@@ -1,0 +1,6 @@
+import UnitExpenseController from "@/app/controllers/unitExpense/unitExpenseController";
+
+export async function GET(req) {
+  return UnitExpenseController.readById(req);
+}
+

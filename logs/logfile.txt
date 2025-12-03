@@ -1,0 +1,1397 @@
+exception-time:       [2025-11-22T13:05:35.165Z]  
+custom-exception:  [Transaction failed in PurchaseReturnController.create] | 
+system-exception:  [Error: Failed to create transactions: purchase is not defined]
+
+
+exception-time:       [2025-11-22T13:05:35.293Z]  
+custom-exception:  [Failed to create purchase return in Method: PurchaseReturnController.create] | 
+system-exception:  [Error: Failed to create transactions: purchase is not defined]
+
+
+exception-time:       [2025-11-23T15:02:59.950Z]  
+custom-exception:  [Failed to create product in Method: ProductController.create] | 
+system-exception:  [Error: Product already exists]exception-time:       [2025-11-27T11:45:23.716Z]  
+custom-exception:  [Failed to create area in Method: AreaController.create] | 
+system-exception:  [Error: Area already exists]
+
+
+exception-time:       [2025-11-27T11:45:59.302Z]  
+custom-exception:  [Failed to create subarea in Method: SubareaController.create] | 
+system-exception:  [Error: Subarea already exists]
+
+
+exception-time:       [2025-11-27T11:50:11.699Z]  
+custom-exception:  [Failed to create company in Method: CompanyController.create] | 
+system-exception:  [Error: Company already exists]
+
+
+exception-time:       [2025-12-01T10:20:19.655Z]  
+custom-exception:  [Failed to create User receive in Method: UserController.create] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'email')]
+
+
+exception-time:       [2025-12-01T14:44:49.676Z]  
+custom-exception:  [Failed to get suppliers in Method: SupplierController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__975aa5cc._.js:185:148    182 ;   183 class SupplierRepository {   184     async readAll() { → 185         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:49.678Z]  
+custom-exception:  [Failed to get transactions in Method: transactionController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4f1d6707._.js:507:151    504 ;   505 class TransactionRepository {   506     async readAll() { → 507         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:49.678Z]  
+custom-exception:  [Failed to fetch sales in Method: SaleController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__37848e24._.js:81:144    78 ;   79 class SalesRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:49.678Z]  
+custom-exception:  [Failed to fetch purchases in Method: PurchaseController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__27658dd6._.js:81:148    78 ;   79 class PurchaseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:49.679Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:50.972Z]  
+custom-exception:  [Failed to fetch sale returns in Method: SaleReturnController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale_return.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8339ac4e._.js:81:151    78 ;   79 class SaleReturnRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale_return.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:50.973Z]  
+custom-exception:  [Failed to fetch purchase returns in Method: PurchaseReturnController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase_return.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__473b8596._.js:81:155    78 ;   79 class PurchaseReturnRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase_return.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:50.974Z]  
+custom-exception:  [Failed to get areas in Method: AreaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78a3d8ce._.js:125:145    122 ;   123 class AreaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:50.974Z]  
+custom-exception:  [Failed to get vehicles in Method: VehicleController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].vehicle.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__819a5bdb._.js:185:147    182 ;   183 class VehicleRepository {   184     async readAll() { → 185         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].vehicle.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:50.974Z]  
+custom-exception:  [Failed to fetch quotations in Method: QuotationController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].quotation.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__7c02cd61._.js:81:149    78 ;   79 class QuotationsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].quotation.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:44:51.060Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:28.603Z]  
+custom-exception:  [Failed to get areas in Method: AreaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78a3d8ce._.js:125:145    122 ;   123 class AreaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:28.603Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:29.127Z]  
+custom-exception:  [Failed to get areas in Method: AreaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78a3d8ce._.js:125:145    122 ;   123 class AreaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:29.128Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:29.588Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:31.832Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:31.832Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:31.833Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:31.833Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:31.833Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:32.706Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:32.706Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:32.706Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:32.707Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:32.707Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:33.395Z]  
+custom-exception:  [Failed to get areas in Method: AreaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78a3d8ce._.js:125:145    122 ;   123 class AreaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:33.396Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:34.001Z]  
+custom-exception:  [Failed to get areas in Method: AreaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78a3d8ce._.js:125:145    122 ;   123 class AreaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:34.002Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:45:34.443Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:12.787Z]  
+custom-exception:  [Failed to get transactions in Method: transactionController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4f1d6707._.js:507:151    504 ;   505 class TransactionRepository {   506     async readAll() { → 507         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:12.788Z]  
+custom-exception:  [Failed to get suppliers in Method: SupplierController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__975aa5cc._.js:185:148    182 ;   183 class SupplierRepository {   184     async readAll() { → 185         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:12.788Z]  
+custom-exception:  [Failed to fetch purchases in Method: PurchaseController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__27658dd6._.js:81:148    78 ;   79 class PurchaseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:12.788Z]  
+custom-exception:  [Failed to fetch sales in Method: SaleController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__37848e24._.js:81:144    78 ;   79 class SalesRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:12.788Z]  
+custom-exception:  [Failed to fetch quotations in Method: QuotationController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].quotation.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__7c02cd61._.js:81:149    78 ;   79 class QuotationsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].quotation.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:12.789Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:13.586Z]  
+custom-exception:  [Failed to fetch purchase returns in Method: PurchaseReturnController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase_return.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__473b8596._.js:81:155    78 ;   79 class PurchaseReturnRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase_return.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:13.587Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:13.587Z]  
+custom-exception:  [Failed to get vehicles in Method: VehicleController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].vehicle.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__819a5bdb._.js:185:147    182 ;   183 class VehicleRepository {   184     async readAll() { → 185         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].vehicle.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:13.587Z]  
+custom-exception:  [Failed to get areas in Method: AreaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78a3d8ce._.js:125:145    122 ;   123 class AreaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:13.587Z]  
+custom-exception:  [Failed to get transactions in Method: transactionController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4f1d6707._.js:507:151    504 ;   505 class TransactionRepository {   506     async readAll() { → 507         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:13.588Z]  
+custom-exception:  [Failed to fetch sale returns in Method: SaleReturnController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale_return.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8339ac4e._.js:81:151    78 ;   79 class SaleReturnRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale_return.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:14.484Z]  
+custom-exception:  [Failed to get suppliers in Method: SupplierController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__975aa5cc._.js:185:148    182 ;   183 class SupplierRepository {   184     async readAll() { → 185         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:14.485Z]  
+custom-exception:  [Failed to fetch purchases in Method: PurchaseController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__27658dd6._.js:81:148    78 ;   79 class PurchaseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:14.486Z]  
+custom-exception:  [Failed to fetch sales in Method: SaleController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__37848e24._.js:81:144    78 ;   79 class SalesRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:14.486Z]  
+custom-exception:  [Failed to fetch quotations in Method: QuotationController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].quotation.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__7c02cd61._.js:81:149    78 ;   79 class QuotationsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].quotation.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:14.486Z]  
+custom-exception:  [Failed to fetch purchase returns in Method: PurchaseReturnController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase_return.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__473b8596._.js:81:155    78 ;   79 class PurchaseReturnRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase_return.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:14.487Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:15.154Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:15.155Z]  
+custom-exception:  [Failed to get vehicles in Method: VehicleController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].vehicle.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__819a5bdb._.js:185:147    182 ;   183 class VehicleRepository {   184     async readAll() { → 185         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].vehicle.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:15.155Z]  
+custom-exception:  [Failed to get areas in Method: AreaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78a3d8ce._.js:125:145    122 ;   123 class AreaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:46:15.155Z]  
+custom-exception:  [Failed to fetch sale returns in Method: SaleReturnController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale_return.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8339ac4e._.js:81:151    78 ;   79 class SaleReturnRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale_return.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:55.601Z]  
+custom-exception:  [Failed to get transactions in Method: transactionController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4f1d6707._.js:507:151    504 ;   505 class TransactionRepository {   506     async readAll() { → 507         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:55.602Z]  
+custom-exception:  [Failed to get suppliers in Method: SupplierController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__975aa5cc._.js:185:148    182 ;   183 class SupplierRepository {   184     async readAll() { → 185         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:55.602Z]  
+custom-exception:  [Failed to fetch sales in Method: SaleController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__37848e24._.js:81:144    78 ;   79 class SalesRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:55.603Z]  
+custom-exception:  [Failed to fetch purchases in Method: PurchaseController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__27658dd6._.js:81:148    78 ;   79 class PurchaseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:55.603Z]  
+custom-exception:  [Failed to fetch quotations in Method: QuotationController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].quotation.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__7c02cd61._.js:81:149    78 ;   79 class QuotationsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].quotation.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:55.603Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:56.573Z]  
+custom-exception:  [Failed to fetch purchase returns in Method: PurchaseReturnController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase_return.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__473b8596._.js:81:155    78 ;   79 class PurchaseReturnRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].purchase_return.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:56.574Z]  
+custom-exception:  [Failed to fetch sale returns in Method: SaleReturnController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale_return.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8339ac4e._.js:81:151    78 ;   79 class SaleReturnRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].sale_return.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:56.576Z]  
+custom-exception:  [Failed to get vehicles in Method: VehicleController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].vehicle.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__819a5bdb._.js:185:147    182 ;   183 class VehicleRepository {   184     async readAll() { → 185         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].vehicle.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:56.576Z]  
+custom-exception:  [Failed to get areas in Method: AreaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78a3d8ce._.js:125:145    122 ;   123 class AreaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].areas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:49:56.577Z]  
+custom-exception:  [Failed to fetch subareas in Method: SubareaController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0652af24._.js:125:148    122 ;   123 class SubareaRepository {   124     async readAll() { → 125         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].subareas.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:41.998Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:42.467Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:42.723Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:43.210Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:43.543Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:43.978Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:52.872Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:53.316Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:53.766Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:58.742Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:54:59.223Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:55:39.253Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T14:55:39.773Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:11.890Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:11.890Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:12.387Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:12.387Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:37.348Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:37.349Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:37.795Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:37.795Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:53.363Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:01:53.363Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:00.118Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:00.119Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:00.580Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:00.581Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:08.010Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:08.010Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:10.244Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:10.245Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:10.702Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:10.703Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:16.410Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:16.410Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:17.041Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:17.041Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:29.562Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:30.473Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:30.474Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:31.052Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:31.053Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:02:31.546Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:03:47.068Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:03:47.622Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:03:58.651Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:03:59.150Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:03.486Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:10.700Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:10.700Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:11.231Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:11.232Z]  
+custom-exception:  [Failed to get employees in Method: EmployeeController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__d3a11d6f._.js:213:165    210     return "employee";   211 }   212 async readAll() { → 213     const employees = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:19.973Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:20.497Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:20.498Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:21.557Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:21.558Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T15:06:22.184Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:42:58.455Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:42:59.477Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:42:59.477Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:43:00.522Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:43:00.523Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:43:01.160Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:43:14.110Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:47:00.197Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:47:00.198Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T16:47:00.199Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:13.949Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:13.950Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:13.951Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:13.951Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:13.951Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:15.764Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:15.765Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:15.765Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:15.765Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:04:15.765Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:27:00.496Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:28:14.203Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:28:14.734Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:41:13.096Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T18:41:13.097Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T19:11:57.418Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T19:45:28.206Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T20:41:57.773Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T20:42:01.217Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-01T20:42:52.831Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__efa2c5fe._.js:201:144    198     };   199     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   200 } → 201 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:45:31.199Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:45:31.201Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:45:31.202Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:45:32.010Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:45:32.011Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:45:32.012Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:47:30.180Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:47:30.181Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:47:30.181Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:53:12.830Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:53:12.832Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:53:12.832Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:59:59.404Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:59:59.405Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T12:59:59.405Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:00.197Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:00.198Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:00.199Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:04.622Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:04.623Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:04.629Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:04.629Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:04.630Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:06.291Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:06.292Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:06.293Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:06.293Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:06.294Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:06.955Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:07.524Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:10.577Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:10.578Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:11.731Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:11.732Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:12.569Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:12.570Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:12.570Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:12.571Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:12.571Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:13.403Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:13.403Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:13.403Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:13.404Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:00:13.404Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:01:37.768Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:01:38.443Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:02:50.888Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:02:50.894Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:02:52.395Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:02:52.395Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:44.530Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:45.173Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:46.901Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:46.902Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:46.902Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:46.903Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:46.903Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:47.891Z]  
+custom-exception:  [Failed to fetch companies in Method: CompanyController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__92a8153a._.js:95:151    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_company.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:47.893Z]  
+custom-exception:  [Failed to fetch product groups in Method: ProductGroupController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__5dfa7c87._.js:95:153    92     });   93 }   94 async readAll() { → 95     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product_group.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:47.894Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aab7ef0b._.js:118:147    115     });   116 }   117 async readAll() { → 118     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:47.895Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:81:148    78 ;   79 class UnitRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:47.896Z]  
+custom-exception:  [Error fetching categories in Method: CategoryController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__aef0377c._.js:81:152    78 ;   79 class CategoryRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_category.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:54.877Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:54.878Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:54.878Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:55.738Z]  
+custom-exception:  [Failed to get all account heads in Method: AccountHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__4c5fcae4._.js:81:152    78 ;   79 class AccountHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:55.739Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__44912284._.js:81:148    78 ;   79 class AccountsRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T13:10:55.739Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__f3570fc5._.js:81:156    78 ;   79 class AccountSubHeadRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Database `poultry_system` does not exist]
+
+
+exception-time:       [2025-12-02T17:01:14.973Z]  
+custom-exception:  [Failed to create account - duplicate name and type in Method: AccountsController.create] | 
+system-exception:  [Error: An account with this name already exists for this account type]
+
+
+exception-time:       [2025-12-02T17:01:21.039Z]  
+custom-exception:  [Failed to create account - duplicate name and type in Method: AccountsController.create] | 
+system-exception:  [Error: An account with this name already exists for this account type]
+
+
+exception-time:       [2025-12-02T18:38:47.749Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2025-12-02T19:08:53.390Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T19:17:42.264Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-02T19:23:31.324Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-02T19:51:50.944Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-02T19:59:47.419Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-02T20:03:02.147Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-02T20:05:31.799Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-02T20:38:19.976Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:38:20.604Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:38:34.691Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:38:43.152Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:40:54.095Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:43:46.340Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:43:47.416Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:44:21.906Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:44:23.463Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:44:50.886Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:45:43.121Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:45:44.582Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:46:10.600Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-02T20:46:11.807Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-03T12:36:29.728Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-03T12:36:31.036Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-03T12:36:35.606Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T12:42:31.418Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-03T12:42:32.129Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2025-12-03T12:46:41.722Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-03T12:47:07.219Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T12:48:56.852Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T12:48:57.302Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T12:49:06.758Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T12:49:07.271Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T12:49:14.081Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T12:49:15.259Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:14:27.579Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:14:35.338Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:14:47.597Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:14:52.270Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:14:52.936Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:15:12.389Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:15:13.177Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:15:20.927Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:16:48.804Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:16:49.400Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:17:10.377Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:27:12.148Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:28:11.669Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:30:23.116Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:34:11.794Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-03T13:45:20.598Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+

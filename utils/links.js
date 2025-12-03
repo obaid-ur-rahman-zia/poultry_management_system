@@ -1,0 +1,112 @@
+import { Building2, ChartLine, FileText, FlaskConical, Grid3x3, LayoutDashboard, MapPin, MessageSquareQuote, Package, Receipt, Scale, ShoppingCart, TrendingUp, Undo, UserCircle, Users, Wallet } from "lucide-react";
+
+export const navigationItems = [
+    {
+      id: "quick-access",
+      title: "Quick Access",
+      href: "/",
+      icon: Grid3x3,
+      type: "single",
+    },
+    {
+      id: "analytics",
+      title: "Analytics",
+      href: "/analytics",
+      icon: ChartLine,
+      type: "single",
+    },
+    {
+      id: "account",
+      title: "Accounts",
+      href: "/account",
+      icon: Wallet,
+      type: "single",
+    },
+    {
+      id: "transactions",
+      title: "Transactions",
+      icon: Package,
+      type: "group",
+      children: [
+        {
+          id: "opposite-transactions",
+          title: "Opposite Transactions",
+          href: "/opposite-transactions",
+          icon: Undo,
+        },
+        {
+          id: "self-transactions",
+          title: "Self Transactions",
+          href: "/self-transactions",
+          icon: TrendingUp,
+        },
+      ],
+    },
+    {
+      id: "operations",
+      title: "Operations",
+      icon: Building2,
+      type: "group",
+      children: [
+        {
+          id: "add-product",
+          title: "Add Product",
+          href: "/add-product",
+          icon: Package,
+        },
+        {
+          id: "add-unit",
+          title: "Add Unit",
+          href: "/add-unit",
+          icon: Scale,
+        },
+        {
+          id: "floc-management",
+          title: "Floc Management",
+          href: "/floc-management",
+          icon: FlaskConical,
+        },
+      ],
+    },
+    {
+      id: "unit-income-expense",
+      title: "Unit Income & Expense",
+      icon: Scale,
+      type: "group",
+      children: [
+        {
+          id: "unit-expense",
+          title: "Unit Expense",
+          href: "/unit-expense",
+          icon: Wallet,
+        },
+        {
+          id: "unit-income",
+          title: "Unit Income",
+          href: "/unit-income",
+          icon: TrendingUp,
+        },
+      ],
+    },
+    {
+      id: "reports",
+      title: "Reports",
+      href: "/reports",
+      icon: FileText,
+      type: "single",
+    },
+    {
+      id: "trading",
+      title: "Trading",
+      href: "/trading",
+      icon: ShoppingCart,
+      type: "single",
+    },
+    {
+      id: "userManagement",
+      title: "User Management",
+      href: "/user_management",
+      icon: Users,
+      type: "single",
+    },
+  ];

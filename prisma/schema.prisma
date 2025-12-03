@@ -1,0 +1,959 @@
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../lib/generated/prisma"
+}
+
+// generator erd {
+//   provider = "prisma-erd-generator"
+// }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+model user {
+  user_id         Int      @id @default(autoincrement())
+  user_nam       String
+  email          String   @unique
+  password       String
+  role           Role
+  profile_picture String?
+  phone          String?
+  address        String?
+  
+  insert_dat DateTime @default(now())
+  update_dat DateTime @updatedAt
+  status     Int      @default(1)
+
+}
+
+model pro_company {
+  company_id  Int      @id @default(autoincrement())
+  company_nam String   @unique(map: "uq_company_name") @db.VarChar(155)
+  insert_dat  DateTime @default(now()) @db.Timestamp(0)
+  update_dat  DateTime @default(now()) @db.Timestamp(0)
+  insert_by   String   @default("user 1") @db.VarChar(50)
+  update_by   String   @default("user 1") @db.VarChar(50)
+  status      Int      @default(1)
+
+  product     product[]
+  accounts    accounts[]
+  voucher     voucher?
+  transaction transaction?
+}
+
+model pro_category {
+  procategory_id  Int            @id @default(autoincrement())
+  procategory_nam String         @unique(map: "uq_type_name") @db.VarChar(100)
+  parent_id       Int?
+  is_parent       Int            @default(0)
+  insert_dat      DateTime       @default(now()) @db.Timestamp(0)
+  update_dat      DateTime       @default(now()) @db.Timestamp(0)
+  insert_by       String         @default("user 1") @db.VarChar(50)
+  update_by       String         @default("user 1") @db.VarChar(50)
+  status          Int            @default(1)
+  // relations
+  product         product[]
+  parent          pro_category?  @relation("CategoryHierarchy", fields: [parent_id], references: [procategory_id])
+  children        pro_category[] @relation("CategoryHierarchy")
+}
+
+model pro_unit {
+  prounit_id  Int      @id @default(autoincrement())
+  prounit_nam String   @unique(map: "uq_unit_name") @db.VarChar(100)
+  parent_id   Int?
+  is_parent   Int      @default(0)
+  insert_dat  DateTime @default(now()) @db.Timestamp(0)
+  update_dat  DateTime @default(now()) @db.Timestamp(0)
+  insert_by   String   @default("user 1") @db.VarChar(50)
+  update_by   String   @default("user 1") @db.VarChar(50)
+  status      Int      @default(1)
+
+  // relations
+  product  product[]
+  parent   pro_unit?  @relation("UnitHierarchy", fields: [parent_id], references: [prounit_id])
+  children pro_unit[] @relation("UnitHierarchy")
+}
+
+model customer_group {
+  cgroup_id  Int      @id @default(autoincrement())
+  cgroup_nam String   @unique(map: "uq_customergroup_name") @db.VarChar(155)
+  insert_dat DateTime @default(now()) @db.Timestamp(0)
+  update_dat DateTime @default(now()) @db.Timestamp(0)
+  insert_by  String   @default("user 1") @db.VarChar(50)
+  update_by  String   @default("user 1") @db.VarChar(50)
+  status     Int      @default(1)
+
+  accounts accounts[]
+}
+
+model employee_designation {
+  designation_id  Int      @id @default(autoincrement())
+  designation_nam String   @unique(map: "uq_designation_name") @db.VarChar(155)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
+
+  accounts accounts[]
+}
+
+model warehouse {
+  warehouse_id  Int      @id @default(autoincrement())
+  warehouse_nam String   @unique(map: "uq_warehouse_name") @db.VarChar(155)
+  insert_dat    DateTime @default(now()) @db.Timestamp(0)
+  update_dat    DateTime @default(now()) @db.Timestamp(0)
+  insert_by     String   @default("user 1") @db.VarChar(50)
+  update_by     String   @default("user 1") @db.VarChar(50)
+  status        Int      @default(1)
+}
+
+model product_group {
+  pgroup_id  Int      @id @default(autoincrement())
+  pgroup_nam String   @unique(map: "uq_productgroup_name") @db.VarChar(155)
+  insert_dat DateTime @default(now()) @db.Timestamp(0)
+  update_dat DateTime @default(now()) @db.Timestamp(0)
+  insert_by  String   @default("user 1") @db.VarChar(50)
+  update_by  String   @default("user 1") @db.VarChar(50)
+  status     Int      @default(1)
+
+  product product[]
+}
+
+model product {
+  product_id          Int     @id @default(autoincrement())
+  product_title       String  @unique(map: "uq_product_title") @db.VarChar(255)
+  product_description String? @db.VarChar(255)
+  procategory_id      Int
+  prounit_id          Int
+  company_id          Int
+  pgroup_id           Int
+  purchase_price      Float
+  sale_price          Float
+  avg_price           Float
+  barcode             String? @db.VarChar(255)
+  packing             Float?
+  reorder_level       Float?
+  current_stock       Float?
+  sales_mc            Float?
+  location            String? @db.VarChar(255)
+
+  discount_amount        Float?
+  discount_percent       Float?
+  tax_amount             Float?
+  tax_percent            Float?
+  isTaxApplied           Int    @default(0)
+  isDiscountApplied      Int    @default(0)
+  isDiscountedPercentage Int    @default(0)
+  isTaxPercentage        Int    @default(0)
+  isTaxAppliedCondition  Int    @default(0) //Tax applied after the discount is deducted.
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+
+  companies    pro_company   @relation(fields: [company_id], references: [company_id], map: "fk_materials_company_relation")
+  types        pro_category  @relation(fields: [procategory_id], references: [procategory_id], map: "fk_materials_type_relation")
+  units        pro_unit      @relation(fields: [prounit_id], references: [prounit_id], map: "fk_materials_unit_relation")
+  productGroup product_group @relation(fields: [pgroup_id], references: [pgroup_id], map: "fk_materials_product_group_relation")
+
+  // sales_products sales_products[]
+  purchases        purchase_detail[]
+  sales            sale_detail[]
+  quotation_detail quotation_detail[]
+  purchase_returns purchase_return_detail[]
+  sale_returns     sale_return_detail[]
+  unit_expenses    unit_expense[]
+  unit_sales       unit_sale[]
+  trading          trading[]
+
+  @@index([company_id], map: "idx_materials_company_id")
+  @@index([procategory_id], map: "idx_materials_category_id")
+  @@index([prounit_id], map: "idx_materials_unit_id")
+}
+
+model purchase {
+  purchase_id     Int      @id @default(autoincrement())
+  invoice_id      String   @db.VarChar(255)
+  purchase_dat    DateTime
+  invoice_dat     DateTime
+  acc_id          Int
+  subtotal_amount Float
+  total_discount  Float
+  bill_tax        Float
+  packing_fare    Float
+  loading_fare    Float
+  adjust_up       Float?
+  total_amount    Float
+  paid_amount     Float
+  remarks         String?
+  is_deleted      Boolean  @default(false)
+  is_edited       Boolean  @default(false)
+  insert_dat      DateTime @default(now())
+  update_dat      DateTime @updatedAt
+  insert_by       String   @default("user 1")
+  update_by       String   @default("user 1")
+
+  suppliers accounts          @relation(fields: [acc_id], references: [acc_id])
+  products  purchase_detail[]
+}
+
+model purchase_detail {
+  id                     Int       @id @default(autoincrement())
+  purchase_id            Int
+  product_id             Int
+  warehouse_id           Int
+  packing                Float
+  quantity               Float
+  bonus                  Float?
+  total_unit             Float
+  purchase_price         Float
+  unit_price             Float? // per unit purchase price
+  sale_price             Float
+  prod_subtotal_amount   Float
+  discount_amount        Float?
+  tax_amount             Float?
+  total_discount_amount  Float?
+  total_tax_amount       Float?
+  batch                  String?
+  expiry                 DateTime?
+  net_amount             Float
+  isTaxApplied           Int       @default(0)
+  isDiscountApplied      Int       @default(0)
+  isTaxPercentage        Int       @default(0)
+  isDiscountedPercentage Int       @default(0)
+  isTaxAppliedCondition  Int       @default(0)
+
+  purchase purchase @relation(fields: [purchase_id], references: [purchase_id])
+  product  product  @relation(fields: [product_id], references: [product_id])
+}
+
+model purchase_return {
+  purchase_return_id Int      @id @default(autoincrement())
+  return_dat         DateTime
+  acc_id             Int //Supplier ID
+  subtotal_amount    Float
+  total_discount     Float
+  bill_tax           Float
+  packing_fare       Float
+  loading_fare       Float
+  total_amount       Float
+  received_amount    Float
+  remarks            String?
+  is_deleted         Boolean  @default(false)
+  is_edited          Boolean  @default(false)
+  insert_dat         DateTime @default(now())
+  update_dat         DateTime @updatedAt
+  insert_by          String   @default("user 1")
+  update_by          String   @default("user 1")
+
+  suppliers accounts                 @relation(fields: [acc_id], references: [acc_id])
+  products  purchase_return_detail[]
+}
+
+model purchase_return_detail {
+  id                     Int       @id @default(autoincrement())
+  purchase_return_id     Int
+  product_id             Int
+  return_type_id         Int
+  warehouse_id           Int
+  packing                Float
+  quantity               Float
+  total_unit             Float
+  purchase_price         Float
+  unit_price             Float? // per unit sale price
+  sale_price             Float // per unit sale price
+  prod_subtotal_amount   Float
+  discount_amount        Float?
+  tax_amount             Float?
+  total_discount_amount  Float?
+  total_tax_amount       Float?
+  batch                  String?
+  expiry                 DateTime?
+  net_amount             Float
+  isTaxApplied           Int       @default(0)
+  isDiscountApplied      Int       @default(0)
+  isTaxPercentage        Int       @default(0)
+  isDiscountedPercentage Int       @default(0)
+  isTaxAppliedCondition  Int       @default(0)
+
+  purchase_return purchase_return @relation(fields: [purchase_return_id], references: [purchase_return_id])
+  product         product         @relation(fields: [product_id], references: [product_id])
+  return_type     return_type     @relation(fields: [return_type_id], references: [return_type_id])
+}
+
+model sale_return {
+  sale_return_id  Int      @id @default(autoincrement())
+  return_dat      DateTime
+  acc_id          Int //Customer ID
+  subtotal_amount Float
+  total_discount  Float
+  bill_tax        Float
+  packing_fare    Float
+  loading_fare    Float
+  total_amount    Float
+  paid_amount     Float
+  remarks         String?
+  is_deleted      Boolean  @default(false)
+  is_edited       Boolean  @default(false)
+  insert_dat      DateTime @default(now())
+  update_dat      DateTime @updatedAt
+  insert_by       String   @default("user 1")
+  update_by       String   @default("user 1")
+
+  customers accounts             @relation(fields: [acc_id], references: [acc_id])
+  products  sale_return_detail[]
+}
+
+model sale_return_detail {
+  id                    Int    @id @default(autoincrement())
+  sale_return_id        Int
+  sale_id               Int
+  product_id            Int
+  warehouse_id          Int
+  return_type_id        Int
+  sale_price            Float
+  unit_price            Float // per unit sale price
+  quantity              Float
+  packing               Float
+  total_unit            Float
+  prod_subtotal_amount  Float
+  discount_amount       Float? // actual discount
+  total_discount_amount Float?
+  tax_amount            Float?
+  total_tax_amount      Float?
+  net_amount            Float
+
+  isTaxApplied           Int @default(0)
+  isDiscountApplied      Int @default(0)
+  isTaxPercentage        Int @default(0)
+  isDiscountedPercentage Int @default(0)
+  isTaxAppliedCondition  Int @default(0)
+
+  sale_return sale_return @relation(fields: [sale_return_id], references: [sale_return_id])
+  return_type return_type @relation(fields: [return_type_id], references: [return_type_id])
+  product     product     @relation(fields: [product_id], references: [product_id])
+}
+
+model return_type {
+  return_type_id  Int      @id @default(autoincrement())
+  return_type_nam String   @unique(map: "uq_return_type_name") @db.VarChar(100)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
+
+  purchase_return_details purchase_return_detail[]
+  sale_return_details     sale_return_detail[]
+}
+
+model sale {
+  sale_id         Int      @id @default(autoincrement())
+  sale_dat        DateTime
+  bill_by         Int
+  payment         Int?
+  salesman_id     Int
+  customer_id     Int
+  total_discount  Float
+  total_tax       Float
+  extra_tax       Float?
+  packing_fare    Float
+  subtotal_amount Float
+  total_amount    Float
+  received_amount Float
+  delivered_to    String
+  builty_number   String
+  ogp_number      String
+  remarks         String?
+  is_deleted      Boolean  @default(false)
+  is_edited       Boolean  @default(false)
+  insert_dat      DateTime @default(now())
+  update_dat      DateTime @updatedAt
+  insert_by       String   @default("user 1")
+  update_by       String   @default("user 1")
+
+  salesman accounts      @relation("sale_salesman", fields: [salesman_id], references: [acc_id])
+  customer accounts      @relation("sale_customer", fields: [customer_id], references: [acc_id])
+  products sale_detail[]
+}
+
+model sale_detail {
+  id                    Int    @id @default(autoincrement())
+  sale_id               Int
+  product_id            Int
+  warehouse_id          Int
+  sale_price            Float
+  unit_price            Float // per unit sale price
+  quantity              Float
+  packing               Float
+  bonus                 Float
+  total_unit            Float
+  prod_subtotal_amount  Float
+  discount_amount       Float? // actual discount
+  total_discount_amount Float?
+  tax_amount            Float?
+  total_tax_amount      Float?
+  net_amount            Float
+
+  isTaxApplied           Int @default(0)
+  isDiscountApplied      Int @default(0)
+  isTaxPercentage        Int @default(0)
+  isDiscountedPercentage Int @default(0)
+  isTaxAppliedCondition  Int @default(0)
+
+  sale    sale    @relation(fields: [sale_id], references: [sale_id])
+  product product @relation(fields: [product_id], references: [product_id])
+}
+
+model quotation {
+  quotation_id    Int      @id @default(autoincrement())
+  salesman_id     Int
+  customer_id     Int
+  subtotal_amount Float
+  total_discount  Float
+  total_tax       Float
+  extra_tax       Float?
+  packing_fare    Float
+  total_amount    Float
+  remarks         String?
+  is_deleted      Boolean  @default(false)
+  is_edited       Boolean  @default(false)
+  insert_dat      DateTime @default(now())
+  update_dat      DateTime @updatedAt
+  insert_by       String   @default("user 1")
+  update_by       String   @default("user 1")
+
+  salesman accounts           @relation("quotation_salesman", fields: [salesman_id], references: [acc_id])
+  customer accounts           @relation("quotation_customer", fields: [customer_id], references: [acc_id])
+  products quotation_detail[]
+}
+
+model quotation_detail {
+  id                    Int    @id @default(autoincrement())
+  quotation_id          Int
+  product_id            Int
+  warehouse_id          Int
+  sale_price            Float
+  unit_price            Float
+  quantity              Float
+  packing               Float
+  bonus                 Float?
+  total_unit            Float
+  prod_subtotal_amount  Float
+  discount_amount       Float? // actual discount
+  total_discount_amount Float?
+  tax_amount            Float?
+  total_tax_amount      Float?
+  net_amount            Float
+
+  isTaxApplied           Int @default(0)
+  isDiscountApplied      Int @default(0)
+  isTaxPercentage        Int @default(0)
+  isDiscountedPercentage Int @default(0)
+  isTaxAppliedCondition  Int @default(0)
+
+  quotation quotation @relation(fields: [quotation_id], references: [quotation_id])
+  product   product   @relation(fields: [product_id], references: [product_id])
+}
+
+model vehicle {
+  vehicle_id      Int      @id @default(autoincrement())
+  vehicle_type_id Int
+  vehicle_nam     String   @db.VarChar(100)
+  vehicle_plate   String   @unique(map: "uq_vehicle_plate") @db.VarChar(100)
+  driver_id       Int?     @unique(map: "uq_driver_id")
+  deliveryman_id  Int?     @unique(map: "uq_deliveryman_id")
+  is_assigned     Int      @default(0)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
+
+  driver       accounts?    @relation("DriverVehicle", fields: [driver_id], references: [acc_id])
+  deliveryman  accounts?    @relation("DeliveryVehicle", fields: [deliveryman_id], references: [acc_id])
+  vehicle_type vehicle_type @relation(fields: [vehicle_type_id], references: [vehicle_type_id])
+
+  area_assignments area_assignment[]
+}
+
+model vehicle_type {
+  vehicle_type_id  Int      @id @default(autoincrement())
+  vehicle_type_nam String   @unique(map: "uq_vehicle_type_name") @db.VarChar(100)
+  insert_dat       DateTime @default(now()) @db.Timestamp(0)
+  update_dat       DateTime @default(now()) @db.Timestamp(0)
+  insert_by        String   @default("user 1") @db.VarChar(50)
+  update_by        String   @default("user 1") @db.VarChar(50)
+  status           Int      @default(1)
+
+  vehicle vehicle[]
+}
+
+// NEW: Junction table for area-salesman-vehicle assignments
+model area_assignment {
+  assignment_id Int @id @default(autoincrement())
+  area_id       Int
+  acc_id        Int
+  vehicle_id    Int
+
+  insert_dat DateTime @default(now()) @db.Timestamp(0)
+  update_dat DateTime @default(now()) @db.Timestamp(0)
+  insert_by  String   @default("user 1") @db.VarChar(50)
+  update_by  String   @default("user 1") @db.VarChar(50)
+  is_active  Int      @default(1) // 1 = active, 0 = inactive/historical
+  status     Int      @default(1)
+
+  salesman accounts @relation(fields: [acc_id], references: [acc_id])
+  vehicle  vehicle  @relation(fields: [vehicle_id], references: [vehicle_id])
+
+  // Ensure one active assignment per area
+  @@unique([area_id, is_active], name: "uq_active_area_assignment")
+  @@index([acc_id])
+  @@index([vehicle_id])
+  @@index([is_active])
+}
+
+model account_head {
+  head_id  Int    @id @default(autoincrement())
+  head_nam String @unique @db.VarChar(100)
+
+  // relations
+  sub_heads       account_sub_head[]
+  accounts        accounts[]
+  accounts_manage account_manage[]
+}
+
+model account_sub_head {
+  sub_id        Int    @id @default(autoincrement()) // Now primary key
+  head_id       Int
+  subhead_id    Int // Sequential per head (1,2,3... resets per head)
+  subhead_nam   String @db.VarChar(100)
+  is_parent     Int    @default(0) // 0 = false, 1 = true
+  parent_sub_id Int? // References sub_id of parent
+
+  insert_dat DateTime @default(now())
+  update_dat DateTime @updatedAt
+  insert_by  String   @default("user 1")
+  update_by  String   @default("user 1")
+  status     Int      @default(1)
+
+  // relations
+  head            account_head       @relation(fields: [head_id], references: [head_id])
+  parent          account_sub_head?  @relation("SubHeadHierarchy", fields: [parent_sub_id], references: [sub_id])
+  children        account_sub_head[] @relation("SubHeadHierarchy")
+  accounts        accounts[]
+  accounts_manage account_manage[]
+
+  // Unique constraint to ensure subhead_id is unique within each head
+  @@unique([head_id, subhead_id], name: "uq_head_subhead")
+  @@index([head_id])
+  @@index([parent_sub_id])
+}
+
+model accounts {
+  acc_id     Int @id @default(autoincrement()) // Now primary key
+  head_id    Int
+  sub_id     Int
+  account_id Int // Sequential per sub_id (1,2,3... resets per sub_id)
+
+  // Common fields for all account types
+  account_nam       String  @db.VarChar(100)
+  account_cnic      String? @unique @db.VarChar(100)
+  account_address   String? @db.VarChar(255)
+  account_alter_nam String? @db.VarChar(100)
+  account_contact   String? @db.VarChar(50)
+  account_reference String? @db.VarChar(255)
+  account_no        String? @db.VarChar(100)
+
+  // Account type flags
+  is_employee     Int @default(0)
+  is_driver       Int @default(0)
+  is_delivery_man Int @default(0)
+
+  is_customer Int @default(0)
+  is_supplier Int @default(0)
+  is_salesman Int @default(0)
+
+  // Customer-specific fields (only used when is_customer = 1)
+  credit_limit Decimal? @db.Decimal(15, 2)
+  cgroup_id    Int?
+  subarea_id   Int?
+
+  // Supplier-specific fields (only used when is_supplier = 1)
+  company_id Int?
+
+  // Employee-specific fields (only used when is_salesman = 1)
+  designation_id Int?
+
+  insert_dat DateTime @default(now())
+  update_dat DateTime @updatedAt
+  insert_by  String   @default("user 1")
+  update_by  String   @default("user 1")
+  status     Int      @default(1)
+
+  // relations
+  head    account_head     @relation(fields: [head_id], references: [head_id])
+  subhead account_sub_head @relation(fields: [sub_id], references: [sub_id])
+
+  voucher     voucher[]
+  transaction transaction[]
+
+  customer_group       customer_group?       @relation(fields: [cgroup_id], references: [cgroup_id])
+  company              pro_company?          @relation(fields: [company_id], references: [company_id])
+  employee_designation employee_designation? @relation(fields: [designation_id], references: [designation_id])
+  driver_vehicles      vehicle?              @relation("DriverVehicle")
+  deliveryman_vehicles vehicle?              @relation("DeliveryVehicle")
+  area_assignments     area_assignment[]
+  account_manage       account_manage[]
+  purchase             purchase[]
+  purchase_return      purchase_return[]
+  sale_customer        sale[]                @relation("sale_customer")
+  sale_salesman        sale[]                @relation("sale_salesman")
+  quotation_customer   quotation[]           @relation("quotation_customer")
+  quotation_salesman   quotation[]           @relation("quotation_salesman")
+  sale_return          sale_return[]
+  opposite_paid_by     opposite_transaction[] @relation("OppositePaidBy")
+  opposite_bank_account opposite_transaction[] @relation("OppositeBankAccount")
+  opposite_received_by  opposite_transaction[] @relation("OppositeReceivedBy")
+  self_transactions    self_transaction[]     @relation("SelfTransactionAccount")
+  trading_buy_from     trading[]              @relation("TradingBuyFrom")
+  trading_sale_to      trading[]              @relation("TradingSaleTo")
+
+  // Unique constraint to ensure account_id is unique within each sub_id
+  @@unique([sub_id, account_id], name: "uq_sub_account")
+  // Indexes for better query performance
+  @@index([head_id])
+  @@index([sub_id])
+  @@index([is_customer])
+  @@index([is_supplier])
+  @@index([is_salesman])
+  @@index([cgroup_id])
+  @@index([designation_id])
+}
+
+model account_manage {
+  m_id             Int    @id @default(autoincrement())
+  head_id          Int
+  sub_id           Int
+  acc_id           Int?
+  description      String @db.VarChar(255)
+  account_lvl      Int
+  display_category Int    @default(0)
+  is_active        Int    @default(1)
+
+  // relations using simple concatenated IDs
+  head    account_head     @relation(fields: [head_id], references: [head_id])
+  subhead account_sub_head @relation(fields: [sub_id], references: [sub_id])
+  account accounts?        @relation(fields: [acc_id], references: [acc_id])
+
+  // Indexes for foreign keys
+  @@unique([description, is_active])
+  @@index([acc_id])
+  @@index(description)
+  @@index([head_id])
+  @@index([sub_id])
+}
+
+model screen_code {
+  screen_id     Int    @id @default(autoincrement())
+  screen_nam    String @unique(map: "uq_screen_name") @db.VarChar(100)
+  description   String @db.VarChar(255)
+  screen_type   String @db.VarChar(100)
+  is_save       Int    @default(0)
+  is_modify     Int    @default(0)
+  is_read       Int    @default(0)
+  group_id      Int
+  display_order Int
+
+  screen_group screen_group @relation(fields: [group_id], references: [group_id], onDelete: Cascade, map: "fk_screen_group_screen_code")
+}
+
+model screen_group {
+  group_id      Int    @id @default(autoincrement())
+  group_nam     String @unique(map: "uq_group_name") @db.VarChar(100)
+  description   String @db.VarChar(255)
+  display_order Int
+  is_parent     Int    @default(0)
+  parent_id     Int?
+
+  screen_codes screen_code[]
+}
+
+model transaction {
+  t_id              Int      @id @default(autoincrement())
+  record_no         Int?
+  company_id        Int?     @unique
+  reference_id      Int?
+  acc_id            Int
+  transaction_dat   DateTime @default(now())
+  financial_year    String?
+  voucher_type      String?
+  reference         String
+  debit             Float
+  credit            Float
+  remarks           String?
+  manual_voucher_no String?
+  isDeleted         Boolean  @default(false)
+  isEdited          Boolean  @default(false)
+
+  insert_dat DateTime @default(now())
+  update_dat DateTime @updatedAt
+  insert_by  String   @default("user 1")
+  update_by  String   @default("user 1")
+
+  account accounts     @relation(fields: [acc_id], references: [acc_id])
+  company pro_company? @relation(fields: [company_id], references: [company_id])
+
+  @@unique([reference_id, t_id])
+  @@index([reference_id, record_no])
+  @@index([acc_id])
+  @@index([isDeleted])
+}
+
+model voucher {
+  v_id              Int      @id @default(autoincrement())
+  voucher_id        Int
+  company_id        Int?     @unique
+  record_no         Int
+  acc_id            Int
+  transaction_dat   DateTime @default(now())
+  financial_year    String
+  voucher_type      String
+  debit             Float
+  credit            Float
+  remarks           String?
+  manual_voucher_no String?
+  isDeleted         Boolean  @default(false)
+  isEdited          Boolean  @default(false)
+
+  insert_dat DateTime @default(now())
+  update_dat DateTime @updatedAt
+  insert_by  String   @default("user 1")
+  update_by  String   @default("user 1")
+
+  account accounts     @relation(fields: [acc_id], references: [acc_id])
+  company pro_company? @relation(fields: [company_id], references: [company_id])
+
+  @@unique([v_id, voucher_id])
+  @@index([voucher_id, record_no])
+  @@index([acc_id])
+  @@index([financial_year])
+  @@index([isDeleted])
+}
+
+model farm {
+  farm_id    Int      @id @default(autoincrement())
+  farm_nam   String   @unique(map: "uq_farm_name") @db.VarChar(100)
+  capacity   Float?
+  address    String?  @db.VarChar(255)
+  insert_dat DateTime @default(now()) @db.Timestamp(0)
+  update_dat DateTime @default(now()) @db.Timestamp(0)
+  insert_by  String   @default("user 1") @db.VarChar(50)
+  update_by  String   @default("user 1") @db.VarChar(50)
+  status     Int      @default(1)
+
+  flocs floc[]
+  unit_expenses unit_expense[]
+  unit_sales    unit_sale[]
+  daily_fs_rates daily_fs_rate[]
+}
+
+model floc {
+  floc_id          Int      @id @default(autoincrement())
+  farm_id          Int
+  starting_date    DateTime
+  ending_date      DateTime?
+  stackholders     Json     // Array of {acc_id: Int, percentage: Float}
+  clear_description String? @db.VarChar(500)
+  insert_dat       DateTime @default(now()) @db.Timestamp(0)
+  update_dat       DateTime @default(now()) @db.Timestamp(0)
+  insert_by        String   @default("user 1") @db.VarChar(50)
+  update_by        String   @default("user 1") @db.VarChar(50)
+  status           Int      @default(1)
+
+  farm farm @relation(fields: [farm_id], references: [farm_id])
+  unit_expenses unit_expense[]
+  unit_sales    unit_sale[]
+  daily_fs_rates daily_fs_rate[]
+
+  @@index([farm_id])
+  @@index([starting_date])
+  @@index([ending_date])
+}
+
+model opposite_transaction {
+  transaction_id  Int      @id @default(autoincrement())
+  transaction_date DateTime
+  paid_by         Int
+  bank_account    Int?
+  received_by     Int
+  amount          Float
+  description     String?  @db.VarChar(500)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
+
+  paid_by_account    accounts @relation("OppositePaidBy", fields: [paid_by], references: [acc_id])
+  bank_account_ref   accounts? @relation("OppositeBankAccount", fields: [bank_account], references: [acc_id])
+  received_by_account accounts @relation("OppositeReceivedBy", fields: [received_by], references: [acc_id])
+
+  @@index([paid_by])
+  @@index([received_by])
+  @@index([transaction_date])
+}
+
+model self_transaction {
+  transaction_id  Int      @id @default(autoincrement())
+  transaction_date DateTime
+  is_bank         Int      @default(0) // 0 = Cash, 1 = Bank
+  account_id      Int
+  transaction_type String  @db.VarChar(20) // "receive" or "pay"
+  amount          Float
+  description     String?  @db.VarChar(500)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
+
+  account accounts @relation("SelfTransactionAccount", fields: [account_id], references: [acc_id])
+
+  @@index([account_id])
+  @@index([transaction_date])
+  @@index([transaction_type])
+}
+
+model unit_expense {
+  expense_id    Int      @id @default(autoincrement())
+  expense_date  DateTime
+  farm_id       Int
+  floc_id       Int
+  product_id    Int
+  price         Float
+  quantity      Float
+  tax_type      String   @db.VarChar(20) // "flat" or "percentage"
+  tax_value     Float    @default(0)
+  discount_type String   @db.VarChar(20) // "flat" or "percentage"
+  discount_value Float   @default(0)
+  total         Float
+  description   String?  @db.VarChar(500)
+  insert_dat    DateTime @default(now()) @db.Timestamp(0)
+  update_dat    DateTime @default(now()) @db.Timestamp(0)
+  insert_by     String   @default("user 1") @db.VarChar(50)
+  update_by     String   @default("user 1") @db.VarChar(50)
+  status        Int      @default(1)
+
+  farm    farm    @relation(fields: [farm_id], references: [farm_id])
+  floc    floc    @relation(fields: [floc_id], references: [floc_id])
+  product product @relation(fields: [product_id], references: [product_id])
+
+  @@index([farm_id])
+  @@index([floc_id])
+  @@index([product_id])
+  @@index([expense_date])
+}
+
+model unit_sale {
+  sale_id       Int      @id @default(autoincrement())
+  sale_date     DateTime
+  farm_id       Int
+  floc_id       Int
+  farm_rate     Float?
+  sale_rate     Float?
+  product_id    Int
+  price         Float
+  quantity      Float
+  tax_type      String   @db.VarChar(20) // "flat" or "percentage"
+  tax_value     Float    @default(0)
+  discount_type String   @db.VarChar(20) // "flat" or "percentage"
+  discount_value Float   @default(0)
+  total         Float
+  description   String?  @db.VarChar(500)
+  insert_dat    DateTime @default(now()) @db.Timestamp(0)
+  update_dat    DateTime @default(now()) @db.Timestamp(0)
+  insert_by     String   @default("user 1") @db.VarChar(50)
+  update_by     String   @default("user 1") @db.VarChar(50)
+  status        Int      @default(1)
+
+  farm    farm    @relation(fields: [farm_id], references: [farm_id])
+  floc    floc    @relation(fields: [floc_id], references: [floc_id])
+  product product @relation(fields: [product_id], references: [product_id])
+
+  @@index([farm_id])
+  @@index([floc_id])
+  @@index([product_id])
+  @@index([sale_date])
+  @@unique([farm_id, floc_id, sale_date], name: "uq_farm_floc_date_fs_rate")
+}
+
+model daily_fs_rate {
+  rate_id    Int      @id @default(autoincrement())
+  rate_date  DateTime
+  farm_id    Int
+  floc_id    Int
+  farm_rate  Float
+  sale_rate  Float
+  insert_dat DateTime @default(now()) @db.Timestamp(0)
+  update_dat DateTime @default(now()) @db.Timestamp(0)
+  insert_by  String   @default("user 1") @db.VarChar(50)
+  update_by  String   @default("user 1") @db.VarChar(50)
+  status     Int      @default(1)
+
+  farm farm @relation(fields: [farm_id], references: [farm_id])
+  floc floc @relation(fields: [floc_id], references: [floc_id])
+
+  @@unique([farm_id, floc_id, rate_date], name: "uq_daily_fs_rate")
+  @@index([farm_id])
+  @@index([floc_id])
+  @@index([rate_date])
+}
+
+model trading {
+  trading_id        Int      @id @default(autoincrement())
+  trading_date      DateTime
+  buy_from_account  Int
+  do_number         String?  @db.VarChar(100)
+  product_id        Int
+  buy_quantity      Float
+  buy_price         Float
+  buy_tax_type      String   @db.VarChar(20) // "flat" or "percentage"
+  buy_tax_value     Float    @default(0)
+  buy_discount_type String   @db.VarChar(20) // "flat" or "percentage"
+  buy_discount_value Float   @default(0)
+  buy_total         Float
+  buy_detail        String?  @db.VarChar(500)
+  sale_to_account   Int
+  sale_price        Float
+  sale_quantity     Float
+  sale_tax_type     String   @db.VarChar(20) // "flat" or "percentage"
+  sale_tax_value    Float    @default(0)
+  sale_discount_type String  @db.VarChar(20) // "flat" or "percentage"
+  sale_discount_value Float  @default(0)
+  sale_total        Float
+  sale_detail       String?  @db.VarChar(500)
+  insert_dat        DateTime @default(now()) @db.Timestamp(0)
+  update_dat        DateTime @default(now()) @db.Timestamp(0)
+  insert_by         String   @default("user 1") @db.VarChar(50)
+  update_by         String   @default("user 1") @db.VarChar(50)
+  status            Int      @default(1)
+
+  buy_from_account_ref accounts @relation("TradingBuyFrom", fields: [buy_from_account], references: [acc_id])
+  sale_to_account_ref  accounts @relation("TradingSaleTo", fields: [sale_to_account], references: [acc_id])
+  product              product  @relation(fields: [product_id], references: [product_id])
+
+  @@index([buy_from_account])
+  @@index([sale_to_account])
+  @@index([product_id])
+  @@index([trading_date])
+}
