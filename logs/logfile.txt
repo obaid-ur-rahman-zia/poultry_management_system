@@ -1395,3 +1395,373 @@ custom-exception:  [Failed to get all trades in Method: TradingController.readAl
 system-exception:  [SyntaxError: Unexpected end of JSON input]
 
 
+exception-time:       [2025-12-03T15:14:56.175Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T16:43:28.208Z]  
+custom-exception:  [Failed to create User receive in Method: UserController.create] | 
+system-exception:  [PrismaClientValidationError:  Invalid `tx.user.update()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__7b638399._.js:1079:35    1076     status: 1   1077 }, tx);   1078 // Link the account to the user → 1079 await tx.user.update({          where: {            user_id: 3          },          data: {            cash_in_hand_account_id: 5,            ~~~~~~~~~~~~~~~~~~~~~~~        ?   user_nam?: String | StringFieldUpdateOperationsInput,        ?   email?: String | StringFieldUpdateOperationsInput,        ?   password?: String | StringFieldUpdateOperationsInput,        ?   role?: Role | EnumRoleFieldUpdateOperationsInput,        ?   profile_picture?: String | NullableStringFieldUpdateOperationsInput | Null,        ?   phone?: String | NullableStringFieldUpdateOperationsInput | Null,        ?   address?: String | NullableStringFieldUpdateOperationsInput | Null,        ?   insert_dat?: DateTime | DateTimeFieldUpdateOperationsInput,        ?   update_dat?: DateTime | DateTimeFieldUpdateOperationsInput,        ?   status?: Int | IntFieldUpdateOperationsInput          }        })  Unknown argument `cash_in_hand_account_id`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T16:43:39.492Z]  
+custom-exception:  [Failed to create User receive in Method: UserController.create] | 
+system-exception:  [PrismaClientValidationError:  Invalid `tx.user.update()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__7b638399._.js:1079:35    1076     status: 1   1077 }, tx);   1078 // Link the account to the user → 1079 await tx.user.update({          where: {            user_id: 4          },          data: {            cash_in_hand_account_id: 6,            ~~~~~~~~~~~~~~~~~~~~~~~        ?   user_nam?: String | StringFieldUpdateOperationsInput,        ?   email?: String | StringFieldUpdateOperationsInput,        ?   password?: String | StringFieldUpdateOperationsInput,        ?   role?: Role | EnumRoleFieldUpdateOperationsInput,        ?   profile_picture?: String | NullableStringFieldUpdateOperationsInput | Null,        ?   phone?: String | NullableStringFieldUpdateOperationsInput | Null,        ?   address?: String | NullableStringFieldUpdateOperationsInput | Null,        ?   insert_dat?: DateTime | DateTimeFieldUpdateOperationsInput,        ?   update_dat?: DateTime | DateTimeFieldUpdateOperationsInput,        ?   status?: Int | IntFieldUpdateOperationsInput          }        })  Unknown argument `cash_in_hand_account_id`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T17:01:19.773Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:26:05.822Z]  
+custom-exception:  [Failed to delete account in Method: AccountsController.delete] | 
+system-exception:  [PrismaClientUnknownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0c4934ce._.js:225:154    222     });   223 }   224 async delete(acc_id) { → 225     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete( Error occurred during query execution: ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"accounts\" violates RESTRICT setting of foreign key constraint \"transaction_acc_id_fkey\" on table \"transaction\"", severity: "ERROR", detail: Some("Key (acc_id)=(2) is referenced from table \"transaction\"."), column: None, hint: None }), transient: false })]
+
+
+exception-time:       [2025-12-04T17:26:24.169Z]  
+custom-exception:  [Failed to delete account in Method: AccountsController.delete] | 
+system-exception:  [PrismaClientUnknownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__0c4934ce._.js:225:154    222     });   223 }   224 async delete(acc_id) { → 225     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete( Error occurred during query execution: ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"accounts\" violates RESTRICT setting of foreign key constraint \"transaction_acc_id_fkey\" on table \"transaction\"", severity: "ERROR", detail: Some("Key (acc_id)=(3) is referenced from table \"transaction\"."), column: None, hint: None }), transient: false })]
+
+
+exception-time:       [2025-12-04T17:37:04.598Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:39:16.765Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:39:17.455Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:40:53.769Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:41:08.174Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T17:41:08.962Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T17:41:37.497Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:41:38.009Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:41:57.454Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected token 'o', "[object Obj"... is not valid JSON]
+
+
+exception-time:       [2025-12-04T17:41:58.147Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected token 'o', "[object Obj"... is not valid JSON]
+
+
+exception-time:       [2025-12-04T17:43:16.338Z]  
+custom-exception:  [Failed to create opposite transaction in Method: OppositeTransactionController.create] | 
+system-exception:  [Error: Credit limit exceeded. Current credit balance: 0.00, Credit limit: 3000.00, Transaction amount: 8000.00]
+
+
+exception-time:       [2025-12-04T17:43:44.809Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:43:45.406Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T17:58:05.524Z]  
+custom-exception:  [Failed to create account in Method: AccountsController.create] | 
+system-exception:  [Error: Account not found]
+
+
+exception-time:       [2025-12-04T17:58:12.789Z]  
+custom-exception:  [Failed to create account in Method: AccountsController.create] | 
+system-exception:  [Error: Account not found]
+
+
+exception-time:       [2025-12-04T17:58:27.622Z]  
+custom-exception:  [Failed to create account in Method: AccountsController.create] | 
+system-exception:  [Error: Account not found]
+
+
+exception-time:       [2025-12-04T17:59:09.178Z]  
+custom-exception:  [Failed to create account in Method: AccountsController.create] | 
+system-exception:  [Error: Account not found]
+
+
+exception-time:       [2025-12-04T18:00:11.903Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:00:29.336Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:00:30.488Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:01:33.081Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:02:04.415Z]  
+custom-exception:  [Failed to create account - credit limit validation failed in Method: AccountsController.create] | 
+system-exception:  [Error: Credit limit (3000) must be greater than or equal to opening balance (4000)]
+
+
+exception-time:       [2025-12-04T18:03:01.873Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:03:02.982Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:04:53.451Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:04:54.239Z]  
+custom-exception:  [Failed to get all opposite transactions in Method: OppositeTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:07:40.875Z]  
+custom-exception:  [Failed to get all self transactions in Method: SelfTransactionController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T18:49:59.583Z]  
+custom-exception:  [Failed to create unit in Method: UnitController.create] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.create()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__3e021149._.js:99:148    96 if (data.address !== undefined) {   97     createData.address = data.address;   98 } → 99 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.create({        data: {          prounit_nam: "Farm 1",          capacity: 300000,          ~~~~~~~~          address: "cjdncjnsdcn",      ?   is_parent?: Int,      ?   insert_dat?: DateTime,      ?   update_dat?: DateTime,      ?   insert_by?: String,      ?   update_by?: String,      ?   status?: Int,      ?   product?: productCreateNestedManyWithoutUnitsInput,      ?   parent?: pro_unitCreateNestedOneWithoutChildrenInput,      ?   children?: pro_unitCreateNestedManyWithoutParentInput        }      })  Unknown argument `capacity`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T19:14:20.140Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].floc.create()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__1876ba57._.js:141:144    138     });   139 }   140 async create(data) { → 141     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].floc.create( Foreign key constraint violated on the constraint: `floc_farm_id_fkey`]
+
+
+exception-time:       [2025-12-04T19:22:45.420Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [Error: farm_id, starting_date, and stackholders are required in Method: FlocController.create]
+
+
+exception-time:       [2025-12-04T19:23:02.724Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [Error: farm_id, starting_date, and stackholders are required in Method: FlocController.create]
+
+
+exception-time:       [2025-12-04T19:23:15.800Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [Error: farm_id, starting_date, and stackholders are required in Method: FlocController.create]
+
+
+exception-time:       [2025-12-04T19:32:53.180Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__287fb932._.js:81:152    78 ;   79 class UnitExpenseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany({                orderBy: {                  expense_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_expense`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T19:32:53.981Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__287fb932._.js:81:152    78 ;   79 class UnitExpenseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany({                orderBy: {                  expense_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_expense`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T19:49:46.340Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [Error: Unit already has an active floc. Please end the current floc first.]
+
+
+exception-time:       [2025-12-04T19:54:12.332Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [Error: Unit already has an active floc. Please end the current floc first.]
+
+
+exception-time:       [2025-12-04T19:58:24.991Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T19:59:01.454Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__287fb932._.js:81:152    78 ;   79 class UnitExpenseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany({                orderBy: {                  expense_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_expense`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T19:59:02.200Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__287fb932._.js:81:152    78 ;   79 class UnitExpenseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany({                orderBy: {                  expense_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_expense`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:00:58.513Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8cd6d20b._.js:81:149    78 ;   79 class UnitSaleRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany({                orderBy: {                  sale_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_sale`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:00:58.947Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8cd6d20b._.js:81:149    78 ;   79 class UnitSaleRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany({                orderBy: {                  sale_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_sale`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:01:00.631Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__287fb932._.js:81:152    78 ;   79 class UnitExpenseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany({                orderBy: {                  expense_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_expense`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:01:01.268Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__287fb932._.js:81:152    78 ;   79 class UnitExpenseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany({                orderBy: {                  expense_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_expense`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:01:58.791Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8cd6d20b._.js:81:149    78 ;   79 class UnitSaleRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany({                orderBy: {                  sale_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_sale`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:01:59.515Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8cd6d20b._.js:81:149    78 ;   79 class UnitSaleRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany({                orderBy: {                  sale_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_sale`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:02:27.609Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__287fb932._.js:81:152    78 ;   79 class UnitExpenseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany({                orderBy: {                  expense_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_expense`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:02:28.279Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__287fb932._.js:81:152    78 ;   79 class UnitExpenseRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_expense.findMany({                orderBy: {                  expense_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_expense`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:09:26.417Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8cd6d20b._.js:81:149    78 ;   79 class UnitSaleRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany({                orderBy: {                  sale_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_sale`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:09:27.222Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany()` invocation in D:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__8cd6d20b._.js:81:149    78 ;   79 class UnitSaleRepository {   80     async readAll() { → 81         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].unit_sale.findMany({                orderBy: {                  sale_id: "desc"                },                include: {                  farm: true,                  ~~~~                  floc: true,                  product: true,              ?   unit?: true                },                where: {                  status: 1                }              })  Unknown field `farm` for include statement on model `unit_sale`. Available options are marked with ?.]
+
+
+exception-time:       [2025-12-04T20:11:11.671Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T20:20:50.953Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T20:21:44.696Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T20:21:45.248Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T20:25:40.134Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T20:28:35.932Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:31:36.766Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:31:38.456Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:43:59.192Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:43:59.837Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:45:35.307Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: Unexpected token 'o', "[object Obj"... is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:45:44.787Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T20:46:49.473Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:46:51.184Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: Unexpected token 'o', "[object Obj"... is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:46:52.289Z]  
+custom-exception:  [Failed to get all unit sales in Method: UnitSaleController.readAll] | 
+system-exception:  [SyntaxError: Unexpected token 'o', "[object Obj"... is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:46:52.884Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T20:46:53.592Z]  
+custom-exception:  [Failed to get all trades in Method: TradingController.readAll] | 
+system-exception:  [SyntaxError: Unexpected end of JSON input]
+
+
+exception-time:       [2025-12-04T20:48:27.657Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2025-12-04T20:48:28.343Z]  
+custom-exception:  [Failed to get all unit expenses in Method: UnitExpenseController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+

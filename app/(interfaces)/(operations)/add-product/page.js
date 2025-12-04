@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2, PlusCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Plus, Search, Edit2, Trash2, PlusCircle, Check, ChevronsUpDown } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -29,6 +30,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 export default function ProductPage() {
   const {
@@ -55,13 +77,16 @@ export default function ProductPage() {
   const [categories, setCategories] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [units, setUnits] = useState([]);
-  const [productGroups, setProductGroups] = useState([]);
   
-  // Add new item states
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  // Dialog states
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [isAddingCompany, setIsAddingCompany] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState("");
+  
+  // Searchable select states
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [companyOpen, setCompanyOpen] = useState(false);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +98,6 @@ export default function ProductPage() {
     fetchCategories();
     fetchCompanies();
     fetchUnits();
-    fetchProductGroups();
     fetchProducts();
   }, []);
 
@@ -119,19 +143,6 @@ export default function ProductPage() {
     }
   };
 
-  const fetchProductGroups = async () => {
-    try {
-      const response = await fetch("/api/productGroup/readAll");
-      const result = await response.json();
-      
-      if (result.response_status === "success") {
-        const groupsData = result.response_result?.data || result.response_result || [];
-        setProductGroups(groupsData);
-      }
-    } catch (error) {
-      console.error("Error fetching product groups:", error);
-    }
-  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -191,7 +202,7 @@ export default function ProductPage() {
           setValue("procategory_id", newCategory.procategory_id.toString());
         }
         setNewCategoryName("");
-        setIsAddingCategory(false);
+        setIsCategoryDialogOpen(false);
       } else {
         toast.error(result.response_message || "Failed to create category");
       }
@@ -236,7 +247,7 @@ export default function ProductPage() {
           setValue("company_id", newCompany.company_id.toString());
         }
         setNewCompanyName("");
-        setIsAddingCompany(false);
+        setIsCompanyDialogOpen(false);
       } else {
         toast.error(result.response_message || "Failed to create company");
       }
@@ -247,20 +258,6 @@ export default function ProductPage() {
   };
 
   const onSubmit = async (data) => {
-    // Get default values for required fields
-    const defaultUnit = units.length > 0 ? units[0].prounit_id : null;
-    const defaultGroup = productGroups.length > 0 ? productGroups[0].pgroup_id : null;
-
-    if (!defaultUnit) {
-      toast.error("No units available. Please add a unit first.");
-      return;
-    }
-
-    if (!defaultGroup) {
-      toast.error("No product groups available. Please add a product group first.");
-      return;
-    }
-
     const payload = {
       req_object: {
         product_title: data.product_title.trim(),
@@ -268,12 +265,8 @@ export default function ProductPage() {
         company_id: parseInt(data.company_id),
         sale_price: parseFloat(data.sale_price) || 0,
         purchase_price: parseFloat(data.sale_price) || 0, // Using sale_price as default
-        prounit_id: defaultUnit,
-        pgroup_id: defaultGroup,
-        packing: 1, // Default packing
-        insert_by: "user",
-        update_by: "user",
-        status: 1,
+        prounit_id: null, // Optional
+        pgroup_id: null, // Optional
         ...(isEditMode && { product_id: editingProductId }),
       },
     };
@@ -420,70 +413,70 @@ export default function ProductPage() {
                     control={control}
                     rules={{ required: "Category is required" }}
                     render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.procategory_id} value={category.procategory_id.toString()}>
-                              {category.procategory_nam}
-                            </SelectItem>
-                          ))}
-                          <SelectItem
-                            value="__add_new__"
-                            onSelect={() => setIsAddingCategory(true)}
-                            className="text-primary font-semibold"
+                      <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={categoryOpen}
+                            className="flex-1 justify-between"
                           >
-                            <PlusCircle className="h-4 w-4 inline mr-2" />
-                            Add New Category
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                            {field.value
+                              ? categories.find(
+                                  (category) => category.procategory_id.toString() === field.value
+                                )?.procategory_nam || "Select category"
+                              : "Select category"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search category..." />
+                            <CommandList>
+                              <CommandEmpty>No category found.</CommandEmpty>
+                              <CommandGroup>
+                                {categories.map((category) => (
+                                  <CommandItem
+                                    key={category.procategory_id}
+                                    value={`${category.procategory_id}-${category.procategory_nam}`}
+                                    onSelect={() => {
+                                      field.onChange(category.procategory_id.toString());
+                                      setCategoryOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.value === category.procategory_id.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {category.procategory_nam}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     )}
                   />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsCategoryDialogOpen(true)}
+                    className="shrink-0"
+                    title="Add new category"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
                 {errors.procategory_id && (
                   <p className="text-sm text-destructive">
                     {errors.procategory_id.message}
                   </p>
-                )}
-                {isAddingCategory && (
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      placeholder="Enter new category name"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddCategory();
-                        }
-                      }}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      onClick={handleAddCategory}
-                      size="sm"
-                    >
-                      Add
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsAddingCategory(false);
-                        setNewCategoryName("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
                 )}
               </div>
 
@@ -496,70 +489,70 @@ export default function ProductPage() {
                     control={control}
                     rules={{ required: "Company is required" }}
                     render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Select company" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {companies.map((company) => (
-                            <SelectItem key={company.company_id} value={company.company_id.toString()}>
-                              {company.company_nam}
-                            </SelectItem>
-                          ))}
-                          <SelectItem
-                            value="__add_new__"
-                            onSelect={() => setIsAddingCompany(true)}
-                            className="text-primary font-semibold"
+                      <Popover open={companyOpen} onOpenChange={setCompanyOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={companyOpen}
+                            className="flex-1 justify-between"
                           >
-                            <PlusCircle className="h-4 w-4 inline mr-2" />
-                            Add New Company
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                            {field.value
+                              ? companies.find(
+                                  (company) => company.company_id.toString() === field.value
+                                )?.company_nam || "Select company"
+                              : "Select company"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search company..." />
+                            <CommandList>
+                              <CommandEmpty>No company found.</CommandEmpty>
+                              <CommandGroup>
+                                {companies.map((company) => (
+                                  <CommandItem
+                                    key={company.company_id}
+                                    value={`${company.company_id}-${company.company_nam}`}
+                                    onSelect={() => {
+                                      field.onChange(company.company_id.toString());
+                                      setCompanyOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.value === company.company_id.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {company.company_nam}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     )}
                   />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsCompanyDialogOpen(true)}
+                    className="shrink-0"
+                    title="Add new company"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
                 {errors.company_id && (
                   <p className="text-sm text-destructive">
                     {errors.company_id.message}
                   </p>
-                )}
-                {isAddingCompany && (
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      placeholder="Enter new company name"
-                      value={newCompanyName}
-                      onChange={(e) => setNewCompanyName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddCompany();
-                        }
-                      }}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      onClick={handleAddCompany}
-                      size="sm"
-                    >
-                      Add
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsAddingCompany(false);
-                        setNewCompanyName("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
                 )}
               </div>
 
@@ -731,6 +724,102 @@ export default function ProductPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Category Dialog */}
+      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Category</DialogTitle>
+            <DialogDescription>
+              Create a new product category.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="dialog_category_name">Category Name *</Label>
+              <Input
+                id="dialog_category_name"
+                placeholder="Enter category name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddCategory();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsCategoryDialogOpen(false);
+                setNewCategoryName("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddCategory}
+              disabled={!newCategoryName.trim()}
+            >
+              Add Category
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Company Dialog */}
+      <Dialog open={isCompanyDialogOpen} onOpenChange={setIsCompanyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Company</DialogTitle>
+            <DialogDescription>
+              Create a new company.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="dialog_company_name">Company Name *</Label>
+              <Input
+                id="dialog_company_name"
+                placeholder="Enter company name"
+                value={newCompanyName}
+                onChange={(e) => setNewCompanyName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddCompany();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsCompanyDialogOpen(false);
+                setNewCompanyName("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddCompany}
+              disabled={!newCompanyName.trim()}
+            >
+              Add Company
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

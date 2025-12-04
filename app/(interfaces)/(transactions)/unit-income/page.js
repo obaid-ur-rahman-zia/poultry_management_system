@@ -50,7 +50,7 @@ export default function UnitSalePage() {
     } = useForm({
         defaultValues: {
             sale_date: new Date().toISOString().split('T')[0],
-            farm_id: "",
+            prounit_id: "",
             floc_id: "",
             farm_rate: "",
             sale_rate: "",
@@ -69,7 +69,7 @@ export default function UnitSalePage() {
     const [loading, setLoading] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingSaleId, setEditingSaleId] = useState(null);
-    const [farms, setFarms] = useState([]);
+    const [units, setUnits] = useState([]);
     const [flocs, setFlocs] = useState([]);
     const [products, setProducts] = useState([]);
     const [availableFlocs, setAvailableFlocs] = useState([]);
@@ -80,11 +80,11 @@ export default function UnitSalePage() {
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
-    const [filterFarm, setFilterFarm] = useState("all");
+    const [filterUnit, setFilterUnit] = useState("all");
     const [filterFloc, setFilterFloc] = useState("all");
     const [filterDate, setFilterDate] = useState("");
 
-    const selectedFarm = watch("farm_id");
+    const selectedUnit = watch("prounit_id");
     const selectedFloc = watch("floc_id");
     const saleDate = watch("sale_date");
     const farmRate = watch("farm_rate");
@@ -98,29 +98,32 @@ export default function UnitSalePage() {
     const discountValue = watch("discount_value");
 
     useEffect(() => {
-        fetchFarms();
+        fetchUnits();
         fetchProducts();
         fetchSales();
+        // Set current date if not already set
+        const currentDate = new Date().toISOString().split('T')[0];
+        setValue("sale_date", currentDate);
     }, []);
 
     useEffect(() => {
-        if (selectedFarm) {
-            fetchFlocsByFarm(selectedFarm);
+        if (selectedUnit) {
+            fetchFlocsByUnit(selectedUnit);
         } else {
             setAvailableFlocs([]);
             setValue("floc_id", "");
         }
-    }, [selectedFarm]);
+    }, [selectedUnit]);
 
     useEffect(() => {
         // Check if F.S Rate is already set for today
-        if (selectedFarm && selectedFloc && saleDate) {
+        if (selectedUnit && selectedFloc && saleDate) {
             checkFsRateForToday();
         } else {
             setFsRateSet(false);
             setFsRateEditable(true);
         }
-    }, [selectedFarm, selectedFloc, saleDate]);
+    }, [selectedUnit, selectedFloc, saleDate]);
 
     useEffect(() => {
         // If product is "chick", apply farm rate as price
@@ -132,26 +135,27 @@ export default function UnitSalePage() {
         }
     }, [selectedProduct, farmRate, products]);
 
-    const fetchFarms = async () => {
+    const fetchUnits = async () => {
         try {
-            const response = await fetch("/api/farm/readAll");
+            const response = await fetch("/api/unit/readAll");
             const result = await response.json();
             if (result.response_status === "success") {
-                const farmsData = result.response_result?.data || result.response_result || [];
-                setFarms(farmsData);
+                const unitsData = result.response_result?.data || result.response_result || [];
+                setUnits(Array.isArray(unitsData) ? unitsData : []);
             }
         } catch (error) {
-            console.error("Error fetching farms:", error);
+            console.error("Error fetching units:", error);
+            setUnits([]);
         }
     };
 
-    const fetchFlocsByFarm = async (farmId) => {
+    const fetchFlocsByUnit = async (prounitId) => {
         try {
-            const response = await fetch(`/api/floc/readByFarmId?farm_id=${farmId}`);
+            const response = await fetch(`/api/floc/readByFarmId?farm_id=${prounitId}`);
             const result = await response.json();
             if (result.response_status === "success") {
                 const flocsData = result.response_result?.data || result.response_result || [];
-                setAvailableFlocs(flocsData);
+                setAvailableFlocs(Array.isArray(flocsData) ? flocsData : []);
             }
         } catch (error) {
             console.error("Error fetching flocs:", error);
@@ -187,7 +191,7 @@ export default function UnitSalePage() {
     const checkFsRateForToday = async () => {
         try {
             const response = await fetch(
-                `/api/unitSale/checkFsRate?farm_id=${selectedFarm}&floc_id=${selectedFloc}&sale_date=${saleDate}`
+                `/api/unitSale/checkFsRate?prounit_id=${selectedUnit}&floc_id=${selectedFloc}&sale_date=${saleDate}`
             );
             const result = await response.json();
             if (result.response_status === "success") {
@@ -212,7 +216,7 @@ export default function UnitSalePage() {
     const fetchPreviousFsRates = async () => {
         try {
             const response = await fetch(
-                `/api/unitSale/previousFsRates?farm_id=${selectedFarm}&floc_id=${selectedFloc}`
+                `/api/unitSale/previousFsRates?prounit_id=${selectedUnit}&floc_id=${selectedFloc}`
             );
             const result = await response.json();
             if (result.response_status === "success") {
@@ -244,11 +248,11 @@ export default function UnitSalePage() {
     };
 
     const handleOpenFsRateHistory = () => {
-        if (selectedFarm && selectedFloc) {
+        if (selectedUnit && selectedFloc) {
             fetchPreviousFsRates();
             setIsFsRateHistoryOpen(true);
         } else {
-            toast.error("Please select farm and floc first");
+            toast.error("Please select unit and floc first");
         }
     };
 
@@ -283,7 +287,7 @@ export default function UnitSalePage() {
     };
 
     const onSubmit = async (data) => {
-        if (!data.farm_id || !data.floc_id || !data.product_id || !data.price || !data.quantity) {
+        if (!data.prounit_id || !data.floc_id || !data.product_id || !data.price || !data.quantity) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -299,7 +303,7 @@ export default function UnitSalePage() {
         const payload = {
             req_object: {
                 sale_date: data.sale_date,
-                farm_id: parseInt(data.farm_id),
+                prounit_id: parseInt(data.prounit_id),
                 floc_id: parseInt(data.floc_id),
                 farm_rate: data.farm_rate ? parseFloat(data.farm_rate) : null,
                 sale_rate: data.sale_rate ? parseFloat(data.sale_rate) : null,
@@ -337,7 +341,7 @@ export default function UnitSalePage() {
                 }
                 reset({
                     sale_date: new Date().toISOString().split('T')[0],
-                    farm_id: "",
+                    prounit_id: "",
                     floc_id: "",
                     farm_rate: "",
                     sale_rate: "",
@@ -367,9 +371,10 @@ export default function UnitSalePage() {
     const handleEdit = (sale) => {
         setIsEditMode(true);
         setEditingSaleId(sale.sale_id);
+        const prounitId = (sale.prounit_id || sale.farm_id || sale.unit?.prounit_id)?.toString() || "";
         reset({
             sale_date: sale.sale_date ? new Date(sale.sale_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            farm_id: sale.farm_id?.toString() || "",
+            prounit_id: prounitId,
             floc_id: sale.floc_id?.toString() || "",
             farm_rate: sale.farm_rate?.toString() || "",
             sale_rate: sale.sale_rate?.toString() || "",
@@ -384,6 +389,10 @@ export default function UnitSalePage() {
         });
         setFsRateSet(true);
         setFsRateEditable(false);
+        // Fetch flocs for the selected unit
+        if (prounitId) {
+            fetchFlocsByUnit(prounitId);
+        }
     };
 
     const handleDelete = async (saleId) => {
@@ -410,13 +419,16 @@ export default function UnitSalePage() {
 
     // Filter sales
     const filteredSales = sales.filter((sale) => {
+        const prounitId = sale.prounit_id || sale.farm_id || sale.unit?.prounit_id;
+        const unitName = sale.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === prounitId)?.prounit_nam);
+
         const matchesSearch = searchQuery === "" ||
             sale.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (Array.isArray(farms) && farms.find(f => f.farm_id === sale.farm_id)?.farm_nam?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            unitName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (Array.isArray(products) && products.find(p => p.product_id === sale.product_id)?.product_title?.toLowerCase().includes(searchQuery.toLowerCase()));
 
-        const matchesFarm = filterFarm === "all" ||
-            sale.farm_id?.toString() === filterFarm;
+        const matchesUnit = filterUnit === "all" ||
+            prounitId?.toString() === filterUnit;
 
         const matchesFloc = filterFloc === "all" ||
             sale.floc_id?.toString() === filterFloc;
@@ -424,7 +436,7 @@ export default function UnitSalePage() {
         const matchesDate = filterDate === "" ||
             (sale.sale_date && new Date(sale.sale_date).toISOString().split('T')[0] === filterDate);
 
-        return matchesSearch && matchesFarm && matchesFloc && matchesDate;
+        return matchesSearch && matchesUnit && matchesFloc && matchesDate;
     });
 
     const totalAmount = calculateTotal();
@@ -435,6 +447,64 @@ export default function UnitSalePage() {
             <Card className={"max-w-5xl mx-auto"}>
                 <CardContent>
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="unit-sale-form">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 ">
+
+                            {/* F.S Rate (Combined Farm Rate and Sale Rate) */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <Label>F.S Rate *</Label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleOpenFsRateHistory}
+                                        disabled={!selectedUnit || !selectedFloc}
+                                    >
+                                        <History className="h-4 w-4 mr-1" />
+                                        {/* Previous */}
+                                    </Button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1">
+                                        <Input
+                                            id="farm_rate"
+                                            type="number"
+                                            step="0.01"
+                                            {...register("farm_rate", {
+                                                required: !fsRateSet ? "Farm Rate is required" : false,
+                                            })}
+                                            placeholder="0.00"
+                                            disabled={!fsRateEditable}
+                                            className={!fsRateEditable ? "bg-muted" : ""}
+                                        />
+                                    </div>
+                                    <span className="text-muted-foreground font-medium">/</span>
+                                    <div className="flex-1">
+                                        <Input
+                                            id="sale_rate"
+                                            type="number"
+                                            step="0.01"
+                                            {...register("sale_rate", {
+                                                required: !fsRateSet ? "Sale Rate is required" : false,
+                                            })}
+                                            placeholder="0.00"
+                                            disabled={!fsRateEditable}
+                                            className={!fsRateEditable ? "bg-muted" : ""}
+                                        />
+                                    </div>
+                                    {/* <span className="text-muted-foreground font-medium text-sm">, F.S</span> */}
+                                </div>
+                                {(errors.farm_rate || errors.sale_rate) && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.farm_rate?.message || errors.sale_rate?.message}
+                                    </p>
+                                )}
+                                {/* {!fsRateEditable && (
+                                    <p className="text-xs text-muted-foreground">F.S Rate is set for today and cannot be edited</p>
+                                )} */}
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             {/* Date */}
                             <div className="space-y-2">
@@ -442,6 +512,7 @@ export default function UnitSalePage() {
                                 <Input
                                     id="sale_date"
                                     type="date"
+                                    defaultValue={new Date().toISOString().split('T')[0]}
                                     {...register("sale_date", {
                                         required: "Date is required",
                                     })}
@@ -453,34 +524,34 @@ export default function UnitSalePage() {
                                 )}
                             </div>
 
-                            {/* Farm Selection */}
+                            {/* Unit Selection */}
                             <div className="space-y-2">
-                                <Label htmlFor="farm_id">Unit (Farm) *</Label>
+                                <Label htmlFor="prounit_id">Unit *</Label>
                                 <Controller
-                                    name="farm_id"
+                                    name="prounit_id"
                                     control={control}
-                                    rules={{ required: "Farm is required" }}
+                                    rules={{ required: "Unit is required" }}
                                     render={({ field }) => (
                                         <Select
                                             value={field.value}
                                             onValueChange={field.onChange}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select farm" />
+                                                <SelectValue placeholder="Select unit" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {farms.map((farm) => (
-                                                    <SelectItem key={farm.farm_id} value={farm.farm_id.toString()}>
-                                                        {farm.farm_nam}
+                                                {Array.isArray(units) && units.map((unit) => (
+                                                    <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
+                                                        {unit.prounit_nam}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     )}
                                 />
-                                {errors.farm_id && (
+                                {errors.prounit_id && (
                                     <p className="text-sm text-destructive">
-                                        {errors.farm_id.message}
+                                        {errors.prounit_id.message}
                                     </p>
                                 )}
                             </div>
@@ -496,7 +567,7 @@ export default function UnitSalePage() {
                                         <Select
                                             value={field.value}
                                             onValueChange={field.onChange}
-                                            disabled={!selectedFarm || availableFlocs.length === 0}
+                                            disabled={!selectedUnit || availableFlocs.length === 0}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select floc" />
@@ -516,67 +587,11 @@ export default function UnitSalePage() {
                                         {errors.floc_id.message}
                                     </p>
                                 )}
-                                {!selectedFarm && (
-                                    <p className="text-xs text-muted-foreground">Please select a farm first</p>
+                                {!selectedUnit && (
+                                    <p className="text-xs text-muted-foreground">Please select a unit first</p>
                                 )}
                             </div>
 
-                            {/* F.S Rate Section */}
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor="farm_rate">F.S Rate - Farm Rate *</Label>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={handleOpenFsRateHistory}
-                                        disabled={!selectedFarm || !selectedFloc}
-                                    >
-                                        <History className="h-4 w-4 mr-1" />
-                                        {/* Previous Rates */}
-                                    </Button>
-                                </div>
-                                <Input
-                                    id="farm_rate"
-                                    type="number"
-                                    step="0.01"
-                                    {...register("farm_rate", {
-                                        required: !fsRateSet ? "Farm Rate is required" : false,
-                                    })}
-                                    placeholder="0.00"
-                                    disabled={!fsRateEditable}
-                                    className={!fsRateEditable ? "bg-muted" : ""}
-                                />
-                                {errors.farm_rate && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.farm_rate.message}
-                                    </p>
-                                )}
-                                {!fsRateEditable && (
-                                    <p className="text-xs text-muted-foreground">F.S Rate is set for today and cannot be edited</p>
-                                )}
-                            </div>
-
-                            {/* Sale Rate */}
-                            <div className="space-y-2">
-                                <Label htmlFor="sale_rate">F.S Rate - Sale Rate *</Label>
-                                <Input
-                                    id="sale_rate"
-                                    type="number"
-                                    step="0.01"
-                                    {...register("sale_rate", {
-                                        required: !fsRateSet ? "Sale Rate is required" : false,
-                                    })}
-                                    placeholder="0.00"
-                                    disabled={!fsRateEditable}
-                                    className={!fsRateEditable ? "bg-muted" : ""}
-                                />
-                                {errors.sale_rate && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.sale_rate.message}
-                                    </p>
-                                )}
-                            </div>
 
                             {/* Product Selection */}
                             <div className="space-y-2">
@@ -609,6 +624,8 @@ export default function UnitSalePage() {
                                     </p>
                                 )}
                             </div>
+
+
 
                             {/* Price */}
                             <div className="space-y-2">
@@ -727,17 +744,17 @@ export default function UnitSalePage() {
                                     </p>
                                 </div>
                             </div>
+                            {/* Description */}
+                            <div className="space-y-2 col-span-4">
+                                <Label htmlFor="description">Description</Label>
+                                <Input
+                                    id="description"
+                                    {...register("description")}
+                                    placeholder="Enter description"
+                                />
+                            </div>
                         </div>
 
-                        {/* Description */}
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Input
-                                id="description"
-                                {...register("description")}
-                                placeholder="Enter description"
-                            />
-                        </div>
 
                         <div className="flex justify-end gap-2">
                             <Button
@@ -746,7 +763,7 @@ export default function UnitSalePage() {
                                 onClick={() => {
                                     reset({
                                         sale_date: new Date().toISOString().split('T')[0],
-                                        farm_id: "",
+                                        prounit_id: "",
                                         floc_id: "",
                                         farm_rate: "",
                                         sale_rate: "",
@@ -795,16 +812,16 @@ export default function UnitSalePage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Farm</Label>
-                                <Select value={filterFarm} onValueChange={setFilterFarm}>
+                                <Label>Unit</Label>
+                                <Select value={filterUnit} onValueChange={setFilterUnit}>
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Farms</SelectItem>
-                                        {farms.map((farm) => (
-                                            <SelectItem key={farm.farm_id} value={farm.farm_id.toString()}>
-                                                {farm.farm_nam}
+                                        <SelectItem value="all">All Units</SelectItem>
+                                        {Array.isArray(units) && units.map((unit) => (
+                                            <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
+                                                {unit.prounit_nam}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -835,7 +852,7 @@ export default function UnitSalePage() {
                                 <thead className="sticky top-0 bg-background z-20 border-b-2">
                                     <tr className="border-b">
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Farm</th>
+                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Floc</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">F.S Rate</th>
@@ -852,7 +869,7 @@ export default function UnitSalePage() {
                                                 {sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : "N/A"}
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
-                                                {farms.find(f => f.farm_id === sale.farm_id)?.farm_nam || "N/A"}
+                                                {sale.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (sale.prounit_id || sale.farm_id))?.prounit_nam) || "N/A"}
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
                                                 Floc #{sale.floc_id}
@@ -861,7 +878,7 @@ export default function UnitSalePage() {
                                                 {Array.isArray(products) && products.find(p => p.product_id === sale.product_id)?.product_title || "N/A"}
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
-                                                {sale.farm_rate && sale.sale_rate 
+                                                {sale.farm_rate && sale.sale_rate
                                                     ? `${sale.farm_rate} / ${sale.sale_rate}`
                                                     : "N/A"}
                                             </td>

@@ -109,13 +109,10 @@ class ProductController {
       const { req_object } = await req.json();
       const required = [
         "product_title",
-        "prounit_id",
         "procategory_id",
         "company_id",
-        "pgroup_id",
         "purchase_price",
         "sale_price",
-        "packing",
       ];
 
       for (const field of required) {

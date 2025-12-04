@@ -10,7 +10,8 @@ class TradingController {
       const cachedData = await RedisService.get(cacheKey);
       if (cachedData) {
         console.log("Trading Cache Hit");
-        return successResponse(JSON.parse(cachedData), "Success");
+        // RedisService.get() already parses JSON, so no need to parse again
+        return successResponse(cachedData, "Success");
       }
       console.log("Trading Cache Miss");
       const data = await TradingRepository.readAll();

@@ -10,7 +10,8 @@ class UnitExpenseController {
       const cachedData = await RedisService.get(cacheKey);
       if (cachedData) {
         console.log("Unit Expense Cache Hit");
-        return successResponse(JSON.parse(cachedData), "Success");
+        // RedisService.get() already parses JSON, so no need to parse again
+        return successResponse(cachedData, "Success");
       }
       console.log("Unit Expense Cache Miss");
       const data = await UnitExpenseRepository.readAll();
@@ -61,11 +62,13 @@ class UnitExpenseController {
   async create(req) {
     try {
       const { req_object } = await req.json();
-      const { expense_date, farm_id, floc_id, product_id, price, quantity, total } = req_object;
+      // Support both prounit_id and farm_id for backward compatibility
+      const prounit_id = req_object.prounit_id || req_object.farm_id;
+      const { expense_date, floc_id, product_id, price, quantity, total } = req_object;
 
-      if (!expense_date || !farm_id || !floc_id || !product_id || !price || !quantity) {
+      if (!expense_date || !prounit_id || !floc_id || !product_id || !price || !quantity) {
         const error = new Error(
-          "expense_date, farm_id, floc_id, product_id, price, and quantity are required in Method: UnitExpenseController.create"
+          "expense_date, prounit_id (or farm_id), floc_id, product_id, price, and quantity are required in Method: UnitExpenseController.create"
         );
         ErrorLogger.log(
           "Failed to create unit expense in Method: UnitExpenseController.create",
@@ -76,7 +79,7 @@ class UnitExpenseController {
 
       const result = await UnitExpenseRepository.create({
         expense_date,
-        farm_id: Number(farm_id),
+        prounit_id: Number(prounit_id),
         floc_id: Number(floc_id),
         product_id: Number(product_id),
         price: Number(price),
@@ -122,9 +125,12 @@ class UnitExpenseController {
         return errorResponse(error, 400);
       }
 
+      // Support both prounit_id and farm_id for backward compatibility
+      const prounit_id = req_object.prounit_id || req_object.farm_id;
+      
       const result = await UnitExpenseRepository.update(expense_id, {
         ...req_object,
-        farm_id: req_object.farm_id ? Number(req_object.farm_id) : undefined,
+        prounit_id: prounit_id !== undefined ? Number(prounit_id) : undefined,
         floc_id: req_object.floc_id ? Number(req_object.floc_id) : undefined,
         product_id: req_object.product_id ? Number(req_object.product_id) : undefined,
         price: req_object.price ? Number(req_object.price) : undefined,

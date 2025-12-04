@@ -2,7 +2,11 @@
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import UserRepository from "@/app/repositories/user/userRepository";
+import AccountsRepository from "@/app/repositories/account/accounts/accountsRepository";
+import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/accountSubHeadRepository";
+import RedisService from "@/app/utils/redis";
 import bcrypt from "bcryptjs";
+import prisma from "@/lib/prisma";
 
 class UserController {
   // ✅ Read all User receives
@@ -47,12 +51,80 @@ class UserController {
 
       const hashedPassword = await bcrypt.hash(req_object.password, 10);
 
-      const user = await UserRepository.create(
-        { ...req_object, password: hashedPassword }
-      );
+      // Use transaction to create user and Cash In Hand account together
+      const result = await prisma.$transaction(async (tx) => {
+        // Create user
+        const user = await UserRepository.create(
+          { ...req_object, password: hashedPassword },
+          tx
+        );
+
+        // Find or create "Cash In Hand" subhead
+        let cashInHandSubhead = await AccountSubHeadRepository.findByName("Cash In Hand");
+        
+        if (!cashInHandSubhead) {
+          // Get the first head_id (usually 1 for "Main Head")
+          const firstHead = await tx.account_head.findFirst({
+            orderBy: { head_id: "asc" },
+          });
+          
+          if (firstHead) {
+            // Get max subhead_id for this head
+            const maxSubhead = await tx.account_sub_head.findFirst({
+              where: { head_id: firstHead.head_id },
+              orderBy: { subhead_id: "desc" },
+              select: { subhead_id: true },
+            });
+            const nextSubheadId = maxSubhead ? maxSubhead.subhead_id + 1 : 1;
+            
+            // Create Cash In Hand subhead
+            cashInHandSubhead = await tx.account_sub_head.create({
+              data: {
+                head_id: firstHead.head_id,
+                subhead_id: nextSubheadId,
+                subhead_nam: "Cash In Hand",
+                is_parent: 0,
+                parent_sub_id: null,
+                insert_by: "system",
+                update_by: "system",
+                status: 1,
+              },
+            });
+          }
+        }
+        
+        // Create Cash In Hand account if subhead exists (MANDATORY)
+        if (!cashInHandSubhead) {
+          throw new Error("Cash In Hand subhead not found. Cannot create user without Cash In Hand account.");
+        }
+
+        // Create Cash In Hand account with user's name (MANDATORY)
+        const accountName = `CIH Account (${req_object.user_nam})`;
+        
+        const cashInHandAccount = await AccountsRepository.create({
+          head_id: cashInHandSubhead.head_id,
+          sub_id: cashInHandSubhead.sub_id,
+          account_nam: accountName,
+          insert_by: "system",
+          update_by: "system",
+          status: 1,
+        }, tx);
+        
+        // Link the account to the user (MANDATORY)
+        await tx.user.update({
+          where: { user_id: user.user_id },
+          data: { cash_in_hand_account_id: cashInHandAccount.acc_id },
+        });
+
+        return { ...user, cash_in_hand_account: cashInHandAccount };
+      });
+
+      // Clear caches
+      await RedisService.del("accounts:all");
+      await RedisService.del("accountSubHeads:all");
 
       return successResponse(
-        { user },
+        { user: result },
         `User created successfully with "${req_object.role}" role`
       );
     } catch (err) {

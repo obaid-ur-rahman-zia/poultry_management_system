@@ -24,8 +24,6 @@ class FarmRepository {
         farm_nam: data.farm_nam.trim(),
         capacity: data.capacity ? Number(data.capacity) : null,
         address: data.address || null,
-        insert_by: data.insert_by || "user 1",
-        update_by: data.update_by || "user 1",
         status: data.status ?? 1,
       },
     });
@@ -49,7 +47,6 @@ class FarmRepository {
         farm_nam: req_object.farm_nam?.trim(),
         capacity: req_object.capacity !== undefined ? (req_object.capacity ? Number(req_object.capacity) : null) : undefined,
         address: req_object.address !== undefined ? req_object.address : undefined,
-        update_by: req_object.update_by || "user 1",
         status: req_object.status ?? 1,
       },
     });

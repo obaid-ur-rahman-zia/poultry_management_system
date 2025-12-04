@@ -1,8 +1,10 @@
 import AccountsRepository from "@/app/repositories/account/accounts/accountsRepository";
+import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/accountSubHeadRepository";
 import TransactionRepository from "@/app/repositories/transaction/transactionRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
+import { validateCreditLimitVsOpeningBalance } from "@/app/utils/creditLimitValidator";
 import prisma from "@/lib/prisma";
 
 class AccountsController {
@@ -135,6 +137,23 @@ class AccountsController {
         return errorResponse(error, 400);
       }
 
+      // Validate credit limit vs opening balance
+      const openingBalance = req_object.opening_balance;
+      const balanceType = req_object.balance_type || "credit";
+      const creditLimit = req_object.credit_limit;
+      
+      if (openingBalance !== undefined && openingBalance !== null && openingBalance !== 0) {
+        const validation = validateCreditLimitVsOpeningBalance(creditLimit, openingBalance, balanceType);
+        if (!validation.valid) {
+          const error = new Error(validation.message);
+          ErrorLogger.log(
+            "Failed to create account - credit limit validation failed in Method: AccountsController.create",
+            error
+          );
+          return errorResponse(error, 400);
+        }
+      }
+
       // Use transaction to ensure both account and transaction are created together
       const result = await prisma.$transaction(async (tx) => {
         const createdAccount = await AccountsRepository.create({
@@ -153,24 +172,103 @@ class AccountsController {
           status: req_object.status,
         }, tx);
 
-        // Create transaction if opening balance is provided and not zero
+        // Create double-entry transactions if opening balance is provided and not zero
         const openingBalance = req_object.opening_balance;
+        const balanceType = req_object.balance_type || "credit"; // "debit" or "credit"
+        
         if (openingBalance !== undefined && openingBalance !== null && openingBalance !== 0) {
-          const isDebit = openingBalance < 0;
           const absoluteBalance = Math.abs(openingBalance);
-
-          await TransactionRepository.create({
-            acc_id: createdAccount.acc_id,
-            reference_id: createdAccount.acc_id,
-            reference: "Opening Balance",
-            debit: isDebit ? absoluteBalance : 0,
-            credit: isDebit ? 0 : absoluteBalance,
-            remarks: `Opening balance for account: ${account_nam.trim()}`,
-            financial_year: new Date().getFullYear().toString(),
-            voucher_type: "Opening Balance",
-            insert_by: req_object.insert_by || "user 1",
-            update_by: req_object.update_by || "user 1",
-          }, tx);
+          const isDebit = balanceType === "debit";
+          
+          // Find or create "Opening Balance" account
+          // First, find the "Opening Balance" subhead (or create if needed)
+          let openingBalanceSubhead = await AccountSubHeadRepository.findByName("Opening Balance");
+          let openingBalanceAccount = null;
+          
+          if (!openingBalanceSubhead) {
+            // Get the first head_id (usually 1 for "Main Head")
+            const firstHead = await tx.account_head.findFirst({
+              orderBy: { head_id: "asc" },
+            });
+            
+            if (firstHead) {
+              // Create Opening Balance subhead
+              const maxSubhead = await tx.account_sub_head.findFirst({
+                where: { head_id: firstHead.head_id },
+                orderBy: { subhead_id: "desc" },
+                select: { subhead_id: true },
+              });
+              const nextSubheadId = maxSubhead ? maxSubhead.subhead_id + 1 : 1;
+              
+              openingBalanceSubhead = await tx.account_sub_head.create({
+                data: {
+                  head_id: firstHead.head_id,
+                  subhead_id: nextSubheadId,
+                  subhead_nam: "Opening Balance",
+                  is_parent: 0,
+                  parent_sub_id: null,
+                  insert_by: "system",
+                  update_by: "system",
+                  status: 1,
+                },
+              });
+            }
+          }
+          
+          if (openingBalanceSubhead) {
+            // Find or create Opening Balance account
+            openingBalanceAccount = await AccountsRepository.findOrCreateByAccountNameAndSubheadName(
+              "Opening Balance",
+              "Opening Balance",
+              openingBalanceSubhead.head_id,
+              openingBalanceSubhead.sub_id,
+              tx
+            );
+          }
+          
+          if (openingBalanceAccount) {
+            // Transaction 1: Opening Balance account
+            await TransactionRepository.create({
+              acc_id: openingBalanceAccount.acc_id,
+              reference_id: createdAccount.acc_id,
+              reference: "Opening Balance",
+              debit: isDebit ? absoluteBalance : 0,
+              credit: isDebit ? 0 : absoluteBalance,
+              remarks: `Opening balance for account: ${account_nam.trim()}`,
+              financial_year: new Date().getFullYear().toString(),
+              voucher_type: "Opening Balance",
+              insert_by: req_object.insert_by || "user 1",
+              update_by: req_object.update_by || "user 1",
+            }, tx);
+            
+            // Transaction 2: New account (inverse)
+            await TransactionRepository.create({
+              acc_id: createdAccount.acc_id,
+              reference_id: createdAccount.acc_id,
+              reference: "Opening Balance",
+              debit: isDebit ? 0 : absoluteBalance,
+              credit: isDebit ? absoluteBalance : 0,
+              remarks: `Opening balance for account: ${account_nam.trim()}`,
+              financial_year: new Date().getFullYear().toString(),
+              voucher_type: "Opening Balance",
+              insert_by: req_object.insert_by || "user 1",
+              update_by: req_object.update_by || "user 1",
+            }, tx);
+          } else {
+            // Fallback: Create single transaction if Opening Balance account not found/created
+            await TransactionRepository.create({
+              acc_id: createdAccount.acc_id,
+              reference_id: createdAccount.acc_id,
+              reference: "Opening Balance",
+              debit: isDebit ? absoluteBalance : 0,
+              credit: isDebit ? 0 : absoluteBalance,
+              remarks: `Opening balance for account: ${account_nam.trim()}`,
+              financial_year: new Date().getFullYear().toString(),
+              voucher_type: "Opening Balance",
+              insert_by: req_object.insert_by || "user 1",
+              update_by: req_object.update_by || "user 1",
+            }, tx);
+          }
         }
 
         return createdAccount;
@@ -253,15 +351,33 @@ class AccountsController {
         return errorResponse(error, 400);
       }
 
+      // Validate credit limit vs opening balance
+      const openingBalance = req_object.opening_balance;
+      const balanceType = req_object.balance_type || "credit";
+      const creditLimit = req_object.credit_limit !== undefined ? req_object.credit_limit : currentAccount.credit_limit;
+      
+      if (openingBalance !== undefined && openingBalance !== null && openingBalance !== 0) {
+        const validation = validateCreditLimitVsOpeningBalance(creditLimit, openingBalance, balanceType);
+        if (!validation.valid) {
+          const error = new Error(validation.message);
+          ErrorLogger.log(
+            "Failed to update account - credit limit validation failed in Method: AccountsController.update",
+            error
+          );
+          return errorResponse(error, 400);
+        }
+      }
+
       // Use transaction to ensure both account and transaction are updated together
       const result = await prisma.$transaction(async (tx) => {
         const updated = await AccountsRepository.update(acc_id, req_object, tx);
 
-        // Handle opening balance transaction
+        // Handle opening balance transaction (double-entry)
         const openingBalance = req_object.opening_balance;
+        const balanceType = req_object.balance_type || "credit";
         
-        // Find existing opening balance transaction
-        const existingTransaction = await tx.transaction.findFirst({
+        // Find existing opening balance transactions (both accounts)
+        const existingAccountTransaction = await tx.transaction.findFirst({
           where: {
             acc_id: Number(acc_id),
             reference_id: Number(acc_id),
@@ -271,44 +387,194 @@ class AccountsController {
         });
 
         if (openingBalance !== undefined && openingBalance !== null && openingBalance !== 0) {
-          const isDebit = openingBalance < 0;
           const absoluteBalance = Math.abs(openingBalance);
-
-          if (existingTransaction) {
-            // Update existing transaction
-            await tx.transaction.update({
-              where: { t_id: existingTransaction.t_id },
-              data: {
+          const isDebit = balanceType === "debit";
+          
+          // Find or create "Opening Balance" account
+          let openingBalanceSubhead = await AccountSubHeadRepository.findByName("Opening Balance");
+          let openingBalanceAccount = null;
+          
+          if (!openingBalanceSubhead) {
+            const firstHead = await tx.account_head.findFirst({
+              orderBy: { head_id: "asc" },
+            });
+            
+            if (firstHead) {
+              const maxSubhead = await tx.account_sub_head.findFirst({
+                where: { head_id: firstHead.head_id },
+                orderBy: { subhead_id: "desc" },
+                select: { subhead_id: true },
+              });
+              const nextSubheadId = maxSubhead ? maxSubhead.subhead_id + 1 : 1;
+              
+              openingBalanceSubhead = await tx.account_sub_head.create({
+                data: {
+                  head_id: firstHead.head_id,
+                  subhead_id: nextSubheadId,
+                  subhead_nam: "Opening Balance",
+                  is_parent: 0,
+                  parent_sub_id: null,
+                  insert_by: "system",
+                  update_by: "system",
+                  status: 1,
+                },
+              });
+            }
+          }
+          
+          if (openingBalanceSubhead) {
+            openingBalanceAccount = await AccountsRepository.findOrCreateByAccountNameAndSubheadName(
+              "Opening Balance",
+              "Opening Balance",
+              openingBalanceSubhead.head_id,
+              openingBalanceSubhead.sub_id,
+              tx
+            );
+          }
+          
+          if (openingBalanceAccount) {
+            // Find existing Opening Balance account transaction
+            const existingOpeningBalanceTransaction = await tx.transaction.findFirst({
+              where: {
+                acc_id: openingBalanceAccount.acc_id,
+                reference_id: Number(acc_id),
+                reference: "Opening Balance",
+                isDeleted: false,
+              },
+            });
+            
+            if (existingAccountTransaction && existingOpeningBalanceTransaction) {
+              // Update both transactions
+              await tx.transaction.update({
+                where: { t_id: existingAccountTransaction.t_id },
+                data: {
+                  debit: isDebit ? 0 : absoluteBalance,
+                  credit: isDebit ? absoluteBalance : 0,
+                  remarks: `Opening balance for account: ${account_nam.trim()}`,
+                  update_by: req_object.update_by || "user 1",
+                },
+              });
+              
+              await tx.transaction.update({
+                where: { t_id: existingOpeningBalanceTransaction.t_id },
+                data: {
+                  debit: isDebit ? absoluteBalance : 0,
+                  credit: isDebit ? 0 : absoluteBalance,
+                  remarks: `Opening balance for account: ${account_nam.trim()}`,
+                  update_by: req_object.update_by || "user 1",
+                },
+              });
+            } else {
+              // Delete old transactions if they exist
+              if (existingAccountTransaction) {
+                await tx.transaction.update({
+                  where: { t_id: existingAccountTransaction.t_id },
+                  data: { isDeleted: true },
+                });
+              }
+              if (existingOpeningBalanceTransaction) {
+                await tx.transaction.update({
+                  where: { t_id: existingOpeningBalanceTransaction.t_id },
+                  data: { isDeleted: true },
+                });
+              }
+              
+              // Create new double-entry transactions
+              // Transaction 1: Opening Balance account
+              await TransactionRepository.create({
+                acc_id: openingBalanceAccount.acc_id,
+                reference_id: Number(acc_id),
+                reference: "Opening Balance",
                 debit: isDebit ? absoluteBalance : 0,
                 credit: isDebit ? 0 : absoluteBalance,
                 remarks: `Opening balance for account: ${account_nam.trim()}`,
+                financial_year: new Date().getFullYear().toString(),
+                voucher_type: "Opening Balance",
+                insert_by: req_object.update_by || "user 1",
                 update_by: req_object.update_by || "user 1",
-              },
-            });
+              }, tx);
+              
+              // Transaction 2: Account (inverse)
+              await TransactionRepository.create({
+                acc_id: Number(acc_id),
+                reference_id: Number(acc_id),
+                reference: "Opening Balance",
+                debit: isDebit ? 0 : absoluteBalance,
+                credit: isDebit ? absoluteBalance : 0,
+                remarks: `Opening balance for account: ${account_nam.trim()}`,
+                financial_year: new Date().getFullYear().toString(),
+                voucher_type: "Opening Balance",
+                insert_by: req_object.update_by || "user 1",
+                update_by: req_object.update_by || "user 1",
+              }, tx);
+            }
           } else {
-            // Create new transaction
-            await TransactionRepository.create({
-              acc_id: Number(acc_id),
-              reference_id: Number(acc_id),
-              reference: "Opening Balance",
-              debit: isDebit ? absoluteBalance : 0,
-              credit: isDebit ? 0 : absoluteBalance,
-              remarks: `Opening balance for account: ${account_nam.trim()}`,
-              financial_year: new Date().getFullYear().toString(),
-              voucher_type: "Opening Balance",
-              insert_by: req_object.update_by || "user 1",
-              update_by: req_object.update_by || "user 1",
-            }, tx);
+            // Fallback: Single transaction if Opening Balance account not found
+            if (existingAccountTransaction) {
+              await tx.transaction.update({
+                where: { t_id: existingAccountTransaction.t_id },
+                data: {
+                  debit: isDebit ? absoluteBalance : 0,
+                  credit: isDebit ? 0 : absoluteBalance,
+                  remarks: `Opening balance for account: ${account_nam.trim()}`,
+                  update_by: req_object.update_by || "user 1",
+                },
+              });
+            } else {
+              await TransactionRepository.create({
+                acc_id: Number(acc_id),
+                reference_id: Number(acc_id),
+                reference: "Opening Balance",
+                debit: isDebit ? absoluteBalance : 0,
+                credit: isDebit ? 0 : absoluteBalance,
+                remarks: `Opening balance for account: ${account_nam.trim()}`,
+                financial_year: new Date().getFullYear().toString(),
+                voucher_type: "Opening Balance",
+                insert_by: req_object.update_by || "user 1",
+                update_by: req_object.update_by || "user 1",
+              }, tx);
+            }
           }
-        } else if (existingTransaction) {
-          // If opening balance is zero or not provided, delete the existing transaction
+        } else if (existingAccountTransaction) {
+          // If opening balance is zero or not provided, delete both transactions
           await tx.transaction.update({
-            where: { t_id: existingTransaction.t_id },
+            where: { t_id: existingAccountTransaction.t_id },
             data: {
               isDeleted: true,
               update_by: req_object.update_by || "user 1",
             },
           });
+          
+          // Also delete the Opening Balance account transaction if exists
+          const openingBalanceSubhead = await AccountSubHeadRepository.findByName("Opening Balance");
+          if (openingBalanceSubhead) {
+            const openingBalanceAccount = await AccountsRepository.findByAccountNameAndSubheadName(
+              "Opening Balance",
+              "Opening Balance",
+              tx
+            );
+            
+            if (openingBalanceAccount) {
+              const existingOpeningBalanceTransaction = await tx.transaction.findFirst({
+                where: {
+                  acc_id: openingBalanceAccount.acc_id,
+                  reference_id: Number(acc_id),
+                  reference: "Opening Balance",
+                  isDeleted: false,
+                },
+              });
+              
+              if (existingOpeningBalanceTransaction) {
+                await tx.transaction.update({
+                  where: { t_id: existingOpeningBalanceTransaction.t_id },
+                  data: {
+                    isDeleted: true,
+                    update_by: req_object.update_by || "user 1",
+                  },
+                });
+              }
+            }
+          }
         }
 
         return updated;

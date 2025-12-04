@@ -41,8 +41,9 @@ class UserRepository {
     /**
      * Create a new raw stone receive record
      */
-    async create(data) {
-        return prisma.user.create({
+    async create(data, tx = null) {
+        const prismaClient = tx || prisma;
+        return prismaClient.user.create({
             data: {
                 user_nam: data.user_nam,
                 email: data.email,
@@ -103,6 +104,21 @@ class UserRepository {
     async readById(user_id) {
         return prisma.user.findUnique({
             where: { user_id: Number(user_id) },
+            include: {
+                cash_in_hand_account: true,
+            },
+        });
+    }
+
+    /**
+     * Get user by email
+     */
+    async readByEmail(email) {
+        return prisma.user.findUnique({
+            where: { email: email },
+            include: {
+                cash_in_hand_account: true,
+            },
         });
     }
 

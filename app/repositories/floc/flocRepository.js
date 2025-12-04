@@ -5,7 +5,7 @@ class FlocRepository {
     return prisma.floc.findMany({
       orderBy: { floc_id: "desc" },
       include: {
-        farm: true,
+        unit: true,
       },
       where: {
         status: 1,
@@ -19,7 +19,7 @@ class FlocRepository {
         floc_id: Number(floc_id),
       },
       include: {
-        farm: true,
+        unit: true,
       },
     });
   }
@@ -27,12 +27,12 @@ class FlocRepository {
   async readByFarmId(farm_id) {
     return prisma.floc.findMany({
       where: {
-        farm_id: Number(farm_id),
+        prounit_id: Number(farm_id),
         status: 1,
       },
       orderBy: { starting_date: "desc" },
       include: {
-        farm: true,
+        unit: true,
       },
     });
   }
@@ -43,15 +43,15 @@ class FlocRepository {
 
     return prisma.floc.findFirst({
       where: {
-        farm_id: Number(farm_id),
+        prounit_id: Number(farm_id),
         status: 1,
         OR: [
           { ending_date: null },
-          { ending_date: { gte: today } },
+          { ending_date: { gt: today } }, // Only active if ending_date is in the future (after today), not today or past
         ],
       },
       include: {
-        farm: true,
+        unit: true,
       },
     });
   }
@@ -59,7 +59,7 @@ class FlocRepository {
   async create(data) {
     return prisma.floc.create({
       data: {
-        farm_id: data.farm_id,
+        prounit_id: data.prounit_id || data.farm_id,
         starting_date: new Date(data.starting_date),
         ending_date: data.ending_date ? new Date(data.ending_date) : null,
         stackholders: data.stackholders || [],
@@ -69,7 +69,7 @@ class FlocRepository {
         status: data.status ?? 1,
       },
       include: {
-        farm: true,
+        unit: true,
       },
     });
   }
@@ -80,8 +80,10 @@ class FlocRepository {
       status: req_object.status ?? 1,
     };
 
-    if (req_object.farm_id !== undefined) {
-      updateData.farm_id = req_object.farm_id;
+    if (req_object.prounit_id !== undefined) {
+      updateData.prounit_id = req_object.prounit_id;
+    } else if (req_object.farm_id !== undefined) {
+      updateData.prounit_id = req_object.farm_id; // Backward compatibility
     }
     if (req_object.starting_date !== undefined) {
       updateData.starting_date = new Date(req_object.starting_date);
@@ -99,23 +101,27 @@ class FlocRepository {
       },
       data: updateData,
       include: {
-        farm: true,
+        unit: true,
       },
     });
   }
 
   async clearEndingDate(floc_id, clear_description) {
+    // Set ending_date to today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     return prisma.floc.update({
       where: {
         floc_id: Number(floc_id),
       },
       data: {
-        ending_date: null,
+        ending_date: today,
         clear_description: clear_description.trim(),
         update_by: "user 1",
       },
       include: {
-        farm: true,
+        unit: true,
       },
     });
   }

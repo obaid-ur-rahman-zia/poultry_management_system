@@ -20,19 +20,21 @@ enum Role {
 }
 
 model user {
-  user_id         Int      @id @default(autoincrement())
-  user_nam       String
-  email          String   @unique
-  password       String
-  role           Role
-  profile_picture String?
-  phone          String?
-  address        String?
-  
+  user_id                 Int     @id @default(autoincrement())
+  user_nam                String
+  email                   String  @unique
+  password                String
+  role                    Role
+  profile_picture         String?
+  phone                   String?
+  address                 String?
+  cash_in_hand_account_id Int?    @unique
+
   insert_dat DateTime @default(now())
   update_dat DateTime @updatedAt
   status     Int      @default(1)
 
+  cash_in_hand_account accounts? @relation("UserCashInHand", fields: [cash_in_hand_account_id], references: [acc_id])
 }
 
 model pro_company {
@@ -69,18 +71,18 @@ model pro_category {
 model pro_unit {
   prounit_id  Int      @id @default(autoincrement())
   prounit_nam String   @unique(map: "uq_unit_name") @db.VarChar(100)
-  parent_id   Int?
-  is_parent   Int      @default(0)
-  insert_dat  DateTime @default(now()) @db.Timestamp(0)
-  update_dat  DateTime @default(now()) @db.Timestamp(0)
-  insert_by   String   @default("user 1") @db.VarChar(50)
-  update_by   String   @default("user 1") @db.VarChar(50)
+  capacity    Float?
+  address     String?  @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @db.Timestamp(0)
   status      Int      @default(1)
 
   // relations
-  product  product[]
-  parent   pro_unit?  @relation("UnitHierarchy", fields: [parent_id], references: [prounit_id])
-  children pro_unit[] @relation("UnitHierarchy")
+  product      product[]
+  flocs        floc[]
+  unit_expenses unit_expense[]
+  unit_sales    unit_sale[]
+  daily_fs_rates daily_fs_rate[]
 }
 
 model customer_group {
@@ -130,40 +132,22 @@ model product_group {
 }
 
 model product {
-  product_id          Int     @id @default(autoincrement())
-  product_title       String  @unique(map: "uq_product_title") @db.VarChar(255)
-  product_description String? @db.VarChar(255)
-  procategory_id      Int
-  prounit_id          Int
-  company_id          Int
-  pgroup_id           Int
-  purchase_price      Float
-  sale_price          Float
-  avg_price           Float
-  barcode             String? @db.VarChar(255)
-  packing             Float?
-  reorder_level       Float?
-  current_stock       Float?
-  sales_mc            Float?
-  location            String? @db.VarChar(255)
-
-  discount_amount        Float?
-  discount_percent       Float?
-  tax_amount             Float?
-  tax_percent            Float?
-  isTaxApplied           Int    @default(0)
-  isDiscountApplied      Int    @default(0)
-  isDiscountedPercentage Int    @default(0)
-  isTaxPercentage        Int    @default(0)
-  isTaxAppliedCondition  Int    @default(0) //Tax applied after the discount is deducted.
+  product_id     Int      @id @default(autoincrement())
+  product_title  String   @unique(map: "uq_product_title") @db.VarChar(255)
+  procategory_id Int
+  company_id     Int
+  prounit_id     Int?
+  pgroup_id      Int?
+  sale_price     Float
+  purchase_price Float
 
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
 
   companies    pro_company   @relation(fields: [company_id], references: [company_id], map: "fk_materials_company_relation")
   types        pro_category  @relation(fields: [procategory_id], references: [procategory_id], map: "fk_materials_type_relation")
-  units        pro_unit      @relation(fields: [prounit_id], references: [prounit_id], map: "fk_materials_unit_relation")
-  productGroup product_group @relation(fields: [pgroup_id], references: [pgroup_id], map: "fk_materials_product_group_relation")
+  units        pro_unit?     @relation(fields: [prounit_id], references: [prounit_id], map: "fk_materials_unit_relation")
+  productGroup product_group? @relation(fields: [pgroup_id], references: [pgroup_id], map: "fk_materials_product_group_relation")
 
   // sales_products sales_products[]
   purchases        purchase_detail[]
@@ -607,26 +591,27 @@ model accounts {
   voucher     voucher[]
   transaction transaction[]
 
-  customer_group       customer_group?       @relation(fields: [cgroup_id], references: [cgroup_id])
-  company              pro_company?          @relation(fields: [company_id], references: [company_id])
-  employee_designation employee_designation? @relation(fields: [designation_id], references: [designation_id])
-  driver_vehicles      vehicle?              @relation("DriverVehicle")
-  deliveryman_vehicles vehicle?              @relation("DeliveryVehicle")
-  area_assignments     area_assignment[]
-  account_manage       account_manage[]
-  purchase             purchase[]
-  purchase_return      purchase_return[]
-  sale_customer        sale[]                @relation("sale_customer")
-  sale_salesman        sale[]                @relation("sale_salesman")
-  quotation_customer   quotation[]           @relation("quotation_customer")
-  quotation_salesman   quotation[]           @relation("quotation_salesman")
-  sale_return          sale_return[]
-  opposite_paid_by     opposite_transaction[] @relation("OppositePaidBy")
+  customer_group        customer_group?        @relation(fields: [cgroup_id], references: [cgroup_id])
+  company               pro_company?           @relation(fields: [company_id], references: [company_id])
+  employee_designation  employee_designation?  @relation(fields: [designation_id], references: [designation_id])
+  driver_vehicles       vehicle?               @relation("DriverVehicle")
+  deliveryman_vehicles  vehicle?               @relation("DeliveryVehicle")
+  area_assignments      area_assignment[]
+  account_manage        account_manage[]
+  purchase              purchase[]
+  purchase_return       purchase_return[]
+  sale_customer         sale[]                 @relation("sale_customer")
+  sale_salesman         sale[]                 @relation("sale_salesman")
+  quotation_customer    quotation[]            @relation("quotation_customer")
+  quotation_salesman    quotation[]            @relation("quotation_salesman")
+  sale_return           sale_return[]
+  opposite_paid_by      opposite_transaction[] @relation("OppositePaidBy")
   opposite_bank_account opposite_transaction[] @relation("OppositeBankAccount")
   opposite_received_by  opposite_transaction[] @relation("OppositeReceivedBy")
-  self_transactions    self_transaction[]     @relation("SelfTransactionAccount")
-  trading_buy_from     trading[]              @relation("TradingBuyFrom")
-  trading_sale_to      trading[]              @relation("TradingSaleTo")
+  self_transactions     self_transaction[]     @relation("SelfTransactionAccount")
+  trading_buy_from      trading[]              @relation("TradingBuyFrom")
+  trading_sale_to       trading[]              @relation("TradingSaleTo")
+  user_cash_in_hand     user?                  @relation("UserCashInHand")
 
   // Unique constraint to ensure account_id is unique within each sub_id
   @@unique([sub_id, account_id], name: "uq_sub_account")
@@ -755,58 +740,52 @@ model farm {
   farm_nam   String   @unique(map: "uq_farm_name") @db.VarChar(100)
   capacity   Float?
   address    String?  @db.VarChar(255)
-  insert_dat DateTime @default(now()) @db.Timestamp(0)
-  update_dat DateTime @default(now()) @db.Timestamp(0)
-  insert_by  String   @default("user 1") @db.VarChar(50)
-  update_by  String   @default("user 1") @db.VarChar(50)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
   status     Int      @default(1)
 
-  flocs floc[]
-  unit_expenses unit_expense[]
-  unit_sales    unit_sale[]
-  daily_fs_rates daily_fs_rate[]
 }
 
 model floc {
-  floc_id          Int      @id @default(autoincrement())
-  farm_id          Int
-  starting_date    DateTime
-  ending_date      DateTime?
-  stackholders     Json     // Array of {acc_id: Int, percentage: Float}
-  clear_description String? @db.VarChar(500)
+  floc_id           Int       @id @default(autoincrement())
+  prounit_id        Int
+  starting_date     DateTime
+  ending_date       DateTime?
+  stackholders      Json // Array of {acc_id: Int, percentage: Float}
+  clear_description String?   @db.VarChar(500)
+  insert_dat        DateTime  @default(now()) @db.Timestamp(0)
+  update_dat        DateTime  @default(now()) @db.Timestamp(0)
+  insert_by         String    @default("user 1") @db.VarChar(50)
+  update_by         String    @default("user 1") @db.VarChar(50)
+  status            Int       @default(1)
+
+  unit           pro_unit        @relation(fields: [prounit_id], references: [prounit_id])
+  unit_expenses  unit_expense[]
+  unit_sales     unit_sale[]
+  daily_fs_rates daily_fs_rate[]
+
+  @@index([prounit_id])
+  @@index([starting_date])
+  @@index([ending_date])
+}
+
+model opposite_transaction {
+  transaction_id   Int      @id @default(autoincrement())
+  transaction_date DateTime
+  paid_by          Int
+  bank_account     Int?
+  received_by      Int
+  amount           Float
+  description      String?  @db.VarChar(500)
   insert_dat       DateTime @default(now()) @db.Timestamp(0)
   update_dat       DateTime @default(now()) @db.Timestamp(0)
   insert_by        String   @default("user 1") @db.VarChar(50)
   update_by        String   @default("user 1") @db.VarChar(50)
   status           Int      @default(1)
 
-  farm farm @relation(fields: [farm_id], references: [farm_id])
-  unit_expenses unit_expense[]
-  unit_sales    unit_sale[]
-  daily_fs_rates daily_fs_rate[]
-
-  @@index([farm_id])
-  @@index([starting_date])
-  @@index([ending_date])
-}
-
-model opposite_transaction {
-  transaction_id  Int      @id @default(autoincrement())
-  transaction_date DateTime
-  paid_by         Int
-  bank_account    Int?
-  received_by     Int
-  amount          Float
-  description     String?  @db.VarChar(500)
-  insert_dat      DateTime @default(now()) @db.Timestamp(0)
-  update_dat      DateTime @default(now()) @db.Timestamp(0)
-  insert_by       String   @default("user 1") @db.VarChar(50)
-  update_by       String   @default("user 1") @db.VarChar(50)
-  status          Int      @default(1)
-
-  paid_by_account    accounts @relation("OppositePaidBy", fields: [paid_by], references: [acc_id])
-  bank_account_ref   accounts? @relation("OppositeBankAccount", fields: [bank_account], references: [acc_id])
-  received_by_account accounts @relation("OppositeReceivedBy", fields: [received_by], references: [acc_id])
+  paid_by_account     accounts  @relation("OppositePaidBy", fields: [paid_by], references: [acc_id])
+  bank_account_ref    accounts? @relation("OppositeBankAccount", fields: [bank_account], references: [acc_id])
+  received_by_account accounts  @relation("OppositeReceivedBy", fields: [received_by], references: [acc_id])
 
   @@index([paid_by])
   @@index([received_by])
@@ -814,18 +793,18 @@ model opposite_transaction {
 }
 
 model self_transaction {
-  transaction_id  Int      @id @default(autoincrement())
+  transaction_id   Int      @id @default(autoincrement())
   transaction_date DateTime
-  is_bank         Int      @default(0) // 0 = Cash, 1 = Bank
-  account_id      Int
-  transaction_type String  @db.VarChar(20) // "receive" or "pay"
-  amount          Float
-  description     String?  @db.VarChar(500)
-  insert_dat      DateTime @default(now()) @db.Timestamp(0)
-  update_dat      DateTime @default(now()) @db.Timestamp(0)
-  insert_by       String   @default("user 1") @db.VarChar(50)
-  update_by       String   @default("user 1") @db.VarChar(50)
-  status          Int      @default(1)
+  is_bank          Int      @default(0) // 0 = Cash, 1 = Bank
+  account_id       Int
+  transaction_type String   @db.VarChar(20) // "receive" or "pay"
+  amount           Float
+  description      String?  @db.VarChar(500)
+  insert_dat       DateTime @default(now()) @db.Timestamp(0)
+  update_dat       DateTime @default(now()) @db.Timestamp(0)
+  insert_by        String   @default("user 1") @db.VarChar(50)
+  update_by        String   @default("user 1") @db.VarChar(50)
+  status           Int      @default(1)
 
   account accounts @relation("SelfTransactionAccount", fields: [account_id], references: [acc_id])
 
@@ -835,72 +814,72 @@ model self_transaction {
 }
 
 model unit_expense {
-  expense_id    Int      @id @default(autoincrement())
-  expense_date  DateTime
-  farm_id       Int
-  floc_id       Int
-  product_id    Int
-  price         Float
-  quantity      Float
-  tax_type      String   @db.VarChar(20) // "flat" or "percentage"
-  tax_value     Float    @default(0)
-  discount_type String   @db.VarChar(20) // "flat" or "percentage"
-  discount_value Float   @default(0)
-  total         Float
-  description   String?  @db.VarChar(500)
-  insert_dat    DateTime @default(now()) @db.Timestamp(0)
-  update_dat    DateTime @default(now()) @db.Timestamp(0)
-  insert_by     String   @default("user 1") @db.VarChar(50)
-  update_by     String   @default("user 1") @db.VarChar(50)
-  status        Int      @default(1)
+  expense_id     Int      @id @default(autoincrement())
+  expense_date   DateTime
+  prounit_id     Int
+  floc_id        Int
+  product_id     Int
+  price          Float
+  quantity       Float
+  tax_type       String   @db.VarChar(20) // "flat" or "percentage"
+  tax_value      Float    @default(0)
+  discount_type  String   @db.VarChar(20) // "flat" or "percentage"
+  discount_value Float    @default(0)
+  total          Float
+  description    String?  @db.VarChar(500)
+  insert_dat     DateTime @default(now()) @db.Timestamp(0)
+  update_dat     DateTime @default(now()) @db.Timestamp(0)
+  insert_by      String   @default("user 1") @db.VarChar(50)
+  update_by      String   @default("user 1") @db.VarChar(50)
+  status         Int      @default(1)
 
-  farm    farm    @relation(fields: [farm_id], references: [farm_id])
-  floc    floc    @relation(fields: [floc_id], references: [floc_id])
-  product product @relation(fields: [product_id], references: [product_id])
+  unit    pro_unit @relation(fields: [prounit_id], references: [prounit_id])
+  floc    floc     @relation(fields: [floc_id], references: [floc_id])
+  product product  @relation(fields: [product_id], references: [product_id])
 
-  @@index([farm_id])
+  @@index([prounit_id])
   @@index([floc_id])
   @@index([product_id])
   @@index([expense_date])
 }
 
 model unit_sale {
-  sale_id       Int      @id @default(autoincrement())
-  sale_date     DateTime
-  farm_id       Int
-  floc_id       Int
-  farm_rate     Float?
-  sale_rate     Float?
-  product_id    Int
-  price         Float
-  quantity      Float
-  tax_type      String   @db.VarChar(20) // "flat" or "percentage"
-  tax_value     Float    @default(0)
-  discount_type String   @db.VarChar(20) // "flat" or "percentage"
-  discount_value Float   @default(0)
-  total         Float
-  description   String?  @db.VarChar(500)
-  insert_dat    DateTime @default(now()) @db.Timestamp(0)
-  update_dat    DateTime @default(now()) @db.Timestamp(0)
-  insert_by     String   @default("user 1") @db.VarChar(50)
-  update_by     String   @default("user 1") @db.VarChar(50)
-  status        Int      @default(1)
+  sale_id        Int      @id @default(autoincrement())
+  sale_date      DateTime
+  prounit_id     Int
+  floc_id        Int
+  farm_rate      Float?
+  sale_rate      Float?
+  product_id     Int
+  price          Float
+  quantity       Float
+  tax_type       String   @db.VarChar(20) // "flat" or "percentage"
+  tax_value      Float    @default(0)
+  discount_type  String   @db.VarChar(20) // "flat" or "percentage"
+  discount_value Float    @default(0)
+  total          Float
+  description    String?  @db.VarChar(500)
+  insert_dat     DateTime @default(now()) @db.Timestamp(0)
+  update_dat     DateTime @default(now()) @db.Timestamp(0)
+  insert_by      String   @default("user 1") @db.VarChar(50)
+  update_by      String   @default("user 1") @db.VarChar(50)
+  status         Int      @default(1)
 
-  farm    farm    @relation(fields: [farm_id], references: [farm_id])
-  floc    floc    @relation(fields: [floc_id], references: [floc_id])
-  product product @relation(fields: [product_id], references: [product_id])
+  unit    pro_unit @relation(fields: [prounit_id], references: [prounit_id])
+  floc    floc     @relation(fields: [floc_id], references: [floc_id])
+  product product  @relation(fields: [product_id], references: [product_id])
 
-  @@index([farm_id])
+  @@unique([prounit_id, floc_id, sale_date], name: "uq_unit_floc_date_fs_rate")
+  @@index([prounit_id])
   @@index([floc_id])
   @@index([product_id])
   @@index([sale_date])
-  @@unique([farm_id, floc_id, sale_date], name: "uq_farm_floc_date_fs_rate")
 }
 
 model daily_fs_rate {
   rate_id    Int      @id @default(autoincrement())
   rate_date  DateTime
-  farm_id    Int
+  prounit_id Int
   floc_id    Int
   farm_rate  Float
   sale_rate  Float
@@ -910,43 +889,43 @@ model daily_fs_rate {
   update_by  String   @default("user 1") @db.VarChar(50)
   status     Int      @default(1)
 
-  farm farm @relation(fields: [farm_id], references: [farm_id])
-  floc floc @relation(fields: [floc_id], references: [floc_id])
+  unit pro_unit @relation(fields: [prounit_id], references: [prounit_id])
+  floc floc     @relation(fields: [floc_id], references: [floc_id])
 
-  @@unique([farm_id, floc_id, rate_date], name: "uq_daily_fs_rate")
-  @@index([farm_id])
+  @@unique([prounit_id, floc_id, rate_date], name: "uq_daily_fs_rate")
+  @@index([prounit_id])
   @@index([floc_id])
   @@index([rate_date])
 }
 
 model trading {
-  trading_id        Int      @id @default(autoincrement())
-  trading_date      DateTime
-  buy_from_account  Int
-  do_number         String?  @db.VarChar(100)
-  product_id        Int
-  buy_quantity      Float
-  buy_price         Float
-  buy_tax_type      String   @db.VarChar(20) // "flat" or "percentage"
-  buy_tax_value     Float    @default(0)
-  buy_discount_type String   @db.VarChar(20) // "flat" or "percentage"
-  buy_discount_value Float   @default(0)
-  buy_total         Float
-  buy_detail        String?  @db.VarChar(500)
-  sale_to_account   Int
-  sale_price        Float
-  sale_quantity     Float
-  sale_tax_type     String   @db.VarChar(20) // "flat" or "percentage"
-  sale_tax_value    Float    @default(0)
-  sale_discount_type String  @db.VarChar(20) // "flat" or "percentage"
-  sale_discount_value Float  @default(0)
-  sale_total        Float
-  sale_detail       String?  @db.VarChar(500)
-  insert_dat        DateTime @default(now()) @db.Timestamp(0)
-  update_dat        DateTime @default(now()) @db.Timestamp(0)
-  insert_by         String   @default("user 1") @db.VarChar(50)
-  update_by         String   @default("user 1") @db.VarChar(50)
-  status            Int      @default(1)
+  trading_id          Int      @id @default(autoincrement())
+  trading_date        DateTime
+  buy_from_account    Int
+  do_number           String?  @db.VarChar(100)
+  product_id          Int
+  buy_quantity        Float
+  buy_price           Float
+  buy_tax_type        String   @db.VarChar(20) // "flat" or "percentage"
+  buy_tax_value       Float    @default(0)
+  buy_discount_type   String   @db.VarChar(20) // "flat" or "percentage"
+  buy_discount_value  Float    @default(0)
+  buy_total           Float
+  buy_detail          String?  @db.VarChar(500)
+  sale_to_account     Int
+  sale_price          Float
+  sale_quantity       Float
+  sale_tax_type       String   @db.VarChar(20) // "flat" or "percentage"
+  sale_tax_value      Float    @default(0)
+  sale_discount_type  String   @db.VarChar(20) // "flat" or "percentage"
+  sale_discount_value Float    @default(0)
+  sale_total          Float
+  sale_detail         String?  @db.VarChar(500)
+  insert_dat          DateTime @default(now()) @db.Timestamp(0)
+  update_dat          DateTime @default(now()) @db.Timestamp(0)
+  insert_by           String   @default("user 1") @db.VarChar(50)
+  update_by           String   @default("user 1") @db.VarChar(50)
+  status              Int      @default(1)
 
   buy_from_account_ref accounts @relation("TradingBuyFrom", fields: [buy_from_account], references: [acc_id])
   sale_to_account_ref  accounts @relation("TradingSaleTo", fields: [sale_to_account], references: [acc_id])

@@ -86,11 +86,13 @@ class FlocController {
   async create(req) {
     try {
       const { req_object } = await req.json();
-      const { farm_id, starting_date, stackholders } = req_object;
+      // Support both prounit_id and farm_id for backward compatibility
+      const prounit_id = req_object.prounit_id || req_object.farm_id;
+      const { starting_date, stackholders } = req_object;
 
-      if (!farm_id || !starting_date || !stackholders || !Array.isArray(stackholders)) {
+      if (!prounit_id || !starting_date || !stackholders || !Array.isArray(stackholders)) {
         const error = new Error(
-          "farm_id, starting_date, and stackholders are required in Method: FlocController.create"
+          "prounit_id (or farm_id), starting_date, and stackholders are required in Method: FlocController.create"
         );
         ErrorLogger.log(
           "Failed to create floc in Method: FlocController.create",
@@ -113,11 +115,11 @@ class FlocController {
         return errorResponse(error, 400);
       }
 
-      // Check if farm already has an active floc
-      const activeFloc = await FlocRepository.findActiveFlocByFarmId(farm_id);
+      // Check if unit already has an active floc
+      const activeFloc = await FlocRepository.findActiveFlocByFarmId(prounit_id);
       if (activeFloc) {
         const error = new Error(
-          "Farm already has an active floc. Please end the current floc first."
+          "Unit already has an active floc. Please end the current floc first."
         );
         ErrorLogger.log(
           "Failed to create floc in Method: FlocController.create",
@@ -125,6 +127,9 @@ class FlocController {
         );
         return errorResponse(error, 400);
       }
+
+      // Ensure prounit_id is set in req_object
+      req_object.prounit_id = prounit_id;
 
       // Validate dates
       if (req_object.ending_date) {
@@ -187,14 +192,16 @@ class FlocController {
         }
       }
 
-      // If updating farm_id, check if new farm has active floc
-      if (req_object.farm_id) {
+      // If updating prounit_id or farm_id, check if new unit has active floc
+      const prounit_id = req_object.prounit_id || req_object.farm_id;
+      if (prounit_id) {
         const currentFloc = await FlocRepository.readById(floc_id);
-        if (currentFloc && currentFloc.farm_id !== req_object.farm_id) {
-          const activeFloc = await FlocRepository.findActiveFlocByFarmId(req_object.farm_id);
+        const currentProunitId = currentFloc?.prounit_id || currentFloc?.farm_id;
+        if (currentFloc && currentProunitId !== prounit_id) {
+          const activeFloc = await FlocRepository.findActiveFlocByFarmId(prounit_id);
           if (activeFloc && activeFloc.floc_id !== Number(floc_id)) {
             const error = new Error(
-              "Farm already has an active floc. Please end the current floc first."
+              "Unit already has an active floc. Please end the current floc first."
             );
             ErrorLogger.log(
               "Failed to update floc in Method: FlocController.update",
@@ -203,6 +210,8 @@ class FlocController {
             return errorResponse(error, 400);
           }
         }
+        // Ensure prounit_id is set in req_object
+        req_object.prounit_id = prounit_id;
       }
 
       // Validate dates if both are provided

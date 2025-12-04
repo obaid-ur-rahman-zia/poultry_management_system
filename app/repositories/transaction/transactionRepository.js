@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { checkCreditLimit } from "@/app/utils/creditLimitValidator";
 
 class TransactionRepository {
   async readAll() {
@@ -82,6 +83,24 @@ class TransactionRepository {
 
   async create(data, tx) {
     const prismaClient = tx ? tx : prisma;
+    
+    // Check credit limit before creating transaction
+    // Credit limit represents maximum total receivable (accumulated balance)
+    // Skip credit limit check for "Opening Balance" transactions (system transactions)
+    const creditAmount = Number(data.credit) || 0;
+    const debitAmount = Number(data.debit) || 0;
+    const isOpeningBalance = data.reference === "Opening Balance";
+    
+    // Only check credit limit if:
+    // 1. Not an opening balance transaction (system transaction)
+    // 2. There's a transaction amount
+    if (!isOpeningBalance && (creditAmount > 0 || debitAmount > 0)) {
+      const creditCheck = await checkCreditLimit(data.acc_id, creditAmount, debitAmount, tx);
+      if (!creditCheck.allowed) {
+        throw new Error(creditCheck.message);
+      }
+    }
+    
     return prismaClient.transaction.create({
       data: {
         record_no: data.record_no || null,
@@ -89,8 +108,8 @@ class TransactionRepository {
         reference: data.reference,
         financial_year: data.financial_year || null,
         voucher_type: data.voucher_type || null,
-        debit: Number(data.debit) || 0,
-        credit: Number(data.credit) || 0,
+        debit: debitAmount,
+        credit: creditAmount,
         remarks: data.remarks || null,
         manual_voucher_no: data.manual_voucher_no || null,
         account: {

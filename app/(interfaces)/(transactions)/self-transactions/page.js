@@ -294,7 +294,7 @@ export default function SelfTransactionPage() {
                                             />
                                             <Label htmlFor="cash" className="cursor-pointer">Cash</Label>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        {/* <div className="flex items-center gap-2">
                                             <input
                                                 type="radio"
                                                 id="bank"
@@ -304,7 +304,7 @@ export default function SelfTransactionPage() {
                                                 className="w-4 h-4"
                                             />
                                             <Label htmlFor="bank" className="cursor-pointer">Bank</Label>
-                                        </div>
+                                        </div> */}
                                     </div>
 
 

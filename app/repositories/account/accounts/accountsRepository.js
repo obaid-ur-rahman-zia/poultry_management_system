@@ -35,8 +35,9 @@ class AccountsRepository {
     });
   }
 
-  async readById(acc_id) {
-    return prisma.accounts.findUnique({
+  async readById(acc_id, tx = null) {
+    const prismaClient = tx || prisma;
+    return prismaClient.accounts.findUnique({
       where: {
         acc_id: Number(acc_id),
       },
@@ -141,6 +142,51 @@ class AccountsRepository {
         acc_id: Number(acc_id),
       },
     });
+  }
+
+  // Find account by name and subhead name
+  async findByAccountNameAndSubheadName(accountName, subheadName, tx = null) {
+    const prismaClient = tx || prisma;
+    return prismaClient.accounts.findFirst({
+      where: {
+        account_nam: {
+          equals: accountName.trim(),
+          mode: 'insensitive',
+        },
+        subhead: {
+          subhead_nam: {
+            equals: subheadName.trim(),
+            mode: 'insensitive',
+          },
+        },
+        status: 1,
+      },
+      include: {
+        head: true,
+        subhead: true,
+      },
+    });
+  }
+
+  // Find or create account by name and subhead name
+  async findOrCreateByAccountNameAndSubheadName(accountName, subheadName, headId, subId, tx = null) {
+    const prismaClient = tx || prisma;
+    
+    // First try to find existing account
+    const existing = await this.findByAccountNameAndSubheadName(accountName, subheadName, tx);
+    if (existing) {
+      return existing;
+    }
+    
+    // If not found, create it
+    return await this.create({
+      head_id: headId,
+      sub_id: subId,
+      account_nam: accountName.trim(),
+      insert_by: "system",
+      update_by: "system",
+      status: 1,
+    }, tx);
   }
 }
 

@@ -131,6 +131,22 @@ class AccountSubHeadRepository {
       },
     });
   }
+
+  // Find subhead by name
+  async findByName(subheadName) {
+    return prisma.account_sub_head.findFirst({
+      where: {
+        subhead_nam: {
+          equals: subheadName.trim(),
+          mode: 'insensitive',
+        },
+        status: 1,
+      },
+      include: {
+        head: true,
+      },
+    });
+  }
 }
 
 export default new AccountSubHeadRepository();

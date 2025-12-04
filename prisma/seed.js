@@ -144,6 +144,7 @@ async function main() {
   console.log("Creating Account Manage entries (Accounts)...");
   await prisma.account_manage.createMany({
     data: [
+      // Note: acc_id is set to null because accounts are created dynamically when users are created
       // {
       //   head_id: 1,
       //   sub_id: 2,
@@ -151,7 +152,7 @@ async function main() {
       //   account_lvl: 3,
       //   display_category: 0,
       //   is_active: 1,
-      //   acc_id: 1,
+      //   acc_id: null, // Accounts are created when users are created
       // },
     ],
     skipDuplicates: true,
@@ -159,7 +160,7 @@ async function main() {
 
   // ---- Users ----
   console.log("Creating Users...");
-  await prisma.user.create({
+  const superAdmin = await prisma.user.create({
     data: {
       user_nam: "Super Admin",
       email: "admin@system.com",
@@ -168,6 +169,71 @@ async function main() {
       status: 1,
     },
   });
+
+  // Create Cash In Hand subhead if it doesn't exist
+  console.log("Creating Cash In Hand subhead...");
+  let cashInHandSubhead = await prisma.account_sub_head.findFirst({
+    where: {
+      subhead_nam: {
+        equals: "Cash In Hand",
+        mode: 'insensitive',
+      },
+    },
+  });
+
+  if (!cashInHandSubhead) {
+    const firstHead = await prisma.account_head.findFirst({
+      orderBy: { head_id: "asc" },
+    });
+
+    if (firstHead) {
+      const maxSubhead = await prisma.account_sub_head.findFirst({
+        where: { head_id: firstHead.head_id },
+        orderBy: { subhead_id: "desc" },
+        select: { subhead_id: true },
+      });
+      const nextSubheadId = maxSubhead ? maxSubhead.subhead_id + 1 : 1;
+
+      cashInHandSubhead = await prisma.account_sub_head.create({
+        data: {
+          head_id: firstHead.head_id,
+          subhead_id: nextSubheadId,
+          subhead_nam: "Cash In Hand",
+          is_parent: 0,
+          parent_sub_id: null,
+          insert_by: "system",
+          update_by: "system",
+          status: 1,
+        },
+      });
+    }
+  }
+
+  // Create Cash In Hand account for Super Admin
+  if (cashInHandSubhead) {
+    console.log("Creating Cash In Hand account for Super Admin...");
+    const accountName = `Cash Account (${superAdmin.user_nam})`;
+    
+    const cashInHandAccount = await prisma.accounts.create({
+      data: {
+        head_id: cashInHandSubhead.head_id,
+        sub_id: cashInHandSubhead.sub_id,
+        account_id: 1, // First account in this subhead
+        account_nam: accountName,
+        insert_by: "system",
+        update_by: "system",
+        status: 1,
+      },
+    });
+
+    // Link the account to the super admin user
+    await prisma.user.update({
+      where: { user_id: superAdmin.user_id },
+      data: { cash_in_hand_account_id: cashInHandAccount.acc_id },
+    });
+
+    console.log(`✅ Cash In Hand account created for Super Admin: ${accountName}`);
+  }
 
   console.log("✅ Seed completed!");
 }

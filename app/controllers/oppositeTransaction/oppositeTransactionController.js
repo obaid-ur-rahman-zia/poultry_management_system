@@ -13,7 +13,8 @@ class OppositeTransactionController {
       const cachedData = await RedisService.get(cacheKey);
       if (cachedData) {
         console.log("Opposite Transaction Cache Hit");
-        return successResponse(JSON.parse(cachedData), "Success");
+        // RedisService.get() already parses JSON, so no need to parse again
+        return successResponse(cachedData, "Success");
       }
       console.log("Opposite Transaction Cache Miss");
       const data = await OppositeTransactionRepository.readAll();
@@ -142,8 +143,8 @@ class OppositeTransactionController {
             acc_id: Number(paid_by),
             reference_id: referenceId,
             reference: "Opposite Transaction",
-            debit: amountValue,
-            credit: 0,
+            credit: amountValue,
+            debit: 0,
             remarks: description,
             financial_year: financialYear,
             voucher_type: "Opposite Transaction",
@@ -160,8 +161,8 @@ class OppositeTransactionController {
             acc_id: Number(received_by),
             reference_id: referenceId,
             reference: "Opposite Transaction",
-            debit: 0,
-            credit: amountValue,
+            credit: 0,
+            debit: amountValue,
             remarks: description,
             financial_year: financialYear,
             voucher_type: "Opposite Transaction",

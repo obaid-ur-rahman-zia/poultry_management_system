@@ -5,7 +5,7 @@ class UnitSaleRepository {
     return prisma.unit_sale.findMany({
       orderBy: { sale_id: "desc" },
       include: {
-        farm: true,
+        unit: true,
         floc: true,
         product: true,
       },
@@ -21,14 +21,14 @@ class UnitSaleRepository {
         sale_id: Number(sale_id),
       },
       include: {
-        farm: true,
+        unit: true,
         floc: true,
         product: true,
       },
     });
   }
 
-  async checkFsRateForToday(farm_id, floc_id, sale_date) {
+  async checkFsRateForToday(prounit_id, floc_id, sale_date) {
     const date = new Date(sale_date);
     date.setHours(0, 0, 0, 0);
     const nextDay = new Date(date);
@@ -37,7 +37,7 @@ class UnitSaleRepository {
     // Check if F.S Rate exists in daily_fs_rate for today
     const fsRate = await prisma.daily_fs_rate.findFirst({
       where: {
-        farm_id: Number(farm_id),
+        prounit_id: Number(prounit_id),
         floc_id: Number(floc_id),
         rate_date: {
           gte: date,
@@ -50,10 +50,10 @@ class UnitSaleRepository {
     return fsRate;
   }
 
-  async getPreviousFsRates(farm_id, floc_id) {
+  async getPreviousFsRates(prounit_id, floc_id) {
     return prisma.daily_fs_rate.findMany({
       where: {
-        farm_id: Number(farm_id),
+        prounit_id: Number(prounit_id),
         floc_id: Number(floc_id),
         status: 1,
       },
@@ -64,10 +64,12 @@ class UnitSaleRepository {
 
   async createDailyFsRate(data, tx) {
     const prismaClient = tx || prisma;
+    // Support both prounit_id and farm_id for backward compatibility
+    const prounit_id = data.prounit_id || data.farm_id;
     return prismaClient.daily_fs_rate.create({
       data: {
         rate_date: new Date(data.rate_date),
-        farm_id: data.farm_id,
+        prounit_id: Number(prounit_id),
         floc_id: data.floc_id,
         farm_rate: Number(data.farm_rate),
         sale_rate: Number(data.sale_rate),
@@ -80,10 +82,12 @@ class UnitSaleRepository {
 
   async create(data, tx) {
     const prismaClient = tx || prisma;
+    // Support both prounit_id and farm_id for backward compatibility
+    const prounit_id = data.prounit_id || data.farm_id;
     return prismaClient.unit_sale.create({
       data: {
         sale_date: new Date(data.sale_date),
-        farm_id: data.farm_id,
+        prounit_id: Number(prounit_id),
         floc_id: data.floc_id,
         farm_rate: data.farm_rate ? Number(data.farm_rate) : null,
         sale_rate: data.sale_rate ? Number(data.sale_rate) : null,
@@ -101,7 +105,7 @@ class UnitSaleRepository {
         status: data.status ?? 1,
       },
       include: {
-        farm: true,
+        unit: true,
         floc: true,
         product: true,
       },
@@ -110,30 +114,37 @@ class UnitSaleRepository {
 
   async update(sale_id, req_object, tx) {
     const prismaClient = tx || prisma;
+    // Support both prounit_id and farm_id for backward compatibility
+    const prounit_id = req_object.prounit_id || req_object.farm_id;
+    const updateData = {
+      sale_date: req_object.sale_date ? new Date(req_object.sale_date) : undefined,
+      floc_id: req_object.floc_id !== undefined ? req_object.floc_id : undefined,
+      farm_rate: req_object.farm_rate !== undefined ? (req_object.farm_rate ? Number(req_object.farm_rate) : null) : undefined,
+      sale_rate: req_object.sale_rate !== undefined ? (req_object.sale_rate ? Number(req_object.sale_rate) : null) : undefined,
+      product_id: req_object.product_id !== undefined ? req_object.product_id : undefined,
+      price: req_object.price !== undefined ? Number(req_object.price) : undefined,
+      quantity: req_object.quantity !== undefined ? Number(req_object.quantity) : undefined,
+      tax_type: req_object.tax_type !== undefined ? req_object.tax_type : undefined,
+      tax_value: req_object.tax_value !== undefined ? Number(req_object.tax_value) : undefined,
+      discount_type: req_object.discount_type !== undefined ? req_object.discount_type : undefined,
+      discount_value: req_object.discount_value !== undefined ? Number(req_object.discount_value) : undefined,
+      total: req_object.total !== undefined ? Number(req_object.total) : undefined,
+      description: req_object.description !== undefined ? req_object.description : undefined,
+      update_by: req_object.update_by || "user 1",
+      status: req_object.status ?? 1,
+    };
+    
+    if (prounit_id !== undefined) {
+      updateData.prounit_id = Number(prounit_id);
+    }
+    
     return prismaClient.unit_sale.update({
       where: {
         sale_id: Number(sale_id),
       },
-      data: {
-        sale_date: req_object.sale_date ? new Date(req_object.sale_date) : undefined,
-        farm_id: req_object.farm_id !== undefined ? req_object.farm_id : undefined,
-        floc_id: req_object.floc_id !== undefined ? req_object.floc_id : undefined,
-        farm_rate: req_object.farm_rate !== undefined ? (req_object.farm_rate ? Number(req_object.farm_rate) : null) : undefined,
-        sale_rate: req_object.sale_rate !== undefined ? (req_object.sale_rate ? Number(req_object.sale_rate) : null) : undefined,
-        product_id: req_object.product_id !== undefined ? req_object.product_id : undefined,
-        price: req_object.price !== undefined ? Number(req_object.price) : undefined,
-        quantity: req_object.quantity !== undefined ? Number(req_object.quantity) : undefined,
-        tax_type: req_object.tax_type !== undefined ? req_object.tax_type : undefined,
-        tax_value: req_object.tax_value !== undefined ? Number(req_object.tax_value) : undefined,
-        discount_type: req_object.discount_type !== undefined ? req_object.discount_type : undefined,
-        discount_value: req_object.discount_value !== undefined ? Number(req_object.discount_value) : undefined,
-        total: req_object.total !== undefined ? Number(req_object.total) : undefined,
-        description: req_object.description !== undefined ? req_object.description : undefined,
-        update_by: req_object.update_by || "user 1",
-        status: req_object.status ?? 1,
-      },
+      data: updateData,
       include: {
-        farm: true,
+        unit: true,
         floc: true,
         product: true,
       },

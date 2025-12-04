@@ -1,8 +1,11 @@
-# Switch2itech Distribution System
+
+<img width="90" height="90" src="./app/favicon.ico"/>
+
+# Switch2itech Poultry Management System
 
 ## Introduction
 
-Welcome to the **Switch2itech Distribution System** – a comprehensive solution designed to streamline and optimize your distribution operations.
+Welcome to the **Switch2itech Poultry Management System**– a comprehensive solution designed to streamline and optimize your distribution operations.
 
 Switch2itech is committed to delivering innovative technology solutions that empower businesses to manage their distribution networks efficiently. Our platform combines cutting-edge technology with user-friendly interfaces to help you track inventory, manage orders, coordinate logistics, and analyze performance metrics in real-time.
 

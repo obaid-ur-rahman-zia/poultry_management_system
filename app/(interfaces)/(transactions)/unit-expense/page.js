@@ -42,7 +42,7 @@ export default function UnitExpensePage() {
     } = useForm({
         defaultValues: {
             expense_date: new Date().toISOString().split('T')[0],
-            farm_id: "",
+            prounit_id: "",
             floc_id: "",
             product_id: "",
             price: "",
@@ -59,18 +59,18 @@ export default function UnitExpensePage() {
     const [loading, setLoading] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingExpenseId, setEditingExpenseId] = useState(null);
-    const [farms, setFarms] = useState([]);
+    const [units, setUnits] = useState([]);
     const [flocs, setFlocs] = useState([]);
     const [products, setProducts] = useState([]);
     const [availableFlocs, setAvailableFlocs] = useState([]);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
-    const [filterFarm, setFilterFarm] = useState("all");
+    const [filterUnit, setFilterUnit] = useState("all");
     const [filterFloc, setFilterFloc] = useState("all");
     const [filterDate, setFilterDate] = useState("");
 
-    const selectedFarm = watch("farm_id");
+    const selectedUnit = watch("prounit_id");
     const price = watch("price");
     const quantity = watch("quantity");
     const taxType = watch("tax_type");
@@ -79,40 +79,41 @@ export default function UnitExpensePage() {
     const discountValue = watch("discount_value");
 
     useEffect(() => {
-        fetchFarms();
+        fetchUnits();
         fetchProducts();
         fetchExpenses();
     }, []);
 
     useEffect(() => {
-        if (selectedFarm) {
-            fetchFlocsByFarm(selectedFarm);
+        if (selectedUnit) {
+            fetchFlocsByUnit(selectedUnit);
         } else {
             setAvailableFlocs([]);
             setValue("floc_id", "");
         }
-    }, [selectedFarm]);
+    }, [selectedUnit]);
 
-    const fetchFarms = async () => {
+    const fetchUnits = async () => {
         try {
-            const response = await fetch("/api/farm/readAll");
+            const response = await fetch("/api/unit/readAll");
             const result = await response.json();
             if (result.response_status === "success") {
-                const farmsData = result.response_result?.data || result.response_result || [];
-                setFarms(farmsData);
+                const unitsData = result.response_result?.data || result.response_result || [];
+                setUnits(Array.isArray(unitsData) ? unitsData : []);
             }
         } catch (error) {
-            console.error("Error fetching farms:", error);
+            console.error("Error fetching units:", error);
+            setUnits([]);
         }
     };
 
-    const fetchFlocsByFarm = async (farmId) => {
+    const fetchFlocsByUnit = async (prounitId) => {
         try {
-            const response = await fetch(`/api/floc/readByFarmId?farm_id=${farmId}`);
+            const response = await fetch(`/api/floc/readByFarmId?farm_id=${prounitId}`);
             const result = await response.json();
             if (result.response_status === "success") {
                 const flocsData = result.response_result?.data || result.response_result || [];
-                setAvailableFlocs(flocsData);
+                setAvailableFlocs(Array.isArray(flocsData) ? flocsData : []);
             }
         } catch (error) {
             console.error("Error fetching flocs:", error);
@@ -189,7 +190,7 @@ export default function UnitExpensePage() {
     };
 
     const onSubmit = async (data) => {
-        if (!data.farm_id || !data.floc_id || !data.product_id || !data.price || !data.quantity) {
+        if (!data.prounit_id || !data.floc_id || !data.product_id || !data.price || !data.quantity) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -199,7 +200,7 @@ export default function UnitExpensePage() {
         const payload = {
             req_object: {
                 expense_date: data.expense_date,
-                farm_id: parseInt(data.farm_id),
+                prounit_id: parseInt(data.prounit_id),
                 floc_id: parseInt(data.floc_id),
                 product_id: parseInt(data.product_id),
                 price: parseFloat(data.price),
@@ -229,7 +230,7 @@ export default function UnitExpensePage() {
                 toast.success(isEditMode ? "Expense updated successfully" : "Expense created successfully");
                 reset({
                     expense_date: new Date().toISOString().split('T')[0],
-                    farm_id: "",
+                    prounit_id: "",
                     floc_id: "",
                     product_id: "",
                     price: "",
@@ -255,9 +256,10 @@ export default function UnitExpensePage() {
     const handleEdit = (expense) => {
         setIsEditMode(true);
         setEditingExpenseId(expense.expense_id);
+        const prounitId = (expense.prounit_id || expense.farm_id || expense.unit?.prounit_id)?.toString() || "";
         reset({
             expense_date: expense.expense_date ? new Date(expense.expense_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            farm_id: expense.farm_id?.toString() || "",
+            prounit_id: prounitId,
             floc_id: expense.floc_id?.toString() || "",
             product_id: expense.product_id?.toString() || "",
             price: expense.price?.toString() || "",
@@ -268,6 +270,10 @@ export default function UnitExpensePage() {
             discount_value: expense.discount_value?.toString() || "",
             description: expense.description || "",
         });
+        // Fetch flocs for the selected unit
+        if (prounitId) {
+            fetchFlocsByUnit(prounitId);
+        }
     };
 
     const handleDelete = async (expenseId) => {
@@ -294,13 +300,16 @@ export default function UnitExpensePage() {
 
     // Filter expenses
     const filteredExpenses = expenses.filter((expense) => {
-            const matchesSearch = searchQuery === "" ||
+        const prounitId = expense.prounit_id || expense.farm_id || expense.unit?.prounit_id;
+        const unitName = expense.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === prounitId)?.prounit_nam);
+        
+        const matchesSearch = searchQuery === "" ||
             expense.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (Array.isArray(farms) && farms.find(f => f.farm_id === expense.farm_id)?.farm_nam?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            unitName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (Array.isArray(products) && products.find(p => p.product_id === expense.product_id)?.product_title?.toLowerCase().includes(searchQuery.toLowerCase()));
 
-        const matchesFarm = filterFarm === "all" ||
-            expense.farm_id?.toString() === filterFarm;
+        const matchesUnit = filterUnit === "all" ||
+            prounitId?.toString() === filterUnit;
 
         const matchesFloc = filterFloc === "all" ||
             expense.floc_id?.toString() === filterFloc;
@@ -308,7 +317,7 @@ export default function UnitExpensePage() {
         const matchesDate = filterDate === "" ||
             (expense.expense_date && new Date(expense.expense_date).toISOString().split('T')[0] === filterDate);
 
-        return matchesSearch && matchesFarm && matchesFloc && matchesDate;
+        return matchesSearch && matchesUnit && matchesFloc && matchesDate;
     });
 
     const totalAmount = calculateTotal();
@@ -337,34 +346,34 @@ export default function UnitExpensePage() {
                                 )}
                             </div>
 
-                            {/* Farm Selection */}
+                            {/* Unit Selection */}
                             <div className="space-y-2">
-                                <Label htmlFor="farm_id">Unit (Farm) *</Label>
+                                <Label htmlFor="prounit_id">Unit *</Label>
                                 <Controller
-                                    name="farm_id"
+                                    name="prounit_id"
                                     control={control}
-                                    rules={{ required: "Farm is required" }}
+                                    rules={{ required: "Unit is required" }}
                                     render={({ field }) => (
                                         <Select
                                             value={field.value}
                                             onValueChange={field.onChange}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select farm" />
+                                                <SelectValue placeholder="Select unit" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {farms.map((farm) => (
-                                                    <SelectItem key={farm.farm_id} value={farm.farm_id.toString()}>
-                                                        {farm.farm_nam}
+                                                {Array.isArray(units) && units.map((unit) => (
+                                                    <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
+                                                        {unit.prounit_nam}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     )}
                                 />
-                                {errors.farm_id && (
+                                {errors.prounit_id && (
                                     <p className="text-sm text-destructive">
-                                        {errors.farm_id.message}
+                                        {errors.prounit_id.message}
                                     </p>
                                 )}
                             </div>
@@ -380,7 +389,7 @@ export default function UnitExpensePage() {
                                         <Select
                                             value={field.value}
                                             onValueChange={field.onChange}
-                                            disabled={!selectedFarm || availableFlocs.length === 0}
+                                            disabled={!selectedUnit || availableFlocs.length === 0}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select floc" />
@@ -400,8 +409,8 @@ export default function UnitExpensePage() {
                                         {errors.floc_id.message}
                                     </p>
                                 )}
-                                {!selectedFarm && (
-                                    <p className="text-xs text-muted-foreground">Please select a farm first</p>
+                                {!selectedUnit && (
+                                    <p className="text-xs text-muted-foreground">Please select a unit first</p>
                                 )}
                             </div>
 
@@ -573,7 +582,7 @@ export default function UnitExpensePage() {
                                 onClick={() => {
                                     reset({
                                         expense_date: new Date().toISOString().split('T')[0],
-                                        farm_id: "",
+                                        prounit_id: "",
                                         floc_id: "",
                                         product_id: "",
                                         price: "",
@@ -618,16 +627,16 @@ export default function UnitExpensePage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Farm</Label>
-                                <Select value={filterFarm} onValueChange={setFilterFarm}>
+                                <Label>Unit</Label>
+                                <Select value={filterUnit} onValueChange={setFilterUnit}>
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Farms</SelectItem>
-                                        {farms.map((farm) => (
-                                            <SelectItem key={farm.farm_id} value={farm.farm_id.toString()}>
-                                                {farm.farm_nam}
+                                        <SelectItem value="all">All Units</SelectItem>
+                                        {Array.isArray(units) && units.map((unit) => (
+                                            <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
+                                                {unit.prounit_nam}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -658,7 +667,7 @@ export default function UnitExpensePage() {
                                 <thead className="sticky top-0 bg-background z-20 border-b-2">
                                     <tr className="border-b">
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Farm</th>
+                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Floc</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Price</th>
@@ -674,7 +683,7 @@ export default function UnitExpensePage() {
                                                 {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "N/A"}
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
-                                                {farms.find(f => f.farm_id === expense.farm_id)?.farm_nam || "N/A"}
+                                                {expense.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (expense.prounit_id || expense.farm_id))?.prounit_nam) || "N/A"}
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
                                                 Floc #{expense.floc_id}

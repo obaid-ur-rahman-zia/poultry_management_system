@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Plus, Search, Edit2, Trash2, X, AlertCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -68,6 +69,8 @@ export default function FlocManagementPage() {
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [clearDescription, setClearDescription] = useState("");
   const [flocToClear, setFlocToClear] = useState(null);
+  const [shouldClearEndingDate, setShouldClearEndingDate] = useState(false);
+  const [activeFlocForSelectedFarm, setActiveFlocForSelectedFarm] = useState(null);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,11 +89,42 @@ export default function FlocManagementPage() {
 
   useEffect(() => {
     updateAvailableFarms();
-  }, [flocs, selectedFarm]);
+  }, [flocs, selectedFarm, isEditMode, editingFlocId]);
+
+  // Check if selected farm has an active floc
+  useEffect(() => {
+    if (selectedFarm) {
+      const farmId = parseInt(selectedFarm);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const activeFloc = flocs.find(floc => {
+        const flocProunitId = floc.prounit_id || floc.farm_id;
+        if (flocProunitId !== farmId) return false;
+        
+        // Check if floc is active (no ending_date or ending_date is in the future, not today or past)
+        if (!floc.ending_date) return true;
+        const endDate = new Date(floc.ending_date);
+        endDate.setHours(0, 0, 0, 0);
+        // Floc is active if ending_date is in the future (after today)
+        return endDate > today;
+      });
+      
+      setActiveFlocForSelectedFarm(activeFloc || null);
+      if (!activeFloc) {
+        setShouldClearEndingDate(false);
+        setClearDescription("");
+      }
+    } else {
+      setActiveFlocForSelectedFarm(null);
+      setShouldClearEndingDate(false);
+      setClearDescription("");
+    }
+  }, [selectedFarm, flocs]);
 
   const fetchFarms = async () => {
     try {
-      const response = await fetch("/api/farm/readAll");
+      const response = await fetch("/api/unit/readAll");
       const result = await response.json();
       
       if (result.response_status === "success") {
@@ -98,7 +132,7 @@ export default function FlocManagementPage() {
         setFarms(farmsData);
       }
     } catch (error) {
-      console.error("Error fetching farms:", error);
+      console.error("Error fetching units:", error);
     }
   };
 
@@ -144,23 +178,26 @@ export default function FlocManagementPage() {
 
     const unavailableFarmIds = flocs
       .filter(floc => {
-        // Farm is unavailable if it has an ending_date that hasn't passed yet
+        // Farm is unavailable if it has an ending_date that is in the future (after today)
+        // If ending_date is today or in the past, the farm is available
         if (floc.ending_date) {
           const endDate = new Date(floc.ending_date);
           endDate.setHours(0, 0, 0, 0);
-          return endDate >= today;
+          // Farm is unavailable only if ending_date is in the future (after today)
+          return endDate > today;
         }
-        // If no ending_date, farm is unavailable
+        // If no ending_date, farm is unavailable (active floc)
         return true;
       })
-      .map(floc => floc.farm_id);
+      .map(floc => floc.prounit_id || floc.farm_id);
 
     const available = farms.filter(farm => {
+      const farmId = farm.prounit_id || farm.farm_id;
       // If editing, allow the currently selected farm
-      if (isEditMode && editingFlocId && flocs.find(f => f.floc_id === editingFlocId)?.farm_id === farm.farm_id) {
+      if (isEditMode && editingFlocId && (flocs.find(f => f.floc_id === editingFlocId)?.prounit_id || flocs.find(f => f.floc_id === editingFlocId)?.farm_id) === farmId) {
         return true;
       }
-      return !unavailableFarmIds.includes(farm.farm_id);
+      return !unavailableFarmIds.includes(farmId);
     });
 
     setAvailableFarms(available);
@@ -244,7 +281,59 @@ export default function FlocManagementPage() {
     }
   };
 
+  const handleConfirmClear = async () => {
+    if (!clearDescription.trim()) {
+      toast.error("Please provide a description for clearing the ending date");
+      return;
+    }
+
+    if (!activeFlocForSelectedFarm) {
+      toast.error("No active floc found to clear");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/floc/clearEndingDate`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          req_object: {
+            floc_id: activeFlocForSelectedFarm.floc_id,
+            clear_description: clearDescription.trim(),
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.response_status === "success") {
+        toast.success("Ending date cleared successfully. Farm is now available for a new floc.");
+        await fetchFlocs();
+        setClearDescription("");
+        setShouldClearEndingDate(false);
+        setActiveFlocForSelectedFarm(null);
+        // Refresh available farms - the cleared farm should now be available
+        setTimeout(() => {
+          updateAvailableFarms();
+        }, 100);
+      } else {
+        toast.error(result.response_message || "Failed to clear ending date");
+      }
+    } catch (error) {
+      console.error("Error clearing ending date:", error);
+      toast.error("Failed to clear ending date");
+    }
+  };
+
   const onSubmit = async (data) => {
+    // If clearing ending date is enabled but not yet confirmed, prevent form submission
+    if (shouldClearEndingDate && activeFlocForSelectedFarm) {
+      toast.error("Please confirm clearing the ending date first");
+      return;
+    }
+
     // Validate stackholders total percentage
     const totalPercentage = calculateTotalPercentage();
     if (totalPercentage !== 100) {
@@ -267,7 +356,7 @@ export default function FlocManagementPage() {
 
     const payload = {
       req_object: {
-        farm_id: parseInt(data.farm_id),
+        prounit_id: parseInt(data.farm_id), // farm_id from form maps to prounit_id
         starting_date: data.starting_date,
         ending_date: data.ending_date || null,
         stackholders: validStackholders.map(sh => ({
@@ -298,13 +387,16 @@ export default function FlocManagementPage() {
           isEditMode ? "Floc updated successfully" : "Floc created successfully"
         );
         reset({
-          prounit_id: "",
+          farm_id: "",
           starting_date: "",
           ending_date: "",
           stackholders: [{ acc_id: "", percentage: "" }],
         });
         setIsEditMode(false);
         setEditingFlocId(null);
+        setShouldClearEndingDate(false);
+        setClearDescription("");
+        setActiveFlocForSelectedFarm(null);
         fetchFlocs();
       } else {
         toast.error(result.response_message || "Failed to save floc");
@@ -318,6 +410,9 @@ export default function FlocManagementPage() {
   const handleCreateNew = () => {
     setIsEditMode(false);
     setEditingFlocId(null);
+    setShouldClearEndingDate(false);
+    setClearDescription("");
+    setActiveFlocForSelectedFarm(null);
     reset({
       farm_id: "",
       starting_date: "",
@@ -338,8 +433,10 @@ export default function FlocManagementPage() {
           : floc.stackholders)
       : [{ acc_id: "", percentage: "" }];
 
+    const prounitId = (floc.prounit_id || floc.farm_id)?.toString() || "";
+
     reset({
-      farm_id: floc.farm_id?.toString() || "",
+      farm_id: prounitId,
       starting_date: floc.starting_date ? new Date(floc.starting_date).toISOString().split('T')[0] : "",
       ending_date: floc.ending_date ? new Date(floc.ending_date).toISOString().split('T')[0] : "",
       stackholders: stackholdersData.length > 0 
@@ -349,6 +446,12 @@ export default function FlocManagementPage() {
           }))
         : [{ acc_id: "", percentage: "" }],
     });
+    
+    // Update available farms after setting edit mode to ensure current unit is included
+    setTimeout(() => {
+      updateAvailableFarms();
+    }, 0);
+    
     document.getElementById("floc-form")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -378,12 +481,14 @@ export default function FlocManagementPage() {
 
   // Filter flocs
   const filteredFlocs = flocs.filter((floc) => {
+    const flocProunitId = floc.prounit_id || floc.farm_id;
     const matchesSearch = searchQuery === "" || 
-      floc.farm?.farm_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      farms.find(f => f.farm_id === floc.farm_id)?.farm_nam?.toLowerCase().includes(searchQuery.toLowerCase());
+      floc.unit?.prounit_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      farms.find(f => (f.prounit_id || f.farm_id) === flocProunitId)?.prounit_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      farms.find(f => (f.prounit_id || f.farm_id) === flocProunitId)?.farm_nam?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesUnit = filterUnit === "all" || 
-      floc.farm_id?.toString() === filterUnit;
+      (floc.prounit_id || floc.farm_id)?.toString() === filterUnit;
 
     const matchesStartDate = filterStartDate === "" ||
       (floc.starting_date && new Date(floc.starting_date).toISOString().split('T')[0] === filterStartDate);
@@ -415,18 +520,62 @@ export default function FlocManagementPage() {
                   render={({ field }) => (
                     <Select
                       value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={availableFarms.length === 0 && !isEditMode}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Trigger useEffect to check for active floc
+                        const farmId = parseInt(value);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const activeFloc = flocs.find(floc => {
+                          const flocProunitId = floc.prounit_id || floc.farm_id;
+                          if (flocProunitId !== farmId) return false;
+                          if (!floc.ending_date) return true;
+                          const endDate = new Date(floc.ending_date);
+                          endDate.setHours(0, 0, 0, 0);
+                          return endDate >= today;
+                        });
+                        if (activeFloc) {
+                          setActiveFlocForSelectedFarm(activeFloc);
+                        } else {
+                          setActiveFlocForSelectedFarm(null);
+                          setShouldClearEndingDate(false);
+                          setClearDescription("");
+                        }
+                      }}
+                      disabled={availableFarms.length === 0 && !isEditMode && farms.length === 0}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select farm" />
                       </SelectTrigger>
                       <SelectContent>
                         {availableFarms.map((farm) => (
-                          <SelectItem key={farm.farm_id} value={farm.farm_id.toString()}>
-                            {farm.farm_nam}
+                          <SelectItem key={farm.prounit_id || farm.farm_id} value={(farm.prounit_id || farm.farm_id).toString()}>
+                            {farm.prounit_nam || farm.farm_nam}
                           </SelectItem>
                         ))}
+                        {/* Show unavailable farms (with active flocs) when no available farms */}
+                        {availableFarms.length === 0 && !isEditMode && farms.length > 0 && farms.map((farm) => {
+                          const farmId = farm.prounit_id || farm.farm_id;
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const activeFloc = flocs.find(floc => {
+                            const flocProunitId = floc.prounit_id || floc.farm_id;
+                            if (flocProunitId !== farmId) return false;
+                            if (!floc.ending_date) return true;
+                            const endDate = new Date(floc.ending_date);
+                            endDate.setHours(0, 0, 0, 0);
+                            // Floc is active if ending_date is in the future (after today)
+                            return endDate > today;
+                          });
+                          if (activeFloc) {
+                            return (
+                              <SelectItem key={farmId} value={farmId.toString()}>
+                                {farm.prounit_nam || farm.farm_nam} (Active - can clear)
+                              </SelectItem>
+                            );
+                          }
+                          return null;
+                        })}
                       </SelectContent>
                     </Select>
                   )}
@@ -436,10 +585,46 @@ export default function FlocManagementPage() {
                     {errors.farm_id.message}
                   </p>
                 )}
-                {availableFarms.length === 0 && !isEditMode && (
-                  <p className="text-sm text-muted-foreground">
-                    No available farms. All farms are currently in active flocs.
-                  </p>
+                {availableFarms.length === 0 && !isEditMode && farms.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      No available farms. All farms are currently in active flocs.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Select a farm from the list below to clear its ending date and make it available.
+                    </p>
+                    <Select
+                      value={selectedFarm}
+                      onValueChange={(value) => {
+                        setValue("farm_id", value);
+                        const farmId = parseInt(value);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const activeFloc = flocs.find(floc => {
+                          const flocProunitId = floc.prounit_id || floc.farm_id;
+                          if (flocProunitId !== farmId) return false;
+                          if (!floc.ending_date) return true;
+                          const endDate = new Date(floc.ending_date);
+                          endDate.setHours(0, 0, 0, 0);
+                          return endDate >= today;
+                        });
+                        if (activeFloc) {
+                          setActiveFlocForSelectedFarm(activeFloc);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select farm to clear ending date" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {farms.map((farm) => (
+                          <SelectItem key={farm.prounit_id || farm.farm_id} value={(farm.prounit_id || farm.farm_id).toString()}>
+                            {farm.prounit_nam || farm.farm_nam}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
               </div>
 
@@ -467,7 +652,52 @@ export default function FlocManagementPage() {
                   id="ending_date"
                   type="date"
                   {...register("ending_date")}
+                  disabled={shouldClearEndingDate}
                 />
+                {activeFlocForSelectedFarm && !isEditMode && (
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Switch
+                      id="clear-ending-date"
+                      checked={shouldClearEndingDate}
+                      onCheckedChange={setShouldClearEndingDate}
+                    />
+                    <Label htmlFor="clear-ending-date" className="text-sm cursor-pointer">
+                      Clear ending date of active floc (will set to today)
+                    </Label>
+                  </div>
+                )}
+                {shouldClearEndingDate && (
+                  <div className="space-y-2 mt-2">
+                    <Label htmlFor="clear_description">Clear Description *</Label>
+                    <Textarea
+                      id="clear_description"
+                      placeholder="Enter reason for clearing ending date"
+                      value={clearDescription}
+                      onChange={(e) => setClearDescription(e.target.value)}
+                      rows={2}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="default"
+                        onClick={handleConfirmClear}
+                        disabled={!clearDescription.trim()}
+                      >
+                        Confirm Clear
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShouldClearEndingDate(false);
+                          setClearDescription("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -562,14 +792,14 @@ export default function FlocManagementPage() {
                     {totalPercentage.toFixed(2)}%
                   </span>
                 </div>
-                {!isPercentageValid && (
+                {/* {!isPercentageValid && (
                   <Alert variant="destructive" className="mt-2">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
                       Stackholders percentage must total exactly 100%
                     </AlertDescription>
                   </Alert>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -581,6 +811,9 @@ export default function FlocManagementPage() {
                   reset();
                   setIsEditMode(false);
                   setEditingFlocId(null);
+                  setShouldClearEndingDate(false);
+                  setClearDescription("");
+                  setActiveFlocForSelectedFarm(null);
                 }}
               >
                 {isEditMode ? "Cancel Edit" : "Clear Form"}
@@ -621,8 +854,8 @@ export default function FlocManagementPage() {
                   <SelectContent>
                     <SelectItem value="all">All Farms</SelectItem>
                     {farms.map((farm) => (
-                      <SelectItem key={farm.farm_id} value={farm.farm_id.toString()}>
-                        {farm.farm_nam}
+                      <SelectItem key={farm.prounit_id || farm.farm_id} value={(farm.prounit_id || farm.farm_id).toString()}>
+                        {farm.prounit_nam || farm.farm_nam}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -685,7 +918,7 @@ export default function FlocManagementPage() {
                     return (
                       <TableRow key={floc.floc_id}>
                         <TableCell className="font-medium">
-                          {floc.farm?.farm_nam || farms.find(f => f.farm_id === floc.farm_id)?.farm_nam || "N/A"}
+                          {floc.unit?.prounit_nam || farms.find(f => (f.prounit_id || f.farm_id) === floc.prounit_id)?.prounit_nam || farms.find(f => (f.prounit_id || f.farm_id) === floc.prounit_id)?.farm_nam || "N/A"}
                         </TableCell>
                         <TableCell>
                           {floc.starting_date 
@@ -693,19 +926,26 @@ export default function FlocManagementPage() {
                             : "N/A"}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            {floc.ending_date 
-                              ? new Date(floc.ending_date).toLocaleDateString()
-                              : "Not set"}
-                            {floc.ending_date && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleClearEndingDate(floc)}
-                                className="h-6 px-2 text-xs"
-                              >
-                                Clear
-                              </Button>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              {floc.ending_date 
+                                ? new Date(floc.ending_date).toLocaleDateString()
+                                : "Not set"}
+                              {floc.ending_date && !floc.clear_description && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleClearEndingDate(floc)}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  Clear
+                                </Button>
+                              )}
+                            </div>
+                            {floc.clear_description && (
+                              <p className="text-xs text-muted-foreground italic">
+                                Cleared: {floc.clear_description}
+                              </p>
                             )}
                           </div>
                         </TableCell>

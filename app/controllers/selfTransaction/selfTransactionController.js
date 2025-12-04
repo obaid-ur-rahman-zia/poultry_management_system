@@ -1,10 +1,15 @@
 import SelfTransactionRepository from "@/app/repositories/selfTransaction/selfTransactionRepository";
 import TransactionRepository from "@/app/repositories/transaction/transactionRepository";
+import AccountsRepository from "@/app/repositories/account/accounts/accountsRepository";
+import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/accountSubHeadRepository";
+import UserRepository from "@/app/repositories/user/userRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
 import prisma from "@/lib/prisma";
 import { calculateFinancialYear } from "@/app/components/calculateFinYear/financialYear";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 class SelfTransactionController {
   async readAll() {
@@ -13,7 +18,8 @@ class SelfTransactionController {
       const cachedData = await RedisService.get(cacheKey);
       if (cachedData) {
         console.log("Self Transaction Cache Hit");
-        return successResponse(JSON.parse(cachedData), "Success");
+        // RedisService.get() already parses JSON, so no need to parse again
+        return successResponse(cachedData, "Success");
       }
       console.log("Self Transaction Cache Miss");
       const data = await SelfTransactionRepository.readAll();
@@ -63,6 +69,28 @@ class SelfTransactionController {
 
   async create(req) {
     try {
+      // Get logged-in user session
+      const session = await getServerSession(authOptions);
+      if (!session || !session.user?.id) {
+        return errorResponse(new Error("Unauthorized: User must be logged in"), 401);
+      }
+
+      const userId = parseInt(session.user.id);
+      
+      // Get user with cash in hand account
+      const user = await UserRepository.readById(userId);
+      if (!user) {
+        return errorResponse(new Error("User not found"), 404);
+      }
+
+      // Validate that user has cash in hand account
+      if (!user.cash_in_hand_account || !user.cash_in_hand_account_id) {
+        return errorResponse(
+          new Error("User must have a Cash In Hand account. Please contact administrator."),
+          400
+        );
+      }
+
       const { req_object } = await req.json();
       const { transaction_date, account_id, amount, transaction_type } = req_object;
 
@@ -98,8 +126,9 @@ class SelfTransactionController {
 
       const financialYear = calculateFinancialYear(transaction_date);
       const isReceive = transaction_type === "receive";
+      const cashInHandAccountId = user.cash_in_hand_account_id;
 
-      // Use transaction to ensure both self_transaction and transaction are created together
+      // Use transaction to ensure both self_transaction and transactions are created together
       const result = await prisma.$transaction(async (tx) => {
         // Create the self transaction record
         const createdTransaction = await SelfTransactionRepository.create(
@@ -117,7 +146,7 @@ class SelfTransactionController {
           tx
         );
 
-        // Create transaction entry
+        // Create transaction entry for the selected account
         // If receive: credit the account (money coming in)
         // If pay: debit the account (money going out)
         await TransactionRepository.create(
@@ -128,6 +157,26 @@ class SelfTransactionController {
             debit: isReceive ? 0 : amountValue,
             credit: isReceive ? amountValue : 0,
             remarks: req_object.description || `${transaction_type === "receive" ? "Received" : "Paid"} ${isReceive ? "in" : "from"} own account`,
+            financial_year: financialYear,
+            voucher_type: "Self Transaction",
+            transaction_dat: new Date(transaction_date),
+            insert_by: req_object.insert_by || "user 1",
+            update_by: req_object.update_by || "user 1",
+          },
+          tx
+        );
+
+        // Create opposite transaction in user's cash in hand account
+        // If receive: debit cash in hand (money going out from cash)
+        // If pay: credit cash in hand (money coming into cash)
+        await TransactionRepository.create(
+          {
+            acc_id: cashInHandAccountId,
+            reference_id: createdTransaction.transaction_id,
+            reference: "Self Transaction",
+            debit: isReceive ? amountValue : 0,
+            credit: isReceive ? 0 : amountValue,
+            remarks: req_object.description || `Opposite transaction: ${transaction_type === "receive" ? "Paid from" : "Received in"} cash in hand`,
             financial_year: financialYear,
             voucher_type: "Self Transaction",
             transaction_dat: new Date(transaction_date),
@@ -157,6 +206,28 @@ class SelfTransactionController {
 
   async update(req) {
     try {
+      // Get logged-in user session
+      const session = await getServerSession(authOptions);
+      if (!session || !session.user?.id) {
+        return errorResponse(new Error("Unauthorized: User must be logged in"), 401);
+      }
+
+      const userId = parseInt(session.user.id);
+      
+      // Get user with cash in hand account
+      const user = await UserRepository.readById(userId);
+      if (!user) {
+        return errorResponse(new Error("User not found"), 404);
+      }
+
+      // Validate that user has cash in hand account
+      if (!user.cash_in_hand_account || !user.cash_in_hand_account_id) {
+        return errorResponse(
+          new Error("User must have a Cash In Hand account. Please contact administrator."),
+          400
+        );
+      }
+
       const { req_object } = await req.json();
       const { transaction_id } = req_object;
 
@@ -186,8 +257,9 @@ class SelfTransactionController {
       const amount = req_object.amount ? Number(req_object.amount) : existingTransaction.amount;
       const accountId = req_object.account_id ? Number(req_object.account_id) : existingTransaction.account_id;
       const transactionDate = req_object.transaction_date || existingTransaction.transaction_date;
+      const cashInHandAccountId = user.cash_in_hand_account_id;
 
-      // Use transaction to ensure both self_transaction and transaction are updated together
+      // Use transaction to ensure both self_transaction and transactions are updated together
       const result = await prisma.$transaction(async (tx) => {
         // Update the self transaction record
         const updatedTransaction = await SelfTransactionRepository.update(
@@ -201,14 +273,14 @@ class SelfTransactionController {
           tx
         );
 
-        // Delete old transaction
+        // Delete old transactions (both account and cash in hand)
         await TransactionRepository.softDeleteByReferenceId(
           existingTransaction.transaction_id,
           "Self Transaction",
           tx
         );
 
-        // Create new transaction
+        // Create new transaction for the selected account
         await TransactionRepository.create(
           {
             acc_id: accountId,
@@ -217,6 +289,24 @@ class SelfTransactionController {
             debit: isReceive ? 0 : amount,
             credit: isReceive ? amount : 0,
             remarks: req_object.description || `${transactionType === "receive" ? "Received" : "Paid"} ${isReceive ? "in" : "from"} own account`,
+            financial_year: financialYear,
+            voucher_type: "Self Transaction",
+            transaction_dat: new Date(transactionDate),
+            insert_by: req_object.update_by || "user 1",
+            update_by: req_object.update_by || "user 1",
+          },
+          tx
+        );
+
+        // Create opposite transaction in user's cash in hand account
+        await TransactionRepository.create(
+          {
+            acc_id: cashInHandAccountId,
+            reference_id: updatedTransaction.transaction_id,
+            reference: "Self Transaction",
+            debit: isReceive ? amount : 0,
+            credit: isReceive ? 0 : amount,
+            remarks: req_object.description || `Opposite transaction: ${transactionType === "receive" ? "Paid from" : "Received in"} cash in hand`,
             financial_year: financialYear,
             voucher_type: "Self Transaction",
             transaction_dat: new Date(transactionDate),
@@ -261,12 +351,12 @@ class SelfTransactionController {
         return errorResponse(new Error("transaction_id is required"), 400);
       }
 
-      // Use transaction to ensure both self_transaction and transaction are deleted together
+      // Use transaction to ensure both self_transaction and transactions are deleted together
       await prisma.$transaction(async (tx) => {
         // Soft delete the self transaction
         await SelfTransactionRepository.delete(transaction_id);
 
-        // Soft delete related transaction
+        // Soft delete related transactions (both account and cash in hand)
         await TransactionRepository.softDeleteByReferenceId(
           Number(transaction_id),
           "Self Transaction",
