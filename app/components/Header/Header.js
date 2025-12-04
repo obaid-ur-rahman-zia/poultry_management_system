@@ -528,7 +528,7 @@ const Header = () => {
                                 The Switch2itech Help Center will support you as you learn about and use Switch2itech Software.
                                 We have documentation and videos to answer your questions.
                             </p>
-                            <p>Can't find the answers you're looking for?</p>
+                            <p>Can&apos;t find the answers you&apos;re looking for?</p>
                             <p>
                                 Please submit a support ticket & our support agent will be in touch with in one business day.
                             </p>
