@@ -1,18 +1,18 @@
-import { Building2, ChartLine, FileText, FlaskConical, Grid3x3, LayoutDashboard, MapPin, MessageSquareQuote, Package, Receipt, Scale, ShoppingCart, TrendingUp, Undo, UserCircle, Users, Wallet } from "lucide-react";
+import { Building2, ChartLine, FileText, FlaskConical, Grid3x2, Grid3x3, LayoutDashboard, MapPin, MessageSquareQuote, Package, Receipt, Scale, ShoppingCart, TrendingUp, Undo, UserCircle, Users, Wallet } from "lucide-react";
 
 export const navigationItems = [
     {
-      id: "quick-access",
-      title: "Quick Access",
+      id: "analytics",
+      title: "Analytics",
       href: "/",
-      icon: Grid3x3,
+      icon: ChartLine,
       type: "single",
     },
     {
-      id: "analytics",
-      title: "Analytics",
-      href: "/analytics",
-      icon: ChartLine,
+      id: "quick-access",
+      title: "Quick Access",
+      href: "/quick-access",
+      icon: Grid3x2,
       type: "single",
     },
     {

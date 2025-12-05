@@ -3,10 +3,12 @@
 import LayoutSidebar, { useSidebar } from "@/app/components/common/LayoutSidebar";
 import BreadcrumbNav from "@/app/components/breadCrumb/breadCrumb";
 import Header from "../components/Header/Header";
+import RouteTracker from "@/app/components/common/RouteTracker";
 
 export default function InterfaceLayout({ children }) {
     return (
         <LayoutSidebar>
+            <RouteTracker />
             <ContentArea>{children}</ContentArea>
         </LayoutSidebar>
     );
