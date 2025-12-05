@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -16,7 +17,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
   LineChart,
   Line,
 } from "recharts";
@@ -30,9 +30,45 @@ import {
   RefreshCw,
   ArrowUpRight,
   ArrowDownRight,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const cardHoverVariants = {
+  rest: { scale: 1, y: 0 },
+  hover: { 
+    scale: 1.02, 
+    y: -4,
+    transition: {
+      duration: 0.3,
+      ease: [0.22, 1, 0.36, 1],
+    }
+  },
+};
 
 export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState({
@@ -229,405 +265,405 @@ export default function DashboardPage() {
   if (dashboardData.loading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-          <div className="text-lg">Loading dashboard...</div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <RefreshCw className="h-8 w-8 text-primary" />
+          </motion.div>
+          <div className="text-lg font-medium">Loading dashboard...</div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="p-6 space-y-6"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div variants={itemVariants} className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Last updated: {lastRefresh.toLocaleTimeString()}
-          </p>
+          <div className="flex items-center gap-3">
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Sparkles className="h-8 w-8 text-blue-600" />
+            </motion.div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Last updated: {lastRefresh.toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
         </div>
-        <Button
-          onClick={fetchDashboardData}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
-      </div>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            onClick={fetchDashboardData}
+            variant="outline"
+            size="sm"
+            className="gap-2 shadow-sm"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </motion.div>
+      </motion.div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Total Debit
-            </CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              Rs. {totalDebit.toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {transactions.filter((t) => t.debit > 0).length} transactions
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Total Credit
-            </CardTitle>
-            <TrendingDown className="h-5 w-5 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              Rs. {totalCredit.toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {transactions.filter((t) => t.credit > 0).length} transactions
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Net Balance
-            </CardTitle>
-            <DollarSign className="h-5 w-5 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${
-                netBalance >= 0 ? "text-blue-600" : "text-orange-600"
-              }`}
-            >
-              Rs. {Math.abs(netBalance).toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {netBalance >= 0 ? "Surplus" : "Deficit"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Trading Profit
-            </CardTitle>
-            <Activity className="h-5 w-5 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${
-                tradingProfit >= 0 ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              Rs. {Math.abs(tradingProfit).toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {trades.length} trades
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <MetricCard
+          title="Total Debit"
+          value={totalDebit}
+          icon={TrendingUp}
+          iconColor="text-green-600"
+          valueColor="text-green-600"
+          subtitle={`${transactions.filter((t) => t.debit > 0).length} transactions`}
+          index={0}
+        />
+        <MetricCard
+          title="Total Credit"
+          value={totalCredit}
+          icon={TrendingDown}
+          iconColor="text-red-600"
+          valueColor="text-red-600"
+          subtitle={`${transactions.filter((t) => t.credit > 0).length} transactions`}
+          index={1}
+        />
+        <MetricCard
+          title="Net Balance"
+          value={Math.abs(netBalance)}
+          icon={DollarSign}
+          iconColor="text-blue-600"
+          valueColor={netBalance >= 0 ? "text-blue-600" : "text-orange-600"}
+          subtitle={netBalance >= 0 ? "Surplus" : "Deficit"}
+          index={2}
+        />
+        <MetricCard
+          title="Trading Profit"
+          value={Math.abs(tradingProfit)}
+          icon={Activity}
+          iconColor="text-purple-600"
+          valueColor={tradingProfit >= 0 ? "text-green-600" : "text-red-600"}
+          subtitle={`${trades.length} trades`}
+          index={3}
+        />
+      </motion.div>
 
       {/* Secondary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Unit Sales
-            </CardTitle>
-            <ArrowUpRight className="h-5 w-5 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              Rs. {totalUnitSales.toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {unitSales.length} sales records
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Unit Expenses
-            </CardTitle>
-            <ArrowDownRight className="h-5 w-5 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              Rs. {totalUnitExpenses.toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {unitExpenses.length} expense records
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Unit Net Profit
-            </CardTitle>
-            <DollarSign className="h-5 w-5 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${
-                unitNetProfit >= 0 ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              Rs. {Math.abs(unitNetProfit).toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Net from units
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Active Flocs
-            </CardTitle>
-            <Activity className="h-5 w-5 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {activeFlocs} / {flocs.length}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Active floc operations
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <MetricCard
+          title="Unit Sales"
+          value={totalUnitSales}
+          icon={ArrowUpRight}
+          iconColor="text-green-600"
+          valueColor="text-green-600"
+          subtitle={`${unitSales.length} sales records`}
+          index={4}
+        />
+        <MetricCard
+          title="Unit Expenses"
+          value={totalUnitExpenses}
+          icon={ArrowDownRight}
+          iconColor="text-red-600"
+          valueColor="text-red-600"
+          subtitle={`${unitExpenses.length} expense records`}
+          index={5}
+        />
+        <MetricCard
+          title="Unit Net Profit"
+          value={Math.abs(unitNetProfit)}
+          icon={DollarSign}
+          iconColor="text-blue-600"
+          valueColor={unitNetProfit >= 0 ? "text-green-600" : "text-red-600"}
+          subtitle="Net from units"
+          index={6}
+        />
+        <MetricCard
+          title="Active Flocs"
+          value={`${activeFlocs} / ${flocs.length}`}
+          icon={Activity}
+          iconColor="text-blue-600"
+          valueColor="text-blue-600"
+          subtitle="Active floc operations"
+          index={7}
+          isString={true}
+        />
+      </motion.div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Transaction Type Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Transaction Types
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {transactionTypeData.length > 0 ? (
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        <motion.div variants={itemVariants}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <CardTitle className="text-lg font-semibold text-gray-800">
+                Transaction Types
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {transactionTypeData.length > 0 ? (
+                <div className="h-64">
+                  <ChartContainer
+                    config={transactionTypeData.reduce((acc, item) => {
+                      acc[item.name.toLowerCase().replace(/\s+/g, "")] = {
+                        label: item.name,
+                        color: item.color,
+                      };
+                      return acc;
+                    }, {})}
+                    className="h-full w-full"
+                  >
+                    <PieChart>
+                      <Pie
+                        data={transactionTypeData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={2}
+                        dataKey="value"
+                        startAngle={90}
+                        endAngle={-270}
+                      >
+                        {transactionTypeData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ChartContainer>
+                </div>
+              ) : (
+                <div className="h-64 flex items-center justify-center text-gray-500">
+                  No transaction data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="border-b bg-gradient-to-r from-green-50 to-emerald-50">
+              <CardTitle className="text-lg font-semibold text-gray-800">
+                Monthly Transactions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
               <div className="h-64">
                 <ChartContainer
-                  config={transactionTypeData.reduce((acc, item) => {
-                    acc[item.name.toLowerCase().replace(/\s+/g, "")] = {
-                      label: item.name,
-                      color: item.color,
-                    };
-                    return acc;
-                  }, {})}
+                  config={{
+                    debit: { label: "Debit", color: "#10b981" },
+                    credit: { label: "Credit", color: "#ef4444" },
+                  }}
                   className="h-full w-full"
                 >
-                  <PieChart>
-                    <Pie
-                      data={transactionTypeData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      {transactionTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
+                  <BarChart data={monthlyTransactionData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
+                    <Bar dataKey="debit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="credit" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  </BarChart>
                 </ChartContainer>
               </div>
-            ) : (
-              <div className="h-64 flex items-center justify-center text-gray-500">
-                No transaction data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Monthly Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Monthly Transactions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ChartContainer
-                config={{
-                  debit: { label: "Debit", color: "#10b981" },
-                  credit: { label: "Credit", color: "#ef4444" },
-                }}
-                className="h-full w-full"
-              >
-                <BarChart data={monthlyTransactionData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="debit" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="credit" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
 
       {/* Trading and Unit Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Trading */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Monthly Trading Performance
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        <motion.div variants={itemVariants}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
+              <CardTitle className="text-lg font-semibold text-gray-800">
+                Monthly Trading Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="h-64">
+                <ChartContainer
+                  config={{
+                    buy: { label: "Buy Amount", color: "#ef4444" },
+                    sale: { label: "Sale Amount", color: "#10b981" },
+                  }}
+                  className="h-full w-full"
+                >
+                  <LineChart data={monthlyTradingData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="buy"
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="sale"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-amber-50">
+              <CardTitle className="text-lg font-semibold text-gray-800">System Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <SystemOverviewItem
+                  icon={Users}
+                  title="Accounts"
+                  active={activeAccounts}
+                  total={totalAccounts}
+                  color="blue"
+                />
+                <SystemOverviewItem
+                  icon={Package}
+                  title="Units"
+                  active={activeUnits}
+                  total={totalUnits}
+                  color="green"
+                />
+                <SystemOverviewItem
+                  icon={Package}
+                  title="Products"
+                  active={products.length}
+                  total={products.length}
+                  color="purple"
+                />
+                <SystemOverviewItem
+                  icon={Activity}
+                  title="Flocs"
+                  active={activeFlocs}
+                  total={flocs.length}
+                  color="orange"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function MetricCard({ title, value, icon: Icon, iconColor, valueColor, subtitle, index, isString = false }) {
+  return (
+    <motion.div
+      variants={itemVariants}
+      custom={index}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        variants={cardHoverVariants}
+        initial="rest"
+        whileHover="hover"
+        className="h-full"
+      >
+        <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 h-full bg-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              {title}
             </CardTitle>
+            <motion.div
+              whileHover={{ rotate: [0, -10, 10, 0] }}
+              transition={{ duration: 0.5 }}
+            >
+              <Icon className={`h-5 w-5 ${iconColor}`} />
+            </motion.div>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
-              <ChartContainer
-                config={{
-                  buy: { label: "Buy Amount", color: "#ef4444" },
-                  sale: { label: "Sale Amount", color: "#10b981" },
-                }}
-                className="h-full w-full"
-              >
-                <LineChart data={monthlyTradingData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="buy"
-                    stroke="#ef4444"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="sale"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ChartContainer>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 + 0.3 }}
+              className={`text-2xl font-bold ${valueColor}`}
+            >
+              {isString ? value : `Rs. ${value.toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            </motion.div>
+            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
           </CardContent>
         </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
 
-        {/* System Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">System Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <div className="text-sm font-semibold">Accounts</div>
-                    <div className="text-xs text-gray-500">
-                      {activeAccounts} active / {totalAccounts} total
-                    </div>
-                  </div>
-                </div>
-                <Badge variant="outline">
-                  {totalAccounts > 0
-                    ? Math.round((activeAccounts / totalAccounts) * 100)
-                    : 0}%
-                </Badge>
-              </div>
+function SystemOverviewItem({ icon: Icon, title, active, total, color }) {
+  const colorClasses = {
+    blue: "text-blue-600 bg-blue-50",
+    green: "text-green-600 bg-green-50",
+    purple: "text-purple-600 bg-purple-50",
+    orange: "text-orange-600 bg-orange-50",
+  };
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Package className="h-5 w-5 text-green-600" />
-                  <div>
-                    <div className="text-sm font-semibold">Units</div>
-                    <div className="text-xs text-gray-500">
-                      {activeUnits} active / {totalUnits} total
-                    </div>
-                  </div>
-                </div>
-                <Badge variant="outline">
-                  {totalUnits > 0
-                    ? Math.round((activeUnits / totalUnits) * 100)
-                    : 0}%
-                </Badge>
-              </div>
+  const percentage = total > 0 ? Math.round((active / total) * 100) : 0;
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Package className="h-5 w-5 text-purple-600" />
-                  <div>
-                    <div className="text-sm font-semibold">Products</div>
-                    <div className="text-xs text-gray-500">
-                      {products.length} products available
-                    </div>
-                  </div>
-                </div>
-                <Badge variant="outline">{products.length}</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Activity className="h-5 w-5 text-orange-600" />
-                  <div>
-                    <div className="text-sm font-semibold">Flocs</div>
-                    <div className="text-xs text-gray-500">
-                      {activeFlocs} active / {flocs.length} total
-                    </div>
-                  </div>
-                </div>
-                <Badge variant="outline">
-                  {flocs.length > 0
-                    ? Math.round((activeFlocs / flocs.length) * 100)
-                    : 0}%
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+  return (
+    <motion.div
+      whileHover={{ x: 4 }}
+      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <div className="text-sm font-semibold text-gray-900">{title}</div>
+          <div className="text-xs text-gray-500">
+            {active} active / {total} total
+          </div>
+        </div>
       </div>
-    </div>
+      <Badge variant="outline" className="font-semibold">
+        {percentage}%
+      </Badge>
+    </motion.div>
   );
 }
 
 // Helper function to generate monthly transaction data
 function generateMonthlyData(transactions) {
   const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
 
   return months.map((month, idx) => {
@@ -647,29 +683,15 @@ function generateMonthlyData(transactions) {
       0
     );
 
-    return {
-      month,
-      debit,
-      credit,
-    };
+    return { month, debit, credit };
   });
 }
 
 // Helper function to generate monthly trading data
 function generateMonthlyTradingData(trades) {
   const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
 
   return months.map((month, idx) => {
@@ -689,10 +711,6 @@ function generateMonthlyTradingData(trades) {
       0
     );
 
-    return {
-      month,
-      buy,
-      sale,
-    };
+    return { month, buy, sale };
   });
 }
