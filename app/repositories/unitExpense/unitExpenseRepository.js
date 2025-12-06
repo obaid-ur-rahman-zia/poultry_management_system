@@ -32,24 +32,31 @@ class UnitExpenseRepository {
     const prismaClient = tx || prisma;
     // Support both prounit_id and farm_id for backward compatibility
     const prounit_id = data.prounit_id || data.farm_id;
+    const createData = {
+      expense_date: new Date(data.expense_date),
+      prounit_id: Number(prounit_id),
+      floc_id: data.floc_id,
+      product_id: data.product_id,
+      price: Number(data.price),
+      quantity: Number(data.quantity),
+      tax_type: data.tax_type || "flat",
+      tax_value: Number(data.tax_value) || 0,
+      discount_type: data.discount_type || "percentage",
+      discount_value: Number(data.discount_value) || 0,
+      total: Number(data.total),
+      description: data.description || null,
+      insert_by: data.insert_by || "user 1",
+      update_by: data.update_by || "user 1",
+      status: data.status ?? 1,
+    };
+    
+    // Add supplier_id if provided (requires schema migration)
+    if (data.supplier_id !== undefined) {
+      createData.supplier_id = Number(data.supplier_id);
+    }
+    
     return prismaClient.unit_expense.create({
-      data: {
-        expense_date: new Date(data.expense_date),
-        prounit_id: Number(prounit_id),
-        floc_id: data.floc_id,
-        product_id: data.product_id,
-        price: Number(data.price),
-        quantity: Number(data.quantity),
-        tax_type: data.tax_type || "flat",
-        tax_value: Number(data.tax_value) || 0,
-        discount_type: data.discount_type || "percentage",
-        discount_value: Number(data.discount_value) || 0,
-        total: Number(data.total),
-        description: data.description || null,
-        insert_by: data.insert_by || "user 1",
-        update_by: data.update_by || "user 1",
-        status: data.status ?? 1,
-      },
+      data: createData,
       include: {
         unit: true,
         floc: true,
@@ -65,6 +72,7 @@ class UnitExpenseRepository {
     const updateData = {
       expense_date: req_object.expense_date ? new Date(req_object.expense_date) : undefined,
       floc_id: req_object.floc_id !== undefined ? req_object.floc_id : undefined,
+      supplier_id: req_object.supplier_id !== undefined ? Number(req_object.supplier_id) : undefined,
       product_id: req_object.product_id !== undefined ? req_object.product_id : undefined,
       price: req_object.price !== undefined ? Number(req_object.price) : undefined,
       quantity: req_object.quantity !== undefined ? Number(req_object.quantity) : undefined,

@@ -56,8 +56,9 @@ class FlocRepository {
     });
   }
 
-  async create(data) {
-    return prisma.floc.create({
+  async create(data, tx = null) {
+    const prismaClient = tx || prisma;
+    return prismaClient.floc.create({
       data: {
         prounit_id: data.prounit_id || data.farm_id,
         starting_date: new Date(data.starting_date),

@@ -612,6 +612,8 @@ model accounts {
   trading_buy_from      trading[]              @relation("TradingBuyFrom")
   trading_sale_to       trading[]              @relation("TradingSaleTo")
   user_cash_in_hand     user?                  @relation("UserCashInHand")
+  unit_expenses         unit_expense[]         @relation("UnitExpenseSupplier")
+  unit_sales            unit_sale[]            @relation("UnitSaleCustomer")
 
   // Unique constraint to ensure account_id is unique within each sub_id
   @@unique([sub_id, account_id], name: "uq_sub_account")
@@ -818,6 +820,7 @@ model unit_expense {
   expense_date   DateTime
   prounit_id     Int
   floc_id        Int
+  supplier_id    Int?
   product_id     Int
   price          Float
   quantity       Float
@@ -833,14 +836,16 @@ model unit_expense {
   update_by      String   @default("user 1") @db.VarChar(50)
   status         Int      @default(1)
 
-  unit    pro_unit @relation(fields: [prounit_id], references: [prounit_id])
-  floc    floc     @relation(fields: [floc_id], references: [floc_id])
-  product product  @relation(fields: [product_id], references: [product_id])
+  unit     pro_unit @relation(fields: [prounit_id], references: [prounit_id])
+  floc     floc     @relation(fields: [floc_id], references: [floc_id])
+  product  product  @relation(fields: [product_id], references: [product_id])
+  supplier accounts? @relation("UnitExpenseSupplier", fields: [supplier_id], references: [acc_id])
 
   @@index([prounit_id])
   @@index([floc_id])
   @@index([product_id])
   @@index([expense_date])
+  @@index([supplier_id])
 }
 
 model unit_sale {
@@ -848,6 +853,7 @@ model unit_sale {
   sale_date      DateTime
   prounit_id     Int
   floc_id        Int
+  customer_id    Int?
   farm_rate      Float?
   sale_rate      Float?
   product_id     Int
@@ -865,15 +871,17 @@ model unit_sale {
   update_by      String   @default("user 1") @db.VarChar(50)
   status         Int      @default(1)
 
-  unit    pro_unit @relation(fields: [prounit_id], references: [prounit_id])
-  floc    floc     @relation(fields: [floc_id], references: [floc_id])
-  product product  @relation(fields: [product_id], references: [product_id])
+  unit     pro_unit @relation(fields: [prounit_id], references: [prounit_id])
+  floc     floc     @relation(fields: [floc_id], references: [floc_id])
+  product  product  @relation(fields: [product_id], references: [product_id])
+  customer accounts? @relation("UnitSaleCustomer", fields: [customer_id], references: [acc_id])
 
   @@unique([prounit_id, floc_id, sale_date], name: "uq_unit_floc_date_fs_rate")
   @@index([prounit_id])
   @@index([floc_id])
   @@index([product_id])
   @@index([sale_date])
+  @@index([customer_id])
 }
 
 model daily_fs_rate {

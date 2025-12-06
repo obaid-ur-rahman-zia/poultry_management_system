@@ -1,7 +1,10 @@
 import FlocRepository from "@/app/repositories/floc/flocRepository";
+import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/accountSubHeadRepository";
+import AccountsRepository from "@/app/repositories/account/accounts/accountsRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
+import prisma from "@/lib/prisma";
 
 class FlocController {
   async readAll() {
@@ -145,11 +148,110 @@ class FlocController {
         }
       }
 
-      const floc = await FlocRepository.create(req_object);
+      // Get unit information for account name
+      const unit = await prisma.pro_unit.findUnique({
+        where: { prounit_id: Number(prounit_id) },
+      });
+
+      if (!unit) {
+        const error = new Error("Unit not found");
+        ErrorLogger.log(
+          "Failed to create floc in Method: FlocController.create",
+          error
+        );
+        return errorResponse(error, 404);
+      }
+
+      // Use transaction to ensure both floc and account are created together
+      const result = await prisma.$transaction(
+        async (tx) => {
+          try {
+            // Create floc
+            const floc = await FlocRepository.create(req_object, tx);
+
+            // Find or create "Floc" subhead
+            let flocSubhead = await AccountSubHeadRepository.findByName("Floc", tx);
+            
+            if (!flocSubhead) {
+              // Get first account head to use for the subhead
+              const firstHead = await tx.account_head.findFirst({
+                orderBy: { head_id: "asc" },
+              });
+
+              if (!firstHead) {
+                throw new Error("No account head found. Please create an account head first.");
+              }
+
+              // Get the max subhead_id for this head_id
+              const maxSubhead = await tx.account_sub_head.findFirst({
+                where: { head_id: firstHead.head_id },
+                orderBy: { subhead_id: "desc" },
+                select: { subhead_id: true },
+              });
+
+              const nextSubheadId = maxSubhead ? maxSubhead.subhead_id + 1 : 1;
+
+              // Create the Floc subhead
+              flocSubhead = await tx.account_sub_head.create({
+                data: {
+                  head_id: firstHead.head_id,
+                  subhead_id: nextSubheadId,
+                  subhead_nam: "Floc",
+                  is_parent: 0,
+                  parent_sub_id: null,
+                  insert_by: "system",
+                  update_by: "system",
+                  status: 1,
+                },
+              });
+            }
+
+            // Create account name for the floc (e.g., "UnitName - Floc #1")
+            const flocAccountName = `${unit.prounit_nam} - Floc #${floc.floc_id}`;
+
+            // Create account for the floc in the Floc subhead
+            const maxAccount = await tx.accounts.findFirst({
+              where: { sub_id: flocSubhead.sub_id },
+              orderBy: { account_id: "desc" },
+              select: { account_id: true },
+            });
+
+            const nextAccountId = maxAccount ? maxAccount.account_id + 1 : 1;
+
+            await tx.accounts.create({
+              data: {
+                head_id: flocSubhead.head_id,
+                sub_id: flocSubhead.sub_id,
+                account_id: nextAccountId,
+                account_nam: flocAccountName,
+                insert_by: "system",
+                update_by: "system",
+                status: 1,
+              },
+            });
+
+            return floc;
+          } catch (transactionError) {
+            ErrorLogger.log(
+              "Transaction failed in FlocController.create",
+              transactionError
+            );
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 10000,
+          timeout: 30000,
+          isolationLevel: "Serializable",
+        }
+      );
+
       await RedisService.del("flocs:all");
+      await RedisService.del("accountSubHeads:all");
+      await RedisService.del("accounts:all");
       return successResponse(
-        { floc_id: floc.floc_id },
-        "Floc created successfully"
+        { floc_id: result.floc_id },
+        "Floc and account created successfully"
       );
     } catch (err) {
       ErrorLogger.log(

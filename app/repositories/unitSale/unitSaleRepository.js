@@ -84,26 +84,33 @@ class UnitSaleRepository {
     const prismaClient = tx || prisma;
     // Support both prounit_id and farm_id for backward compatibility
     const prounit_id = data.prounit_id || data.farm_id;
+    const createData = {
+      sale_date: new Date(data.sale_date),
+      prounit_id: Number(prounit_id),
+      floc_id: data.floc_id,
+      farm_rate: data.farm_rate ? Number(data.farm_rate) : null,
+      sale_rate: data.sale_rate ? Number(data.sale_rate) : null,
+      product_id: data.product_id,
+      price: Number(data.price),
+      quantity: Number(data.quantity),
+      tax_type: data.tax_type || "flat",
+      tax_value: Number(data.tax_value) || 0,
+      discount_type: data.discount_type || "percentage",
+      discount_value: Number(data.discount_value) || 0,
+      total: Number(data.total),
+      description: data.description || null,
+      insert_by: data.insert_by || "user 1",
+      update_by: data.update_by || "user 1",
+      status: data.status ?? 1,
+    };
+    
+    // Add customer_id if provided (requires schema migration)
+    if (data.customer_id !== undefined) {
+      createData.customer_id = Number(data.customer_id);
+    }
+    
     return prismaClient.unit_sale.create({
-      data: {
-        sale_date: new Date(data.sale_date),
-        prounit_id: Number(prounit_id),
-        floc_id: data.floc_id,
-        farm_rate: data.farm_rate ? Number(data.farm_rate) : null,
-        sale_rate: data.sale_rate ? Number(data.sale_rate) : null,
-        product_id: data.product_id,
-        price: Number(data.price),
-        quantity: Number(data.quantity),
-        tax_type: data.tax_type || "flat",
-        tax_value: Number(data.tax_value) || 0,
-        discount_type: data.discount_type || "percentage",
-        discount_value: Number(data.discount_value) || 0,
-        total: Number(data.total),
-        description: data.description || null,
-        insert_by: data.insert_by || "user 1",
-        update_by: data.update_by || "user 1",
-        status: data.status ?? 1,
-      },
+      data: createData,
       include: {
         unit: true,
         floc: true,
@@ -119,6 +126,7 @@ class UnitSaleRepository {
     const updateData = {
       sale_date: req_object.sale_date ? new Date(req_object.sale_date) : undefined,
       floc_id: req_object.floc_id !== undefined ? req_object.floc_id : undefined,
+      customer_id: req_object.customer_id !== undefined ? Number(req_object.customer_id) : undefined,
       farm_rate: req_object.farm_rate !== undefined ? (req_object.farm_rate ? Number(req_object.farm_rate) : null) : undefined,
       sale_rate: req_object.sale_rate !== undefined ? (req_object.sale_rate ? Number(req_object.sale_rate) : null) : undefined,
       product_id: req_object.product_id !== undefined ? req_object.product_id : undefined,

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2, History } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, History, PlusCircle } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -52,6 +52,7 @@ export default function UnitSalePage() {
             sale_date: new Date().toISOString().split('T')[0],
             prounit_id: "",
             floc_id: "",
+            customer_id: "",
             farm_rate: "",
             sale_rate: "",
             product_id: "",
@@ -77,6 +78,19 @@ export default function UnitSalePage() {
     const [fsRateEditable, setFsRateEditable] = useState(true);
     const [previousFsRates, setPreviousFsRates] = useState([]);
     const [isFsRateHistoryOpen, setIsFsRateHistoryOpen] = useState(false);
+    const [customers, setCustomers] = useState([]);
+    const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
+    const [customerFormData, setCustomerFormData] = useState({
+        customer_name: "",
+        customer_cnic: "",
+        customer_address: "",
+        customer_contact: "",
+        customer_credit_limit: "",
+        cgroup_id: "",
+        subarea_id: "",
+    });
+    const [customerGroups, setCustomerGroups] = useState([]);
+    const [subareas, setSubareas] = useState([]);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -101,6 +115,9 @@ export default function UnitSalePage() {
         fetchUnits();
         fetchProducts();
         fetchSales();
+        fetchCustomers();
+        fetchCustomerGroups();
+        fetchSubareas();
         // Set current date if not already set
         const currentDate = new Date().toISOString().split('T')[0];
         setValue("sale_date", currentDate);
@@ -247,6 +264,103 @@ export default function UnitSalePage() {
         }
     };
 
+    const fetchCustomers = async () => {
+        try {
+            const response = await fetch("/api/customer/readAll");
+            const result = await response.json();
+            if (result.response_status === "success") {
+                // Customer API returns { customer_data, nextId }
+                const customersData = result.response_result?.customer_data || result.response_result?.data || result.response_result || [];
+                setCustomers(Array.isArray(customersData) ? customersData : []);
+            }
+        } catch (error) {
+            console.error("Error fetching customers:", error);
+            setCustomers([]);
+        }
+    };
+
+    const fetchCustomerGroups = async () => {
+        try {
+            const response = await fetch("/api/customerGroup/readAll");
+            const result = await response.json();
+            if (result.response_status === "success") {
+                const groupsData = result.response_result?.data || result.response_result || [];
+                setCustomerGroups(Array.isArray(groupsData) ? groupsData : []);
+            }
+        } catch (error) {
+            console.error("Error fetching customer groups:", error);
+            setCustomerGroups([]);
+        }
+    };
+
+    const fetchSubareas = async () => {
+        try {
+            const response = await fetch("/api/subarea/readAll");
+            const result = await response.json();
+            if (result.response_status === "success") {
+                const subareasData = result.response_result?.data || result.response_result || [];
+                setSubareas(Array.isArray(subareasData) ? subareasData : []);
+            }
+        } catch (error) {
+            console.error("Error fetching subareas:", error);
+            setSubareas([]);
+        }
+    };
+
+    const handleCreateCustomer = async () => {
+        if (!customerFormData.customer_name || !customerFormData.customer_cnic || !customerFormData.customer_address || !customerFormData.customer_contact || !customerFormData.customer_credit_limit || !customerFormData.cgroup_id || !customerFormData.subarea_id) {
+            toast.error("Please fill all required fields");
+            return;
+        }
+
+        try {
+            const payload = {
+                req_object: {
+                    customer_name: customerFormData.customer_name.trim(),
+                    customer_cnic: customerFormData.customer_cnic.trim(),
+                    customer_address: customerFormData.customer_address.trim(),
+                    customer_contact: customerFormData.customer_contact.trim(),
+                    customer_credit_limit: parseFloat(customerFormData.customer_credit_limit),
+                    cgroup_id: parseInt(customerFormData.cgroup_id),
+                    subarea_id: parseInt(customerFormData.subarea_id),
+                },
+            };
+
+            const response = await fetch("/api/customer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            if (result.response_status === "success") {
+                toast.success("Customer created successfully");
+                // Clear cache and refresh customers list
+                await fetchCustomers();
+                // Get acc_id from response - could be in result.response_result or result.response_result.customer
+                const accId = result.response_result?.acc_id || result.response_result?.customer?.acc_id;
+                if (accId) {
+                    setValue("customer_id", accId.toString());
+                }
+                setIsCustomerDialogOpen(false);
+                setCustomerFormData({
+                    customer_name: "",
+                    customer_cnic: "",
+                    customer_address: "",
+                    customer_contact: "",
+                    customer_credit_limit: "",
+                    cgroup_id: "",
+                    subarea_id: "",
+                });
+            } else {
+                toast.error(result.response_message || "Failed to create customer");
+            }
+        } catch (error) {
+            console.error("Error creating customer:", error);
+            toast.error("Failed to create customer");
+        }
+    };
+
     const handleOpenFsRateHistory = () => {
         if (selectedUnit && selectedFloc) {
             fetchPreviousFsRates();
@@ -287,7 +401,7 @@ export default function UnitSalePage() {
     };
 
     const onSubmit = async (data) => {
-        if (!data.prounit_id || !data.floc_id || !data.product_id || !data.price || !data.quantity) {
+        if (!data.prounit_id || !data.floc_id || !data.customer_id || !data.product_id || !data.price || !data.quantity) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -305,6 +419,7 @@ export default function UnitSalePage() {
                 sale_date: data.sale_date,
                 prounit_id: parseInt(data.prounit_id),
                 floc_id: parseInt(data.floc_id),
+                customer_id: parseInt(data.customer_id),
                 farm_rate: data.farm_rate ? parseFloat(data.farm_rate) : null,
                 sale_rate: data.sale_rate ? parseFloat(data.sale_rate) : null,
                 product_id: parseInt(data.product_id),
@@ -343,6 +458,7 @@ export default function UnitSalePage() {
                     sale_date: new Date().toISOString().split('T')[0],
                     prounit_id: "",
                     floc_id: "",
+                    customer_id: "",
                     farm_rate: "",
                     sale_rate: "",
                     product_id: "",
@@ -376,6 +492,7 @@ export default function UnitSalePage() {
             sale_date: sale.sale_date ? new Date(sale.sale_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             prounit_id: prounitId,
             floc_id: sale.floc_id?.toString() || "",
+            customer_id: sale.customer_id?.toString() || "",
             farm_rate: sale.farm_rate?.toString() || "",
             sale_rate: sale.sale_rate?.toString() || "",
             product_id: sale.product_id?.toString() || "",
@@ -592,6 +709,48 @@ export default function UnitSalePage() {
                                 )}
                             </div>
 
+                            {/* Customer Selection */}
+                            <div className="space-y-2">
+                                <Label htmlFor="customer_id">Customer *</Label>
+                                <div className="flex gap-2">
+                                    <Controller
+                                        name="customer_id"
+                                        control={control}
+                                        rules={{ required: "Customer is required" }}
+                                        render={({ field }) => (
+                                            <Select
+                                                value={field.value}
+                                                onValueChange={field.onChange}
+                                                className="flex-1"
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select customer" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Array.isArray(customers) && customers.map((customer) => (
+                                                        <SelectItem key={customer.acc_id} value={customer.acc_id.toString()}>
+                                                            {customer.account_nam}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setIsCustomerDialogOpen(true)}
+                                    >
+                                        <PlusCircle className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                {errors.customer_id && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.customer_id.message}
+                                    </p>
+                                )}
+                            </div>
 
                             {/* Product Selection */}
                             <div className="space-y-2">
@@ -765,6 +924,7 @@ export default function UnitSalePage() {
                                         sale_date: new Date().toISOString().split('T')[0],
                                         prounit_id: "",
                                         floc_id: "",
+                                        customer_id: "",
                                         farm_rate: "",
                                         sale_rate: "",
                                         product_id: "",
@@ -854,6 +1014,7 @@ export default function UnitSalePage() {
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Floc</th>
+                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Customer</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">F.S Rate</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Price</th>
@@ -873,6 +1034,9 @@ export default function UnitSalePage() {
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
                                                 Floc #{sale.floc_id}
+                                            </td>
+                                            <td className="p-2 align-middle whitespace-nowrap">
+                                                {Array.isArray(customers) && sale.customer_id && customers.find(c => c.acc_id === sale.customer_id)?.account_nam || "N/A"}
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
                                                 {Array.isArray(products) && products.find(p => p.product_id === sale.product_id)?.product_title || "N/A"}
@@ -978,6 +1142,126 @@ export default function UnitSalePage() {
                             onClick={() => setIsFsRateHistoryOpen(false)}
                         >
                             Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Create Customer Dialog */}
+            <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Create New Customer</DialogTitle>
+                        <DialogDescription>
+                            Create a new customer account. The customer will be created with is_customer flag set to true.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="customer_name">Customer Name *</Label>
+                            <Input
+                                id="customer_name"
+                                value={customerFormData.customer_name}
+                                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_name: e.target.value })}
+                                placeholder="Enter customer name"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="customer_cnic">CNIC *</Label>
+                            <Input
+                                id="customer_cnic"
+                                value={customerFormData.customer_cnic}
+                                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_cnic: e.target.value })}
+                                placeholder="XXXXX-XXXXXXX-X"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="customer_address">Address *</Label>
+                            <Input
+                                id="customer_address"
+                                value={customerFormData.customer_address}
+                                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_address: e.target.value })}
+                                placeholder="Enter address"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="customer_contact">Contact *</Label>
+                            <Input
+                                id="customer_contact"
+                                value={customerFormData.customer_contact}
+                                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_contact: e.target.value })}
+                                placeholder="Enter contact number"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="customer_credit_limit">Credit Limit *</Label>
+                            <Input
+                                id="customer_credit_limit"
+                                type="number"
+                                step="0.01"
+                                value={customerFormData.customer_credit_limit}
+                                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_credit_limit: e.target.value })}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="cgroup_id">Customer Group *</Label>
+                            <Select
+                                value={customerFormData.cgroup_id}
+                                onValueChange={(value) => setCustomerFormData({ ...customerFormData, cgroup_id: value })}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select customer group" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.isArray(customerGroups) && customerGroups.map((group) => (
+                                        <SelectItem key={group.cgroup_id} value={group.cgroup_id.toString()}>
+                                            {group.cgroup_nam}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="subarea_id">Subarea *</Label>
+                            <Select
+                                value={customerFormData.subarea_id}
+                                onValueChange={(value) => setCustomerFormData({ ...customerFormData, subarea_id: value })}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select subarea" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.isArray(subareas) && subareas.map((subarea) => (
+                                        <SelectItem key={subarea.subarea_id} value={subarea.subarea_id.toString()}>
+                                            {subarea.subarea_nam}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                setIsCustomerDialogOpen(false);
+                                setCustomerFormData({
+                                    customer_name: "",
+                                    customer_cnic: "",
+                                    customer_address: "",
+                                    customer_contact: "",
+                                    customer_credit_limit: "",
+                                    cgroup_id: "",
+                                    subarea_id: "",
+                                });
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="button" onClick={handleCreateCustomer}>
+                            Create Customer
                         </Button>
                     </DialogFooter>
                 </DialogContent>

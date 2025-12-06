@@ -3,6 +3,7 @@ import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
 import prisma from "@/lib/prisma";
+import { createTransactions } from "./unitSaleTransactions";
 
 class UnitSaleController {
   async readAll() {
@@ -137,11 +138,11 @@ class UnitSaleController {
       const { req_object } = await req.json();
       // Support both prounit_id and farm_id for backward compatibility
       const prounit_id = req_object.prounit_id || req_object.farm_id;
-      const { sale_date, floc_id, product_id, price, quantity, set_fs_rate, farm_rate, sale_rate } = req_object;
+      const { sale_date, floc_id, customer_id, product_id, price, quantity, set_fs_rate, farm_rate, sale_rate } = req_object;
 
-      if (!sale_date || !prounit_id || !floc_id || !product_id || !price || !quantity) {
+      if (!sale_date || !prounit_id || !floc_id || !customer_id || !product_id || !price || !quantity) {
         const error = new Error(
-          "sale_date, prounit_id (or farm_id), floc_id, product_id, price, and quantity are required in Method: UnitSaleController.create"
+          "sale_date, prounit_id (or farm_id), floc_id, customer_id, product_id, price, and quantity are required in Method: UnitSaleController.create"
         );
         ErrorLogger.log(
           "Failed to create unit sale in Method: UnitSaleController.create",
@@ -150,62 +151,94 @@ class UnitSaleController {
         return errorResponse(error, 400);
       }
 
-      // If set_fs_rate is true and rates are provided, create daily_fs_rate first
-      if (set_fs_rate && farm_rate && sale_rate) {
-        const date = new Date(sale_date);
-        date.setHours(0, 0, 0, 0);
-        const nextDay = new Date(date);
-        nextDay.setDate(nextDay.getDate() + 1);
+      // CRITICAL FIX: Wrap everything in try-catch to ensure transaction rollback
+      const sale = await prisma.$transaction(
+        async (tx) => {
+          try {
+            // If set_fs_rate is true and rates are provided, create daily_fs_rate first
+            if (set_fs_rate && farm_rate && sale_rate) {
+              const date = new Date(sale_date);
+              date.setHours(0, 0, 0, 0);
+              const nextDay = new Date(date);
+              nextDay.setDate(nextDay.getDate() + 1);
 
-        // Check if F.S Rate already exists for today
-        const existingRate = await prisma.daily_fs_rate.findFirst({
-          where: {
-            prounit_id: Number(prounit_id),
-            floc_id: Number(floc_id),
-            rate_date: {
-              gte: date,
-              lt: nextDay,
-            },
-          },
-        });
+              // Check if F.S Rate already exists for today
+              const existingRate = await tx.daily_fs_rate.findFirst({
+                where: {
+                  prounit_id: Number(prounit_id),
+                  floc_id: Number(floc_id),
+                  rate_date: {
+                    gte: date,
+                    lt: nextDay,
+                  },
+                },
+              });
 
-        if (!existingRate) {
-          await UnitSaleRepository.createDailyFsRate({
-            rate_date: sale_date,
-            prounit_id: Number(prounit_id),
-            floc_id: Number(floc_id),
-            farm_rate: Number(farm_rate),
-            sale_rate: Number(sale_rate),
-            insert_by: req_object.insert_by || "user 1",
-            update_by: req_object.update_by || "user 1",
-            status: 1,
-          });
+              if (!existingRate) {
+                await UnitSaleRepository.createDailyFsRate({
+                  rate_date: sale_date,
+                  prounit_id: Number(prounit_id),
+                  floc_id: Number(floc_id),
+                  farm_rate: Number(farm_rate),
+                  sale_rate: Number(sale_rate),
+                  insert_by: req_object.insert_by || "user 1",
+                  update_by: req_object.update_by || "user 1",
+                  status: 1,
+                }, tx);
+              }
+            }
+
+            // Create unit sale
+            const createdSale = await UnitSaleRepository.create({
+              sale_date,
+              prounit_id: Number(prounit_id),
+              floc_id: Number(floc_id),
+              customer_id: Number(customer_id),
+              farm_rate: farm_rate ? Number(farm_rate) : null,
+              sale_rate: sale_rate ? Number(sale_rate) : null,
+              product_id: Number(product_id),
+              price: Number(price),
+              quantity: Number(quantity),
+              tax_type: req_object.tax_type || "flat",
+              tax_value: req_object.tax_value || 0,
+              discount_type: req_object.discount_type || "percentage",
+              discount_value: req_object.discount_value || 0,
+              total: Number(req_object.total),
+              description: req_object.description || null,
+              insert_by: req_object.insert_by || "user 1",
+              update_by: req_object.update_by || "user 1",
+              status: req_object.status ?? 1,
+            }, tx);
+
+            // CRITICAL: Validate sale was created successfully
+            if (!createdSale || !createdSale.sale_id) {
+              throw new Error("Failed to create unit sale record");
+            }
+
+            // Create all related transactions - this will throw if any transaction fails
+            await createTransactions(createdSale, req_object.customer_id, tx);
+
+            return createdSale;
+          } catch (transactionError) {
+            // Log the specific error that occurred within the transaction
+            ErrorLogger.log(
+              "Transaction failed in UnitSaleController.create",
+              transactionError
+            );
+            // Re-throw to trigger rollback
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 10000, // 10s to get connection from pool
+          timeout: 30000, // 30s for entire transaction
+          isolationLevel: "Serializable", // Prevents partial commits
         }
-      }
-
-      const result = await UnitSaleRepository.create({
-        sale_date,
-        prounit_id: Number(prounit_id),
-        floc_id: Number(floc_id),
-        farm_rate: farm_rate ? Number(farm_rate) : null,
-        sale_rate: sale_rate ? Number(sale_rate) : null,
-        product_id: Number(product_id),
-        price: Number(price),
-        quantity: Number(quantity),
-        tax_type: req_object.tax_type || "flat",
-        tax_value: req_object.tax_value || 0,
-        discount_type: req_object.discount_type || "percentage",
-        discount_value: req_object.discount_value || 0,
-        total: Number(req_object.total),
-        description: req_object.description || null,
-        insert_by: req_object.insert_by || "user 1",
-        update_by: req_object.update_by || "user 1",
-        status: req_object.status ?? 1,
-      });
+      );
 
       await RedisService.del("unitSales:all");
       return successResponse(
-        { sale_id: result.sale_id },
+        { sale_id: sale.sale_id },
         "Unit sale created successfully"
       );
     } catch (err) {

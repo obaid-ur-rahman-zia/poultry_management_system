@@ -112,6 +112,7 @@ class TransactionRepository {
         credit: creditAmount,
         remarks: data.remarks || null,
         manual_voucher_no: data.manual_voucher_no || null,
+        transaction_dat: data.transaction_dat || new Date(),
         account: {
           connect: { acc_id: data.acc_id },
         },

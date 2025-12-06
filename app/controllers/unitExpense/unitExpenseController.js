@@ -2,6 +2,8 @@ import UnitExpenseRepository from "@/app/repositories/unitExpense/unitExpenseRep
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
+import { createTransactions } from "./unitExpenseTransactions";
+import prisma from "@/lib/prisma";
 
 class UnitExpenseController {
   async readAll() {
@@ -64,11 +66,11 @@ class UnitExpenseController {
       const { req_object } = await req.json();
       // Support both prounit_id and farm_id for backward compatibility
       const prounit_id = req_object.prounit_id || req_object.farm_id;
-      const { expense_date, floc_id, product_id, price, quantity, total } = req_object;
+      const { expense_date, floc_id, supplier_id, product_id, price, quantity, total } = req_object;
 
-      if (!expense_date || !prounit_id || !floc_id || !product_id || !price || !quantity) {
+      if (!expense_date || !prounit_id || !floc_id || !supplier_id || !product_id || !price || !quantity) {
         const error = new Error(
-          "expense_date, prounit_id (or farm_id), floc_id, product_id, price, and quantity are required in Method: UnitExpenseController.create"
+          "expense_date, prounit_id (or farm_id), floc_id, supplier_id, product_id, price, and quantity are required in Method: UnitExpenseController.create"
         );
         ErrorLogger.log(
           "Failed to create unit expense in Method: UnitExpenseController.create",
@@ -77,27 +79,59 @@ class UnitExpenseController {
         return errorResponse(error, 400);
       }
 
-      const result = await UnitExpenseRepository.create({
-        expense_date,
-        prounit_id: Number(prounit_id),
-        floc_id: Number(floc_id),
-        product_id: Number(product_id),
-        price: Number(price),
-        quantity: Number(quantity),
-        tax_type: req_object.tax_type || "flat",
-        tax_value: req_object.tax_value || 0,
-        discount_type: req_object.discount_type || "percentage",
-        discount_value: req_object.discount_value || 0,
-        total: Number(total),
-        description: req_object.description || null,
-        insert_by: req_object.insert_by || "user 1",
-        update_by: req_object.update_by || "user 1",
-        status: req_object.status ?? 1,
-      });
+      // CRITICAL FIX: Wrap everything in try-catch to ensure transaction rollback
+      const expense = await prisma.$transaction(
+        async (tx) => {
+          try {
+            // Create unit expense
+            const createdExpense = await UnitExpenseRepository.create({
+              expense_date,
+              prounit_id: Number(prounit_id),
+              floc_id: Number(floc_id),
+              supplier_id: Number(supplier_id),
+              product_id: Number(product_id),
+              price: Number(price),
+              quantity: Number(quantity),
+              tax_type: req_object.tax_type || "flat",
+              tax_value: req_object.tax_value || 0,
+              discount_type: req_object.discount_type || "percentage",
+              discount_value: req_object.discount_value || 0,
+              total: Number(total),
+              description: req_object.description || null,
+              insert_by: req_object.insert_by || "user 1",
+              update_by: req_object.update_by || "user 1",
+              status: req_object.status ?? 1,
+            }, tx);
+
+            // CRITICAL: Validate expense was created successfully
+            if (!createdExpense || !createdExpense.expense_id) {
+              throw new Error("Failed to create unit expense record");
+            }
+
+            // Create all related transactions - this will throw if any transaction fails
+            await createTransactions(createdExpense, req_object.supplier_id, tx);
+
+            return createdExpense;
+          } catch (transactionError) {
+            // Log the specific error that occurred within the transaction
+            ErrorLogger.log(
+              "Transaction failed in UnitExpenseController.create",
+              transactionError
+            );
+            // Re-throw to trigger rollback
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 10000, // 10s to get connection from pool
+          timeout: 30000, // 30s for entire transaction
+          isolationLevel: "Serializable", // Prevents partial commits
+        }
+      );
 
       await RedisService.del("unitExpenses:all");
       return successResponse(
-        { expense_id: result.expense_id },
+        { expense_id: expense.expense_id },
         "Unit expense created successfully"
       );
     } catch (err) {
@@ -105,7 +139,9 @@ class UnitExpenseController {
         "Failed to create unit expense in Method: UnitExpenseController.create",
         err
       );
-      return errorResponse(err, 500);
+      // Return more detailed error message
+      const errorMessage = err.message || "Failed to create unit expense";
+      return errorResponse(new Error(errorMessage), 500);
     }
   }
 

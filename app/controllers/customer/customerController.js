@@ -2,7 +2,9 @@ import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import CustomerRepository from "@/app/repositories/customer/customerRepository";
 import { AccountConfigService } from "@/app/utils/accountConfigService";
+import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/accountSubHeadRepository";
 import RedisService from "@/app/utils/redis";
+import prisma from "@/lib/prisma";
 
 class CustomerController {
   async readAll() {
@@ -77,17 +79,50 @@ class CustomerController {
         return errorResponse(error, 400);
       }
 
-      const configService = new AccountConfigService();
-      const config = await configService.getAccountConfig("Customer");
-      console.log(config);
+      // Try to get config, if not found, find or create Customer subhead
+      let config;
+      try {
+        const configService = new AccountConfigService();
+        config = await configService.getAccountConfig("Customer");
+      } catch (error) {
+        // Config not found, find or create Customer subhead
+        let customerSubhead = await AccountSubHeadRepository.findByName("Customer");
+        
+        if (!customerSubhead) {
+          // Get first account head to use for the subhead
+          const firstHead = await prisma.account_head.findFirst({
+            orderBy: { head_id: "asc" },
+          });
+
+          if (!firstHead) {
+            throw new Error("No account head found. Please create an account head first.");
+          }
+
+          // Create Customer subhead
+          customerSubhead = await AccountSubHeadRepository.create({
+            head_id: firstHead.head_id,
+            subhead_nam: "Customer",
+            insert_by: "system",
+            update_by: "system",
+            status: 1,
+          });
+        }
+
+        // Use the subhead for config
+        config = {
+          head_id: customerSubhead.head_id,
+          sub_id: customerSubhead.sub_id,
+        };
+      }
+
       const customer = await CustomerRepository.create({
         head_id: config.head_id,
         sub_id: config.sub_id,
         account_nam: req_object.customer_name.trim(),
         account_address: req_object.customer_address.trim(),
-        account_alter_nam: req_object.customer_alternate_name.trim(),
+        account_alter_nam: req_object.customer_alternate_name?.trim() || "",
         account_contact: req_object.customer_contact.trim(),
-        account_reference: req_object.customer_reference.trim(),
+        account_reference: req_object.customer_reference?.trim() || "",
         account_cnic: req_object.customer_cnic.trim(),
         credit_limit: req_object.customer_credit_limit,
         cgroup_id: req_object.cgroup_id,

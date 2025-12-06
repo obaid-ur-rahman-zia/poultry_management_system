@@ -7,7 +7,8 @@ class UnitRepository {
     });
   }
 
-  async create(data) {
+  async create(data, tx = null) {
+    const prismaClient = tx || prisma;
     const createData = {
       prounit_nam: data.prounit_nam,
     };
@@ -21,7 +22,7 @@ class UnitRepository {
       createData.address = data.address;
     }
     
-    return prisma.pro_unit.create({
+    return prismaClient.pro_unit.create({
       data: createData,
     });
   }

@@ -2,7 +2,9 @@ import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import SupplierRepository from "@/app/repositories/supplier/supplierRepository";
 import { AccountConfigService } from "@/app/utils/accountConfigService";
+import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/accountSubHeadRepository";
 import RedisService from "@/app/utils/redis";
+import prisma from "@/lib/prisma";
 
 class SupplierController {
   async readAll() {
@@ -73,16 +75,50 @@ class SupplierController {
         return errorResponse(error, 400);
       }
 
-      const configService = new AccountConfigService();
-      const config = await configService.getAccountConfig("Supplier");
+      // Try to get config, if not found, find or create Supplier subhead
+      let config;
+      try {
+        const configService = new AccountConfigService();
+        config = await configService.getAccountConfig("Supplier");
+      } catch (error) {
+        // Config not found, find or create Supplier subhead
+        let supplierSubhead = await AccountSubHeadRepository.findByName("Supplier");
+        
+        if (!supplierSubhead) {
+          // Get first account head to use for the subhead
+          const firstHead = await prisma.account_head.findFirst({
+            orderBy: { head_id: "asc" },
+          });
+
+          if (!firstHead) {
+            throw new Error("No account head found. Please create an account head first.");
+          }
+
+          // Create Supplier subhead
+          supplierSubhead = await AccountSubHeadRepository.create({
+            head_id: firstHead.head_id,
+            subhead_nam: "Supplier",
+            insert_by: "system",
+            update_by: "system",
+            status: 1,
+          });
+        }
+
+        // Use the subhead for config
+        config = {
+          head_id: supplierSubhead.head_id,
+          sub_id: supplierSubhead.sub_id,
+        };
+      }
+
       const supplier = await SupplierRepository.create({
         head_id: config.head_id,
         sub_id: config.sub_id,
         account_nam: req_object.supplier_name.trim(),
         account_address: req_object.supplier_address.trim(),
-        account_alter_nam: req_object.supplier_alternate_name.trim(),
+        account_alter_nam: req_object.supplier_alternate_name?.trim() || "",
         account_contact: req_object.supplier_contact.trim(),
-        account_reference: req_object.supplier_reference.trim(),
+        account_reference: req_object.supplier_reference?.trim() || "",
         account_cnic: req_object.supplier_cnic.trim(),
         company_id: req_object.supplier_company_id,
       });

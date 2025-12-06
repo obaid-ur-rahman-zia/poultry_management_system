@@ -3,7 +3,10 @@ import prisma from "@/lib/prisma";
 class SupplierRepository {
   async readAll() {
     return prisma.accounts.findMany({
-      where: { is_supplier: 1 },
+      where: { 
+        is_supplier: 1,
+        status: 1,
+      },
       orderBy: { acc_id: "asc" },
       select: {
         acc_id: true,

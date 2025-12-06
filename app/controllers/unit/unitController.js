@@ -1,7 +1,10 @@
 import UnitRepository from "@/app/repositories/unit/unitRepository";
+import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/accountSubHeadRepository";
+import AccountsRepository from "@/app/repositories/account/accounts/accountsRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
+import prisma from "@/lib/prisma";
 
 class UnitController {
   async create(req) {
@@ -29,13 +32,95 @@ class UnitController {
         return errorResponse(error, 400);
       }
 
-      const unit = await UnitRepository.create({
-        prounit_nam: prounit_nam.trim(),
-        capacity: capacity,
-        address: address,
-      });
+      // Use transaction to ensure both unit and account are created together
+      const result = await prisma.$transaction(
+        async (tx) => {
+          try {
+            // Create unit
+            const unit = await UnitRepository.create({
+              prounit_nam: prounit_nam.trim(),
+              capacity: capacity,
+              address: address,
+            }, tx);
+
+            // Find or create "Unit" subhead
+            let unitSubhead = await AccountSubHeadRepository.findByName("Unit", tx);
+            
+            if (!unitSubhead) {
+              // Get first account head to use for the subhead
+              const firstHead = await tx.account_head.findFirst({
+                orderBy: { head_id: "asc" },
+              });
+
+              if (!firstHead) {
+                throw new Error("No account head found. Please create an account head first.");
+              }
+
+              // Get the max subhead_id for this head_id
+              const maxSubhead = await tx.account_sub_head.findFirst({
+                where: { head_id: firstHead.head_id },
+                orderBy: { subhead_id: "desc" },
+                select: { subhead_id: true },
+              });
+
+              const nextSubheadId = maxSubhead ? maxSubhead.subhead_id + 1 : 1;
+
+              // Create the Unit subhead
+              unitSubhead = await tx.account_sub_head.create({
+                data: {
+                  head_id: firstHead.head_id,
+                  subhead_id: nextSubheadId,
+                  subhead_nam: "Unit",
+                  is_parent: 0,
+                  parent_sub_id: null,
+                  insert_by: "system",
+                  update_by: "system",
+                  status: 1,
+                },
+              });
+            }
+
+            // Create account for the unit in the Unit subhead
+            const maxAccount = await tx.accounts.findFirst({
+              where: { sub_id: unitSubhead.sub_id },
+              orderBy: { account_id: "desc" },
+              select: { account_id: true },
+            });
+
+            const nextAccountId = maxAccount ? maxAccount.account_id + 1 : 1;
+
+            await tx.accounts.create({
+              data: {
+                head_id: unitSubhead.head_id,
+                sub_id: unitSubhead.sub_id,
+                account_id: nextAccountId,
+                account_nam: prounit_nam.trim(),
+                insert_by: "system",
+                update_by: "system",
+                status: 1,
+              },
+            });
+
+            return unit;
+          } catch (transactionError) {
+            ErrorLogger.log(
+              "Transaction failed in UnitController.create",
+              transactionError
+            );
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 10000,
+          timeout: 30000,
+          isolationLevel: "Serializable",
+        }
+      );
+
       await RedisService.del("units:all");
-      return successResponse({ prounit_id: unit.prounit_id }, "Success");
+      await RedisService.del("accountSubHeads:all");
+      await RedisService.del("accounts:all");
+      return successResponse({ prounit_id: result.prounit_id }, "Unit and account created successfully");
     } catch (err) {
       if (err.code === "P2002") {
         ErrorLogger.log(

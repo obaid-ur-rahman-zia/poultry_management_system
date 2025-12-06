@@ -133,8 +133,9 @@ class AccountSubHeadRepository {
   }
 
   // Find subhead by name
-  async findByName(subheadName) {
-    return prisma.account_sub_head.findFirst({
+  async findByName(subheadName, tx = null) {
+    const prismaClient = tx || prisma;
+    return prismaClient.account_sub_head.findFirst({
       where: {
         subhead_nam: {
           equals: subheadName.trim(),

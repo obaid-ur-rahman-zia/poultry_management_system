@@ -2,6 +2,8 @@ import TradingRepository from "@/app/repositories/trading/tradingRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
+import { createTransactions } from "./tradingTransactions";
+import prisma from "@/lib/prisma";
 
 class TradingController {
   async readAll() {
@@ -75,36 +77,67 @@ class TradingController {
         return errorResponse(error, 400);
       }
 
-      const result = await TradingRepository.create({
-        trading_date,
-        buy_from_account: Number(buy_from_account),
-        do_number: req_object.do_number || null,
-        product_id: Number(product_id),
-        buy_quantity: Number(buy_quantity),
-        buy_price: Number(buy_price),
-        buy_tax_type: req_object.buy_tax_type || "flat",
-        buy_tax_value: req_object.buy_tax_value || 0,
-        buy_discount_type: req_object.buy_discount_type || "percentage",
-        buy_discount_value: req_object.buy_discount_value || 0,
-        buy_total: Number(buy_total),
-        buy_detail: req_object.buy_detail || null,
-        sale_to_account: Number(sale_to_account),
-        sale_price: Number(sale_price),
-        sale_quantity: Number(sale_quantity),
-        sale_tax_type: req_object.sale_tax_type || "flat",
-        sale_tax_value: req_object.sale_tax_value || 0,
-        sale_discount_type: req_object.sale_discount_type || "percentage",
-        sale_discount_value: req_object.sale_discount_value || 0,
-        sale_total: Number(sale_total),
-        sale_detail: req_object.sale_detail || null,
-        insert_by: req_object.insert_by || "user 1",
-        update_by: req_object.update_by || "user 1",
-        status: req_object.status ?? 1,
-      });
+      // CRITICAL FIX: Wrap everything in try-catch to ensure transaction rollback
+      const trading = await prisma.$transaction(
+        async (tx) => {
+          try {
+            // Create trading
+            const createdTrading = await TradingRepository.create({
+              trading_date,
+              buy_from_account: Number(buy_from_account),
+              do_number: req_object.do_number || null,
+              product_id: Number(product_id),
+              buy_quantity: Number(buy_quantity),
+              buy_price: Number(buy_price),
+              buy_tax_type: req_object.buy_tax_type || "flat",
+              buy_tax_value: req_object.buy_tax_value || 0,
+              buy_discount_type: req_object.buy_discount_type || "percentage",
+              buy_discount_value: req_object.buy_discount_value || 0,
+              buy_total: Number(buy_total),
+              buy_detail: req_object.buy_detail || null,
+              sale_to_account: Number(sale_to_account),
+              sale_price: Number(sale_price),
+              sale_quantity: Number(sale_quantity),
+              sale_tax_type: req_object.sale_tax_type || "flat",
+              sale_tax_value: req_object.sale_tax_value || 0,
+              sale_discount_type: req_object.sale_discount_type || "percentage",
+              sale_discount_value: req_object.sale_discount_value || 0,
+              sale_total: Number(sale_total),
+              sale_detail: req_object.sale_detail || null,
+              insert_by: req_object.insert_by || "user 1",
+              update_by: req_object.update_by || "user 1",
+              status: req_object.status ?? 1,
+            }, tx);
+
+            // CRITICAL: Validate trading was created successfully
+            if (!createdTrading || !createdTrading.trading_id) {
+              throw new Error("Failed to create trading record");
+            }
+
+            // Create all related transactions - this will throw if any transaction fails
+            await createTransactions(createdTrading, tx);
+
+            return createdTrading;
+          } catch (transactionError) {
+            // Log the specific error that occurred within the transaction
+            ErrorLogger.log(
+              "Transaction failed in TradingController.create",
+              transactionError
+            );
+            // Re-throw to trigger rollback
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 10000, // 10s to get connection from pool
+          timeout: 30000, // 30s for entire transaction
+          isolationLevel: "Serializable", // Prevents partial commits
+        }
+      );
 
       await RedisService.del("trading:all");
       return successResponse(
-        { trading_id: result.trading_id },
+        { trading_id: trading.trading_id },
         "Trade created successfully"
       );
     } catch (err) {

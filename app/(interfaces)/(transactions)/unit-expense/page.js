@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, PlusCircle } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -29,6 +29,14 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function UnitExpensePage() {
     const {
@@ -44,6 +52,7 @@ export default function UnitExpensePage() {
             expense_date: new Date().toISOString().split('T')[0],
             prounit_id: "",
             floc_id: "",
+            supplier_id: "",
             product_id: "",
             price: "",
             quantity: "",
@@ -63,6 +72,16 @@ export default function UnitExpensePage() {
     const [flocs, setFlocs] = useState([]);
     const [products, setProducts] = useState([]);
     const [availableFlocs, setAvailableFlocs] = useState([]);
+    const [suppliers, setSuppliers] = useState([]);
+    const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
+    const [supplierFormData, setSupplierFormData] = useState({
+        supplier_name: "",
+        supplier_cnic: "",
+        supplier_address: "",
+        supplier_contact: "",
+        supplier_company_id: "",
+    });
+    const [companies, setCompanies] = useState([]);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -82,6 +101,8 @@ export default function UnitExpensePage() {
         fetchUnits();
         fetchProducts();
         fetchExpenses();
+        fetchSuppliers();
+        fetchCompanies();
     }, []);
 
     useEffect(() => {
@@ -146,6 +167,87 @@ export default function UnitExpensePage() {
         }
     };
 
+    const fetchSuppliers = async () => {
+        try {
+            const response = await fetch("/api/supplier/readAll");
+            const result = await response.json();
+            if (result.response_status === "success") {
+                // Supplier API returns { supplier_data, nextId }
+                const suppliersData = result.response_result?.supplier_data || result.response_result?.data || result.response_result || [];
+                setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
+            }
+        } catch (error) {
+            console.error("Error fetching suppliers:", error);
+            setSuppliers([]);
+        }
+    };
+
+    const fetchCompanies = async () => {
+        try {
+            const response = await fetch("/api/company/readAll");
+            const result = await response.json();
+            if (result.response_status === "success") {
+                const companiesData = result.response_result?.data || result.response_result || [];
+                setCompanies(Array.isArray(companiesData) ? companiesData : []);
+            }
+        } catch (error) {
+            console.error("Error fetching companies:", error);
+            setCompanies([]);
+        }
+    };
+
+    const handleCreateSupplier = async () => {
+        if (!supplierFormData.supplier_name || !supplierFormData.supplier_cnic || !supplierFormData.supplier_address || !supplierFormData.supplier_contact || !supplierFormData.supplier_company_id) {
+            toast.error("Please fill all required fields");
+            return;
+        }
+
+        try {
+            const payload = {
+                req_object: {
+                    supplier_name: supplierFormData.supplier_name.trim(),
+                    supplier_cnic: supplierFormData.supplier_cnic.trim(),
+                    supplier_address: supplierFormData.supplier_address.trim(),
+                    supplier_contact: supplierFormData.supplier_contact.trim(),
+                    supplier_company_id: parseInt(supplierFormData.supplier_company_id),
+                    supplier_alternate_name: "",
+                    supplier_reference: "",
+                },
+            };
+
+            const response = await fetch("/api/supplier", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            if (result.response_status === "success") {
+                toast.success("Supplier created successfully");
+                // Clear cache and refresh suppliers list
+                await fetchSuppliers();
+                // Get acc_id from response - could be in result.response_result or result.response_result.acc_id
+                const accId = result.response_result?.acc_id || result.response_result?.supplier?.acc_id;
+                if (accId) {
+                    setValue("supplier_id", accId.toString());
+                }
+                setIsSupplierDialogOpen(false);
+                setSupplierFormData({
+                    supplier_name: "",
+                    supplier_cnic: "",
+                    supplier_address: "",
+                    supplier_contact: "",
+                    supplier_company_id: "",
+                });
+            } else {
+                toast.error(result.response_message || "Failed to create supplier");
+            }
+        } catch (error) {
+            console.error("Error creating supplier:", error);
+            toast.error("Failed to create supplier");
+        }
+    };
+
     const fetchExpenses = async () => {
         setLoading(true);
         try {
@@ -190,7 +292,7 @@ export default function UnitExpensePage() {
     };
 
     const onSubmit = async (data) => {
-        if (!data.prounit_id || !data.floc_id || !data.product_id || !data.price || !data.quantity) {
+        if (!data.prounit_id || !data.floc_id || !data.supplier_id || !data.product_id || !data.price || !data.quantity) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -202,6 +304,7 @@ export default function UnitExpensePage() {
                 expense_date: data.expense_date,
                 prounit_id: parseInt(data.prounit_id),
                 floc_id: parseInt(data.floc_id),
+                supplier_id: parseInt(data.supplier_id),
                 product_id: parseInt(data.product_id),
                 price: parseFloat(data.price),
                 quantity: parseFloat(data.quantity),
@@ -228,10 +331,12 @@ export default function UnitExpensePage() {
             const result = await response.json();
             if (result.response_status === "success") {
                 toast.success(isEditMode ? "Expense updated successfully" : "Expense created successfully");
+                fetchExpenses();
                 reset({
                     expense_date: new Date().toISOString().split('T')[0],
                     prounit_id: "",
                     floc_id: "",
+                    supplier_id: "",
                     product_id: "",
                     price: "",
                     quantity: "",
@@ -243,13 +348,14 @@ export default function UnitExpensePage() {
                 });
                 setIsEditMode(false);
                 setEditingExpenseId(null);
-                fetchExpenses();
             } else {
-                toast.error(result.response_message || "Failed to save expense");
+                const errorMessage = result.response_message || result.response_result?.message || "Failed to save expense";
+                console.error("Error response:", result);
+                toast.error(errorMessage);
             }
         } catch (error) {
             console.error("Error saving expense:", error);
-            toast.error("Failed to save expense");
+            toast.error(error.message || "Failed to save expense");
         }
     };
 
@@ -261,6 +367,7 @@ export default function UnitExpensePage() {
             expense_date: expense.expense_date ? new Date(expense.expense_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             prounit_id: prounitId,
             floc_id: expense.floc_id?.toString() || "",
+            supplier_id: expense.supplier_id?.toString() || "",
             product_id: expense.product_id?.toString() || "",
             price: expense.price?.toString() || "",
             quantity: expense.quantity?.toString() || "",
@@ -411,6 +518,49 @@ export default function UnitExpensePage() {
                                 )}
                                 {!selectedUnit && (
                                     <p className="text-xs text-muted-foreground">Please select a unit first</p>
+                                )}
+                            </div>
+
+                            {/* Supplier Selection */}
+                            <div className="space-y-2">
+                                <Label htmlFor="supplier_id">Supplier *</Label>
+                                <div className="flex gap-2">
+                                    <Controller
+                                        name="supplier_id"
+                                        control={control}
+                                        rules={{ required: "Supplier is required" }}
+                                        render={({ field }) => (
+                                            <Select
+                                                value={field.value}
+                                                onValueChange={field.onChange}
+                                                className="flex-1"
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select supplier" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Array.isArray(suppliers) && suppliers.map((supplier) => (
+                                                        <SelectItem key={supplier.acc_id} value={supplier.acc_id.toString()}>
+                                                            {supplier.account_nam}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setIsSupplierDialogOpen(true)}
+                                    >
+                                        <PlusCircle className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                {errors.supplier_id && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.supplier_id.message}
+                                    </p>
                                 )}
                             </div>
 
@@ -584,6 +734,7 @@ export default function UnitExpensePage() {
                                         expense_date: new Date().toISOString().split('T')[0],
                                         prounit_id: "",
                                         floc_id: "",
+                                        supplier_id: "",
                                         product_id: "",
                                         price: "",
                                         quantity: "",
@@ -669,6 +820,7 @@ export default function UnitExpensePage() {
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Floc</th>
+                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Supplier</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Price</th>
                                         <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Quantity</th>
@@ -687,6 +839,9 @@ export default function UnitExpensePage() {
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
                                                 Floc #{expense.floc_id}
+                                            </td>
+                                            <td className="p-2 align-middle whitespace-nowrap">
+                                                {Array.isArray(suppliers) && expense.supplier_id && suppliers.find(s => s.acc_id === expense.supplier_id)?.account_nam || "N/A"}
                                             </td>
                                             <td className="p-2 align-middle whitespace-nowrap">
                                                 {Array.isArray(products) && products.find(p => p.product_id === expense.product_id)?.product_title || "N/A"}
@@ -726,6 +881,95 @@ export default function UnitExpensePage() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Create Supplier Dialog */}
+            <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Create New Supplier</DialogTitle>
+                        <DialogDescription>
+                            Create a new supplier account. The supplier will be created with is_supplier flag set to true.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="supplier_name">Supplier Name *</Label>
+                            <Input
+                                id="supplier_name"
+                                value={supplierFormData.supplier_name}
+                                onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_name: e.target.value })}
+                                placeholder="Enter supplier name"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="supplier_cnic">CNIC *</Label>
+                            <Input
+                                id="supplier_cnic"
+                                value={supplierFormData.supplier_cnic}
+                                onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_cnic: e.target.value })}
+                                placeholder="XXXXX-XXXXXXX-X"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="supplier_address">Address *</Label>
+                            <Input
+                                id="supplier_address"
+                                value={supplierFormData.supplier_address}
+                                onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_address: e.target.value })}
+                                placeholder="Enter address"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="supplier_contact">Contact *</Label>
+                            <Input
+                                id="supplier_contact"
+                                value={supplierFormData.supplier_contact}
+                                onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_contact: e.target.value })}
+                                placeholder="Enter contact number"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="supplier_company_id">Company *</Label>
+                            <Select
+                                value={supplierFormData.supplier_company_id}
+                                onValueChange={(value) => setSupplierFormData({ ...supplierFormData, supplier_company_id: value })}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select company" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.isArray(companies) && companies.map((company) => (
+                                        <SelectItem key={company.company_id} value={company.company_id.toString()}>
+                                            {company.company_nam}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                setIsSupplierDialogOpen(false);
+                                setSupplierFormData({
+                                    supplier_name: "",
+                                    supplier_cnic: "",
+                                    supplier_address: "",
+                                    supplier_contact: "",
+                                    supplier_company_id: "",
+                                });
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="button" onClick={handleCreateSupplier}>
+                            Create Supplier
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
