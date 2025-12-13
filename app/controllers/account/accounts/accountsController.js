@@ -1,24 +1,65 @@
 import AccountsRepository from "@/app/repositories/account/accounts/accountsRepository";
 import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/accountSubHeadRepository";
 import TransactionRepository from "@/app/repositories/transaction/transactionRepository";
+import UserRepository from "@/app/repositories/user/userRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
 import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 class AccountsController {
-  async readAll() {
+  async readAll(req) {
     const cacheKey = "accounts:all";
     try {
-      const cachedData = await RedisService.get(cacheKey);
+      // Get logged-in user session
+      const session = await getServerSession(authOptions);
+      let userCashInHandAccountId = null;
+      
+      if (session && session.user?.id) {
+        const userId = parseInt(session.user.id);
+        const user = await UserRepository.readById(userId);
+        if (user && user.cash_in_hand_account_id) {
+          userCashInHandAccountId = user.cash_in_hand_account_id;
+        }
+      }
+
+      // Find "Cash In Hand" subhead
+      const cashInHandSubhead = await AccountSubHeadRepository.findByName("Cash In Hand");
+      const cashInHandSubId = cashInHandSubhead?.sub_id || null;
+
+      // Get all accounts
+      const allAccounts = await AccountsRepository.readAll();
+
+      // Filter accounts based on user's cash in hand account
+      let filteredAccounts = allAccounts;
+      
+      if (userCashInHandAccountId && cashInHandSubId) {
+        filteredAccounts = allAccounts.filter((account) => {
+          // If account is from "Cash In Hand" subhead, only show user's cash in hand account
+          if (account.sub_id === cashInHandSubId) {
+            return account.acc_id === userCashInHandAccountId;
+          }
+          // For all other subheads, show all accounts
+          return true;
+        });
+      }
+
+      // Use cache key with user ID to avoid cache conflicts
+      const userCacheKey = userCashInHandAccountId 
+        ? `accounts:all:user:${userCashInHandAccountId}` 
+        : cacheKey;
+      
+      const cachedData = await RedisService.get(userCacheKey);
       if (cachedData) {
         console.log("Account Cache Hit");
         return successResponse(cachedData, "Success");
       }
       console.log("Account Cache Miss");
-      const data = await AccountsRepository.readAll();
-      await RedisService.setex(cacheKey, 300, JSON.stringify(data));
-      return successResponse(data, "Success");
+      
+      await RedisService.setex(userCacheKey, 300, JSON.stringify(filteredAccounts));
+      return successResponse(filteredAccounts, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all accounts in Method: AccountsController.readAll",
@@ -67,8 +108,37 @@ class AccountsController {
         return errorResponse(error, 400);
       }
 
-      const data = await AccountsRepository.readBySubHead(sub_id);
-      return successResponse(data, "Success");
+      // Get logged-in user session
+      const session = await getServerSession(authOptions);
+      let userCashInHandAccountId = null;
+      
+      if (session && session.user?.id) {
+        const userId = parseInt(session.user.id);
+        const user = await UserRepository.readById(userId);
+        if (user && user.cash_in_hand_account_id) {
+          userCashInHandAccountId = user.cash_in_hand_account_id;
+        }
+      }
+
+      // Find "Cash In Hand" subhead
+      const cashInHandSubhead = await AccountSubHeadRepository.findByName("Cash In Hand");
+      const cashInHandSubId = cashInHandSubhead?.sub_id || null;
+
+      // Get all accounts for this subhead
+      const allAccounts = await AccountsRepository.readBySubHead(sub_id);
+
+      // Filter accounts if this is "Cash In Hand" subhead
+      let filteredAccounts = allAccounts;
+      
+      if (userCashInHandAccountId && cashInHandSubId && parseInt(sub_id) === cashInHandSubId) {
+        // Only show user's cash in hand account for "Cash In Hand" subhead
+        filteredAccounts = allAccounts.filter(
+          (account) => account.acc_id === userCashInHandAccountId
+        );
+      }
+      // For all other subheads, show all accounts (no filtering needed)
+
+      return successResponse(filteredAccounts, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get accounts by subhead in Method: AccountsController.readBySubHead",
