@@ -375,7 +375,7 @@ const Header = () => {
                                         <AvatarFallback>YOU</AvatarFallback>
                                     </Avatar>
                                     <div className="hidden md:flex flex-col items-start text-sm">
-                                        <span className="font-semibold leading-none">{user?.name || "FARHAN ANSARI"}</span>
+                                        <span className="font-semibold leading-none">{user?.name || ""}</span>
                                         <span className="text-xs text-muted-foreground leading-none mt-1">
                                             {user?.email}
                                         </span>

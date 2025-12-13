@@ -42,7 +42,6 @@ class CustomerController {
         customer_cnic,
         customer_address,
         customer_contact,
-        customer_credit_limit,
         cgroup_id,
         subarea_id,
       } = req_object;
@@ -51,13 +50,10 @@ class CustomerController {
         !customer_name ||
         !customer_cnic ||
         !customer_address ||
-        !customer_contact ||
-        customer_credit_limit === 0 ||
-        !cgroup_id ||
-        !subarea_id
+        !customer_contact
       ) {
         const error = new Error(
-          "customer_name, customer_cnic, customer_address, customer_contact,  customer_credit_limit, cgroup_id and subarea_id are required"
+          "customer_name, customer_cnic, customer_address, and customer_contact are required"
         );
         ErrorLogger.log(
           "Failed to create customer in Method: CustomerController.create",
@@ -124,9 +120,8 @@ class CustomerController {
         account_contact: req_object.customer_contact.trim(),
         account_reference: req_object.customer_reference?.trim() || "",
         account_cnic: req_object.customer_cnic.trim(),
-        credit_limit: req_object.customer_credit_limit,
-        cgroup_id: req_object.cgroup_id,
-        subarea_id: req_object.subarea_id,
+        cgroup_id: req_object.cgroup_id || null,
+        subarea_id: req_object.subarea_id || null,
       });
       await RedisService.del("customers:all");
       await RedisService.del("suppliers:all");
@@ -214,9 +209,8 @@ class CustomerController {
         account_alter_nam: req_object.customer_alternate_name.trim(),
         account_contact: req_object.customer_contact.trim(),
         account_reference: req_object.customer_reference.trim(),
-        credit_limit: req_object.customer_credit_limit,
-        cgroup_id: req_object.cgroup_id,
-        subarea_id: req_object.subarea_id,
+        cgroup_id: req_object.cgroup_id || null,
+        subarea_id: req_object.subarea_id || null,
       });
       await RedisService.del("customers:all");
       return successResponse(updatedCustomer, "Customer updated successfully");

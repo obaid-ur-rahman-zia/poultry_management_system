@@ -97,6 +97,7 @@ class OppositeTransactionController {
         return errorResponse(error, 400);
       }
 
+
       // Get bank account name if provided
       let bankAccountName = "";
       if (bank_account) {

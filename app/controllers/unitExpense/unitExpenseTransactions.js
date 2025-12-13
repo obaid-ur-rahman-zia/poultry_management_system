@@ -37,35 +37,43 @@ export async function createTransactions(unitExpense, supplierId, tx) {
       transaction_dat: expenseDate,
     };
 
-    // Get unit information
-    const unit = await prismaClient.pro_unit.findUnique({
-      where: { prounit_id: unitExpense.prounit_id },
+    // Get floc information
+    const floc = await prismaClient.floc.findUnique({
+      where: { floc_id: unitExpense.floc_id },
+      include: {
+        unit: true,
+      },
     });
 
-    if (!unit) {
-      throw new Error("Unit not found");
+    if (!floc) {
+      throw new Error("Floc not found");
     }
 
-    // Find Unit subhead
-    const unitSubhead = await AccountSubHeadRepository.findByName("Unit", tx);
-    if (!unitSubhead) {
-      throw new Error("Unit subhead not found. Please create a unit first.");
+    if (!floc.unit) {
+      throw new Error("Unit not found for floc");
     }
 
-    // Find unit account by matching unit name
-    const unitAccount = await prismaClient.accounts.findFirst({
+    // Find Floc subhead
+    const flocSubhead = await AccountSubHeadRepository.findByName("Floc", tx);
+    if (!flocSubhead) {
+      throw new Error("Floc subhead not found. Please create a floc first.");
+    }
+
+    // Find floc account by matching floc account name pattern: "UnitName - Floc #floc_id"
+    const flocAccountName = `${floc.unit.prounit_nam} - Floc #${floc.floc_id}`;
+    const flocAccount = await prismaClient.accounts.findFirst({
       where: {
-        sub_id: unitSubhead.sub_id,
+        sub_id: flocSubhead.sub_id,
         account_nam: {
-          equals: unit.prounit_nam,
+          equals: flocAccountName,
           mode: 'insensitive',
         },
         status: 1,
       },
     });
 
-    if (!unitAccount) {
-      throw new Error(`Unit account not found for unit: ${unit.prounit_nam}`);
+    if (!flocAccount) {
+      throw new Error(`Floc account not found for floc: ${flocAccountName}`);
     }
 
     // Get supplier account
@@ -77,10 +85,10 @@ export async function createTransactions(unitExpense, supplierId, tx) {
       throw new Error("Supplier account not found");
     }
 
-    // Debit unit account (expense added to unit)
+    // Debit floc account (expense added to floc)
     if (unitExpense.total > 0) {
       transactionData.push({
-        acc_id: unitAccount.acc_id,
+        acc_id: flocAccount.acc_id,
         debit: unitExpense.total,
         credit: 0,
         ...expenseConstants,

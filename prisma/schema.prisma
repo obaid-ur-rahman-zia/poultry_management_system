@@ -568,7 +568,6 @@ model accounts {
   is_salesman Int @default(0)
 
   // Customer-specific fields (only used when is_customer = 1)
-  credit_limit Decimal? @db.Decimal(15, 2)
   cgroup_id    Int?
   subarea_id   Int?
 
@@ -876,7 +875,6 @@ model unit_sale {
   product  product  @relation(fields: [product_id], references: [product_id])
   customer accounts? @relation("UnitSaleCustomer", fields: [customer_id], references: [acc_id])
 
-  @@unique([prounit_id, floc_id, sale_date], name: "uq_unit_floc_date_fs_rate")
   @@index([prounit_id])
   @@index([floc_id])
   @@index([product_id])

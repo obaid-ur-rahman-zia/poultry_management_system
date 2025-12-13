@@ -85,12 +85,7 @@ export default function UnitSalePage() {
         customer_cnic: "",
         customer_address: "",
         customer_contact: "",
-        customer_credit_limit: "",
-        cgroup_id: "",
-        subarea_id: "",
     });
-    const [customerGroups, setCustomerGroups] = useState([]);
-    const [subareas, setSubareas] = useState([]);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -116,8 +111,6 @@ export default function UnitSalePage() {
         fetchProducts();
         fetchSales();
         fetchCustomers();
-        fetchCustomerGroups();
-        fetchSubareas();
         // Set current date if not already set
         const currentDate = new Date().toISOString().split('T')[0];
         setValue("sale_date", currentDate);
@@ -266,12 +259,36 @@ export default function UnitSalePage() {
 
     const fetchCustomers = async () => {
         try {
-            const response = await fetch("/api/customer/readAll");
+            // Add cache-busting parameter to ensure fresh data
+            const response = await fetch(`/api/customer/readAll?t=${Date.now()}`);
             const result = await response.json();
+            console.log("Customer API Response:", result);
             if (result.response_status === "success") {
                 // Customer API returns { customer_data, nextId }
-                const customersData = result.response_result?.customer_data || result.response_result?.data || result.response_result || [];
-                setCustomers(Array.isArray(customersData) ? customersData : []);
+                // Handle both cached (already parsed) and fresh responses
+                let customersData = null;
+                
+                if (result.response_result) {
+                    // Check if response_result is the object with customer_data
+                    if (result.response_result.customer_data) {
+                        customersData = result.response_result.customer_data;
+                    } 
+                    // Check if response_result is directly an array (fallback)
+                    else if (Array.isArray(result.response_result)) {
+                        customersData = result.response_result;
+                    }
+                    // Check if response_result has a data property
+                    else if (result.response_result.data && Array.isArray(result.response_result.data)) {
+                        customersData = result.response_result.data;
+                    }
+                }
+                
+                const customersArray = Array.isArray(customersData) ? customersData : [];
+                console.log("Setting customers:", customersArray.length, customersArray);
+                setCustomers(customersArray);
+            } else {
+                console.error("Failed to fetch customers:", result.response_message);
+                setCustomers([]);
             }
         } catch (error) {
             console.error("Error fetching customers:", error);
@@ -279,36 +296,9 @@ export default function UnitSalePage() {
         }
     };
 
-    const fetchCustomerGroups = async () => {
-        try {
-            const response = await fetch("/api/customerGroup/readAll");
-            const result = await response.json();
-            if (result.response_status === "success") {
-                const groupsData = result.response_result?.data || result.response_result || [];
-                setCustomerGroups(Array.isArray(groupsData) ? groupsData : []);
-            }
-        } catch (error) {
-            console.error("Error fetching customer groups:", error);
-            setCustomerGroups([]);
-        }
-    };
-
-    const fetchSubareas = async () => {
-        try {
-            const response = await fetch("/api/subarea/readAll");
-            const result = await response.json();
-            if (result.response_status === "success") {
-                const subareasData = result.response_result?.data || result.response_result || [];
-                setSubareas(Array.isArray(subareasData) ? subareasData : []);
-            }
-        } catch (error) {
-            console.error("Error fetching subareas:", error);
-            setSubareas([]);
-        }
-    };
 
     const handleCreateCustomer = async () => {
-        if (!customerFormData.customer_name || !customerFormData.customer_cnic || !customerFormData.customer_address || !customerFormData.customer_contact || !customerFormData.customer_credit_limit || !customerFormData.cgroup_id || !customerFormData.subarea_id) {
+        if (!customerFormData.customer_name || !customerFormData.customer_cnic || !customerFormData.customer_address || !customerFormData.customer_contact) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -320,9 +310,6 @@ export default function UnitSalePage() {
                     customer_cnic: customerFormData.customer_cnic.trim(),
                     customer_address: customerFormData.customer_address.trim(),
                     customer_contact: customerFormData.customer_contact.trim(),
-                    customer_credit_limit: parseFloat(customerFormData.customer_credit_limit),
-                    cgroup_id: parseInt(customerFormData.cgroup_id),
-                    subarea_id: parseInt(customerFormData.subarea_id),
                 },
             };
 
@@ -335,22 +322,36 @@ export default function UnitSalePage() {
             const result = await response.json();
             if (result.response_status === "success") {
                 toast.success("Customer created successfully");
-                // Clear cache and refresh customers list
-                await fetchCustomers();
-                // Get acc_id from response - could be in result.response_result or result.response_result.customer
-                const accId = result.response_result?.acc_id || result.response_result?.customer?.acc_id;
-                if (accId) {
+                // Get acc_id and customer name from response
+                const accId = result.response_result?.acc_id;
+                const customerName = customerFormData.customer_name.trim();
+                
+                // Close dialog first
+                setIsCustomerDialogOpen(false);
+                
+                // Add the new customer to the list immediately (optimistic update)
+                if (accId && customerName) {
+                    setCustomers(prev => {
+                        // Check if customer already exists to avoid duplicates
+                        const exists = prev.some(c => c.acc_id === accId);
+                        if (exists) return prev;
+                        return [...prev, {
+                            acc_id: accId,
+                            account_nam: customerName,
+                        }].sort((a, b) => a.acc_id - b.acc_id);
+                    });
+                    
+                    // Set the customer_id value
                     setValue("customer_id", accId.toString());
                 }
-                setIsCustomerDialogOpen(false);
+                
+                // Then refresh the full list from server to ensure consistency
+                await fetchCustomers();
                 setCustomerFormData({
                     customer_name: "",
                     customer_cnic: "",
                     customer_address: "",
                     customer_contact: "",
-                    customer_credit_limit: "",
-                    cgroup_id: "",
-                    subarea_id: "",
                 });
             } else {
                 toast.error(result.response_message || "Failed to create customer");
@@ -559,12 +560,12 @@ export default function UnitSalePage() {
     const totalAmount = calculateTotal();
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
             {/* Form Section */}
             <Card className={"max-w-5xl mx-auto"}>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="unit-sale-form">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 ">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
                             {/* F.S Rate (Combined Farm Rate and Sale Rate) */}
                             <div className="space-y-2">
@@ -622,7 +623,7 @@ export default function UnitSalePage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                             {/* Date */}
                             <div className="space-y-2">
                                 <Label htmlFor="sale_date">Date *</Label>
@@ -724,14 +725,20 @@ export default function UnitSalePage() {
                                                 className="flex-1"
                                             >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select customer" />
+                                                    <SelectValue placeholder={customers.length > 0 ? "Select customer" : "No customers"} />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {Array.isArray(customers) && customers.map((customer) => (
-                                                        <SelectItem key={customer.acc_id} value={customer.acc_id.toString()}>
-                                                            {customer.account_nam}
+                                                    {Array.isArray(customers) && customers.length > 0 ? (
+                                                        customers.map((customer) => (
+                                                            <SelectItem key={customer.acc_id} value={customer.acc_id.toString()}>
+                                                                {customer.account_nam}
+                                                            </SelectItem>
+                                                        ))
+                                                    ) : (
+                                                        <SelectItem value="no-customers" disabled>
+                                                            No customers available ({customers.length})
                                                         </SelectItem>
-                                                    ))}
+                                                    )}
                                                 </SelectContent>
                                             </Select>
                                         )}
@@ -954,10 +961,10 @@ export default function UnitSalePage() {
 
             {/* Sales List */}
             <Card>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6">
                     {/* Filters */}
                     <div className="space-y-4 mb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="space-y-2">
                                 <Label>Search</Label>
                                 <div className="relative">
@@ -1007,76 +1014,80 @@ export default function UnitSalePage() {
                             No sales found
                         </div>
                     ) : (
-                        <div className="relative max-h-[600px] overflow-auto">
-                            <table className="w-full caption-bottom text-sm">
-                                <thead className="sticky top-0 bg-background z-20 border-b-2">
-                                    <tr className="border-b">
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Floc</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Customer</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">F.S Rate</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Price</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Quantity</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Total</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredSales.map((sale) => (
-                                        <tr key={sale.sale_id} className="hover:bg-muted/50 border-b transition-colors">
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {sale.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (sale.prounit_id || sale.farm_id))?.prounit_nam) || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                Floc #{sale.floc_id}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {Array.isArray(customers) && sale.customer_id && customers.find(c => c.acc_id === sale.customer_id)?.account_nam || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {Array.isArray(products) && products.find(p => p.product_id === sale.product_id)?.product_title || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {sale.farm_rate && sale.sale_rate
-                                                    ? `${sale.farm_rate} / ${sale.sale_rate}`
-                                                    : "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {sale.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {sale.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap font-medium">
-                                                {sale.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleEdit(sale)}
-                                                    >
-                                                        <Edit2 className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(sale.sale_id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </div>
-                                            </td>
+                        <div className="relative max-h-[600px] overflow-auto -mx-4 sm:mx-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full caption-bottom text-sm min-w-[800px]">
+                                    <thead className="sticky top-0 bg-background z-20 border-b-2">
+                                        <tr className="border-b">
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Floc</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Customer</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">F.S Rate</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Price</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Quantity</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Total</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {filteredSales.map((sale) => (
+                                            <tr key={sale.sale_id} className="hover:bg-muted/50 border-b transition-colors">
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {sale.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (sale.prounit_id || sale.farm_id))?.prounit_nam) || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden md:table-cell">
+                                                    Floc #{sale.floc_id}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
+                                                    {Array.isArray(customers) && sale.customer_id && customers.find(c => c.acc_id === sale.customer_id)?.account_nam || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {Array.isArray(products) && products.find(p => p.product_id === sale.product_id)?.product_title || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                    {sale.farm_rate && sale.sale_rate
+                                                        ? `${sale.farm_rate} / ${sale.sale_rate}`
+                                                        : "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                    {sale.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                    {sale.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap font-medium">
+                                                    {sale.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleEdit(sale)}
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(sale.sale_id)}
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </CardContent>
@@ -1084,7 +1095,7 @@ export default function UnitSalePage() {
 
             {/* F.S Rate History Dialog */}
             <Dialog open={isFsRateHistoryOpen} onOpenChange={setIsFsRateHistoryOpen}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Previous F.S Rates</DialogTitle>
                         <DialogDescription>
@@ -1149,7 +1160,7 @@ export default function UnitSalePage() {
 
             {/* Create Customer Dialog */}
             <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Create New Customer</DialogTitle>
                         <DialogDescription>
@@ -1193,53 +1204,6 @@ export default function UnitSalePage() {
                                 placeholder="Enter contact number"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="customer_credit_limit">Credit Limit *</Label>
-                            <Input
-                                id="customer_credit_limit"
-                                type="number"
-                                step="0.01"
-                                value={customerFormData.customer_credit_limit}
-                                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_credit_limit: e.target.value })}
-                                placeholder="0.00"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cgroup_id">Customer Group *</Label>
-                            <Select
-                                value={customerFormData.cgroup_id}
-                                onValueChange={(value) => setCustomerFormData({ ...customerFormData, cgroup_id: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select customer group" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Array.isArray(customerGroups) && customerGroups.map((group) => (
-                                        <SelectItem key={group.cgroup_id} value={group.cgroup_id.toString()}>
-                                            {group.cgroup_nam}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="subarea_id">Subarea *</Label>
-                            <Select
-                                value={customerFormData.subarea_id}
-                                onValueChange={(value) => setCustomerFormData({ ...customerFormData, subarea_id: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select subarea" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Array.isArray(subareas) && subareas.map((subarea) => (
-                                        <SelectItem key={subarea.subarea_id} value={subarea.subarea_id.toString()}>
-                                            {subarea.subarea_nam}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
                     </div>
                     <DialogFooter>
                         <Button
@@ -1252,9 +1216,6 @@ export default function UnitSalePage() {
                                     customer_cnic: "",
                                     customer_address: "",
                                     customer_contact: "",
-                                    customer_credit_limit: "",
-                                    cgroup_id: "",
-                                    subarea_id: "",
                                 });
                             }}
                         >

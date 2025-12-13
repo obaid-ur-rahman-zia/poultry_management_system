@@ -141,9 +141,9 @@ export default function SelfTransactionPage() {
         const amountValue = parseFloat(amount) || 0;
 
         if (transactionType === "receive") {
-            return balance + amountValue;
-        } else {
             return balance - amountValue;
+        } else {
+            return balance + amountValue;
         }
     };
 
@@ -191,6 +191,7 @@ export default function SelfTransactionPage() {
                 setEditingTransactionId(null);
                 fetchTransactions();
             } else {
+                // Show backend error message
                 toast.error(result.response_message || "Failed to save transaction");
             }
         } catch (error) {
@@ -340,7 +341,7 @@ export default function SelfTransactionPage() {
                             </div>
 
                             {/* Account Selection */}
-                            <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center flex-wrap justify-between gap-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="account_id">Account *</Label>
                                     <Controller

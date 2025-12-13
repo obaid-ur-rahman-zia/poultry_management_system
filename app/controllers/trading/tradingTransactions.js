@@ -33,8 +33,8 @@ export async function createTransactions(trading, tx) {
     if (trading.buy_total > 0) {
       transactionData.push({
         acc_id: trading.buy_from_account,
-        debit: trading.buy_total,
-        credit: 0,
+        credit: trading.buy_total,
+        debit: 0,
         ...tradingConstants,
       });
     }
@@ -44,8 +44,8 @@ export async function createTransactions(trading, tx) {
     if (trading.sale_total > 0) {
       transactionData.push({
         acc_id: trading.sale_to_account,
-        debit: 0,
-        credit: trading.sale_total,
+        credit: 0,
+        debit: trading.sale_total,
         ...tradingConstants,
       });
     }

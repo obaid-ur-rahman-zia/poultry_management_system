@@ -3,19 +3,14 @@ import prisma from "@/lib/prisma";
 class CustomerRepository {
   async readAll() {
     return prisma.accounts.findMany({
-      where: { is_customer: 1 },
+      where: { 
+        is_customer: 1,
+        status: 1,
+      },
       orderBy: { acc_id: "asc" },
       select: {
         acc_id: true,
         account_nam: true,
-        subarea_id: true,
-        credit_limit: true,
-        subarea: {
-          select: {
-            subarea_id: true,
-            subarea_nam: true,
-          },
-        },
       },
     });
   }
@@ -52,9 +47,8 @@ class CustomerRepository {
             account_alter_nam: data.account_alter_nam,
             account_contact: data.account_contact,
             account_reference: data.account_reference,
-            credit_limit: Number(data.credit_limit),
-            cgroup_id: data.cgroup_id,
-            subarea_id: data.subarea_id,
+            cgroup_id: data.cgroup_id || null,
+            subarea_id: data.subarea_id || null,
             is_customer: 1,
             insert_by: data.insert_by || "user 1",
             update_by: data.update_by || "user 1",
@@ -86,7 +80,6 @@ class CustomerRepository {
         account_alter_nam: true,
         account_contact: true,
         account_reference: true,
-        credit_limit: true,
         cgroup_id: true,
         subarea_id: true,
         insert_dat: true,
@@ -94,11 +87,6 @@ class CustomerRepository {
         insert_by: true,
         update_by: true,
         status: true,
-        subarea: {
-          select: {
-            area_id: true,
-          },
-        },
         customer_group: {
           select: {
             cgroup_id: true,
@@ -129,9 +117,8 @@ class CustomerRepository {
         account_alter_nam: data.account_alter_nam,
         account_contact: data.account_contact,
         account_reference: data.account_reference,
-        credit_limit: Number(data.credit_limit),
-        cgroup_id: data.cgroup_id,
-        subarea_id: data.subarea_id,
+        cgroup_id: data.cgroup_id !== undefined ? (data.cgroup_id || null) : undefined,
+        subarea_id: data.subarea_id !== undefined ? (data.subarea_id || null) : undefined,
       },
     });
   }

@@ -38,8 +38,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import Image from "next/image";
 import { navigationItems } from "@/utils/links";
+import MobileBottomNav from "./MobileBottomNav";
 
 const Sidebar = ({ 
   isOpen, 
@@ -81,7 +89,7 @@ const Sidebar = ({
 
   const isActive = (href) => pathname === href;
 
-  const SidebarLink = ({ item }) => {
+  const SidebarLink = ({ item, isExpanded: expanded = isExpanded }) => {
     const active = isActive(item.href);
     const Icon = item.icon;
 
@@ -95,7 +103,7 @@ const Sidebar = ({
         }}
         className={`
           relative flex items-center gap-3 ${
-            isExpanded ? "px-2 py-2" : "px-2 py-2 justify-center"
+            expanded ? "px-2 py-2" : "px-2 py-2 justify-center"
           }
           rounded-md transition-all duration-200
           ${
@@ -108,7 +116,7 @@ const Sidebar = ({
       >
         <Icon className="h-5 w-5 shrink-0" />
 
-        {isExpanded && (
+        {expanded && (
           <>
             <span className="flex-1 text-sm font-medium truncate">
               {item.title}
@@ -122,7 +130,7 @@ const Sidebar = ({
       </Link>
     );
 
-    if (!isExpanded) {
+    if (!expanded) {
       return (
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
@@ -138,12 +146,12 @@ const Sidebar = ({
     return <div className="group relative">{linkContent}</div>;
   };
 
-  const GroupHeader = ({ item, sectionKey }) => {
+  const GroupHeader = ({ item, sectionKey, isExpanded: expanded = isExpanded }) => {
     const Icon = item.icon;
     const sectionExpanded = expandedSections[sectionKey];
 
     const handleClick = () => {
-      if (!isExpanded) {
+      if (!expanded) {
         setIsCollapsed(false);
         setExpandedSections((prev) => ({
           ...prev,
@@ -159,7 +167,7 @@ const Sidebar = ({
         onClick={handleClick}
         className={`
           relative flex items-center gap-3 w-full ${
-            isExpanded ? "px-2 py-2" : "px-2 py-2 justify-center"
+            expanded ? "px-2 py-2" : "px-2 py-2 justify-center"
           }
           rounded-md transition-all duration-200
           text-muted-foreground hover:bg-accent hover:text-accent-foreground
@@ -168,7 +176,7 @@ const Sidebar = ({
       >
         <Icon className="h-5 w-5 shrink-0" />
 
-        {isExpanded && (
+        {expanded && (
           <>
             <span className="flex-1 text-sm font-medium truncate text-left">
               {item.title}
@@ -183,7 +191,7 @@ const Sidebar = ({
       </button>
     );
 
-    if (!isExpanded) {
+    if (!expanded) {
       return (
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
@@ -201,26 +209,77 @@ const Sidebar = ({
 
   return (
     <TooltipProvider>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
-          onClick={toggleSidebar}
-        />
-      )}
+      {/* Mobile Sidebar as Sheet */}
+      <div className="lg:hidden">
+        <Sheet open={isOpen} onOpenChange={toggleSidebar}>
+          <SheetContent side="left" className="w-80 p-0">
+            <SheetHeader className="px-4 py-4 border-b">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg flex items-center justify-center">
+                  <Image
+                    src={"/favicon.ico"}
+                    height={200}
+                    width={200}
+                    className=""
+                    alt="Logo"
+                  />
+                </div>
+                <SheetTitle className="text-base font-bold">
+                  Switch2itech
+                </SheetTitle>
+              </div>
+            </SheetHeader>
+            <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+              {navigationItems.map((item) => {
+                if (item.type === "single") {
+                  return (
+                    <SidebarLink
+                      key={item.id}
+                      item={item}
+                      isExpanded={true}
+                    />
+                  );
+                }
 
-      {/* Sidebar */}
+                if (item.type === "group") {
+                  const sectionExpanded = expandedSections[item.id];
+                  return (
+                    <div key={item.id} className="space-y-1">
+                      <GroupHeader item={item} sectionKey={item.id} isExpanded={true} />
+                      {sectionExpanded && (
+                        <div className="ml-4 space-y-1 border-l-2 border-border pl-2">
+                          {item.children.map((child) => (
+                            <SidebarLink
+                              key={child.id}
+                              item={child}
+                              isExpanded={true}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                return null;
+              })}
+            </nav>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Sidebar */}
       <aside
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={`
+          hidden lg:flex
           ${isPinned ? "lg:absolute" : "fixed"} top-0 left-0 h-screen 
           bg-primary border-r border-border shadow-lg
           transition-all duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
           ${isExpanded ? "w-64" : "w-16"}
           ${!isPinned && isExpanded ? "z-50 shadow-2xl" : isPinned ? "z-10" : "z-50"}
-          flex flex-col shrink-0
+          flex-col shrink-0
         `}
       >
         {/* Header */}
@@ -388,6 +447,7 @@ const LayoutSidebar = ({ children }) => {
           <Menu className="h-5 w-5" />
         </button>
 
+        {/* Sidebar - Desktop as aside, Mobile as Sheet */}
         <Sidebar 
           isOpen={sidebarOpen} 
           toggleSidebar={toggleSidebar}
@@ -401,7 +461,14 @@ const LayoutSidebar = ({ children }) => {
           handleMouseLeave={handleMouseLeave}
           isExpanded={isExpanded}
         />
-        {children}
+
+        {/* Content Area with mobile padding for bottom nav */}
+        <div className="flex-1 lg:pb-0 pb-16">
+          {children}
+        </div>
+
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav />
       </div>
     </SidebarContext.Provider>
   );

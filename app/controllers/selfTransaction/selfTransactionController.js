@@ -94,6 +94,10 @@ class SelfTransactionController {
       const { req_object } = await req.json();
       const { transaction_date, account_id, amount, transaction_type } = req_object;
 
+      console.log("=== SELF TRANSACTION CREATE ===");
+      console.log("Raw transaction_type from request:", transaction_type);
+      console.log("Type of transaction_type:", typeof transaction_type);
+
       if (!transaction_date || !account_id || !amount || !transaction_type) {
         const error = new Error(
           "transaction_date, account_id, amount, and transaction_type are required in Method: SelfTransactionController.create"
@@ -105,7 +109,11 @@ class SelfTransactionController {
         return errorResponse(error, 400);
       }
 
-      if (transaction_type !== "receive" && transaction_type !== "pay") {
+      // Normalize transaction type first to handle case variations
+      const normalizedTransactionType = String(transaction_type).toLowerCase().trim();
+      console.log("Normalized transaction_type:", normalizedTransactionType);
+      
+      if (normalizedTransactionType !== "receive" && normalizedTransactionType !== "pay") {
         const error = new Error("transaction_type must be 'receive' or 'pay'");
         ErrorLogger.log(
           "Failed to create self transaction in Method: SelfTransactionController.create",
@@ -125,8 +133,10 @@ class SelfTransactionController {
       }
 
       const financialYear = calculateFinancialYear(transaction_date);
-      const isReceive = transaction_type === "receive";
       const cashInHandAccountId = user.cash_in_hand_account_id;
+      const isReceive = normalizedTransactionType === "receive";
+      const isPay = normalizedTransactionType === "pay";
+      
 
       // Use transaction to ensure both self_transaction and transactions are created together
       const result = await prisma.$transaction(async (tx) => {
@@ -253,11 +263,14 @@ class SelfTransactionController {
         : calculateFinancialYear(existingTransaction.transaction_date);
 
       const transactionType = req_object.transaction_type || existingTransaction.transaction_type;
-      const isReceive = transactionType === "receive";
+      const normalizedTransactionType = String(transactionType).toLowerCase().trim();
+      const isReceive = normalizedTransactionType === "receive";
+      const isPay = normalizedTransactionType === "pay";
       const amount = req_object.amount ? Number(req_object.amount) : existingTransaction.amount;
       const accountId = req_object.account_id ? Number(req_object.account_id) : existingTransaction.account_id;
       const transactionDate = req_object.transaction_date || existingTransaction.transaction_date;
       const cashInHandAccountId = user.cash_in_hand_account_id;
+
 
       // Use transaction to ensure both self_transaction and transactions are updated together
       const result = await prisma.$transaction(async (tx) => {

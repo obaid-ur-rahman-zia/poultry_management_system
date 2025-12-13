@@ -430,12 +430,12 @@ export default function UnitExpensePage() {
     const totalAmount = calculateTotal();
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
             {/* Form Section */}
             <Card className={"max-w-5xl mx-auto"}>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="unit-expense-form">
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                             {/* Date */}
                             <div className="space-y-2">
                                 <Label htmlFor="expense_date">Date *</Label>
@@ -760,10 +760,10 @@ export default function UnitExpensePage() {
 
             {/* Expenses List */}
             <Card>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6">
                     {/* Filters */}
                     <div className="space-y-4 mb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="space-y-2">
                                 <Label>Search</Label>
                                 <div className="relative">
@@ -813,70 +813,74 @@ export default function UnitExpensePage() {
                             No expenses found
                         </div>
                     ) : (
-                        <div className="relative max-h-[600px] overflow-auto">
-                            <table className="w-full caption-bottom text-sm">
-                                <thead className="sticky top-0 bg-background z-20 border-b-2">
-                                    <tr className="border-b">
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Floc</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Supplier</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Price</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Quantity</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Total</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredExpenses.map((expense) => (
-                                        <tr key={expense.expense_id} className="hover:bg-muted/50 border-b transition-colors">
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {expense.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (expense.prounit_id || expense.farm_id))?.prounit_nam) || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                Floc #{expense.floc_id}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {Array.isArray(suppliers) && expense.supplier_id && suppliers.find(s => s.acc_id === expense.supplier_id)?.account_nam || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {Array.isArray(products) && products.find(p => p.product_id === expense.product_id)?.product_title || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {expense.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {expense.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap font-medium">
-                                                {expense.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleEdit(expense)}
-                                                    >
-                                                        <Edit2 className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(expense.expense_id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </div>
-                                            </td>
+                        <div className="relative max-h-[600px] overflow-auto -mx-4 sm:mx-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full caption-bottom text-sm min-w-[800px]">
+                                    <thead className="sticky top-0 bg-background z-20 border-b-2">
+                                        <tr className="border-b">
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Floc</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Supplier</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Price</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Quantity</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Total</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {filteredExpenses.map((expense) => (
+                                            <tr key={expense.expense_id} className="hover:bg-muted/50 border-b transition-colors">
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {expense.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (expense.prounit_id || expense.farm_id))?.prounit_nam) || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden md:table-cell">
+                                                    Floc #{expense.floc_id}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
+                                                    {Array.isArray(suppliers) && expense.supplier_id && suppliers.find(s => s.acc_id === expense.supplier_id)?.account_nam || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {Array.isArray(products) && products.find(p => p.product_id === expense.product_id)?.product_title || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                    {expense.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                    {expense.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap font-medium">
+                                                    {expense.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleEdit(expense)}
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(expense.expense_id)}
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </CardContent>
@@ -884,7 +888,7 @@ export default function UnitExpensePage() {
 
             {/* Create Supplier Dialog */}
             <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Create New Supplier</DialogTitle>
                         <DialogDescription>

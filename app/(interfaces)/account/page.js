@@ -57,7 +57,6 @@ export default function AccountPage() {
             account_no: "",
             opening_balance: "",
             balance_type: "credit",
-            credit_limit: "",
             address: "",
             reference: "",
         },
@@ -253,7 +252,6 @@ export default function AccountPage() {
                 sub_id: parseInt(data.sub_id),
                 account_no: data.account_no?.trim() || null,
                 ...(finalBalance !== null && { opening_balance: finalBalance }),
-                credit_limit: data.credit_limit ? parseFloat(data.credit_limit) : null,
                 insert_by: "user",
                 update_by: "user",
                 status: 1,
@@ -291,7 +289,6 @@ export default function AccountPage() {
                     account_no: "",
                     opening_balance: "",
                     balance_type: "credit",
-                    credit_limit: "",
                     address: "",
                     reference: "",
                 });
@@ -318,7 +315,6 @@ export default function AccountPage() {
             account_no: "",
             opening_balance: "",
             balance_type: "credit",
-            credit_limit: "",
             address: "",
             reference: "",
         });
@@ -347,7 +343,6 @@ export default function AccountPage() {
             account_no: account.account_no || "",
             opening_balance: balanceValue.toString(),
             balance_type: balanceType,
-            credit_limit: account.credit_limit?.toString() || "",
             address: account.account_address || "",
             reference: account.account_reference || "",
         });
@@ -439,12 +434,12 @@ export default function AccountPage() {
     });
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
             {/* Form Section */}
-            <Card className={"max-w-4xl mx-auto "} >
-                <CardContent>
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 " id="account-form">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className={"max-w-4xl mx-auto"} >
+                <CardContent className="p-4 sm:p-6">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="account-form">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Account Type (Subhead) */}
                             <div className="space-y-2">
                                 <Label htmlFor="sub_id">Account Type *</Label>
@@ -569,19 +564,6 @@ export default function AccountPage() {
 
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Credit Limit */}
-                            <div className="space-y-2">
-                                <Label htmlFor="credit_limit">Credit Limit</Label>
-                                <Input
-                                    id="credit_limit"
-                                    type="number"
-                                    step="0.01"
-                                    {...register("credit_limit")}
-                                    placeholder="0.00"
-                                />
-                            </div>
-
-
                             {/* Reference */}
                             <div className="space-y-2">
                                 <Label htmlFor="reference">Reference</Label>
@@ -610,23 +592,31 @@ export default function AccountPage() {
                                     </Button>
                                 </div>
                                 {contactNumbers?.map((contact, index) => (
-                                    <div key={index} className="flex gap-2">
-                                        <Input
-                                            {...register(`contact_numbers.${index}`, {
-                                                required: index === 0 ? "At least one contact number is required" : false,
-                                            })}
-                                            placeholder={`Contact ${index + 1}`}
-                                            type="tel"
-                                        />
-                                        {contactNumbers.length > 1 && (
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={() => handleRemoveContact(index)}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
+                                    <div key={index} className="space-y-1">
+                                        <div className="flex gap-2">
+                                            <Input
+                                                {...register(`contact_numbers.${index}`, {
+                                                    required: index === 0 ? "At least one contact number is required" : false,
+                                                })}
+                                                placeholder={`Contact ${index + 1}`}
+                                                type="tel"
+                                                className={errors.contact_numbers?.[index] ? "border-destructive" : ""}
+                                            />
+                                            {contactNumbers.length > 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => handleRemoveContact(index)}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                        {errors.contact_numbers?.[index] && (
+                                            <p className="text-sm text-destructive">
+                                                {errors.contact_numbers[index].message}
+                                            </p>
                                         )}
                                     </div>
                                 ))}
@@ -731,21 +721,20 @@ export default function AccountPage() {
                             No accounts found
                         </div>
                     ) : (
-                        <div className="relative max-h-[300px] overflow-auto">
-                            <table className="w-full caption-bottom text-sm">
-                                <thead className="sticky top-0 bg-background z-20 border-b-2">
-                                    <tr className="border-b">
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Account Type</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Name</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Contact Numbers</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Account No</th>
-                                        {/* <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Opening Balance</th> */}
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Credit Limit</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Address</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Reference</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
-                                    </tr>
-                                </thead>
+                        <div className="relative max-h-[300px] overflow-auto -mx-4 sm:mx-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full caption-bottom text-sm min-w-[800px]">
+                                    <thead className="sticky top-0 bg-background z-20 border-b-2">
+                                        <tr className="border-b">
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Account Type</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Name</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Contact Numbers</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Account No</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Address</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Reference</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
+                                        </tr>
+                                    </thead>
                                 <tbody>
                                     {filteredAccounts.map((account) => {
                                         const contacts = account.contact_numbers ||
@@ -769,7 +758,7 @@ export default function AccountPage() {
                                                         ? highlightText(account.account_nam || "N/A", searchQuery || filterName)
                                                         : (account.account_nam || "N/A")}
                                                 </td>
-                                                <td className="p-2 align-middle">
+                                                <td className="p-2 align-middle hidden md:table-cell">
                                                     <div className="flex flex-wrap gap-1">
                                                         {contacts.map((contact, idx) => (
                                                             <Badge key={idx} variant="secondary" className="text-xs">
@@ -781,27 +770,15 @@ export default function AccountPage() {
                                                         ))}
                                                     </div>
                                                 </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
                                                     {searchQuery 
                                                         ? highlightText(account.account_no || "N/A", searchQuery)
                                                         : (account.account_no || "N/A")}
                                                 </td>
-                                                {/* <td className="p-2 align-middle whitespace-nowrap">
-                                                    <span className={account.opening_balance < 0 ? "text-red-600" : "text-green-600"}>
-                                                        {account.opening_balance !== null && account.opening_balance !== undefined
-                                                            ? account.opening_balance.toLocaleString()
-                                                            : "0.00"}
-                                                    </span>
-                                                </td> */}
-                                                <td className="p-2 align-middle whitespace-nowrap">
-                                                    {account.credit_limit
-                                                        ? account.credit_limit.toLocaleString()
-                                                        : "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle max-w-xs truncate">
+                                                <td className="p-2 align-middle max-w-xs truncate hidden xl:table-cell">
                                                     {account.account_address || "N/A"}
                                                 </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
                                                     {searchQuery 
                                                         ? highlightText(account.account_reference || "N/A", searchQuery)
                                                         : (account.account_reference || "N/A")}
@@ -812,24 +789,18 @@ export default function AccountPage() {
                                                             variant="ghost"
                                                             size="sm"
                                                             onClick={() => handleEdit(account)}
+                                                            className="h-8 w-8 p-0"
                                                         >
                                                             <Edit2 className="h-4 w-4" />
                                                         </Button>
-
-                                                        {/* <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(account.acc_id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button> */}
                                                     </div>
                                                 </td>
                                             </tr>
                                         );
                                     })}
                                 </tbody>
-                            </table>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </CardContent>
@@ -837,7 +808,7 @@ export default function AccountPage() {
 
             {/* Add Subhead Dialog */}
             <Dialog open={isSubHeadDialogOpen} onOpenChange={setIsSubHeadDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Add New Account Type</DialogTitle>
                         <DialogDescription>

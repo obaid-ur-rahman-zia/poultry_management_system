@@ -4,7 +4,6 @@ import TransactionRepository from "@/app/repositories/transaction/transactionRep
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
-import { validateCreditLimitVsOpeningBalance } from "@/app/utils/creditLimitValidator";
 import prisma from "@/lib/prisma";
 
 class AccountsController {
@@ -137,22 +136,6 @@ class AccountsController {
         return errorResponse(error, 400);
       }
 
-      // Validate credit limit vs opening balance
-      const openingBalance = req_object.opening_balance;
-      const balanceType = req_object.balance_type || "credit";
-      const creditLimit = req_object.credit_limit;
-      
-      if (openingBalance !== undefined && openingBalance !== null && openingBalance !== 0) {
-        const validation = validateCreditLimitVsOpeningBalance(creditLimit, openingBalance, balanceType);
-        if (!validation.valid) {
-          const error = new Error(validation.message);
-          ErrorLogger.log(
-            "Failed to create account - credit limit validation failed in Method: AccountsController.create",
-            error
-          );
-          return errorResponse(error, 400);
-        }
-      }
 
       // Use transaction to ensure both account and transaction are created together
       const result = await prisma.$transaction(async (tx) => {
@@ -166,7 +149,6 @@ class AccountsController {
           account_cnic: req_object.account_cnic,
           account_alter_nam: req_object.account_alter_nam,
           account_no: req_object.account_no,
-          credit_limit: req_object.credit_limit,
           insert_by: req_object.insert_by,
           update_by: req_object.update_by,
           status: req_object.status,
@@ -351,22 +333,6 @@ class AccountsController {
         return errorResponse(error, 400);
       }
 
-      // Validate credit limit vs opening balance
-      const openingBalance = req_object.opening_balance;
-      const balanceType = req_object.balance_type || "credit";
-      const creditLimit = req_object.credit_limit !== undefined ? req_object.credit_limit : currentAccount.credit_limit;
-      
-      if (openingBalance !== undefined && openingBalance !== null && openingBalance !== 0) {
-        const validation = validateCreditLimitVsOpeningBalance(creditLimit, openingBalance, balanceType);
-        if (!validation.valid) {
-          const error = new Error(validation.message);
-          ErrorLogger.log(
-            "Failed to update account - credit limit validation failed in Method: AccountsController.update",
-            error
-          );
-          return errorResponse(error, 400);
-        }
-      }
 
       // Use transaction to ensure both account and transaction are updated together
       const result = await prisma.$transaction(async (tx) => {

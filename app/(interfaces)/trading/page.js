@@ -398,22 +398,22 @@ export default function TradingPage() {
   });
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto sm:p-0 md:p-6 space-y-4 md:space-y-6">
       {/* Trading Form */}
       <Card className="max-w-6xl mx-auto">
-        <CardHeader>
-          <CardTitle>{isEditMode ? "Edit Trade" : "Create New Trade"}</CardTitle>
+        <CardHeader className="p-4 pb-0 sm:p-0">
+          <CardTitle className="text-lg sm:text-xl">{isEditMode ? "Edit Trade" : "Create New Trade"}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 sm:p-0">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Buy From Section */}
-              <div className="border rounded-lg p-4 space-y-4">
-                <h3 className="text-lg font-semibold">Buy From</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="space-y-4">
+                <CardTitle className="text-base sm:text-lg font-semibold">Buy From</CardTitle>
+                <CardContent className="">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Date */}
                   <div className="space-y-2">
                     <Label htmlFor="trading_date">Date *</Label>
@@ -597,13 +597,14 @@ export default function TradingPage() {
                     rows={3}
                   />
                 </div>
-              </div>
+                </CardContent>
+              </Card>
 
               {/* Sale To Section */}
-              <div className="border rounded-lg p-4 space-y-4">
-                <h3 className="text-lg font-semibold">Sale To</h3>
+              <div className="border rounded-lg p-3 sm:p-4 space-y-4">
+                <h3 className="text-base sm:text-lg font-semibold">Sale To</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="sale_to_account">Account *</Label>
                     <Controller
@@ -834,82 +835,86 @@ export default function TradingPage() {
           ) : filteredTrades.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No trades found</div>
           ) : (
-            <div className="overflow-auto">
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-20">
-                  <TableRow>
-                    <TableHead className="bg-background">Date</TableHead>
-                    <TableHead className="bg-background">D.O Number</TableHead>
-                    <TableHead className="bg-background">Product</TableHead>
-                    <TableHead className="bg-background">Buy From</TableHead>
-                    <TableHead className="bg-background">Buy Qty</TableHead>
-                    <TableHead className="bg-background">Buy Price</TableHead>
-                    <TableHead className="bg-background">Buy Total</TableHead>
-                    <TableHead className="bg-background">Sale To</TableHead>
-                    <TableHead className="bg-background">Sale Qty</TableHead>
-                    <TableHead className="bg-background">Sale Price</TableHead>
-                    <TableHead className="bg-background">Sale Total</TableHead>
-                    <TableHead className="bg-background">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTrades.map((trade) => (
-                    <TableRow key={trade.trading_id}>
-                      <TableCell>
-                        {trade.trading_date ? new Date(trade.trading_date).toLocaleDateString() : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {trade.do_number || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {Array.isArray(products) && products.find(p => p.product_id === trade.product_id)?.product_title || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.buy_from_account)?.account_nam || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {trade.buy_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                      </TableCell>
-                      <TableCell>
-                        {trade.buy_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                      </TableCell>
-                      <TableCell>
-                        {trade.buy_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                      </TableCell>
-                      <TableCell>
-                        {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.sale_to_account)?.account_nam || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {trade.sale_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                      </TableCell>
-                      <TableCell>
-                        {trade.sale_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                      </TableCell>
-                      <TableCell>
-                        {trade.sale_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(trade)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(trade.trading_id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+                <Table className="min-w-[1000px]">
+                  <TableHeader className="sticky top-0 bg-background z-20">
+                    <TableRow>
+                      <TableHead className="bg-background">Date</TableHead>
+                      <TableHead className="bg-background hidden md:table-cell">D.O Number</TableHead>
+                      <TableHead className="bg-background">Product</TableHead>
+                      <TableHead className="bg-background hidden lg:table-cell">Buy From</TableHead>
+                      <TableHead className="bg-background hidden lg:table-cell">Buy Qty</TableHead>
+                      <TableHead className="bg-background hidden xl:table-cell">Buy Price</TableHead>
+                      <TableHead className="bg-background hidden xl:table-cell">Buy Total</TableHead>
+                      <TableHead className="bg-background hidden lg:table-cell">Sale To</TableHead>
+                      <TableHead className="bg-background hidden lg:table-cell">Sale Qty</TableHead>
+                      <TableHead className="bg-background hidden xl:table-cell">Sale Price</TableHead>
+                      <TableHead className="bg-background hidden xl:table-cell">Sale Total</TableHead>
+                      <TableHead className="bg-background">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTrades.map((trade) => (
+                      <TableRow key={trade.trading_id}>
+                        <TableCell>
+                          {trade.trading_date ? new Date(trade.trading_date).toLocaleDateString() : "N/A"}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {trade.do_number || "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {Array.isArray(products) && products.find(p => p.product_id === trade.product_id)?.product_title || "N/A"}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.buy_from_account)?.account_nam || "N/A"}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {trade.buy_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell">
+                          {trade.buy_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell">
+                          {trade.buy_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.sale_to_account)?.account_nam || "N/A"}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {trade.sale_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell">
+                          {trade.sale_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell">
+                          {trade.sale_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(trade)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(trade.trading_id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>

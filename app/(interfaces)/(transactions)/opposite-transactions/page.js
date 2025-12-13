@@ -181,7 +181,6 @@ export default function OppositeTransactionsPage() {
                     account_contact: JSON.stringify([""]),
                     account_address: null,
                     account_reference: null,
-                    credit_limit: null,
                     insert_by: "user",
                     update_by: "user",
                     status: 1,
@@ -355,7 +354,7 @@ export default function OppositeTransactionsPage() {
                                             value={field.value}
                                             onValueChange={field.onChange}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className={"!max-w-[400px] !w-full"}>
                                                 <SelectValue placeholder="Select account" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -387,7 +386,7 @@ export default function OppositeTransactionsPage() {
                                                 value={field.value}
                                                 onValueChange={field.onChange}
                                             >
-                                                <SelectTrigger className="flex-1">
+                                                <SelectTrigger className={"!max-w-[400px] !w-full"}>
                                                     <SelectValue placeholder="Select bank" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -430,7 +429,7 @@ export default function OppositeTransactionsPage() {
                                             value={field.value}
                                             onValueChange={field.onChange}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className={"!max-w-[400px] !w-full"}>
                                                 <SelectValue placeholder="Select account" />
                                             </SelectTrigger>
                                             <SelectContent>

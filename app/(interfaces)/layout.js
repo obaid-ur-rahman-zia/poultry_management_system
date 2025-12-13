@@ -23,12 +23,13 @@ const ContentArea = ({ children }) => {
     // When pinned, adjust margin based on sidebar width
     // When unpinned, always use ml-16 (content doesn't move, sidebar overlays)
     // When pinned, sidebar is relative and takes space, so content needs margin to not go behind
+    // On mobile, no margin needed as sidebar is hidden
     const marginClass = isPinned 
-        ? (isExpanded ? "ml-64" : "ml-16")
-        : "ml-16";
+        ? (isExpanded ? "lg:ml-64" : "lg:ml-16")
+        : "lg:ml-16";
 
     return (
-        <main className={`overflow-y-auto overflow-x-hidden flex-1 ${marginClass} transition-all duration-300 h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50`}>
+        <main className={`overflow-y-auto overflow-x-hidden flex-1 ${marginClass} transition-all duration-300 h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pb-20 lg:pb-0`}>
             <Header />
             {/* <BreadcrumbNav /> */}
             <AnimatePresence mode="wait">
@@ -41,7 +42,7 @@ const ContentArea = ({ children }) => {
                         duration: 0.4,
                         ease: [0.22, 1, 0.36, 1]
                     }}
-                    style={{ width: '100%' }}
+                    className="w-full px-2 sm:px-4 md:px-6 lg:px-8"
                 >
                     {children}
                 </motion.div>
