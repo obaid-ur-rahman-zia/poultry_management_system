@@ -380,25 +380,29 @@ export default function UnitSalePage() {
     const calculateTotal = () => {
         const priceValue = parseFloat(price) || 0;
         const quantityValue = parseFloat(quantity) || 0;
-        let subtotal = priceValue * quantityValue;
+        
+        // Start with price per unit
+        let unitPrice = priceValue;
 
-        // Apply discount
+        // Apply discount on price (per unit)
         if (discountValue) {
             const discountAmount = discountType === "percentage"
-                ? (subtotal * parseFloat(discountValue)) / 100
+                ? (unitPrice * parseFloat(discountValue)) / 100
                 : parseFloat(discountValue);
-            subtotal -= discountAmount;
+            unitPrice -= discountAmount;
         }
 
-        // Apply tax
+        // Apply tax on price (per unit, after discount)
         if (taxValue) {
             const taxAmount = taxType === "percentage"
-                ? (subtotal * parseFloat(taxValue)) / 100
+                ? (unitPrice * parseFloat(taxValue)) / 100
                 : parseFloat(taxValue);
-            subtotal += taxAmount;
+            unitPrice += taxAmount;
         }
 
-        return Math.max(0, subtotal);
+        // Multiply by quantity to get total
+        const total = unitPrice * quantityValue;
+        return Math.max(0, total);
     };
 
     const onSubmit = async (data) => {

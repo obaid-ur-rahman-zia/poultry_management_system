@@ -129,15 +129,15 @@ export default function AccountPage() {
             if (result.response_status === "success") {
                 const accountsData = result.response_result?.data || result.response_result || [];
                 // Parse contact numbers if stored as JSON string
-                const formattedAccounts = accountsData.map(account => ({
-                    ...account,
-                    contact_numbers: account.account_contact
-                        ? (account.account_contact.includes('[')
-                            ? JSON.parse(account.account_contact)
-                            : account.account_contact.split(',').filter(c => c.trim()))
-                        : [],
-                }));
-                setAccounts(formattedAccounts);
+                // const formattedAccounts = accountsData.map(account => ({
+                //     ...account,
+                //     contact_numbers: account.account_contact
+                //         ? (account.account_contact.includes('[')
+                //             ? JSON.parse(account.account_contact)
+                //             : account.account_contact.split(',').filter(c => c.trim()))
+                //         : [],
+                // }));
+                setAccounts(accountsData);
             } else {
                 toast.error(result.response_message || "Failed to fetch accounts");
             }

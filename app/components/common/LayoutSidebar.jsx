@@ -380,7 +380,7 @@ const Sidebar = ({
               return (
                 <div key={item.id} className="space-y-1">
                   <GroupHeader item={item} sectionKey={item.id} />
-                  {isExpanded && sectionExpanded && (
+                  {isExpanded && !sectionExpanded && (
                     <div className="ml-4 space-y-1 border-l-2 border-border pl-2">
                       {item.children.map((child) => (
                         <SidebarLink key={child.id} item={child} />
@@ -401,8 +401,8 @@ const Sidebar = ({
 
 const LayoutSidebar = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isPinned, setIsPinned] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isPinned, setIsPinned] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   const toggleSidebar = () => {

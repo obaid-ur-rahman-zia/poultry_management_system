@@ -55,7 +55,7 @@ export default function FlocManagementPage() {
       farm_id: "",
       starting_date: "",
       ending_date: "",
-      stackholders: [{ acc_id: "", percentage: "" }],
+      stackholders: [{ stackholder_id: "", percentage: "" }],
     },
   });
 
@@ -64,13 +64,22 @@ export default function FlocManagementPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingFlocId, setEditingFlocId] = useState(null);
   const [farms, setFarms] = useState([]);
-  const [accounts, setAccounts] = useState([]);
+  const [stackholders, setStackholders] = useState([]);
   const [availableFarms, setAvailableFarms] = useState([]);
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [clearDescription, setClearDescription] = useState("");
   const [flocToClear, setFlocToClear] = useState(null);
   const [shouldClearEndingDate, setShouldClearEndingDate] = useState(false);
   const [activeFlocForSelectedFarm, setActiveFlocForSelectedFarm] = useState(null);
+  const [isCreateStackholderOpen, setIsCreateStackholderOpen] = useState(false);
+  const [creatingIndex, setCreatingIndex] = useState(null);
+  const [isCreatingStackholder, setIsCreatingStackholder] = useState(false);
+  const [newStackholder, setNewStackholder] = useState({
+    stackholder_nam: "",
+    stackholder_cnic: "",
+    stackholder_contact: "",
+    stackholder_address: "",
+  });
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,12 +87,12 @@ export default function FlocManagementPage() {
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
 
-  const stackholders = watch("stackholders") || [{ acc_id: "", percentage: "" }];
+  const formStackholders = watch("stackholders") || [{ stackholder_id: "", percentage: "" }];
   const selectedFarm = watch("farm_id");
 
   useEffect(() => {
     fetchFarms();
-    fetchAccounts();
+    fetchStackholders();
     fetchFlocs();
   }, []);
 
@@ -136,17 +145,17 @@ export default function FlocManagementPage() {
     }
   };
 
-  const fetchAccounts = async () => {
+  const fetchStackholders = async () => {
     try {
-      const response = await fetch("/api/account/accounts/readAll");
+      const response = await fetch("/api/stackholder");
       const result = await response.json();
       
       if (result.response_status === "success") {
-        const accountsData = result.response_result?.data || result.response_result || [];
-        setAccounts(accountsData);
+        const stackholdersData = result.response_result?.data || result.response_result || [];
+        setStackholders(stackholdersData);
       }
     } catch (error) {
-      console.error("Error fetching accounts:", error);
+      console.error("Error fetching stackholders:", error);
     }
   };
 
@@ -205,7 +214,7 @@ export default function FlocManagementPage() {
 
   const handleAddStackholder = () => {
     const currentStackholders = watch("stackholders") || [];
-    setValue("stackholders", [...currentStackholders, { acc_id: "", percentage: "" }]);
+    setValue("stackholders", [...currentStackholders, { stackholder_id: "", percentage: "" }]);
   };
 
   const handleRemoveStackholder = (index) => {
@@ -226,13 +235,61 @@ export default function FlocManagementPage() {
     setValue("stackholders", currentStackholders);
 
     // If only one stackholder, set to 100%
-    if (currentStackholders.length === 1 && field === "acc_id" && value) {
+    if (currentStackholders.length === 1 && field === "stackholder_id" && value) {
       setValue("stackholders.0.percentage", "100");
     }
   };
 
+  const openCreateStackholder = (index) => {
+    setCreatingIndex(index);
+    setIsCreateStackholderOpen(true);
+  };
+
+  const submitCreateStackholder = async () => {
+    if (!newStackholder.stackholder_nam.trim()) {
+      toast.error("Stackholder name is required");
+      return;
+    }
+    setIsCreatingStackholder(true);
+    try {
+      const response = await fetch("/api/stackholder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ req_object: newStackholder }),
+      });
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const created = result.response_result || {};
+        const createdId = created.stackholder_id?.toString();
+        setIsCreateStackholderOpen(false);
+        setNewStackholder({
+          stackholder_nam: "",
+          stackholder_cnic: "",
+          stackholder_contact: "",
+          stackholder_address: "",
+        });
+        await fetchStackholders();
+        if (creatingIndex !== null && createdId) {
+          setValue(`stackholders.${creatingIndex}.stackholder_id`, createdId);
+          const rows = watch("stackholders") || [];
+          if (rows.length === 1) {
+            setValue("stackholders.0.percentage", "100");
+          }
+        }
+        toast.success("Stackholder created successfully");
+      } else {
+        toast.error(result.response_message || "Failed to create stackholder");
+      }
+    } catch (error) {
+      console.error("Error creating stackholder:", error);
+      toast.error("Failed to create stackholder");
+    } finally {
+      setIsCreatingStackholder(false);
+    }
+  };
+
   const calculateTotalPercentage = () => {
-    const percentages = stackholders
+    const percentages = formStackholders
       .map(sh => parseFloat(sh.percentage) || 0)
       .filter(p => !isNaN(p));
     return percentages.reduce((sum, p) => sum + p, 0);
@@ -342,7 +399,7 @@ export default function FlocManagementPage() {
     }
 
     // Validate at least one stackholder
-    const validStackholders = data.stackholders.filter(sh => sh.acc_id);
+    const validStackholders = data.stackholders.filter(sh => sh.stackholder_id);
     if (validStackholders.length === 0) {
       toast.error("At least one stackholder is required");
       return;
@@ -360,7 +417,7 @@ export default function FlocManagementPage() {
         starting_date: data.starting_date,
         ending_date: data.ending_date || null,
         stackholders: validStackholders.map(sh => ({
-          acc_id: parseInt(sh.acc_id),
+          stackholder_id: parseInt(sh.stackholder_id),
           percentage: parseFloat(sh.percentage),
         })),
         ...(isEditMode && { floc_id: editingFlocId }),
@@ -390,7 +447,7 @@ export default function FlocManagementPage() {
           farm_id: "",
           starting_date: "",
           ending_date: "",
-          stackholders: [{ acc_id: "", percentage: "" }],
+          stackholders: [{ stackholder_id: "", percentage: "" }],
         });
         setIsEditMode(false);
         setEditingFlocId(null);
@@ -417,7 +474,7 @@ export default function FlocManagementPage() {
       farm_id: "",
       starting_date: "",
       ending_date: "",
-      stackholders: [{ acc_id: "", percentage: "" }],
+      stackholders: [{ stackholder_id: "", percentage: "" }],
     });
     document.getElementById("floc-form")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -426,12 +483,13 @@ export default function FlocManagementPage() {
     setIsEditMode(true);
     setEditingFlocId(floc.floc_id);
     
-    // Parse stackholders (assuming they're stored as JSON or array)
-    const stackholdersData = floc.stackholders 
-      ? (typeof floc.stackholders === 'string' 
-          ? JSON.parse(floc.stackholders) 
-          : floc.stackholders)
-      : [{ acc_id: "", percentage: "" }];
+    // Get stackholders from floc_stackholders relation
+    const stackholdersData = floc.floc_stackholders && Array.isArray(floc.floc_stackholders)
+      ? floc.floc_stackholders.map(fs => ({
+          stackholder_id: fs.stackholder?.stackholder_id?.toString() || "",
+          percentage: fs.percentage?.toString() || ""
+        }))
+      : [{ stackholder_id: "", percentage: "" }];
 
     const prounitId = (floc.prounit_id || floc.farm_id)?.toString() || "";
 
@@ -440,11 +498,8 @@ export default function FlocManagementPage() {
       starting_date: floc.starting_date ? new Date(floc.starting_date).toISOString().split('T')[0] : "",
       ending_date: floc.ending_date ? new Date(floc.ending_date).toISOString().split('T')[0] : "",
       stackholders: stackholdersData.length > 0 
-        ? stackholdersData.map(sh => ({ 
-            acc_id: sh.acc_id?.toString() || "", 
-            percentage: sh.percentage?.toString() || "" 
-          }))
-        : [{ acc_id: "", percentage: "" }],
+        ? stackholdersData
+        : [{ stackholder_id: "", percentage: "" }],
     });
     
     // Update available farms after setting edit mode to ensure current unit is included
@@ -703,22 +758,40 @@ export default function FlocManagementPage() {
 
             {/* Stackholders */}
             <div className="space-y-2">
+              <div className="flex justify-between items-center">
               <Label>Stackholders *</Label>
-              {stackholders.map((stackholder, index) => (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddStackholder}
+                  className=""
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+              {formStackholders.map((_, index) => (
                 <div key={index} className="flex gap-2 items-end">
                   <div className="flex-1 space-y-2">
                     <Controller
-                      name={`stackholders.${index}.acc_id`}
+                      name={`stackholders.${index}.stackholder_id`}
                       control={control}
                       rules={{ required: "Stackholder is required" }}
                       render={({ field }) => (
                         <Select
                           value={field.value}
                           onValueChange={(value) => {
+                            if (value !== "__create__" && (formStackholders || []).some((sh, i) => i !== index && sh.stackholder_id === value)) {
+                              toast.error("This stackholder is already selected");
+                              return;
+                            }
+                            if (value === "__create__") {
+                              openCreateStackholder(index);
+                              return;
+                            }
                             field.onChange(value);
-                            handleStackholderChange(index, "acc_id", value);
-                            // If only one stackholder, set to 100%
-                            if (stackholders.length === 1) {
+                            handleStackholderChange(index, "stackholder_id", value);
+                            if (formStackholders.length === 1) {
                               setValue("stackholders.0.percentage", "100");
                             }
                           }}
@@ -727,9 +800,19 @@ export default function FlocManagementPage() {
                             <SelectValue placeholder="Select stackholder" />
                           </SelectTrigger>
                           <SelectContent>
-                            {accounts.map((account) => (
-                              <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                {account.account_nam}
+                            <SelectItem value="__create__">
+                              Add New Stackholder
+                            </SelectItem>
+                            {stackholders.map((holder) => (
+                              <SelectItem
+                                key={holder.stackholder_id}
+                                value={holder.stackholder_id.toString()}
+                                disabled={(formStackholders || [])
+                                  .map((sh) => sh.stackholder_id)
+                                  .filter(Boolean)
+                                  .includes(holder.stackholder_id?.toString()) && field.value !== holder.stackholder_id?.toString()}
+                              >
+                                {holder.stackholder_nam}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -752,7 +835,7 @@ export default function FlocManagementPage() {
                           type="number"
                           step="0.01"
                           placeholder="%"
-                          disabled={stackholders.length === 1}
+                          disabled={formStackholders.length === 1}
                           onChange={(e) => {
                             field.onChange(e);
                             handleStackholderChange(index, "percentage", e.target.value);
@@ -761,7 +844,7 @@ export default function FlocManagementPage() {
                       )}
                     />
                   </div>
-                  {stackholders.length > 1 && (
+                  {formStackholders.length > 1 && (
                     <Button
                       type="button"
                       variant="outline"
@@ -774,15 +857,29 @@ export default function FlocManagementPage() {
                 </div>
               ))}
               
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddStackholder}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Stackholder
-              </Button>
+              {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddStackholder}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Stackholder
+                </Button> */}
+                {/* <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCreatingIndex(null);
+                    setIsCreateStackholderOpen(true);
+                  }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Stackholder
+                </Button> */}
+              {/* </div> */}
 
               {/* Percentage Total Alert */}
               <div className="mt-2">
@@ -909,10 +1006,8 @@ export default function FlocManagementPage() {
                     const endDate = floc.ending_date ? new Date(floc.ending_date) : null;
                     const isActive = !endDate || (endDate && endDate >= today);
                     
-                    const stackholdersData = floc.stackholders 
-                      ? (typeof floc.stackholders === 'string' 
-                          ? JSON.parse(floc.stackholders) 
-                          : floc.stackholders)
+                    const stackholdersData = floc.floc_stackholders && Array.isArray(floc.floc_stackholders)
+                      ? floc.floc_stackholders
                       : [];
 
                     return (
@@ -951,14 +1046,11 @@ export default function FlocManagementPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
-                            {stackholdersData.map((sh, idx) => {
-                              const account = accounts.find(a => a.acc_id === sh.acc_id);
-                              return (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {account?.account_nam || "N/A"} ({sh.percentage}%)
-                                </Badge>
-                              );
-                            })}
+                            {stackholdersData.map((fs, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {fs.stackholder?.stackholder_nam || "N/A"} ({fs.percentage}%)
+                              </Badge>
+                            ))}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1034,7 +1126,68 @@ export default function FlocManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isCreateStackholderOpen} onOpenChange={setIsCreateStackholderOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Stackholder</DialogTitle>
+            <DialogDescription>
+              Enter stackholder details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Name *</Label>
+              <Input
+                value={newStackholder.stackholder_nam}
+                onChange={(e) => setNewStackholder({ ...newStackholder, stackholder_nam: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>CNIC</Label>
+              <Input
+                value={newStackholder.stackholder_cnic}
+                onChange={(e) => setNewStackholder({ ...newStackholder, stackholder_cnic: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Contact</Label>
+              <Input
+                value={newStackholder.stackholder_contact}
+                onChange={(e) => setNewStackholder({ ...newStackholder, stackholder_contact: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Textarea
+                value={newStackholder.stackholder_address}
+                onChange={(e) => setNewStackholder({ ...newStackholder, stackholder_address: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateStackholderOpen(false);
+                setNewStackholder({
+                  stackholder_nam: "",
+                  stackholder_cnic: "",
+                  stackholder_contact: "",
+                  stackholder_address: "",
+                });
+                setCreatingIndex(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={submitCreateStackholder} disabled={isCreatingStackholder || !newStackholder.stackholder_nam.trim()}>
+              {isCreatingStackholder ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-

@@ -169,6 +169,22 @@ class FlocController {
             // Create floc
             const floc = await FlocRepository.create(req_object, tx);
 
+            // Create stackholders in junction table
+            if (stackholders && Array.isArray(stackholders) && stackholders.length > 0) {
+              for (const sh of stackholders) {
+                await tx.floc_stackholder.create({
+                  data: {
+                    floc_id: floc.floc_id,
+                    stackholder_id: Number(sh.stackholder_id),
+                    percentage: parseFloat(sh.percentage),
+                    insert_by: req_object.insert_by || "user 1",
+                    update_by: req_object.update_by || "user 1",
+                    status: 1,
+                  },
+                });
+              }
+            }
+
             // Find or create "Floc" subhead
             let flocSubhead = await AccountSubHeadRepository.findByName("Floc", tx);
             
@@ -230,7 +246,18 @@ class FlocController {
               },
             });
 
-            return floc;
+            // Fetch floc with stackholders
+            return await tx.floc.findUnique({
+              where: { floc_id: floc.floc_id },
+              include: {
+                unit: true,
+                floc_stackholders: {
+                  include: {
+                    stackholder: true,
+                  },
+                },
+              },
+            });
           } catch (transactionError) {
             ErrorLogger.log(
               "Transaction failed in FlocController.create",
@@ -316,23 +343,60 @@ class FlocController {
         req_object.prounit_id = prounit_id;
       }
 
-      // Validate dates if both are provided
-      if (req_object.starting_date && req_object.ending_date) {
-        const startDate = new Date(req_object.starting_date);
-        const endDate = new Date(req_object.ending_date);
-        if (startDate > endDate) {
-          const error = new Error("Ending date must be after starting date");
-          ErrorLogger.log(
-            "Failed to update floc in Method: FlocController.update",
-            error
-          );
-          return errorResponse(error, 400);
-        }
-      }
+      // Use transaction to update floc and stackholders
+      const result = await prisma.$transaction(
+        async (tx) => {
+          // Update floc (excluding stackholders - handled separately)
+          const updateData = { ...req_object };
+          delete updateData.stackholders; // Remove stackholders from update data
+          
+          const updatedFloc = await FlocRepository.update(floc_id, updateData);
 
-      const updated = await FlocRepository.update(floc_id, req_object);
+          // Update stackholders if provided
+          if (req_object.stackholders && Array.isArray(req_object.stackholders)) {
+            // Delete existing stackholders for this floc
+            await tx.floc_stackholder.deleteMany({
+              where: {
+                floc_id: Number(floc_id),
+              },
+            });
+
+            // Create new stackholders
+            for (const sh of req_object.stackholders) {
+              await tx.floc_stackholder.create({
+                data: {
+                  floc_id: Number(floc_id),
+                  stackholder_id: Number(sh.stackholder_id),
+                  percentage: parseFloat(sh.percentage),
+                  insert_by: req_object.update_by || "user 1",
+                  update_by: req_object.update_by || "user 1",
+                  status: 1,
+                },
+              });
+            }
+          }
+
+          // Fetch updated floc with stackholders
+          return await tx.floc.findUnique({
+            where: { floc_id: Number(floc_id) },
+            include: {
+              unit: true,
+              floc_stackholders: {
+                include: {
+                  stackholder: true,
+                },
+              },
+            },
+          });
+        },
+        {
+          maxWait: 10000,
+          timeout: 30000,
+        }
+      );
+
       await RedisService.del("flocs:all");
-      return successResponse(updated, "Floc updated successfully");
+      return successResponse(result, "Floc updated successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(

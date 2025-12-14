@@ -6,6 +6,11 @@ class FlocRepository {
       orderBy: { floc_id: "desc" },
       include: {
         unit: true,
+        floc_stackholders: {
+          include: {
+            stackholder: true,
+          },
+        },
       },
       where: {
         status: 1,
@@ -20,6 +25,11 @@ class FlocRepository {
       },
       include: {
         unit: true,
+        floc_stackholders: {
+          include: {
+            stackholder: true,
+          },
+        },
       },
     });
   }
@@ -33,6 +43,11 @@ class FlocRepository {
       orderBy: { starting_date: "desc" },
       include: {
         unit: true,
+        floc_stackholders: {
+          include: {
+            stackholder: true,
+          },
+        },
       },
     });
   }
@@ -52,6 +67,11 @@ class FlocRepository {
       },
       include: {
         unit: true,
+        floc_stackholders: {
+          include: {
+            stackholder: true,
+          },
+        },
       },
     });
   }
@@ -63,7 +83,6 @@ class FlocRepository {
         prounit_id: data.prounit_id || data.farm_id,
         starting_date: new Date(data.starting_date),
         ending_date: data.ending_date ? new Date(data.ending_date) : null,
-        stackholders: data.stackholders || [],
         clear_description: null,
         insert_by: data.insert_by || "user 1",
         update_by: data.update_by || "user 1",
@@ -71,6 +90,11 @@ class FlocRepository {
       },
       include: {
         unit: true,
+        floc_stackholders: {
+          include: {
+            stackholder: true,
+          },
+        },
       },
     });
   }
@@ -92,9 +116,6 @@ class FlocRepository {
     if (req_object.ending_date !== undefined) {
       updateData.ending_date = req_object.ending_date ? new Date(req_object.ending_date) : null;
     }
-    if (req_object.stackholders !== undefined) {
-      updateData.stackholders = req_object.stackholders;
-    }
 
     return prisma.floc.update({
       where: {
@@ -103,6 +124,11 @@ class FlocRepository {
       data: updateData,
       include: {
         unit: true,
+        floc_stackholders: {
+          include: {
+            stackholder: true,
+          },
+        },
       },
     });
   }

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 // import LoadingPage from "@/components/common/Loading";
 
 function SignInForm() {
@@ -37,6 +38,11 @@ function SignInForm() {
         password: formData.password,
         redirect: false,
       });
+
+      if(result.ok) {
+        toast.success("Sign in successful!");
+        // toast.success("Redirecting....");
+      }
 
       if (result?.error) {
         setError("Invalid email or password. Please try again.");

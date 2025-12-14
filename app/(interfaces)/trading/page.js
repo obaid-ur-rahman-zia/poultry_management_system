@@ -174,48 +174,48 @@ export default function TradingPage() {
   const calculateBuyTotal = () => {
     const priceValue = parseFloat(buyPrice) || 0;
     const quantityValue = parseFloat(buyQuantity) || 0;
-    let subtotal = priceValue * quantityValue;
 
-    // Apply discount
+    let discountedPrice = priceValue;
     if (buyDiscountValue) {
       const discountAmount = buyDiscountType === "percentage"
-        ? (subtotal * parseFloat(buyDiscountValue)) / 100
+        ? (priceValue * parseFloat(buyDiscountValue)) / 100
         : parseFloat(buyDiscountValue);
-      subtotal -= discountAmount;
+      discountedPrice = Math.max(0, priceValue - discountAmount);
     }
 
-    // Apply tax
+    let finalUnitPrice = discountedPrice;
     if (buyTaxValue) {
       const taxAmount = buyTaxType === "percentage"
-        ? (subtotal * parseFloat(buyTaxValue)) / 100
+        ? (discountedPrice * parseFloat(buyTaxValue)) / 100
         : parseFloat(buyTaxValue);
-      subtotal += taxAmount;
+      finalUnitPrice = Math.max(0, discountedPrice + taxAmount);
     }
 
+    const subtotal = finalUnitPrice * quantityValue;
     return Math.max(0, subtotal);
   };
 
   const calculateSaleTotal = () => {
     const priceValue = parseFloat(salePrice) || 0;
     const quantityValue = parseFloat(saleQuantity) || 0;
-    let subtotal = priceValue * quantityValue;
 
-    // Apply discount
+    let discountedPrice = priceValue;
     if (saleDiscountValue) {
       const discountAmount = saleDiscountType === "percentage"
-        ? (subtotal * parseFloat(saleDiscountValue)) / 100
+        ? (priceValue * parseFloat(saleDiscountValue)) / 100
         : parseFloat(saleDiscountValue);
-      subtotal -= discountAmount;
+      discountedPrice = Math.max(0, priceValue - discountAmount);
     }
 
-    // Apply tax
+    let finalUnitPrice = discountedPrice;
     if (saleTaxValue) {
       const taxAmount = saleTaxType === "percentage"
-        ? (subtotal * parseFloat(saleTaxValue)) / 100
+        ? (discountedPrice * parseFloat(saleTaxValue)) / 100
         : parseFloat(saleTaxValue);
-      subtotal += taxAmount;
+      finalUnitPrice = Math.max(0, discountedPrice + taxAmount);
     }
 
+    const subtotal = finalUnitPrice * quantityValue;
     return Math.max(0, subtotal);
   };
 
@@ -547,7 +547,7 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="buy_tax_value">Tax Value</Label>
+                    <Label htmlFor="buy_tax_value">Tax on Price</Label>
                     <Input
                       id="buy_tax_value"
                       type="number"
@@ -577,7 +577,7 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="buy_discount_value">Discount Value</Label>
+                    <Label htmlFor="buy_discount_value">Discount on Price</Label>
                     <Input
                       id="buy_discount_value"
                       type="number"
@@ -691,7 +691,7 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sale_tax_value">Tax Value</Label>
+                    <Label htmlFor="sale_tax_value">Tax on Price</Label>
                     <Input
                       id="sale_tax_value"
                       type="number"
@@ -721,7 +721,7 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sale_discount_value">Discount Value</Label>
+                    <Label htmlFor="sale_discount_value">Discount on Price</Label>
                     <Input
                       id="sale_discount_value"
                       type="number"

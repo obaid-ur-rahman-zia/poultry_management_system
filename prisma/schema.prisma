@@ -747,12 +747,47 @@ model farm {
 
 }
 
+model stackholder {
+  stackholder_id   Int      @id @default(autoincrement())
+  stackholder_nam  String   @unique @db.VarChar(100)
+  stackholder_cnic  String?  @unique @db.VarChar(100)
+  stackholder_contact String? @db.VarChar(50)
+  stackholder_address String? @db.VarChar(255)
+  insert_dat       DateTime @default(now()) @db.Timestamp(0)
+  update_dat       DateTime @default(now()) @db.Timestamp(0)
+  insert_by        String   @default("user 1") @db.VarChar(50)
+  update_by        String   @default("user 1") @db.VarChar(50)
+  status           Int      @default(1)
+
+  floc_stackholders floc_stackholder[]
+
+  @@index([status])
+}
+
+model floc_stackholder {
+  floc_stackholder_id Int      @id @default(autoincrement())
+  floc_id             Int
+  stackholder_id      Int
+  percentage          Float
+  insert_dat          DateTime @default(now()) @db.Timestamp(0)
+  update_dat          DateTime @default(now()) @db.Timestamp(0)
+  insert_by           String   @default("user 1") @db.VarChar(50)
+  update_by           String   @default("user 1") @db.VarChar(50)
+  status              Int      @default(1)
+
+  floc        floc        @relation(fields: [floc_id], references: [floc_id], onDelete: Cascade)
+  stackholder stackholder @relation(fields: [stackholder_id], references: [stackholder_id])
+
+  @@unique([floc_id, stackholder_id], name: "uq_floc_stackholder")
+  @@index([floc_id])
+  @@index([stackholder_id])
+}
+
 model floc {
   floc_id           Int       @id @default(autoincrement())
   prounit_id        Int
   starting_date     DateTime
   ending_date       DateTime?
-  stackholders      Json // Array of {acc_id: Int, percentage: Float}
   clear_description String?   @db.VarChar(500)
   insert_dat        DateTime  @default(now()) @db.Timestamp(0)
   update_dat        DateTime  @default(now()) @db.Timestamp(0)
@@ -760,10 +795,11 @@ model floc {
   update_by         String    @default("user 1") @db.VarChar(50)
   status            Int       @default(1)
 
-  unit           pro_unit        @relation(fields: [prounit_id], references: [prounit_id])
-  unit_expenses  unit_expense[]
-  unit_sales     unit_sale[]
-  daily_fs_rates daily_fs_rate[]
+  unit              pro_unit        @relation(fields: [prounit_id], references: [prounit_id])
+  unit_expenses     unit_expense[]
+  unit_sales        unit_sale[]
+  daily_fs_rates    daily_fs_rate[]
+  floc_stackholders floc_stackholder[]
 
   @@index([prounit_id])
   @@index([starting_date])
