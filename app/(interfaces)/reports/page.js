@@ -46,6 +46,7 @@ import {
   X,
   Eye,
 } from "lucide-react";
+import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 
 export default function AccountingReports() {
   const [transactions, setTransactions] = useState([]);
@@ -53,8 +54,10 @@ export default function AccountingReports() {
   const [accounts, setAccounts] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
@@ -62,6 +65,15 @@ export default function AccountingReports() {
     accountSearch: "",
     financialYear: "all",
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     fetchAccounts();
@@ -320,26 +332,142 @@ export default function AccountingReports() {
 
   return (
     <TooltipProvider>
-      <div className="w-full p-6 space-y-3 bg-gray-50 min-h-screen">
-        <div className="flex items-center justify-between">
+      <div className="w-full p-3 sm:p-6 space-y-3 bg-gray-50 min-h-screen">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
               Accounting Reports
             </h1>
           </div>
-          <div className="flex gap-2">
-            <div className="w-92">
-              <div className="relative">
-                <Input
-                  placeholder="Search by account name or remarks..."
-                  value={filters.accountSearch}
-                  onChange={(e) =>
-                    setFilters({ ...filters, accountSearch: e.target.value })
-                  }
-                />
-                <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+          <div className="flex gap-2 w-full sm:w-auto">
+            {!isMobile && (
+              <div className="w-full sm:w-92">
+                <div className="relative">
+                  <Input
+                    placeholder="Search by account name or remarks..."
+                    value={filters.accountSearch}
+                    onChange={(e) =>
+                      setFilters({ ...filters, accountSearch: e.target.value })
+                    }
+                  />
+                  <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+                </div>
               </div>
-            </div>
+            )}
+
+            {isMobile && (
+              <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    <Search className="h-4 w-4 mr-2" />
+                    Search & Filters
+                    {activeFilterCount > 0 && (
+                      <span className="ml-2 bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Search & Filters</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label className="text-sm font-semibold">Search</Label>
+                      <div className="relative mt-1">
+                        <Input
+                          placeholder="Search by account name or remarks..."
+                          value={filters.accountSearch}
+                          onChange={(e) =>
+                            setFilters({ ...filters, accountSearch: e.target.value })
+                          }
+                        />
+                        <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <Label className="text-sm font-semibold">Start Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.startDate}
+                          onChange={(e) =>
+                            setFilters({ ...filters, startDate: e.target.value })
+                          }
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold">End Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.endDate}
+                          onChange={(e) =>
+                            setFilters({ ...filters, endDate: e.target.value })
+                          }
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold">Voucher Type</Label>
+                        <Select
+                          value={filters.voucherType}
+                          onValueChange={(value) =>
+                            setFilters({ ...filters, voucherType: value })
+                          }
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="CR">Cash Receipt</SelectItem>
+                            <SelectItem value="CP">Cash Payment</SelectItem>
+                            <SelectItem value="BR">Bank Receipt</SelectItem>
+                            <SelectItem value="BP">Bank Payment</SelectItem>
+                            <SelectItem value="JV">Journal Voucher</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold">Financial Year</Label>
+                        <Select
+                          value={filters.financialYear}
+                          onValueChange={(value) =>
+                            setFilters({ ...filters, financialYear: value })
+                          }
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Years</SelectItem>
+                            {getFinancialYears().map((year) => (
+                              <SelectItem key={year} value={year}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={resetFilters} variant="outline" className="flex-1">
+                        <X className="h-4 w-4 mr-2" />
+                        Reset All
+                      </Button>
+                      <Button
+                        onClick={() => setIsFilterDialogOpen(false)}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
 
             <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
               <Tooltip>
@@ -614,9 +742,76 @@ export default function AccountingReports() {
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="max-h-[600px] overflow-auto">
-                    <table className="w-full">
+                <MobileListToggle title="General Ledger">
+                  {isMobile ? (
+                    <div className="space-y-3">
+                      {isLoading ? (
+                        <div className="text-center py-8 text-gray-500">Loading transactions...</div>
+                      ) : !Array.isArray(filteredTransactions) || filteredTransactions.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No transactions found</div>
+                      ) : (
+                        filteredTransactions.map((transaction) => (
+                          <Card key={transaction.transaction_id} className="border">
+                            <CardContent className="p-4 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Date</span>
+                                <span className="text-sm font-medium">{formatDate(transaction.transaction_dat)}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Voucher</span>
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                  {transaction.voucher_type}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Head</span>
+                                <span className="text-sm font-medium">{getAccountDetails(transaction.acc_id).headName}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Account</span>
+                                <span className="text-sm font-medium">{getAccountName(transaction.acc_id)}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Reference</span>
+                                <span className="text-sm">{transaction.reference || "-"}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Debit</span>
+                                <span className="text-sm font-medium text-green-700">
+                                  {transaction.debit >= 0 ? formatCurrency(transaction.debit) : "-"}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Credit</span>
+                                <span className="text-sm font-medium text-red-700">
+                                  {transaction.credit >= 0 ? formatCurrency(transaction.credit) : "-"}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Remarks</span>
+                                <span className="text-sm text-gray-600 truncate max-w-[60%]">
+                                  {transaction.remarks || "-"}
+                                </span>
+                              </div>
+                              <div className="flex justify-end pt-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleViewTransaction(transaction)}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="max-h-[600px] overflow-auto">
+                        <table className="w-full">
                       <thead className="bg-blue-50 sticky top-0">
                         <tr className="border-b">
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
@@ -751,42 +946,44 @@ export default function AccountingReports() {
                           })()
                         )}
                       </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {Array.isArray(filteredTransactions) &&
-                  filteredTransactions.length > 0 && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Total Debit:</span>
-                          <span className="font-bold text-green-700 ml-2">
-                            Rs. {formatCurrency(summary.totalDebit)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Total Credit:</span>
-                          <span className="font-bold text-red-700 ml-2">
-                            Rs. {formatCurrency(summary.totalCredit)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Net Balance:</span>
-                          <span
-                            className={`font-bold ml-2 ${
-                              summary.netBalance >= 0
-                                ? "text-blue-700"
-                                : "text-orange-700"
-                            }`}
-                          >
-                            Rs. {formatCurrency(Math.abs(summary.netBalance))}{" "}
-                            {summary.netBalance < 0 ? "Cr" : "Dr"}
-                          </span>
-                        </div>
+                        </table>
                       </div>
                     </div>
                   )}
+
+                  {Array.isArray(filteredTransactions) &&
+                    filteredTransactions.length > 0 && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Total Debit:</span>
+                            <span className="font-bold text-green-700 ml-2">
+                              Rs. {formatCurrency(summary.totalDebit)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Total Credit:</span>
+                            <span className="font-bold text-red-700 ml-2">
+                              Rs. {formatCurrency(summary.totalCredit)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Net Balance:</span>
+                            <span
+                              className={`font-bold ml-2 ${
+                                summary.netBalance >= 0
+                                  ? "text-blue-700"
+                                  : "text-orange-700"
+                              }`}
+                            >
+                              Rs. {formatCurrency(Math.abs(summary.netBalance))}{" "}
+                              {summary.netBalance < 0 ? "Cr" : "Dr"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                </MobileListToggle>
               </CardContent>
             </Card>
           </TabsContent>
@@ -797,9 +994,75 @@ export default function AccountingReports() {
                 <p className="text-sm text-gray-500">Summary by account</p>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="max-h-[600px] overflow-auto">
-                    <table className="w-full">
+                <MobileListToggle title="Trial Balance">
+                  {isMobile ? (
+                    <div className="space-y-3">
+                      {(() => {
+                        if (!Array.isArray(filteredTransactions) || filteredTransactions.length === 0) {
+                          return <div className="text-center py-8 text-gray-500">No data available</div>;
+                        }
+
+                        const accountSummary = {};
+                        filteredTransactions.forEach((t) => {
+                          const accountName = getAccountName(t.acc_id);
+                          if (!accountSummary[accountName]) {
+                            accountSummary[accountName] = { debit: 0, credit: 0 };
+                          }
+                          accountSummary[accountName].debit += t.debit || 0;
+                          accountSummary[accountName].credit += t.credit || 0;
+                        });
+
+                        return (
+                          <>
+                            {Object.entries(accountSummary).map(([account, amounts]) => (
+                              <Card key={account} className="border">
+                                <CardContent className="p-4 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Account</span>
+                                    <span className="text-sm font-medium">{account}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Debit</span>
+                                    <span className="text-sm font-medium text-green-700">
+                                      {formatCurrency(amounts.debit)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Credit</span>
+                                    <span className="text-sm font-medium text-red-700">
+                                      {formatCurrency(amounts.credit)}
+                                    </span>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                            <Card className="border-2 border-blue-200 bg-blue-50">
+                              <CardContent className="p-4 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-bold">TOTAL</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-600">Total Debit</span>
+                                  <span className="text-sm font-bold text-green-700">
+                                    {formatCurrency(summary.totalDebit)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-600">Total Credit</span>
+                                  <span className="text-sm font-bold text-red-700">
+                                    {formatCurrency(summary.totalCredit)}
+                                  </span>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="max-h-[600px] overflow-auto">
+                        <table className="w-full">
                       <thead className="bg-blue-50 sticky top-0">
                         <tr className="border-b">
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
@@ -880,9 +1143,11 @@ export default function AccountingReports() {
                           );
                         })()}
                       </tbody>
-                    </table>
-                  </div>
-                </div>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </MobileListToggle>
               </CardContent>
             </Card>
           </TabsContent>
@@ -895,9 +1160,62 @@ export default function AccountingReports() {
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="max-h-[600px] overflow-auto">
-                    <table className="w-full">
+                <MobileListToggle title="Day Book">
+                  {isMobile ? (
+                    <div className="space-y-3">
+                      {!Array.isArray(filteredTransactions) || filteredTransactions.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No transactions found</div>
+                      ) : (
+                        filteredTransactions.map((transaction) => (
+                          <Card key={transaction.transaction_id} className="border">
+                            <CardContent className="p-4 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Date</span>
+                                <span className="text-sm font-medium">{formatDate(transaction.transaction_dat)}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Voucher</span>
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                  {transaction.voucher_type}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Account</span>
+                                <span className="text-sm font-medium">{getAccountName(transaction.acc_id)}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Remarks</span>
+                                <span className="text-xs text-gray-500 truncate max-w-[60%]">
+                                  {transaction.remarks || "-"}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Amount</span>
+                                <span className="text-sm font-medium">
+                                  {formatCurrency(transaction.debit || transaction.credit || 0)}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Type</span>
+                                {transaction.debit ? (
+                                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                                    Debit
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                                    Credit
+                                  </span>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="max-h-[600px] overflow-auto">
+                        <table className="w-full">
                       <thead className="bg-blue-50 sticky top-0">
                         <tr className="border-b">
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
@@ -976,9 +1294,11 @@ export default function AccountingReports() {
                           ))
                         )}
                       </tbody>
-                    </table>
-                  </div>
-                </div>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </MobileListToggle>
               </CardContent>
             </Card>
           </TabsContent>

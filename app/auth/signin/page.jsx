@@ -61,22 +61,22 @@ function SignInForm() {
   const isFormValid = formData.email && formData.password;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-primary/20 to-primary/30 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-primary/20 to-primary/30 flex items-center justify-center p-3 sm:p-4 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/40 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-64 h-64 sm:w-96 sm:h-96 bg-primary/40 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-primary/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center relative z-10">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-center relative z-10">
         {/* Left side - Illustration */}
-        <div className="hidden lg:flex flex-col justify-center space-y-8 p-8">
-          <div className="space-y-4">
-            <h1 className="text-5xl font-bold text-primary">
+        <div className="hidden lg:flex flex-col justify-center space-y-6 lg:space-y-8 p-4 lg:p-8">
+          <div className="space-y-3 lg:space-y-4">
+            <h1 className="text-4xl lg:text-5xl font-bold text-primary">
               Welcome Back!
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-lg lg:text-xl text-muted-foreground">
               Sign in to access your secure dashboard and manage your account
             </p>
           </div>
@@ -134,24 +134,24 @@ function SignInForm() {
         {/* Right side - Sign in form */}
         <div className="w-full max-w-md mx-auto">
           <Card className="border-border/50 shadow-2xl backdrop-blur-sm bg-card/80">
-            <CardHeader className="space-y-1 pb-6">
-              <div className="flex items-center justify-center mb-4">
+            <CardHeader className="space-y-1 pb-4 sm:pb-6 px-4 sm:px-6">
+              <div className="flex items-center justify-center mb-3 sm:mb-4">
                 <div className="relative">
                   <div className="absolute inset-0 bg-primary rounded-full blur-lg opacity-50"></div>
-                  <div className="relative w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                    <Lock className="w-8 h-8 text-white" />
+                  <div className="relative w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-full flex items-center justify-center">
+                    <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
                 </div>
               </div>
-              <CardTitle className="text-2xl font-bold text-center">
+              <CardTitle className="text-xl sm:text-2xl font-bold text-center">
                 Sign In
               </CardTitle>
-              <CardDescription className="text-center">
+              <CardDescription className="text-center text-sm sm:text-base">
                 Enter your credentials to access your account
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />

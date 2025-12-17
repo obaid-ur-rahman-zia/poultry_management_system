@@ -58,8 +58,14 @@ export default function QuickAccessPage() {
   const router = useRouter();
   const [recentRoutes, setRecentRoutes] = useState([]);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const handleResize = () => setIsMobile(mq.matches);
+    handleResize();
+    mq.addEventListener("change", handleResize);
+
     // Load recent routes from localStorage
     const loadRoutes = () => {
       const stored = localStorage.getItem("recentRoutes");
@@ -79,7 +85,10 @@ export default function QuickAccessPage() {
     loadRoutes();
     // Refresh routes periodically to catch updates from RouteTracker
     const interval = setInterval(loadRoutes, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      mq.removeEventListener("change", handleResize);
+    };
   }, []);
 
   const handleRouteClick = (route) => {
@@ -117,9 +126,9 @@ export default function QuickAccessPage() {
   const centerY = 200;
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col">
+    <div className="min-h-screen overflow-hidden flex flex-col bg-background">
       {/* Compact Header */}
-      <div className="flex-shrink-0 px-6 pt-4 pb-2">
+      <div className="flex-shrink-0 px-4 sm:px-6 pt-4 pb-2">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold  flex items-center gap-2">
@@ -144,8 +153,58 @@ export default function QuickAccessPage() {
         </div>
       </div>
 
-      {/* Main Content - Grid Layout */}
-      <div className="flex-1 grid grid-cols-12 gap-4 px-6 pb-4 overflow-hidden">
+      {/* Main Content */}
+      <div className="flex-1 px-4 sm:px-6 pb-4 overflow-hidden">
+        {isMobile ? (
+          <div className="space-y-3">
+            {recentRoutes.length === 0 ? (
+              <Card>
+                <CardContent className="py-6 flex flex-col items-center gap-2">
+                  <Home className="w-10 h-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">No Recent Routes</p>
+                  <p className="text-xs text-muted-foreground">Navigate to pages to see them here</p>
+                </CardContent>
+              </Card>
+            ) : (
+              recentRoutes.map((route, index) => {
+                const IconComponent = iconMap[route.icon] || DefaultIcon;
+                const config = routeConfig[route.path] || {};
+                return (
+                  <Card
+                    key={`${route.path}-${route.timestamp}-${index}`}
+                    className="border border-muted"
+                  >
+                    <button
+                      onClick={() => handleRouteClick(route)}
+                      className="w-full text-left"
+                    >
+                      <CardContent className="py-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-semibold", config.color || "bg-slate-500")}>
+                            <IconComponent className="w-5 h-5" />
+                          </span>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-sm">{config.name || route.path}</span>
+                            <span className="text-xs text-muted-foreground">{route.keyword || config.keyword || ""}</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleRemoveRoute(e, index)}
+                          className="h-8 w-8"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </CardContent>
+                    </button>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        ) : (
+      <div className="grid grid-cols-12 gap-4 h-full">
         {/* Left Side - Petal View */}
         <div className="col-span-12 lg:col-span-7 flex items-center justify-center">
           <Card className="w-full h-full border-slate-700 backdrop-blur shadow-2xl">
@@ -383,24 +442,26 @@ export default function QuickAccessPage() {
           )}
         </div>
       </div>
+        )}
 
-      {/* Custom Scrollbar Styles */}
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(51, 65, 85, 0.3);
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.5);
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(148, 163, 184, 0.7);
-        }
-      `}</style>
+        {/* Custom Scrollbar Styles */}
+        <style jsx global>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(51, 65, 85, 0.3);
+            border-radius: 2px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.5);
+            border-radius: 2px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.7);
+          }
+        `}</style>
+      </div>
     </div>
   );
 }

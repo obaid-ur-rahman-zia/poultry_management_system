@@ -35,8 +35,10 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 
 export default function UnitSalePage() {
     const {
@@ -92,6 +94,7 @@ export default function UnitSalePage() {
     const [filterUnit, setFilterUnit] = useState("all");
     const [filterFloc, setFilterFloc] = useState("all");
     const [filterDate, setFilterDate] = useState("");
+    const [isMobile, setIsMobile] = useState(false);
 
     const selectedUnit = watch("prounit_id");
     const selectedFloc = watch("floc_id");
@@ -114,6 +117,15 @@ export default function UnitSalePage() {
         // Set current date if not already set
         const currentDate = new Date().toISOString().split('T')[0];
         setValue("sale_date", currentDate);
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     useEffect(() => {
@@ -566,8 +578,11 @@ export default function UnitSalePage() {
     return (
         <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
             {/* Form Section */}
-            <Card className={"max-w-5xl mx-auto"}>
-                <CardContent className="p-4 sm:p-6">
+            <Card className="w-full max-w-5xl mx-auto">
+                <CardHeader className="p-4 md:hidden pb-0 sm:p-6 sm:pb-0">
+                    <CardTitle className="text-lg sm:text-xl">{isEditMode ? "Edit Sale" : "Create New Sale"}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-0">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="unit-sale-form">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
@@ -627,7 +642,7 @@ export default function UnitSalePage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {/* Date */}
                             <div className="space-y-2">
                                 <Label htmlFor="sale_date">Date *</Label>
@@ -915,7 +930,7 @@ export default function UnitSalePage() {
                                 </div>
                             </div>
                             {/* Description */}
-                            <div className="space-y-2 col-span-4">
+                            <div className="space-y-2 col-span-1 sm:col-span-2 lg:col-span-3">
                                 <Label htmlFor="description">Description</Label>
                                 <Input
                                     id="description"
@@ -926,7 +941,7 @@ export default function UnitSalePage() {
                         </div>
 
 
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -952,10 +967,11 @@ export default function UnitSalePage() {
                                     setIsEditMode(false);
                                     setEditingSaleId(null);
                                 }}
+                                className="w-full sm:w-auto"
                             >
                                 {isEditMode ? "Cancel Edit" : "Clear Form"}
                             </Button>
-                            <Button type="submit" disabled={isSubmitting}>
+                            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
                                 {isSubmitting ? "Saving..." : isEditMode ? "Update Sale" : "Create Sale"}
                             </Button>
                         </div>
@@ -966,134 +982,300 @@ export default function UnitSalePage() {
             {/* Sales List */}
             <Card>
                 <CardContent className="p-4 sm:p-6">
-                    {/* Filters */}
-                    <div className="space-y-4 mb-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="space-y-2">
-                                <Label>Search</Label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Search sales..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-9"
-                                    />
+                    <MobileListToggle title="Sales">
+                        {/* Filters */}
+                        {isMobile ? (
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full mb-4">
+                                        <Search className="h-4 w-4 mr-2" />
+                                        Search & Filters
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                                    <DialogHeader>
+                                        <DialogTitle>Search & Filters</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label>Search</Label>
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Search sales..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="pl-9"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Unit</Label>
+                                            <Select value={filterUnit} onValueChange={setFilterUnit}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Units</SelectItem>
+                                                    {Array.isArray(units) && units.map((unit) => (
+                                                        <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
+                                                            {unit.prounit_nam}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Floc</Label>
+                                            <Select value={filterFloc} onValueChange={setFilterFloc}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Flocs</SelectItem>
+                                                    {Array.isArray(flocs) && flocs.map((floc) => (
+                                                        <SelectItem key={floc.floc_id} value={floc.floc_id.toString()}>
+                                                            Floc #{floc.floc_id}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Date</Label>
+                                            <Input
+                                                type="date"
+                                                value={filterDate}
+                                                onChange={(e) => setFilterDate(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        ) : (
+                            <div className="space-y-4 mb-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Search</Label>
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                placeholder="Search sales..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="pl-9"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>Unit</Label>
+                                        <Select value={filterUnit} onValueChange={setFilterUnit}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Units</SelectItem>
+                                                {Array.isArray(units) && units.map((unit) => (
+                                                    <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
+                                                        {unit.prounit_nam}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>Floc</Label>
+                                        <Select value={filterFloc} onValueChange={setFilterFloc}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Flocs</SelectItem>
+                                                {Array.isArray(flocs) && flocs.map((floc) => (
+                                                    <SelectItem key={floc.floc_id} value={floc.floc_id.toString()}>
+                                                        Floc #{floc.floc_id}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>Date</Label>
+                                        <Input
+                                            type="date"
+                                            value={filterDate}
+                                            onChange={(e) => setFilterDate(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
+                        )}
 
-                            <div className="space-y-2">
-                                <Label>Unit</Label>
-                                <Select value={filterUnit} onValueChange={setFilterUnit}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Units</SelectItem>
-                                        {Array.isArray(units) && units.map((unit) => (
-                                            <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
-                                                {unit.prounit_nam}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                        {/* Table */}
+                        {loading ? (
+                            <div className="text-center py-8">Loading...</div>
+                        ) : filteredSales.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                                No sales found
                             </div>
-
-                            <div className="space-y-2">
-                                <Label>Date</Label>
-                                <Input
-                                    type="date"
-                                    value={filterDate}
-                                    onChange={(e) => setFilterDate(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Table */}
-                    {loading ? (
-                        <div className="text-center py-8">Loading...</div>
-                    ) : filteredSales.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                            No sales found
-                        </div>
-                    ) : (
-                        <div className="relative max-h-[600px] overflow-auto -mx-4 sm:mx-0">
-                            <div className="overflow-x-auto">
-                                <table className="w-full caption-bottom text-sm min-w-[800px]">
-                                    <thead className="sticky top-0 bg-background z-20 border-b-2">
-                                        <tr className="border-b">
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Floc</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Customer</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">F.S Rate</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Price</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Quantity</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Total</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredSales.map((sale) => (
-                                            <tr key={sale.sale_id} className="hover:bg-muted/50 border-b transition-colors">
-                                                <td className="p-2 align-middle whitespace-nowrap">
+                        ) : isMobile ? (
+                            <div className="space-y-3">
+                                {filteredSales.map((sale) => (
+                                    <Card key={sale.sale_id} className="border">
+                                        <CardContent className="p-4 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Date</span>
+                                                <span className="text-sm font-medium">
                                                     {sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Unit</span>
+                                                <span className="text-sm font-medium">
                                                     {sale.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (sale.prounit_id || sale.farm_id))?.prounit_nam) || "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden md:table-cell">
-                                                    Floc #{sale.floc_id}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Floc</span>
+                                                <span className="text-sm">Floc #{sale.floc_id}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Customer</span>
+                                                <span className="text-sm font-medium">
                                                     {Array.isArray(customers) && sale.customer_id && customers.find(c => c.acc_id === sale.customer_id)?.account_nam || "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Product</span>
+                                                <span className="text-sm font-medium">
                                                     {Array.isArray(products) && products.find(p => p.product_id === sale.product_id)?.product_title || "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">F.S Rate</span>
+                                                <span className="text-sm">
                                                     {sale.farm_rate && sale.sale_rate
                                                         ? `${sale.farm_rate} / ${sale.sale_rate}`
                                                         : "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
-                                                    {sale.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
-                                                    {sale.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap font-medium">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Price</span>
+                                                <span className="text-sm">{sale.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Quantity</span>
+                                                <span className="text-sm">{sale.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Total</span>
+                                                <span className="text-sm font-medium">
                                                     {sale.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleEdit(sale)}
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            <Edit2 className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(sale.sale_id)}
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-end gap-2 pt-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleEdit(sale)}
+                                                >
+                                                    <Edit2 className="h-4 w-4 mr-1" />
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDelete(sale.sale_id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="relative max-h-[600px] overflow-auto -mx-4 sm:mx-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full caption-bottom text-sm min-w-[800px]">
+                                        <thead className="sticky top-0 bg-background z-20 border-b-2">
+                                            <tr className="border-b">
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Floc</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Customer</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">F.S Rate</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Price</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Quantity</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Total</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredSales.map((sale) => (
+                                                <tr key={sale.sale_id} className="hover:bg-muted/50 border-b transition-colors">
+                                                    <td className="p-2 align-middle whitespace-nowrap">
+                                                        {sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap">
+                                                        {sale.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (sale.prounit_id || sale.farm_id))?.prounit_nam) || "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden md:table-cell">
+                                                        Floc #{sale.floc_id}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
+                                                        {Array.isArray(customers) && sale.customer_id && customers.find(c => c.acc_id === sale.customer_id)?.account_nam || "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap">
+                                                        {Array.isArray(products) && products.find(p => p.product_id === sale.product_id)?.product_title || "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                        {sale.farm_rate && sale.sale_rate
+                                                            ? `${sale.farm_rate} / ${sale.sale_rate}`
+                                                            : "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                        {sale.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                        {sale.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap font-medium">
+                                                        {sale.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap">
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleEdit(sale)}
+                                                                className="h-8 w-8 p-0"
+                                                            >
+                                                                <Edit2 className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleDelete(sale.sale_id)}
+                                                                className="h-8 w-8 p-0"
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                            </Button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </MobileListToggle>
                 </CardContent>
             </Card>
 

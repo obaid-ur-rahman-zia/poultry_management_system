@@ -287,7 +287,7 @@ export default function DashboardPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="p-6 space-y-6"
+      className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6"
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="flex items-center justify-between">
@@ -597,7 +597,7 @@ function MetricCard({ title, value, icon: Icon, iconColor, valueColor, subtitle,
         whileHover="hover"
         className="h-full"
       >
-        <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 h-full bg-white">
+        <Card className="border-0 p-4 shadow-md hover:shadow-xl transition-all duration-300 h-full bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
               {title}

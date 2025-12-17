@@ -38,6 +38,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 
 export default function OppositeTransactionsPage() {
     const {
@@ -77,12 +78,22 @@ export default function OppositeTransactionsPage() {
     const [filterPaidBy, setFilterPaidBy] = useState("all");
     const [filterReceivedBy, setFilterReceivedBy] = useState("all");
     const [filterDate, setFilterDate] = useState("");
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         fetchAccounts();
         fetchSubHeads();
         fetchAccountHeads();
         fetchTransactions();
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     const fetchAccountHeads = async () => {
@@ -511,133 +522,198 @@ export default function OppositeTransactionsPage() {
             {/* Transactions List */}
             <Card>
                 <CardContent>
-                    {/* Filters */}
-                    <div className="space-y-4 mb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="space-y-2">
-                                <Label>Search</Label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <MobileListToggle title="Transactions">
+                        {/* Filters */}
+                        <div className="space-y-4 mb-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Search</Label>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Search transactions..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="pl-9"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Paid By</Label>
+                                    <Select value={filterPaidBy} onValueChange={setFilterPaidBy}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Accounts</SelectItem>
+                                            {accounts.map((account) => (
+                                                <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
+                                                    {account.account_nam}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Received By</Label>
+                                    <Select value={filterReceivedBy} onValueChange={setFilterReceivedBy}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Accounts</SelectItem>
+                                            {accounts.map((account) => (
+                                                <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
+                                                    {account.account_nam}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Date</Label>
                                     <Input
-                                        placeholder="Search transactions..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-9"
+                                        type="date"
+                                        value={filterDate}
+                                        onChange={(e) => setFilterDate(e.target.value)}
                                     />
                                 </div>
                             </div>
-
-                            <div className="space-y-2">
-                                <Label>Paid By</Label>
-                                <Select value={filterPaidBy} onValueChange={setFilterPaidBy}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Accounts</SelectItem>
-                                        {accounts.map((account) => (
-                                            <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                {account.account_nam}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Received By</Label>
-                                <Select value={filterReceivedBy} onValueChange={setFilterReceivedBy}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Accounts</SelectItem>
-                                        {accounts.map((account) => (
-                                            <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                {account.account_nam}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Date</Label>
-                                <Input
-                                    type="date"
-                                    value={filterDate}
-                                    onChange={(e) => setFilterDate(e.target.value)}
-                                />
-                            </div>
                         </div>
-                    </div>
 
-                    {/* Table */}
-                    {loading ? (
-                        <div className="text-center py-8">Loading...</div>
-                    ) : filteredTransactions.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                            No transactions found
-                        </div>
-                    ) : (
-                        <div className="relative max-h-[600px] overflow-auto">
-                            <table className="w-full caption-bottom text-sm">
-                                <thead className="sticky top-0 bg-background z-20 border-b-2">
-                                    <tr className="border-b">
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Paid By</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Bank Account</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Received By</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Amount</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Description</th>
-                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredTransactions.map((transaction) => (
-                                        <tr key={transaction.transaction_id} className="hover:bg-muted/50 border-b transition-colors">
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {transaction.transaction_date ? new Date(transaction.transaction_date).toLocaleDateString() : "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {accounts.find(a => a.acc_id === transaction.paid_by)?.account_nam || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {transaction.bank_account ? (accounts.find(a => a.acc_id === transaction.bank_account)?.account_nam || "N/A") : "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                {accounts.find(a => a.acc_id === transaction.received_by)?.account_nam || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap font-medium">
-                                                {transaction.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                            </td>
-                                            <td className="p-2 align-middle">
-                                                {transaction.description || "N/A"}
-                                            </td>
-                                            <td className="p-2 align-middle whitespace-nowrap">
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleEdit(transaction)}
-                                                    >
-                                                        <Edit2 className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(transaction.transaction_id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </div>
-                                            </td>
+                        {/* Table */}
+                        {loading ? (
+                            <div className="text-center py-8">Loading...</div>
+                        ) : filteredTransactions.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                                No transactions found
+                            </div>
+                        ) : isMobile ? (
+                            <div className="space-y-3">
+                                {filteredTransactions.map((transaction) => (
+                                    <Card key={transaction.transaction_id} className="border">
+                                        <CardContent className="p-4 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Date</span>
+                                                <span className="text-sm font-medium">
+                                                    {transaction.transaction_date ? new Date(transaction.transaction_date).toLocaleDateString() : "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Paid By</span>
+                                                <span className="text-sm font-medium">
+                                                    {accounts.find(a => a.acc_id === transaction.paid_by)?.account_nam || "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Bank Account</span>
+                                                <span className="text-sm font-medium">
+                                                    {transaction.bank_account ? (accounts.find(a => a.acc_id === transaction.bank_account)?.account_nam || "N/A") : "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Received By</span>
+                                                <span className="text-sm font-medium">
+                                                    {accounts.find(a => a.acc_id === transaction.received_by)?.account_nam || "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Amount</span>
+                                                <span className="text-sm font-medium">
+                                                    {transaction.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Description</span>
+                                                <span className="text-sm text-gray-600 truncate max-w-[60%]">
+                                                    {transaction.description || "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-end gap-2 pt-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleEdit(transaction)}
+                                                >
+                                                    <Edit2 className="h-4 w-4 mr-1" />
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDelete(transaction.transaction_id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="relative max-h-[600px] overflow-auto">
+                                <table className="w-full caption-bottom text-sm">
+                                    <thead className="sticky top-0 bg-background z-20 border-b-2">
+                                        <tr className="border-b">
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Paid By</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Bank Account</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Received By</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Amount</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Description</th>
+                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                    </thead>
+                                    <tbody>
+                                        {filteredTransactions.map((transaction) => (
+                                            <tr key={transaction.transaction_id} className="hover:bg-muted/50 border-b transition-colors">
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {transaction.transaction_date ? new Date(transaction.transaction_date).toLocaleDateString() : "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {accounts.find(a => a.acc_id === transaction.paid_by)?.account_nam || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {transaction.bank_account ? (accounts.find(a => a.acc_id === transaction.bank_account)?.account_nam || "N/A") : "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    {accounts.find(a => a.acc_id === transaction.received_by)?.account_nam || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap font-medium">
+                                                    {transaction.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                </td>
+                                                <td className="p-2 align-middle">
+                                                    {transaction.description || "N/A"}
+                                                </td>
+                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleEdit(transaction)}
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(transaction.transaction_id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </MobileListToggle>
                 </CardContent>
             </Card>
 

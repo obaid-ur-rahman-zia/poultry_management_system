@@ -30,6 +30,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function TradingPage() {
   const {
@@ -78,6 +86,7 @@ export default function TradingPage() {
   const [filterBuyAccount, setFilterBuyAccount] = useState("all");
   const [filterSaleAccount, setFilterSaleAccount] = useState("all");
   const [filterDate, setFilterDate] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
   // Watch form values
   const buyQuantity = watch("buy_quantity");
@@ -98,6 +107,15 @@ export default function TradingPage() {
     fetchAccounts();
     fetchProducts();
     fetchTrades();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Sync sale quantity and price with buy values
@@ -769,154 +787,302 @@ export default function TradingPage() {
         </CardHeader>
         <CardContent>
           {/* Filters */}
-          <div className="space-y-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label>Search</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          {isMobile ? (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full mb-4">
+                  <Search className="h-4 w-4 mr-2" />
+                  Search & Filters
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Search & Filters</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Search</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search trades..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Buy From Account</Label>
+                    <Select value={filterBuyAccount} onValueChange={setFilterBuyAccount}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Accounts</SelectItem>
+                        {Array.isArray(accounts) && accounts.map((account) => (
+                          <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
+                            {account.account_nam}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sale To Account</Label>
+                    <Select value={filterSaleAccount} onValueChange={setFilterSaleAccount}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Accounts</SelectItem>
+                        {Array.isArray(accounts) && accounts.map((account) => (
+                          <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
+                            {account.account_nam}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Date</Label>
+                    <Input
+                      type="date"
+                      value={filterDate}
+                      onChange={(e) => setFilterDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <div className="space-y-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Search</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search trades..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Buy From Account</Label>
+                  <Select value={filterBuyAccount} onValueChange={setFilterBuyAccount}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Accounts</SelectItem>
+                      {Array.isArray(accounts) && accounts.map((account) => (
+                        <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
+                          {account.account_nam}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Sale To Account</Label>
+                  <Select value={filterSaleAccount} onValueChange={setFilterSaleAccount}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Accounts</SelectItem>
+                      {Array.isArray(accounts) && accounts.map((account) => (
+                        <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
+                          {account.account_nam}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Date</Label>
                   <Input
-                    placeholder="Search trades..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
                   />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label>Buy From Account</Label>
-                <Select value={filterBuyAccount} onValueChange={setFilterBuyAccount}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Accounts</SelectItem>
-                    {Array.isArray(accounts) && accounts.map((account) => (
-                      <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                        {account.account_nam}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Sale To Account</Label>
-                <Select value={filterSaleAccount} onValueChange={setFilterSaleAccount}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Accounts</SelectItem>
-                    {Array.isArray(accounts) && accounts.map((account) => (
-                      <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                        {account.account_nam}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <Input
-                  type="date"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Table */}
-          {loading ? (
-            <div className="text-center py-8">Loading...</div>
-          ) : filteredTrades.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No trades found</div>
-          ) : (
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="inline-block min-w-full align-middle px-4 sm:px-0">
-                <Table className="min-w-[1000px]">
-                  <TableHeader className="sticky top-0 bg-background z-20">
-                    <TableRow>
-                      <TableHead className="bg-background">Date</TableHead>
-                      <TableHead className="bg-background hidden md:table-cell">D.O Number</TableHead>
-                      <TableHead className="bg-background">Product</TableHead>
-                      <TableHead className="bg-background hidden lg:table-cell">Buy From</TableHead>
-                      <TableHead className="bg-background hidden lg:table-cell">Buy Qty</TableHead>
-                      <TableHead className="bg-background hidden xl:table-cell">Buy Price</TableHead>
-                      <TableHead className="bg-background hidden xl:table-cell">Buy Total</TableHead>
-                      <TableHead className="bg-background hidden lg:table-cell">Sale To</TableHead>
-                      <TableHead className="bg-background hidden lg:table-cell">Sale Qty</TableHead>
-                      <TableHead className="bg-background hidden xl:table-cell">Sale Price</TableHead>
-                      <TableHead className="bg-background hidden xl:table-cell">Sale Total</TableHead>
-                      <TableHead className="bg-background">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTrades.map((trade) => (
-                      <TableRow key={trade.trading_id}>
-                        <TableCell>
-                          {trade.trading_date ? new Date(trade.trading_date).toLocaleDateString() : "N/A"}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {trade.do_number || "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          {Array.isArray(products) && products.find(p => p.product_id === trade.product_id)?.product_title || "N/A"}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.buy_from_account)?.account_nam || "N/A"}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {trade.buy_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          {trade.buy_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          {trade.buy_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.sale_to_account)?.account_nam || "N/A"}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {trade.sale_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          {trade.sale_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          {trade.sale_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(trade)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(trade.trading_id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
             </div>
           )}
+
+          {/* Table */}
+          <MobileListToggle title="Trades List">
+            {loading ? (
+              <div className="text-center py-8">Loading...</div>
+            ) : filteredTrades.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No trades found</div>
+            ) : isMobile ? (
+              <div className="space-y-3">
+                {filteredTrades.map((trade) => (
+                  <Card key={trade.trading_id} className="border">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Date</span>
+                        <span className="text-sm font-medium">
+                          {trade.trading_date ? new Date(trade.trading_date).toLocaleDateString() : "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">D.O Number</span>
+                        <span className="text-sm">{trade.do_number || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Product</span>
+                        <span className="text-sm font-medium">
+                          {Array.isArray(products) && products.find(p => p.product_id === trade.product_id)?.product_title || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Buy From</span>
+                        <span className="text-sm font-medium">
+                          {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.buy_from_account)?.account_nam || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Buy Qty</span>
+                        <span className="text-sm">{trade.buy_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Buy Price</span>
+                        <span className="text-sm">{trade.buy_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Buy Total</span>
+                        <span className="text-sm font-medium">{trade.buy_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Sale To</span>
+                        <span className="text-sm font-medium">
+                          {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.sale_to_account)?.account_nam || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Sale Qty</span>
+                        <span className="text-sm">{trade.sale_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Sale Price</span>
+                        <span className="text-sm">{trade.sale_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Sale Total</span>
+                        <span className="text-sm font-medium">{trade.sale_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(trade)}
+                        >
+                          <Edit2 className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(trade.trading_id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                          Delete
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+                  <Table className="min-w-[1000px]">
+                    <TableHeader className="sticky top-0 bg-background z-20">
+                      <TableRow>
+                        <TableHead className="bg-background">Date</TableHead>
+                        <TableHead className="bg-background hidden md:table-cell">D.O Number</TableHead>
+                        <TableHead className="bg-background">Product</TableHead>
+                        <TableHead className="bg-background hidden lg:table-cell">Buy From</TableHead>
+                        <TableHead className="bg-background hidden lg:table-cell">Buy Qty</TableHead>
+                        <TableHead className="bg-background hidden xl:table-cell">Buy Price</TableHead>
+                        <TableHead className="bg-background hidden xl:table-cell">Buy Total</TableHead>
+                        <TableHead className="bg-background hidden lg:table-cell">Sale To</TableHead>
+                        <TableHead className="bg-background hidden lg:table-cell">Sale Qty</TableHead>
+                        <TableHead className="bg-background hidden xl:table-cell">Sale Price</TableHead>
+                        <TableHead className="bg-background hidden xl:table-cell">Sale Total</TableHead>
+                        <TableHead className="bg-background">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTrades.map((trade) => (
+                        <TableRow key={trade.trading_id}>
+                          <TableCell>
+                            {trade.trading_date ? new Date(trade.trading_date).toLocaleDateString() : "N/A"}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {trade.do_number || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {Array.isArray(products) && products.find(p => p.product_id === trade.product_id)?.product_title || "N/A"}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.buy_from_account)?.account_nam || "N/A"}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {trade.buy_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                          </TableCell>
+                          <TableCell className="hidden xl:table-cell">
+                            {trade.buy_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                          </TableCell>
+                          <TableCell className="hidden xl:table-cell">
+                            {trade.buy_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.sale_to_account)?.account_nam || "N/A"}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {trade.sale_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                          </TableCell>
+                          <TableCell className="hidden xl:table-cell">
+                            {trade.sale_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                          </TableCell>
+                          <TableCell className="hidden xl:table-cell">
+                            {trade.sale_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(trade)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(trade.trading_id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </MobileListToggle>
         </CardContent>
       </Card>
     </div>

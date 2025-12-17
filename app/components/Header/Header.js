@@ -223,7 +223,9 @@ const Header = () => {
                             </SheetFooter>
                         </SheetContent>
                     </Sheet>
-                    <BreadcrumbNav />
+                    <div className="hidden md:block">
+                        <BreadcrumbNav />
+                    </div>
 
                     {/* Left Side Icons */}
                     <TooltipProvider>

@@ -37,6 +37,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 
 export default function UnitExpensePage() {
     const {
@@ -88,6 +89,7 @@ export default function UnitExpensePage() {
     const [filterUnit, setFilterUnit] = useState("all");
     const [filterFloc, setFilterFloc] = useState("all");
     const [filterDate, setFilterDate] = useState("");
+    const [isMobile, setIsMobile] = useState(false);
 
     const selectedUnit = watch("prounit_id");
     const price = watch("price");
@@ -103,6 +105,15 @@ export default function UnitExpensePage() {
         fetchExpenses();
         fetchSuppliers();
         fetchCompanies();
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     useEffect(() => {
@@ -765,128 +776,199 @@ export default function UnitExpensePage() {
             {/* Expenses List */}
             <Card>
                 <CardContent className="p-4 sm:p-6">
-                    {/* Filters */}
-                    <div className="space-y-4 mb-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="space-y-2">
-                                <Label>Search</Label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <MobileListToggle title="Expenses">
+                        {/* Filters */}
+                        <div className="space-y-4 mb-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Search</Label>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Search expenses..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="pl-9"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Unit</Label>
+                                    <Select value={filterUnit} onValueChange={setFilterUnit}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Units</SelectItem>
+                                            {Array.isArray(units) && units.map((unit) => (
+                                                <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
+                                                    {unit.prounit_nam}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Date</Label>
                                     <Input
-                                        placeholder="Search expenses..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-9"
+                                        type="date"
+                                        value={filterDate}
+                                        onChange={(e) => setFilterDate(e.target.value)}
                                     />
                                 </div>
                             </div>
-
-                            <div className="space-y-2">
-                                <Label>Unit</Label>
-                                <Select value={filterUnit} onValueChange={setFilterUnit}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Units</SelectItem>
-                                        {Array.isArray(units) && units.map((unit) => (
-                                            <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
-                                                {unit.prounit_nam}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Date</Label>
-                                <Input
-                                    type="date"
-                                    value={filterDate}
-                                    onChange={(e) => setFilterDate(e.target.value)}
-                                />
-                            </div>
                         </div>
-                    </div>
 
-                    {/* Table */}
-                    {loading ? (
-                        <div className="text-center py-8">Loading...</div>
-                    ) : filteredExpenses.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                            No expenses found
-                        </div>
-                    ) : (
-                        <div className="relative max-h-[600px] overflow-auto -mx-4 sm:mx-0">
-                            <div className="overflow-x-auto">
-                                <table className="w-full caption-bottom text-sm min-w-[800px]">
-                                    <thead className="sticky top-0 bg-background z-20 border-b-2">
-                                        <tr className="border-b">
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Floc</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Supplier</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Price</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Quantity</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Total</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredExpenses.map((expense) => (
-                                            <tr key={expense.expense_id} className="hover:bg-muted/50 border-b transition-colors">
-                                                <td className="p-2 align-middle whitespace-nowrap">
+                        {/* Table */}
+                        {loading ? (
+                            <div className="text-center py-8">Loading...</div>
+                        ) : filteredExpenses.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                                No expenses found
+                            </div>
+                        ) : isMobile ? (
+                            <div className="space-y-3">
+                                {filteredExpenses.map((expense) => (
+                                    <Card key={expense.expense_id} className="border">
+                                        <CardContent className="p-4 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Date</span>
+                                                <span className="text-sm font-medium">
                                                     {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Unit</span>
+                                                <span className="text-sm font-medium">
                                                     {expense.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (expense.prounit_id || expense.farm_id))?.prounit_nam) || "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden md:table-cell">
-                                                    Floc #{expense.floc_id}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Floc</span>
+                                                <span className="text-sm">Floc #{expense.floc_id}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Supplier</span>
+                                                <span className="text-sm font-medium">
                                                     {Array.isArray(suppliers) && expense.supplier_id && suppliers.find(s => s.acc_id === expense.supplier_id)?.account_nam || "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Product</span>
+                                                <span className="text-sm font-medium">
                                                     {Array.isArray(products) && products.find(p => p.product_id === expense.product_id)?.product_title || "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
-                                                    {expense.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
-                                                    {expense.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap font-medium">
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Price</span>
+                                                <span className="text-sm">{expense.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Quantity</span>
+                                                <span className="text-sm">{expense.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Total</span>
+                                                <span className="text-sm font-medium">
                                                     {expense.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleEdit(expense)}
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            <Edit2 className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(expense.expense_id)}
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-end gap-2 pt-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleEdit(expense)}
+                                                >
+                                                    <Edit2 className="h-4 w-4 mr-1" />
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDelete(expense.expense_id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="relative max-h-[600px] overflow-auto -mx-4 sm:mx-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full caption-bottom text-sm min-w-[800px]">
+                                        <thead className="sticky top-0 bg-background z-20 border-b-2">
+                                            <tr className="border-b">
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Unit</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Floc</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Supplier</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Price</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Quantity</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Total</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredExpenses.map((expense) => (
+                                                <tr key={expense.expense_id} className="hover:bg-muted/50 border-b transition-colors">
+                                                    <td className="p-2 align-middle whitespace-nowrap">
+                                                        {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap">
+                                                        {expense.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === (expense.prounit_id || expense.farm_id))?.prounit_nam) || "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden md:table-cell">
+                                                        Floc #{expense.floc_id}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
+                                                        {Array.isArray(suppliers) && expense.supplier_id && suppliers.find(s => s.acc_id === expense.supplier_id)?.account_nam || "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap">
+                                                        {Array.isArray(products) && products.find(p => p.product_id === expense.product_id)?.product_title || "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                        {expense.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                        {expense.quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap font-medium">
+                                                        {expense.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap">
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleEdit(expense)}
+                                                                className="h-8 w-8 p-0"
+                                                            >
+                                                                <Edit2 className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleDelete(expense.expense_id)}
+                                                                className="h-8 w-8 p-0"
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                            </Button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </MobileListToggle>
                 </CardContent>
             </Card>
 

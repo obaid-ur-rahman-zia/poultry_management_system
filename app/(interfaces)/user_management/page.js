@@ -30,6 +30,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import { DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Custom Select Styles
 const selectStyles = {
@@ -96,6 +99,8 @@ export default function UserManagement() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showPassword, setShowPassword] = useState(false);
   const [companyEmailDomain, setCompanyEmailDomain] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
 
   // Check if user is SUPER_ADMIN
   const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
@@ -127,6 +132,15 @@ export default function UserManagement() {
 
   useEffect(() => {
     fetchCompanyEmailDomain();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const fetchCompanyEmailDomain = async () => {
@@ -410,152 +424,262 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">User Management</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Manage system users and their roles
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <Button
             onClick={fetchUsers}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 flex-1 sm:flex-initial"
           >
             <RefreshCw className="w-4 h-4" />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           {isSuperAdmin && (
             <Button
               onClick={handleCreateNew}
-              className="flex items-center gap-2 "
+              className="flex items-center gap-2 flex-1 sm:flex-initial"
             >
               <UserPlus className="w-4 h-4" />
-              Add User
+              <span className="hidden sm:inline">Add User</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           )}
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search users by name, email, or role..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="pl-10"
-          />
+      {isMobile ? (
+        <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="w-full">
+              <Search className="h-4 w-4 mr-2" />
+              Search & Filters
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Search & Filters</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Search</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search users by name, email, or role..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Items per page</Label>
+                <Select
+                  value={{ value: itemsPerPage, label: itemsPerPage.toString() }}
+                  onChange={(option) => {
+                    setItemsPerPage(option.value);
+                    setCurrentPage(1);
+                  }}
+                  options={[5, 10, 20, 50].map((num) => ({
+                    value: num,
+                    label: num.toString(),
+                  }))}
+                  styles={selectStyles}
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search users by name, email, or role..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-gray-600">Items per page:</Label>
+            <Select
+              value={{ value: itemsPerPage, label: itemsPerPage.toString() }}
+              onChange={(option) => {
+                setItemsPerPage(option.value);
+                setCurrentPage(1);
+              }}
+              options={[5, 10, 20, 50].map((num) => ({
+                value: num,
+                label: num.toString(),
+              }))}
+              styles={selectStyles}
+              className="w-24"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Label className="text-sm text-gray-600">Items per page:</Label>
-          <Select
-            value={{ value: itemsPerPage, label: itemsPerPage.toString() }}
-            onChange={(option) => {
-              setItemsPerPage(option.value);
-              setCurrentPage(1);
-            }}
-            options={[5, 10, 20, 50].map((num) => ({
-              value: num,
-              label: num.toString(),
-            }))}
-            styles={selectStyles}
-            className="w-24"
-          />
-        </div>
-      </div>
+      )}
 
       {/* Users Table */}
-      {loading && !users.length ? (
-        <div className="flex justify-center items-center py-12">
-          <Spinner />
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>S.No</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedUsers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    No users found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedUsers.map((user, index) => {
-                  // Calculate serial number based on current page and items per page
-                  const serialNumber = startIndex + index + 1;
-                  
-                  return (
-                    <TableRow key={user.user_id}>
-                      <TableCell className="font-medium">{serialNumber}</TableCell>
-                      <TableCell>{user.user_nam}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
+      <MobileListToggle title="Users List">
+        {loading && !users.length ? (
+          <div className="flex justify-center items-center py-12">
+            <Spinner />
+          </div>
+        ) : isMobile ? (
+          <div className="space-y-3">
+            {paginatedUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">No users found</div>
+            ) : (
+              paginatedUsers.map((user, index) => {
+                const serialNumber = startIndex + index + 1;
+                return (
+                  <Card key={user.user_id} className="border">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">S.No</span>
+                        <span className="text-sm font-medium">{serialNumber}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Name</span>
+                        <span className="text-sm font-medium">{user.user_nam}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Email</span>
+                        <span className="text-sm truncate max-w-[60%]">{user.email}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Role</span>
                         <Badge className={getRoleBadgeColor(user.role)}>
                           {user.role}
                         </Badge>
-                      </TableCell>
-                      <TableCell>{user.phone || "-"}</TableCell>
-                    <TableCell>
-                      {/* Only SUPER_ADMIN can toggle status */}
-                      {isSuperAdmin ? (
-                        <Switch
-                          checked={user.status === 1}
-                          onCheckedChange={() => handleToggleStatus(user)}
-                        />
-                      ) : (
-                        <Badge variant={user.status === 1 ? "default" : "secondary"}>
-                          {user.status === 1 ? "Active" : "Inactive"}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Only SUPER_ADMIN can edit users */}
-                        {isSuperAdmin && (
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Phone</span>
+                        <span className="text-sm">{user.phone || "-"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Status</span>
+                        {isSuperAdmin ? (
+                          <Switch
+                            checked={user.status === 1}
+                            onCheckedChange={() => handleToggleStatus(user)}
+                          />
+                        ) : (
+                          <Badge variant={user.status === 1 ? "default" : "secondary"}>
+                            {user.status === 1 ? "Active" : "Inactive"}
+                          </Badge>
+                        )}
+                      </div>
+                      {isSuperAdmin && (
+                        <div className="flex justify-end pt-2">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(user)}
-                            className="h-8 w-8 p-0"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="h-4 w-4 mr-1" />
+                            Edit
                           </Button>
-                        )}
-                      </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg border shadow-sm">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>S.No</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      No users found
                     </TableCell>
                   </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+                ) : (
+                  paginatedUsers.map((user, index) => {
+                    const serialNumber = startIndex + index + 1;
+                    return (
+                      <TableRow key={user.user_id}>
+                        <TableCell className="font-medium">{serialNumber}</TableCell>
+                        <TableCell>{user.user_nam}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge className={getRoleBadgeColor(user.role)}>
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{user.phone || "-"}</TableCell>
+                        <TableCell>
+                          {isSuperAdmin ? (
+                            <Switch
+                              checked={user.status === 1}
+                              onCheckedChange={() => handleToggleStatus(user)}
+                            />
+                          ) : (
+                            <Badge variant={user.status === 1 ? "default" : "secondary"}>
+                              {user.status === 1 ? "Active" : "Inactive"}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {isSuperAdmin && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(user)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </MobileListToggle>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
             Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of{" "}
             {filteredUsers.length} users
           </div>
@@ -565,10 +689,11 @@ export default function UserManagement() {
               size="sm"
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
+              className="text-xs sm:text-sm"
             >
               Previous
             </Button>
-            <div className="text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600">
               Page {currentPage} of {totalPages}
             </div>
             <Button
@@ -578,6 +703,7 @@ export default function UserManagement() {
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }
               disabled={currentPage === totalPages}
+              className="text-xs sm:text-sm"
             >
               Next
             </Button>
@@ -587,7 +713,7 @@ export default function UserManagement() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
-        <DialogContent className="max-w-5xl min-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Edit User" : "Create New User"}
@@ -600,7 +726,7 @@ export default function UserManagement() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="user_nam">
                   Full Name <span className="text-red-500">*</span>

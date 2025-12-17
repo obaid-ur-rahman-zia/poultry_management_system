@@ -38,6 +38,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 
 export default function AccountPage() {
     const {
@@ -72,6 +73,8 @@ export default function AccountPage() {
     const [isSubHeadDialogOpen, setIsSubHeadDialogOpen] = useState(false);
     const [newSubHeadName, setNewSubHeadName] = useState("");
     const [newSubHeadHeadId, setNewSubHeadHeadId] = useState("");
+    const [isMobile, setIsMobile] = useState(false);
+    const [isFiltersDialogOpen, setIsFiltersDialogOpen] = useState(false);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -82,9 +85,16 @@ export default function AccountPage() {
     const contactNumbers = watch("contact_numbers");
 
     useEffect(() => {
+        const mq = window.matchMedia("(max-width: 768px)");
+        const handleResize = () => setIsMobile(mq.matches);
+        handleResize();
+        mq.addEventListener("change", handleResize);
+
         fetchSubHeads();
         fetchAccountHeads();
         fetchAccounts();
+
+        return () => mq.removeEventListener("change", handleResize);
     }, []);
 
     const fetchAccountHeads = async () => {
@@ -660,149 +670,303 @@ export default function AccountPage() {
             {/* Accounts List */}
             <Card>
                 <CardContent>
-                    {/* Filters */}
-                    <div className="space-y-4 mb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="space-y-2">
-                                <Label>Search</Label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Search accounts..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-9"
-                                    />
+                    <MobileListToggle title="Accounts">
+                        {isMobile ? (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => setIsFiltersDialogOpen(true)}>
+                                        Filters & Search
+                                    </Button>
+                                    <p className="text-xs text-muted-foreground">
+                                        {filteredAccounts.length} accounts
+                                    </p>
                                 </div>
-                            </div>
 
-                            <div className="space-y-2">
-                                <Label>Account Type</Label>
-                                <Select value={filterAccountType} onValueChange={setFilterAccountType}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Types</SelectItem>
-                                        {subHeads.map((subHead) => (
-                                            <SelectItem key={subHead.sub_id} value={subHead.sub_id.toString()}>
-                                                {subHead.subhead_nam} {subHead.head?.head_nam && subHead.head.head_nam !== "Main Head" ? `(${subHead.head.head_nam})` : ""}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                {/* Cards on mobile */}
+                                {loading ? (
+                                    <div className="text-center py-8">Loading...</div>
+                                ) : filteredAccounts.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        No accounts found
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {filteredAccounts.map((account) => {
+                                            const contacts = account.contact_numbers ||
+                                                (account.account_contact
+                                                    ? (account.account_contact.includes('[')
+                                                        ? JSON.parse(account.account_contact)
+                                                        : account.account_contact.split(','))
+                                                    : []);
+                                            return (
+                                                <Card key={account.acc_id} className="border shadow-sm">
+                                                    <CardContent className="p-3 space-y-2">
+                                                        <div className="flex items-start justify-between">
+                                                            <div>
+                                                                <p className="text-sm font-semibold">
+                                                                    {account.account_nam || "N/A"}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    {account.subhead?.subhead_nam ||
+                                                                        subHeads.find(sh => sh.sub_id === account.sub_id)?.subhead_nam ||
+                                                                        "N/A"}
+                                                                </p>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                onClick={() => handleEdit(account)}
+                                                            >
+                                                                <Edit2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
 
-                            <div className="space-y-2">
-                                <Label>Contact No</Label>
-                                <Input
-                                    placeholder="Filter by contact..."
-                                    value={filterContact}
-                                    onChange={(e) => setFilterContact(e.target.value)}
-                                />
-                            </div>
+                                                        {contacts.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {contacts.map((contact, idx) => (
+                                                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                                                        <Phone className="h-3 w-3 inline mr-1" />
+                                                                        {contact}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        )}
 
-                            <div className="space-y-2">
-                                <Label>Name</Label>
-                                <Input
-                                    placeholder="Filter by name..."
-                                    value={filterName}
-                                    onChange={(e) => setFilterName(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
+                                                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                                                            <div>
+                                                                <p className="font-semibold text-foreground text-xs">Account No</p>
+                                                                <p>{account.account_no || "N/A"}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-semibold text-foreground text-xs">Reference</p>
+                                                                <p>{account.account_reference || "N/A"}</p>
+                                                            </div>
+                                                            <div className="col-span-2">
+                                                                <p className="font-semibold text-foreground text-xs">Address</p>
+                                                                <p>{account.account_address || "N/A"}</p>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })}
+                                    </div>
+                                )}
 
-                    {/* Table */}
-                    {loading ? (
-                        <div className="text-center py-8">Loading...</div>
-                    ) : filteredAccounts.length === 0 ? (
-                        <div className="text-center h-[300px] flex items-center justify-center py-8 text-muted-foreground">
-                            No accounts found
-                        </div>
-                    ) : (
-                        <div className="relative max-h-[300px] overflow-auto -mx-4 sm:mx-0">
-                            <div className="overflow-x-auto">
-                                <table className="w-full caption-bottom text-sm min-w-[800px]">
-                                    <thead className="sticky top-0 bg-background z-20 border-b-2">
-                                        <tr className="border-b">
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Account Type</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Name</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Contact Numbers</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Account No</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Address</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Reference</th>
-                                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
-                                        </tr>
-                                    </thead>
-                                <tbody>
-                                    {filteredAccounts.map((account) => {
-                                        const contacts = account.contact_numbers ||
-                                            (account.account_contact
-                                                ? (account.account_contact.includes('[')
-                                                    ? JSON.parse(account.account_contact)
-                                                    : account.account_contact.split(','))
-                                                : []);
-
-                                        return (
-                                            <tr key={account.acc_id} className="hover:bg-muted/50 border-b transition-colors">
-                                                <td className="p-2 align-middle whitespace-nowrap">
-                                                    <Badge variant="outline">
-                                                        {account.subhead?.subhead_nam ||
-                                                            subHeads.find(sh => sh.sub_id === account.sub_id)?.subhead_nam ||
-                                                            "N/A"}
-                                                    </Badge>
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap font-medium">
-                                                    {searchQuery || filterName 
-                                                        ? highlightText(account.account_nam || "N/A", searchQuery || filterName)
-                                                        : (account.account_nam || "N/A")}
-                                                </td>
-                                                <td className="p-2 align-middle hidden md:table-cell">
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {contacts.map((contact, idx) => (
-                                                            <Badge key={idx} variant="secondary" className="text-xs">
-                                                                <Phone className="h-3 w-3 inline mr-1" />
-                                                                {filterContact 
-                                                                    ? highlightText(contact, filterContact)
-                                                                    : contact}
-                                                            </Badge>
+                                <Dialog open={isFiltersDialogOpen} onOpenChange={setIsFiltersDialogOpen}>
+                                    <DialogContent className="max-w-[95vw] sm:max-w-lg">
+                                        <DialogHeader>
+                                            <DialogTitle>Filters & Search</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label>Search</Label>
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        placeholder="Search accounts..."
+                                                        value={searchQuery}
+                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                        className="pl-9"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Account Type</Label>
+                                                <Select value={filterAccountType} onValueChange={setFilterAccountType}>
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="all">All Types</SelectItem>
+                                                        {subHeads.map((subHead) => (
+                                                            <SelectItem key={subHead.sub_id} value={subHead.sub_id.toString()}>
+                                                                {subHead.subhead_nam} {subHead.head?.head_nam && subHead.head.head_nam !== "Main Head" ? `(${subHead.head.head_nam})` : ""}
+                                                            </SelectItem>
                                                         ))}
-                                                    </div>
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
-                                                    {searchQuery 
-                                                        ? highlightText(account.account_no || "N/A", searchQuery)
-                                                        : (account.account_no || "N/A")}
-                                                </td>
-                                                <td className="p-2 align-middle max-w-xs truncate hidden xl:table-cell">
-                                                    {account.account_address || "N/A"}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
-                                                    {searchQuery 
-                                                        ? highlightText(account.account_reference || "N/A", searchQuery)
-                                                        : (account.account_reference || "N/A")}
-                                                </td>
-                                                <td className="p-2 align-middle whitespace-nowrap">
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleEdit(account)}
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            <Edit2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                                </table>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Contact No</Label>
+                                                <Input
+                                                    placeholder="Filter by contact..."
+                                                    value={filterContact}
+                                                    onChange={(e) => setFilterContact(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Name</Label>
+                                                <Input
+                                                    placeholder="Filter by name..."
+                                                    value={filterName}
+                                                    onChange={(e) => setFilterName(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="flex justify-end gap-2">
+                                                <Button variant="ghost" onClick={() => {
+                                                    setSearchQuery("");
+                                                    setFilterAccountType("all");
+                                                    setFilterContact("");
+                                                    setFilterName("");
+                                                }}>
+                                                    Clear
+                                                </Button>
+                                                <Button onClick={() => setIsFiltersDialogOpen(false)}>Apply</Button>
+                                            </div>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <>
+                                {/* Filters - desktop */}
+                                <div className="space-y-4 mb-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Search</Label>
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Search accounts..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="pl-9"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Account Type</Label>
+                                            <Select value={filterAccountType} onValueChange={setFilterAccountType}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Types</SelectItem>
+                                                    {subHeads.map((subHead) => (
+                                                        <SelectItem key={subHead.sub_id} value={subHead.sub_id.toString()}>
+                                                            {subHead.subhead_nam} {subHead.head?.head_nam && subHead.head.head_nam !== "Main Head" ? `(${subHead.head.head_nam})` : ""}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Contact No</Label>
+                                            <Input
+                                                placeholder="Filter by contact..."
+                                                value={filterContact}
+                                                onChange={(e) => setFilterContact(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Name</Label>
+                                            <Input
+                                                placeholder="Filter by name..."
+                                                value={filterName}
+                                                onChange={(e) => setFilterName(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Table - desktop */}
+                                {loading ? (
+                                    <div className="text-center py-8">Loading...</div>
+                                ) : filteredAccounts.length === 0 ? (
+                                    <div className="text-center h-[300px] flex items-center justify-center py-8 text-muted-foreground">
+                                        No accounts found
+                                    </div>
+                                ) : (
+                                    <div className="relative max-h-[300px] overflow-auto -mx-4 sm:mx-0">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full caption-bottom text-sm min-w-[800px]">
+                                                <thead className="sticky top-0 bg-background z-20 border-b-2">
+                                                    <tr className="border-b">
+                                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Account Type</th>
+                                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Name</th>
+                                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Contact Numbers</th>
+                                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Account No</th>
+                                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Address</th>
+                                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Reference</th>
+                                                        <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                            <tbody>
+                                                {filteredAccounts.map((account) => {
+                                                    const contacts = account.contact_numbers ||
+                                                        (account.account_contact
+                                                            ? (account.account_contact.includes('[')
+                                                                ? JSON.parse(account.account_contact)
+                                                                : account.account_contact.split(','))
+                                                            : []);
+
+                                                    return (
+                                                        <tr key={account.acc_id} className="hover:bg-muted/50 border-b transition-colors">
+                                                            <td className="p-2 align-middle whitespace-nowrap">
+                                                                <Badge variant="outline">
+                                                                    {account.subhead?.subhead_nam ||
+                                                                        subHeads.find(sh => sh.sub_id === account.sub_id)?.subhead_nam ||
+                                                                        "N/A"}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="p-2 align-middle whitespace-nowrap font-medium">
+                                                                {searchQuery || filterName 
+                                                                    ? highlightText(account.account_nam || "N/A", searchQuery || filterName)
+                                                                    : (account.account_nam || "N/A")}
+                                                            </td>
+                                                            <td className="p-2 align-middle hidden md:table-cell">
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {contacts.map((contact, idx) => (
+                                                                        <Badge key={idx} variant="secondary" className="text-xs">
+                                                                            <Phone className="h-3 w-3 inline mr-1" />
+                                                                            {filterContact 
+                                                                                ? highlightText(contact, filterContact)
+                                                                                : contact}
+                                                                        </Badge>
+                                                                    ))}
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
+                                                                {searchQuery 
+                                                                    ? highlightText(account.account_no || "N/A", searchQuery)
+                                                                    : (account.account_no || "N/A")}
+                                                            </td>
+                                                            <td className="p-2 align-middle max-w-xs truncate hidden xl:table-cell">
+                                                                {account.account_address || "N/A"}
+                                                            </td>
+                                                            <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
+                                                                {searchQuery 
+                                                                    ? highlightText(account.account_reference || "N/A", searchQuery)
+                                                                    : (account.account_reference || "N/A")}
+                                                            </td>
+                                                            <td className="p-2 align-middle whitespace-nowrap">
+                                                                <div className="flex gap-2">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => handleEdit(account)}
+                                                                        className="h-8 w-8 p-0"
+                                                                    >
+                                                                        <Edit2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </MobileListToggle>
                 </CardContent>
             </Card>
 
