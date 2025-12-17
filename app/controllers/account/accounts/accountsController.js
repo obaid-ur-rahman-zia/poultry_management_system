@@ -36,14 +36,16 @@ class AccountsController {
       let filteredAccounts = allAccounts;
       
       if (userCashInHandAccountId && cashInHandSubId) {
-        filteredAccounts = allAccounts.filter((account) => {
-          // If account is from "Cash In Hand" subhead, only show user's cash in hand account
-          if (account.sub_id === cashInHandSubId) {
-            return account.acc_id === userCashInHandAccountId;
-          }
-          // For all other subheads, show all accounts
-          return true;
-        });
+        // filteredAccounts = allAccounts.filter((account) => {
+        //   // If account is from "Cash In Hand" subhead, only show user's cash in hand account
+        //   if (account.sub_id === cashInHandSubId) {
+        //     return account.acc_id === userCashInHandAccountId;
+        //   }
+        //   // For all other subheads, show all accounts
+        //   return true;
+        // });
+
+        filteredAccounts = allAccounts
       }
 
       // Use cache key with user ID to avoid cache conflicts

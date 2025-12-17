@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Plus, Search, Edit2, Trash2 } from "lucide-react";
@@ -32,6 +33,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default function SelfTransactionPage() {
+    const { data: session } = useSession();
     const {
         register,
         handleSubmit,
@@ -69,6 +71,10 @@ export default function SelfTransactionPage() {
     const isBank = watch("is_bank");
     const transactionType = watch("transaction_type");
     const amount = watch("amount");
+    const userCashInHandAccountId = session?.user?.cashInHandAccountId?.toString();
+    const selectableAccounts = userCashInHandAccountId
+        ? accounts.filter((account) => account.acc_id?.toString() !== userCashInHandAccountId)
+        : accounts;
 
     useEffect(() => {
         fetchAccounts();
@@ -357,7 +363,7 @@ export default function SelfTransactionPage() {
                                                     <SelectValue placeholder="Select account" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {accounts.map((account) => (
+                                                    {selectableAccounts.map((account) => (
                                                         <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
                                                             {account.account_nam}
                                                         </SelectItem>
@@ -499,7 +505,7 @@ export default function SelfTransactionPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">All Accounts</SelectItem>
-                                        {accounts.map((account) => (
+                                        {selectableAccounts.map((account) => (
                                             <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
                                                 {account.account_nam}
                                             </SelectItem>

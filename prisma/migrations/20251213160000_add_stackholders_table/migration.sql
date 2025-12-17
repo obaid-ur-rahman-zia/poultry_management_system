@@ -56,3 +56,5 @@ ALTER TABLE "floc_stackholder" ADD CONSTRAINT "floc_stackholder_stackholder_id_f
 -- AlterTable
 ALTER TABLE "floc" DROP COLUMN "stackholders";
 
+
+
