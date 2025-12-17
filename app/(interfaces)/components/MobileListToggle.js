@@ -38,7 +38,7 @@ export default function MobileListToggle({ title = "List", children }) {
                 <Sheet open={open} onOpenChange={setOpen}>
                     <SheetContent
                         side="bottom"
-                        className="h-[100vh] max-h-screen p-3 pt-4 overflow-y-auto"
+                        className="h-[85vh] max-h-[85vh] p-3 pt-4 overflow-y-auto"
                     >
                         <div className="flex items-center justify-between mb-3">
                             <p className="text-sm font-semibold">{title}</p>

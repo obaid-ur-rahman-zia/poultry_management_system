@@ -1306,7 +1306,7 @@ export default function AccountingReports() {
 
 
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent className="w-[500px] sm:max-w-[500px] max-h-screen overflow-y-auto px-3 py-2">
+          <SheetContent className="w-[500px] sm:max-w-[500px] max-h-[85vh] overflow-y-auto px-3 py-2">
             <SheetHeader className="pb-2">
               <SheetTitle className="text-lg font-bold flex items-center justify-between w-full">
                 <div className="flex items-center justify-between w-full">

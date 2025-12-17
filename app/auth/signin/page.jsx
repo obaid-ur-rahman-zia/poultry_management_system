@@ -250,7 +250,9 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="text-center text-2xl font-bold">
+      <Loader2 className="w-10 h-10 animate-spin" />
+    </div>}>
       <SignInForm />
     </Suspense>
   );
