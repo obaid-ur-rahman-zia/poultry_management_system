@@ -31,6 +31,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Combobox } from "@/components/ui/combobox";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 
 export default function SelfTransactionPage() {
@@ -366,21 +367,17 @@ export default function SelfTransactionPage() {
                                         control={control}
                                         rules={{ required: "Account is required" }}
                                         render={({ field }) => (
-                                            <Select
+                                            <Combobox
+                                                options={selectableAccounts.map((account) => ({
+                                                    value: account.acc_id.toString(),
+                                                    label: account.account_nam,
+                                                }))}
                                                 value={field.value}
                                                 onValueChange={field.onChange}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select account" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {selectableAccounts.map((account) => (
-                                                        <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                            {account.account_nam}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                                placeholder="Select account"
+                                                searchPlaceholder="Search accounts..."
+                                                emptyText="No account found."
+                                            />
                                         )}
                                     />
                                 </div>
@@ -511,19 +508,20 @@ export default function SelfTransactionPage() {
 
                                 <div className="space-y-2">
                                     <Label>Account</Label>
-                                    <Select value={filterAccount} onValueChange={setFilterAccount}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Accounts</SelectItem>
-                                            {selectableAccounts.map((account) => (
-                                                <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                    {account.account_nam}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <Combobox
+                                        options={[
+                                            { value: "all", label: "All Accounts" },
+                                            ...selectableAccounts.map((account) => ({
+                                                value: account.acc_id.toString(),
+                                                label: account.account_nam,
+                                            }))
+                                        ]}
+                                        value={filterAccount}
+                                        onValueChange={setFilterAccount}
+                                        placeholder="All Accounts"
+                                        searchPlaceholder="Search accounts..."
+                                        emptyText="No account found."
+                                    />
                                 </div>
 
                                 <div className="space-y-2">

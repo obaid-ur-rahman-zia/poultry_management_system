@@ -37,6 +37,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Combobox } from "@/components/ui/combobox";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 
 export default function UnitExpensePage() {
@@ -278,6 +280,36 @@ export default function UnitExpensePage() {
         }
     };
 
+    const calculateDiscountAmount = () => {
+        const priceValue = parseFloat(price) || 0;
+        if (!discountValue) return 0;
+        
+        return discountType === "percentage"
+            ? (priceValue * parseFloat(discountValue)) / 100
+            : parseFloat(discountValue);
+    };
+
+    const calculatePriceAfterDiscount = () => {
+        const priceValue = parseFloat(price) || 0;
+        const discountAmount = calculateDiscountAmount();
+        return Math.max(0, priceValue - discountAmount);
+    };
+
+    const calculateTaxAmount = () => {
+        const priceAfterDiscount = calculatePriceAfterDiscount();
+        if (!taxValue) return 0;
+        
+        return taxType === "percentage"
+            ? (priceAfterDiscount * parseFloat(taxValue)) / 100
+            : parseFloat(taxValue);
+    };
+
+    const calculateAmountAfterTax = () => {
+        const priceAfterDiscount = calculatePriceAfterDiscount();
+        const taxAmount = calculateTaxAmount();
+        return Math.max(0, priceAfterDiscount + taxAmount);
+    };
+
     const calculateTotal = () => {
         const priceValue = parseFloat(price) || 0;
         const quantityValue = parseFloat(quantity) || 0;
@@ -476,21 +508,17 @@ export default function UnitExpensePage() {
                                     control={control}
                                     rules={{ required: "Unit is required" }}
                                     render={({ field }) => (
-                                        <Select
+                                        <Combobox
+                                            options={Array.isArray(units) ? units.map((unit) => ({
+                                                value: unit.prounit_id.toString(),
+                                                label: unit.prounit_nam,
+                                            })) : []}
                                             value={field.value}
                                             onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select unit" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Array.isArray(units) && units.map((unit) => (
-                                                    <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
-                                                        {unit.prounit_nam}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                            placeholder="Select unit"
+                                            searchPlaceholder="Search units..."
+                                            emptyText="No unit found."
+                                        />
                                     )}
                                 />
                                 {errors.prounit_id && (
@@ -508,22 +536,18 @@ export default function UnitExpensePage() {
                                     control={control}
                                     rules={{ required: "Floc is required" }}
                                     render={({ field }) => (
-                                        <Select
+                                        <Combobox
+                                            options={availableFlocs.map((floc) => ({
+                                                value: floc.floc_id.toString(),
+                                                label: `Floc #${floc.floc_id} - ${new Date(floc.starting_date).toLocaleDateString()}`,
+                                            }))}
                                             value={field.value}
                                             onValueChange={field.onChange}
+                                            placeholder="Select floc"
+                                            searchPlaceholder="Search flocs..."
+                                            emptyText="No floc found."
                                             disabled={!selectedUnit || availableFlocs.length === 0}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select floc" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {availableFlocs.map((floc) => (
-                                                    <SelectItem key={floc.floc_id} value={floc.floc_id.toString()}>
-                                                        Floc #{floc.floc_id} - {new Date(floc.starting_date).toLocaleDateString()}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        />
                                     )}
                                 />
                                 {errors.floc_id && (
@@ -545,22 +569,19 @@ export default function UnitExpensePage() {
                                         control={control}
                                         rules={{ required: "Supplier is required" }}
                                         render={({ field }) => (
-                                            <Select
-                                                value={field.value}
-                                                onValueChange={field.onChange}
-                                                className="flex-1"
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select supplier" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {Array.isArray(suppliers) && suppliers.map((supplier) => (
-                                                        <SelectItem key={supplier.acc_id} value={supplier.acc_id.toString()}>
-                                                            {supplier.account_nam}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div className="flex-1">
+                                                <Combobox
+                                                    options={Array.isArray(suppliers) ? suppliers.map((supplier) => ({
+                                                        value: supplier.acc_id.toString(),
+                                                        label: supplier.account_nam,
+                                                    })) : []}
+                                                    value={field.value}
+                                                    onValueChange={field.onChange}
+                                                    placeholder="Select supplier"
+                                                    searchPlaceholder="Search suppliers..."
+                                                    emptyText="No supplier found."
+                                                />
+                                            </div>
                                         )}
                                     />
                                     <Button
@@ -587,21 +608,17 @@ export default function UnitExpensePage() {
                                     control={control}
                                     rules={{ required: "Product is required" }}
                                     render={({ field }) => (
-                                        <Select
+                                        <Combobox
+                                            options={Array.isArray(products) ? products.map((product) => ({
+                                                value: product.product_id.toString(),
+                                                label: product.product_title,
+                                            })) : []}
                                             value={field.value}
                                             onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select product" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Array.isArray(products) && products.map((product) => (
-                                                    <SelectItem key={product.product_id} value={product.product_id.toString()}>
-                                                        {product.product_title}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                            placeholder="Select product"
+                                            searchPlaceholder="Search products..."
+                                            emptyText="No product found."
+                                        />
                                     )}
                                 />
                                 {errors.product_id && (
@@ -610,7 +627,10 @@ export default function UnitExpensePage() {
                                     </p>
                                 )}
                             </div>
+                        </div>
 
+                        {/* First Row: Price, Discount Type, Discount Value, Discounted Amount */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Price */}
                             <div className="space-y-2">
                                 <Label htmlFor="price">Price *</Label>
@@ -631,6 +651,58 @@ export default function UnitExpensePage() {
                                 )}
                             </div>
 
+                            {/* Discount Type */}
+                            <div className="space-y-2">
+                                <Label>Discount Type</Label>
+                                <Controller
+                                    name="discount_type"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <RadioGroup
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                            className="flex flex-row gap-4"
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="percentage" id="discount-percentage" />
+                                                <Label htmlFor="discount-percentage" className="font-normal cursor-pointer">Percentage</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="flat" id="discount-flat" />
+                                                <Label htmlFor="discount-flat" className="font-normal cursor-pointer">Flat</Label>
+                                            </div>
+                                        </RadioGroup>
+                                    )}
+                                />
+                            </div>
+
+                            {/* Discount Value */}
+                            <div className="space-y-2">
+                                <Label htmlFor="discount_value">Discount Value</Label>
+                                <Input
+                                    id="discount_value"
+                                    type="number"
+                                    step="0.01"
+                                    {...register("discount_value", {
+                                        min: { value: 0, message: "Discount value must be greater than or equal to 0" },
+                                    })}
+                                    placeholder="0.00"
+                                />
+                            </div>
+
+                            {/* Discounted Amount */}
+                            <div className="space-y-2">
+                                <Label>Discounted Amount</Label>
+                                <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
+                                    <p className="text-sm font-semibold">
+                                        {discountValue ? calculateDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Quantity */}
                             <div className="space-y-2">
                                 <Label htmlFor="quantity">Quantity *</Label>
@@ -653,20 +725,25 @@ export default function UnitExpensePage() {
 
                             {/* Tax Type */}
                             <div className="space-y-2">
-                                <Label htmlFor="tax_type">Tax Type</Label>
+                                <Label>Tax Type</Label>
                                 <Controller
                                     name="tax_type"
                                     control={control}
                                     render={({ field }) => (
-                                        <Select value={field.value} onValueChange={field.onChange}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="flat">Flat</SelectItem>
-                                                <SelectItem value="percentage">Percentage</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        <RadioGroup
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                            className="flex flex-row gap-4"
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="flat" id="tax-flat" />
+                                                <Label htmlFor="tax-flat" className="font-normal cursor-pointer">Flat</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="percentage" id="tax-percentage" />
+                                                <Label htmlFor="tax-percentage" className="font-normal cursor-pointer">Percentage</Label>
+                                            </div>
+                                        </RadioGroup>
                                     )}
                                 />
                             </div>
@@ -685,40 +762,19 @@ export default function UnitExpensePage() {
                                 />
                             </div>
 
-                            {/* Discount Type */}
+                            {/* Tax Applied Amount */}
                             <div className="space-y-2">
-                                <Label htmlFor="discount_type">Discount Type</Label>
-                                <Controller
-                                    name="discount_type"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select value={field.value} onValueChange={field.onChange}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="percentage">Percentage</SelectItem>
-                                                <SelectItem value="flat">Flat</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
+                                <Label>Tax Applied Amount</Label>
+                                <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
+                                    <p className="text-sm font-semibold">
+                                        {taxValue ? calculateTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                                    </p>
+                                </div>
                             </div>
+                        </div>
 
-                            {/* Discount Value */}
-                            <div className="space-y-2">
-                                <Label htmlFor="discount_value">Discount Value</Label>
-                                <Input
-                                    id="discount_value"
-                                    type="number"
-                                    step="0.01"
-                                    {...register("discount_value", {
-                                        min: { value: 0, message: "Discount value must be greater than or equal to 0" },
-                                    })}
-                                    placeholder="0.00"
-                                />
-                            </div>
-
+                        {/* Third Row: Total, Description */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Total */}
                             <div className="space-y-2">
                                 <Label>Total Amount</Label>
@@ -727,6 +783,16 @@ export default function UnitExpensePage() {
                                         {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Input
+                                    id="description"
+                                    {...register("description")}
+                                    placeholder="Enter description"
+                                />
                             </div>
                         </div>
 
@@ -795,19 +861,20 @@ export default function UnitExpensePage() {
 
                                 <div className="space-y-2">
                                     <Label>Unit</Label>
-                                    <Select value={filterUnit} onValueChange={setFilterUnit}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Units</SelectItem>
-                                            {Array.isArray(units) && units.map((unit) => (
-                                                <SelectItem key={unit.prounit_id} value={unit.prounit_id.toString()}>
-                                                    {unit.prounit_nam}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <Combobox
+                                        options={[
+                                            { value: "all", label: "All Units" },
+                                            ...(Array.isArray(units) ? units.map((unit) => ({
+                                                value: unit.prounit_id.toString(),
+                                                label: unit.prounit_nam,
+                                            })) : [])
+                                        ]}
+                                        value={filterUnit}
+                                        onValueChange={setFilterUnit}
+                                        placeholder="All Units"
+                                        searchPlaceholder="Search units..."
+                                        emptyText="No unit found."
+                                    />
                                 </div>
 
                                 <div className="space-y-2">

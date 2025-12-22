@@ -30,6 +30,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Combobox } from "@/components/ui/combobox";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 import {
   Dialog,
@@ -189,6 +191,27 @@ export default function TradingPage() {
     }
   };
 
+  const calculateBuyDiscountAmount = () => {
+    const priceValue = parseFloat(buyPrice) || 0;
+    if (!buyDiscountValue) return 0;
+    
+    return buyDiscountType === "percentage"
+      ? (priceValue * parseFloat(buyDiscountValue)) / 100
+      : parseFloat(buyDiscountValue);
+  };
+
+  const calculateBuyTaxAmount = () => {
+    const priceValue = parseFloat(buyPrice) || 0;
+    const discountAmount = calculateBuyDiscountAmount();
+    const priceAfterDiscount = Math.max(0, priceValue - discountAmount);
+    
+    if (!buyTaxValue) return 0;
+    
+    return buyTaxType === "percentage"
+      ? (priceAfterDiscount * parseFloat(buyTaxValue)) / 100
+      : parseFloat(buyTaxValue);
+  };
+
   const calculateBuyTotal = () => {
     const priceValue = parseFloat(buyPrice) || 0;
     const quantityValue = parseFloat(buyQuantity) || 0;
@@ -211,6 +234,27 @@ export default function TradingPage() {
 
     const subtotal = finalUnitPrice * quantityValue;
     return Math.max(0, subtotal);
+  };
+
+  const calculateSaleDiscountAmount = () => {
+    const priceValue = parseFloat(salePrice) || 0;
+    if (!saleDiscountValue) return 0;
+    
+    return saleDiscountType === "percentage"
+      ? (priceValue * parseFloat(saleDiscountValue)) / 100
+      : parseFloat(saleDiscountValue);
+  };
+
+  const calculateSaleTaxAmount = () => {
+    const priceValue = parseFloat(salePrice) || 0;
+    const discountAmount = calculateSaleDiscountAmount();
+    const priceAfterDiscount = Math.max(0, priceValue - discountAmount);
+    
+    if (!saleTaxValue) return 0;
+    
+    return saleTaxType === "percentage"
+      ? (priceAfterDiscount * parseFloat(saleTaxValue)) / 100
+      : parseFloat(saleTaxValue);
   };
 
   const calculateSaleTotal = () => {
@@ -418,9 +462,9 @@ export default function TradingPage() {
   return (
     <div className="container mx-auto sm:p-0 md:p-6 space-y-4 md:space-y-6">
       {/* Trading Form */}
-      <Card className="max-w-6xl mx-auto">
-        <CardHeader className="p-4 pb-0 sm:p-0">
-          <CardTitle className="text-lg sm:text-xl">{isEditMode ? "Edit Trade" : "Create New Trade"}</CardTitle>
+      <Card className="max-w-7xl mx-auto">
+        <CardHeader className="p-4 pb-0 sm:p-0 sm:pl-4 mb-0!">
+          <CardTitle className="text-lg sm:text-xl mb-0!">{isEditMode ? "Edit Trade" : "Create New Trade"}</CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 sm:p-0">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -429,9 +473,9 @@ export default function TradingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Buy From Section */}
               <Card className="space-y-4">
-                <CardTitle className="text-base sm:text-lg font-semibold">Buy From</CardTitle>
-                <CardContent className="">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <CardTitle className="text-base sm:text-lg  sm:pl-4 font-semibold">Buy From</CardTitle>
+                <CardContent className="p-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
                   {/* Date */}
                   <div className="space-y-2">
                     <Label htmlFor="trading_date">Date *</Label>
@@ -451,18 +495,17 @@ export default function TradingPage() {
                       control={control}
                       rules={{ required: "Buy from account is required" }}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select account" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.isArray(accounts) && accounts.map((account) => (
-                              <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                {account.account_nam}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Combobox
+                          options={Array.isArray(accounts) ? accounts.map((account) => ({
+                            value: account.acc_id.toString(),
+                            label: account.account_nam,
+                          })) : []}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select account"
+                          searchPlaceholder="Search accounts..."
+                          emptyText="No account found."
+                        />
                       )}
                     />
                     {errors.buy_from_account && (
@@ -486,18 +529,17 @@ export default function TradingPage() {
                       control={control}
                       rules={{ required: "Product is required" }}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select product" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.isArray(products) && products.map((product) => (
-                              <SelectItem key={product.product_id} value={product.product_id.toString()}>
-                                {product.product_title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Combobox
+                          options={Array.isArray(products) ? products.map((product) => ({
+                            value: product.product_id.toString(),
+                            label: product.product_title,
+                          })) : []}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select product"
+                          searchPlaceholder="Search products..."
+                          emptyText="No product found."
+                        />
                       )}
                     />
                     {errors.product_id && (
@@ -505,6 +547,71 @@ export default function TradingPage() {
                     )}
                   </div>
 
+                </div>
+
+                {/* First Row: Price, Discount Type, Discount Value, Discounted Amount */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="buy_price">Price *</Label>
+                    <Input
+                      id="buy_price"
+                      type="number"
+                      step="0.01"
+                      {...register("buy_price", { required: "Price is required", min: 0 })}
+                      placeholder="0.00"
+                    />
+                    {errors.buy_price && (
+                      <p className="text-sm text-destructive">{errors.buy_price.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Discount Type</Label>
+                    <Controller
+                      name="buy_discount_type"
+                      control={control}
+                      render={({ field }) => (
+                        <RadioGroup
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          className="flex flex-col gap-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="percentage" id="buy-discount-percentage" />
+                            <Label htmlFor="buy-discount-percentage" className="font-normal cursor-pointer">Percentage</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="flat" id="buy-discount-flat" />
+                            <Label htmlFor="buy-discount-flat" className="font-normal cursor-pointer">Flat</Label>
+                          </div>
+                        </RadioGroup>
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="buy_discount_value">Discount Value</Label>
+                    <Input
+                      id="buy_discount_value"
+                      type="number"
+                      step="0.01"
+                      {...register("buy_discount_value", { min: 0 })}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Discounted Amount</Label>
+                    <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
+                      <p className="text-sm font-semibold">
+                        {buyDiscountValue ? calculateBuyDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="buy_quantity">Quantity *</Label>
                     <Input
@@ -520,52 +627,31 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="buy_price">Price *</Label>
-                    <Input
-                      id="buy_price"
-                      type="number"
-                      step="0.01"
-                      {...register("buy_price", { required: "Price is required", min: 0 })}
-                      placeholder="0.00"
-                    />
-                    {errors.buy_price && (
-                      <p className="text-sm text-destructive">{errors.buy_price.message}</p>
-                    )}
-                  </div>
-
-                </div>
-
-                {/* Tax and Discount for Buy */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Buy Total</Label>
-                    <Input
-                      value={calculateBuyTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      readOnly
-                      className="bg-muted"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_tax_type">Tax Type</Label>
+                    <Label>Tax Type</Label>
                     <Controller
                       name="buy_tax_type"
                       control={control}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="flat">Flat</SelectItem>
-                            <SelectItem value="percentage">Percentage</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <RadioGroup
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          className="flex flex-col gap-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="flat" id="buy-tax-flat" />
+                            <Label htmlFor="buy-tax-flat" className="font-normal cursor-pointer">Flat</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="percentage" id="buy-tax-percentage" />
+                            <Label htmlFor="buy-tax-percentage" className="font-normal cursor-pointer">Percentage</Label>
+                          </div>
+                        </RadioGroup>
                       )}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="buy_tax_value">Tax on Price</Label>
+                    <Label htmlFor="buy_tax_value">Tax Value</Label>
                     <Input
                       id="buy_tax_value"
                       type="number"
@@ -576,44 +662,35 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="buy_discount_type">Discount Type</Label>
-                    <Controller
-                      name="buy_discount_type"
-                      control={control}
-                      render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="flat">Flat</SelectItem>
-                            <SelectItem value="percentage">Percentage</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_discount_value">Discount on Price</Label>
-                    <Input
-                      id="buy_discount_value"
-                      type="number"
-                      step="0.01"
-                      {...register("buy_discount_value", { min: 0 })}
-                      placeholder="0.00"
-                    />
+                    <Label>Tax Applied Amount</Label>
+                    <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
+                      <p className="text-sm font-semibold">
+                        {buyTaxValue ? calculateBuyTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="buy_detail">Detail</Label>
-                  <Textarea
-                    id="buy_detail"
-                    {...register("buy_detail")}
-                    placeholder="Enter buy details"
-                    rows={3}
-                  />
+                {/* Third Row: Total, Description */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Buy Total</Label>
+                    <div className="p-2 bg-muted rounded-md">
+                      <p className="text-lg font-semibold">
+                        {calculateBuyTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="buy_detail">Detail</Label>
+                    <Textarea
+                      id="buy_detail"
+                      {...register("buy_detail")}
+                      placeholder="Enter buy details"
+                      rows={3}
+                    />
+                  </div>
                 </div>
                 </CardContent>
               </Card>
@@ -622,7 +699,7 @@ export default function TradingPage() {
               <div className="border rounded-lg p-3 sm:p-4 space-y-4">
                 <h3 className="text-base sm:text-lg font-semibold">Sale To</h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="sale_to_account">Account *</Label>
                     <Controller
@@ -630,25 +707,27 @@ export default function TradingPage() {
                       control={control}
                       rules={{ required: "Sale to account is required" }}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select account" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.isArray(accounts) && accounts.map((account) => (
-                              <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                {account.account_nam}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Combobox
+                          options={Array.isArray(accounts) ? accounts.map((account) => ({
+                            value: account.acc_id.toString(),
+                            label: account.account_nam,
+                          })) : []}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select account"
+                          searchPlaceholder="Search accounts..."
+                          emptyText="No account found."
+                        />
                       )}
                     />
                     {errors.sale_to_account && (
                       <p className="text-sm text-destructive">{errors.sale_to_account.message}</p>
                     )}
                   </div>
+                </div>
 
+                {/* First Row: Price, Discount Type, Discount Value, Discounted Amount */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="sale_price">Price *</Label>
                     <Input
@@ -664,6 +743,53 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label>Discount Type</Label>
+                    <Controller
+                      name="sale_discount_type"
+                      control={control}
+                      render={({ field }) => (
+                        <RadioGroup
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          className="flex flex-col gap-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="percentage" id="sale-discount-percentage" />
+                            <Label htmlFor="sale-discount-percentage" className="font-normal cursor-pointer">Percentage</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="flat" id="sale-discount-flat" />
+                            <Label htmlFor="sale-discount-flat" className="font-normal cursor-pointer">Flat</Label>
+                          </div>
+                        </RadioGroup>
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="sale_discount_value">Discount Value</Label>
+                    <Input
+                      id="sale_discount_value"
+                      type="number"
+                      step="0.01"
+                      {...register("sale_discount_value", { min: 0 })}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Discounted Amount</Label>
+                    <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
+                      <p className="text-sm font-semibold">
+                        {saleDiscountValue ? calculateSaleDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
+                  <div className="space-y-2">
                     <Label htmlFor="sale_quantity">Quantity *</Label>
                     <Input
                       id="sale_quantity"
@@ -677,39 +803,32 @@ export default function TradingPage() {
                     )}
                   </div>
 
-                </div>
-
-                {/* Tax and Discount for Sale */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Sale Total</Label>
-                    <Input
-                      value={calculateSaleTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      readOnly
-                      className="bg-muted"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sale_tax_type">Tax Type</Label>
+                    <Label>Tax Type</Label>
                     <Controller
                       name="sale_tax_type"
                       control={control}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="flat">Flat</SelectItem>
-                            <SelectItem value="percentage">Percentage</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <RadioGroup
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          className="flex flex-col gap-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="flat" id="sale-tax-flat" />
+                            <Label htmlFor="sale-tax-flat" className="font-normal cursor-pointer">Flat</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="percentage" id="sale-tax-percentage" />
+                            <Label htmlFor="sale-tax-percentage" className="font-normal cursor-pointer">Percentage</Label>
+                          </div>
+                        </RadioGroup>
                       )}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sale_tax_value">Tax on Price</Label>
+                    <Label htmlFor="sale_tax_value">Tax Value</Label>
                     <Input
                       id="sale_tax_value"
                       type="number"
@@ -720,45 +839,36 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sale_discount_type">Discount Type</Label>
-                    <Controller
-                      name="sale_discount_type"
-                      control={control}
-                      render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="flat">Flat</SelectItem>
-                            <SelectItem value="percentage">Percentage</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sale_discount_value">Discount on Price</Label>
-                    <Input
-                      id="sale_discount_value"
-                      type="number"
-                      step="0.01"
-                      {...register("sale_discount_value", { min: 0 })}
-                      placeholder="0.00"
-                    />
+                    <Label>Tax Applied Amount</Label>
+                    <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
+                      <p className="text-sm font-semibold">
+                        {saleTaxValue ? calculateSaleTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="sale_detail">Detail</Label>
-                  <Textarea
-                    id="sale_detail"
-                    {...register("sale_detail")}
-                    placeholder="Enter sale details"
-                    rows={3}
-                    className={"h-36"}
-                  />
+                {/* Third Row: Total, Description */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Sale Total</Label>
+                    <div className="p-2 bg-muted rounded-md">
+                      <p className="text-lg font-semibold">
+                        {calculateSaleTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="sale_detail">Detail</Label>
+                    <Textarea
+                      id="sale_detail"
+                      {...register("sale_detail")}
+                      placeholder="Enter sale details"
+                      rows={3}
+                      className={"h-36"}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -814,35 +924,37 @@ export default function TradingPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Buy From Account</Label>
-                    <Select value={filterBuyAccount} onValueChange={setFilterBuyAccount}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Accounts</SelectItem>
-                        {Array.isArray(accounts) && accounts.map((account) => (
-                          <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                            {account.account_nam}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Combobox
+                      options={[
+                        { value: "all", label: "All Accounts" },
+                        ...(Array.isArray(accounts) ? accounts.map((account) => ({
+                          value: account.acc_id.toString(),
+                          label: account.account_nam,
+                        })) : [])
+                      ]}
+                      value={filterBuyAccount}
+                      onValueChange={setFilterBuyAccount}
+                      placeholder="All Accounts"
+                      searchPlaceholder="Search accounts..."
+                      emptyText="No account found."
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Sale To Account</Label>
-                    <Select value={filterSaleAccount} onValueChange={setFilterSaleAccount}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Accounts</SelectItem>
-                        {Array.isArray(accounts) && accounts.map((account) => (
-                          <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                            {account.account_nam}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Combobox
+                      options={[
+                        { value: "all", label: "All Accounts" },
+                        ...(Array.isArray(accounts) ? accounts.map((account) => ({
+                          value: account.acc_id.toString(),
+                          label: account.account_nam,
+                        })) : [])
+                      ]}
+                      value={filterSaleAccount}
+                      onValueChange={setFilterSaleAccount}
+                      placeholder="All Accounts"
+                      searchPlaceholder="Search accounts..."
+                      emptyText="No account found."
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Date</Label>
@@ -872,35 +984,37 @@ export default function TradingPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Buy From Account</Label>
-                  <Select value={filterBuyAccount} onValueChange={setFilterBuyAccount}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Accounts</SelectItem>
-                      {Array.isArray(accounts) && accounts.map((account) => (
-                        <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                          {account.account_nam}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={[
+                      { value: "all", label: "All Accounts" },
+                      ...(Array.isArray(accounts) ? accounts.map((account) => ({
+                        value: account.acc_id.toString(),
+                        label: account.account_nam,
+                      })) : [])
+                    ]}
+                    value={filterBuyAccount}
+                    onValueChange={setFilterBuyAccount}
+                    placeholder="All Accounts"
+                    searchPlaceholder="Search accounts..."
+                    emptyText="No account found."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Sale To Account</Label>
-                  <Select value={filterSaleAccount} onValueChange={setFilterSaleAccount}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Accounts</SelectItem>
-                      {Array.isArray(accounts) && accounts.map((account) => (
-                        <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                          {account.account_nam}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={[
+                      { value: "all", label: "All Accounts" },
+                      ...(Array.isArray(accounts) ? accounts.map((account) => ({
+                        value: account.acc_id.toString(),
+                        label: account.account_nam,
+                      })) : [])
+                    ]}
+                    value={filterSaleAccount}
+                    onValueChange={setFilterSaleAccount}
+                    placeholder="All Accounts"
+                    searchPlaceholder="Search accounts..."
+                    emptyText="No account found."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Date</Label>

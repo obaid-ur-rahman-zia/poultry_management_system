@@ -39,6 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Combobox } from "@/components/ui/combobox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function FlocManagementPage() {
@@ -572,13 +573,15 @@ export default function FlocManagementPage() {
                   name="farm_id"
                   control={control}
                   rules={{ required: "Farm is required" }}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        // Trigger useEffect to check for active floc
-                        const farmId = parseInt(value);
+                  render={({ field }) => {
+                    const farmOptions = [
+                      ...availableFarms.map((farm) => ({
+                        value: (farm.prounit_id || farm.farm_id).toString(),
+                        label: farm.prounit_nam || farm.farm_nam,
+                      })),
+                      // Show unavailable farms (with active flocs) when no available farms
+                      ...(availableFarms.length === 0 && !isEditMode && farms.length > 0 ? farms.map((farm) => {
+                        const farmId = farm.prounit_id || farm.farm_id;
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
                         const activeFloc = flocs.find(floc => {
@@ -587,30 +590,25 @@ export default function FlocManagementPage() {
                           if (!floc.ending_date) return true;
                           const endDate = new Date(floc.ending_date);
                           endDate.setHours(0, 0, 0, 0);
-                          return endDate >= today;
+                          return endDate > today;
                         });
                         if (activeFloc) {
-                          setActiveFlocForSelectedFarm(activeFloc);
-                        } else {
-                          setActiveFlocForSelectedFarm(null);
-                          setShouldClearEndingDate(false);
-                          setClearDescription("");
+                          return {
+                            value: farmId.toString(),
+                            label: `${farm.prounit_nam || farm.farm_nam} (Active - can clear)`,
+                          };
                         }
-                      }}
-                      disabled={availableFarms.length === 0 && !isEditMode && farms.length === 0}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select farm" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableFarms.map((farm) => (
-                          <SelectItem key={farm.prounit_id || farm.farm_id} value={(farm.prounit_id || farm.farm_id).toString()}>
-                            {farm.prounit_nam || farm.farm_nam}
-                          </SelectItem>
-                        ))}
-                        {/* Show unavailable farms (with active flocs) when no available farms */}
-                        {availableFarms.length === 0 && !isEditMode && farms.length > 0 && farms.map((farm) => {
-                          const farmId = farm.prounit_id || farm.farm_id;
+                        return null;
+                      }).filter(Boolean) : [])
+                    ];
+                    return (
+                      <Combobox
+                        options={farmOptions}
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Trigger useEffect to check for active floc
+                          const farmId = parseInt(value);
                           const today = new Date();
                           today.setHours(0, 0, 0, 0);
                           const activeFloc = flocs.find(floc => {
@@ -619,21 +617,23 @@ export default function FlocManagementPage() {
                             if (!floc.ending_date) return true;
                             const endDate = new Date(floc.ending_date);
                             endDate.setHours(0, 0, 0, 0);
-                            // Floc is active if ending_date is in the future (after today)
-                            return endDate > today;
+                            return endDate >= today;
                           });
                           if (activeFloc) {
-                            return (
-                              <SelectItem key={farmId} value={farmId.toString()}>
-                                {farm.prounit_nam || farm.farm_nam} (Active - can clear)
-                              </SelectItem>
-                            );
+                            setActiveFlocForSelectedFarm(activeFloc);
+                          } else {
+                            setActiveFlocForSelectedFarm(null);
+                            setShouldClearEndingDate(false);
+                            setClearDescription("");
                           }
-                          return null;
-                        })}
-                      </SelectContent>
-                    </Select>
-                  )}
+                        }}
+                        placeholder="Select farm"
+                        searchPlaceholder="Search farms..."
+                        emptyText="No farm found."
+                        disabled={availableFarms.length === 0 && !isEditMode && farms.length === 0}
+                      />
+                    );
+                  }}
                 />
                 {errors.farm_id && (
                   <p className="text-sm text-destructive">
@@ -648,7 +648,11 @@ export default function FlocManagementPage() {
                     <p className="text-sm text-muted-foreground">
                       Select a farm from the list below to clear its ending date and make it available.
                     </p>
-                    <Select
+                    <Combobox
+                      options={farms.map((farm) => ({
+                        value: (farm.prounit_id || farm.farm_id).toString(),
+                        label: farm.prounit_nam || farm.farm_nam,
+                      }))}
                       value={selectedFarm}
                       onValueChange={(value) => {
                         setValue("farm_id", value);
@@ -667,18 +671,10 @@ export default function FlocManagementPage() {
                           setActiveFlocForSelectedFarm(activeFloc);
                         }
                       }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select farm to clear ending date" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {farms.map((farm) => (
-                          <SelectItem key={farm.prounit_id || farm.farm_id} value={(farm.prounit_id || farm.farm_id).toString()}>
-                            {farm.prounit_nam || farm.farm_nam}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select farm to clear ending date"
+                      searchPlaceholder="Search farms..."
+                      emptyText="No farm found."
+                    />
                   </div>
                 )}
               </div>
@@ -778,45 +774,49 @@ export default function FlocManagementPage() {
                       control={control}
                       rules={{ required: "Stackholder is required" }}
                       render={({ field }) => (
-                        <Select
-                          value={field.value}
-                          onValueChange={(value) => {
-                            if (value !== "__create__" && (formStackholders || []).some((sh, i) => i !== index && sh.stackholder_id === value)) {
-                              toast.error("This stackholder is already selected");
-                              return;
-                            }
-                            if (value === "__create__") {
-                              openCreateStackholder(index);
-                              return;
-                            }
-                            field.onChange(value);
-                            handleStackholderChange(index, "stackholder_id", value);
-                            if (formStackholders.length === 1) {
-                              setValue("stackholders.0.percentage", "100");
-                            }
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select stackholder" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__create__">
-                              Add New Stackholder
-                            </SelectItem>
-                            {stackholders.map((holder) => (
-                              <SelectItem
-                                key={holder.stackholder_id}
-                                value={holder.stackholder_id.toString()}
-                                disabled={(formStackholders || [])
-                                  .map((sh) => sh.stackholder_id)
-                                  .filter(Boolean)
-                                  .includes(holder.stackholder_id?.toString()) && field.value !== holder.stackholder_id?.toString()}
-                              >
-                                {holder.stackholder_nam}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <Combobox
+                              options={stackholders
+                                .filter((holder) => {
+                                  // Filter out already selected stackholders (except current one)
+                                  return !(formStackholders || []).some((sh, i) => 
+                                    i !== index && 
+                                    sh.stackholder_id === holder.stackholder_id?.toString() &&
+                                    field.value !== holder.stackholder_id?.toString()
+                                  );
+                                })
+                                .map((holder) => ({
+                                  value: holder.stackholder_id.toString(),
+                                  label: holder.stackholder_nam,
+                                }))}
+                              value={field.value}
+                              onValueChange={(value) => {
+                                if ((formStackholders || []).some((sh, i) => i !== index && sh.stackholder_id === value)) {
+                                  toast.error("This stackholder is already selected");
+                                  return;
+                                }
+                                field.onChange(value);
+                                handleStackholderChange(index, "stackholder_id", value);
+                                if (formStackholders.length === 1) {
+                                  setValue("stackholders.0.percentage", "100");
+                                }
+                              }}
+                              placeholder="Select stackholder"
+                              searchPlaceholder="Search stackholders..."
+                              emptyText="No stackholder found."
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => openCreateStackholder(index)}
+                            title="Add New Stackholder"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
                       )}
                     />
                   </div>
@@ -944,19 +944,20 @@ export default function FlocManagementPage() {
 
               <div className="space-y-2">
                 <Label>Farm</Label>
-                <Select value={filterUnit} onValueChange={setFilterUnit}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Farms</SelectItem>
-                    {farms.map((farm) => (
-                      <SelectItem key={farm.prounit_id || farm.farm_id} value={(farm.prounit_id || farm.farm_id).toString()}>
-                        {farm.prounit_nam || farm.farm_nam}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={[
+                    { value: "all", label: "All Farms" },
+                    ...farms.map((farm) => ({
+                      value: (farm.prounit_id || farm.farm_id).toString(),
+                      label: farm.prounit_nam || farm.farm_nam,
+                    }))
+                  ]}
+                  value={filterUnit}
+                  onValueChange={setFilterUnit}
+                  placeholder="All Farms"
+                  searchPlaceholder="Search farms..."
+                  emptyText="No farm found."
+                />
               </div>
 
               <div className="space-y-2">

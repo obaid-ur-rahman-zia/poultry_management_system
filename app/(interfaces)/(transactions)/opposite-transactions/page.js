@@ -30,6 +30,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Combobox } from "@/components/ui/combobox";
 import {
     Dialog,
     DialogContent,
@@ -361,21 +362,17 @@ export default function OppositeTransactionsPage() {
                                     control={control}
                                     rules={{ required: "Paid by is required" }}
                                     render={({ field }) => (
-                                        <Select
+                                        <Combobox
+                                            options={accounts.map((account) => ({
+                                                value: account.acc_id.toString(),
+                                                label: account.account_nam,
+                                            }))}
                                             value={field.value}
                                             onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger className={"!max-w-[400px] !w-full"}>
-                                                <SelectValue placeholder="Select account" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {accounts.map((account) => (
-                                                    <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                        {account.account_nam}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                            placeholder="Select account"
+                                            searchPlaceholder="Search accounts..."
+                                            emptyText="No account found."
+                                        />
                                     )}
                                 />
                                 {errors.paid_by && (
@@ -393,21 +390,19 @@ export default function OppositeTransactionsPage() {
                                         name="bank_account"
                                         control={control}
                                         render={({ field }) => (
-                                            <Select
-                                                value={field.value}
-                                                onValueChange={field.onChange}
-                                            >
-                                                <SelectTrigger className={"!max-w-[400px] !w-full"}>
-                                                    <SelectValue placeholder="Select bank" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {bankAccounts.map((account) => (
-                                                        <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                            {account.account_nam}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div className="flex-1">
+                                                <Combobox
+                                                    options={bankAccounts.map((account) => ({
+                                                        value: account.acc_id.toString(),
+                                                        label: account.account_nam,
+                                                    }))}
+                                                    value={field.value}
+                                                    onValueChange={field.onChange}
+                                                    placeholder="Select bank"
+                                                    searchPlaceholder="Search banks..."
+                                                    emptyText="No bank found."
+                                                />
+                                            </div>
                                         )}
                                     />
                                     <Button
@@ -436,21 +431,17 @@ export default function OppositeTransactionsPage() {
                                     control={control}
                                     rules={{ required: "Received by is required" }}
                                     render={({ field }) => (
-                                        <Select
+                                        <Combobox
+                                            options={accounts.map((account) => ({
+                                                value: account.acc_id.toString(),
+                                                label: account.account_nam,
+                                            }))}
                                             value={field.value}
                                             onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger className={"!max-w-[400px] !w-full"}>
-                                                <SelectValue placeholder="Select account" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {accounts.map((account) => (
-                                                    <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                        {account.account_nam}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                            placeholder="Select account"
+                                            searchPlaceholder="Search accounts..."
+                                            emptyText="No account found."
+                                        />
                                     )}
                                 />
                                 {errors.received_by && (
@@ -541,36 +532,38 @@ export default function OppositeTransactionsPage() {
 
                                 <div className="space-y-2">
                                     <Label>Paid By</Label>
-                                    <Select value={filterPaidBy} onValueChange={setFilterPaidBy}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Accounts</SelectItem>
-                                            {accounts.map((account) => (
-                                                <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                    {account.account_nam}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <Combobox
+                                        options={[
+                                            { value: "all", label: "All Accounts" },
+                                            ...accounts.map((account) => ({
+                                                value: account.acc_id.toString(),
+                                                label: account.account_nam,
+                                            }))
+                                        ]}
+                                        value={filterPaidBy}
+                                        onValueChange={setFilterPaidBy}
+                                        placeholder="All Accounts"
+                                        searchPlaceholder="Search accounts..."
+                                        emptyText="No account found."
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label>Received By</Label>
-                                    <Select value={filterReceivedBy} onValueChange={setFilterReceivedBy}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Accounts</SelectItem>
-                                            {accounts.map((account) => (
-                                                <SelectItem key={account.acc_id} value={account.acc_id.toString()}>
-                                                    {account.account_nam}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <Combobox
+                                        options={[
+                                            { value: "all", label: "All Accounts" },
+                                            ...accounts.map((account) => ({
+                                                value: account.acc_id.toString(),
+                                                label: account.account_nam,
+                                            }))
+                                        ]}
+                                        value={filterReceivedBy}
+                                        onValueChange={setFilterReceivedBy}
+                                        placeholder="All Accounts"
+                                        searchPlaceholder="Search accounts..."
+                                        emptyText="No account found."
+                                    />
                                 </div>
 
                                 <div className="space-y-2">

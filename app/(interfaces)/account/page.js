@@ -30,6 +30,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Combobox } from "@/components/ui/combobox";
 import {
     Dialog,
     DialogContent,
@@ -459,28 +460,26 @@ export default function AccountPage() {
                                         control={control}
                                         rules={{ required: "Account type is required" }}
                                         render={({ field }) => (
-                                            <Select
-                                                value={field.value}
-                                                onValueChange={(value) => {
-                                                    field.onChange(value);
-                                                    // Find the selected subhead and set head_id
-                                                    const selectedSubHead = subHeads.find(sh => sh.sub_id.toString() === value);
-                                                    if (selectedSubHead) {
-                                                        setValue("head_id", selectedSubHead.head_id.toString());
-                                                    }
-                                                }}
-                                            >
-                                                <SelectTrigger className="flex-1">
-                                                    <SelectValue placeholder="Select Account " />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {subHeads.map((subHead) => (
-                                                        <SelectItem key={subHead.sub_id} value={subHead.sub_id.toString()}>
-                                                            {subHead.subhead_nam} {subHead.head?.head_nam && subHead.head.head_nam !== "Main Head" ? `(${subHead.head.head_nam})` : ""}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div className="flex-1">
+                                                <Combobox
+                                                    options={subHeads.map((subHead) => ({
+                                                        value: subHead.sub_id.toString(),
+                                                        label: `${subHead.subhead_nam}${subHead.head?.head_nam && subHead.head.head_nam !== "Main Head" ? ` (${subHead.head.head_nam})` : ""}`,
+                                                    }))}
+                                                    value={field.value}
+                                                    onValueChange={(value) => {
+                                                        field.onChange(value);
+                                                        // Find the selected subhead and set head_id
+                                                        const selectedSubHead = subHeads.find(sh => sh.sub_id.toString() === value);
+                                                        if (selectedSubHead) {
+                                                            setValue("head_id", selectedSubHead.head_id.toString());
+                                                        }
+                                                    }}
+                                                    placeholder="Select Account"
+                                                    searchPlaceholder="Search account types..."
+                                                    emptyText="No account type found."
+                                                />
+                                            </div>
                                         )}
                                     />
                                     <Button
