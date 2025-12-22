@@ -356,7 +356,10 @@ export default function AccountingReports() {
             )}
 
             {isMobile && (
-              <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+              <Dialog
+                open={isFilterDialogOpen}
+                onOpenChange={setIsFilterDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-full sm:w-auto">
                     <Search className="h-4 w-4 mr-2" />
@@ -380,7 +383,10 @@ export default function AccountingReports() {
                           placeholder="Search by account name or remarks..."
                           value={filters.accountSearch}
                           onChange={(e) =>
-                            setFilters({ ...filters, accountSearch: e.target.value })
+                            setFilters({
+                              ...filters,
+                              accountSearch: e.target.value,
+                            })
                           }
                         />
                         <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -388,18 +394,25 @@ export default function AccountingReports() {
                     </div>
                     <div className="grid grid-cols-1 gap-4">
                       <div>
-                        <Label className="text-sm font-semibold">Start Date</Label>
+                        <Label className="text-sm font-semibold">
+                          Start Date
+                        </Label>
                         <Input
                           type="date"
                           value={filters.startDate}
                           onChange={(e) =>
-                            setFilters({ ...filters, startDate: e.target.value })
+                            setFilters({
+                              ...filters,
+                              startDate: e.target.value,
+                            })
                           }
                           className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-semibold">End Date</Label>
+                        <Label className="text-sm font-semibold">
+                          End Date
+                        </Label>
                         <Input
                           type="date"
                           value={filters.endDate}
@@ -410,7 +423,9 @@ export default function AccountingReports() {
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-semibold">Voucher Type</Label>
+                        <Label className="text-sm font-semibold">
+                          Voucher Type
+                        </Label>
                         <Select
                           value={filters.voucherType}
                           onValueChange={(value) =>
@@ -431,7 +446,9 @@ export default function AccountingReports() {
                         </Select>
                       </div>
                       <div>
-                        <Label className="text-sm font-semibold">Financial Year</Label>
+                        <Label className="text-sm font-semibold">
+                          Financial Year
+                        </Label>
                         <Select
                           value={filters.financialYear}
                           onValueChange={(value) =>
@@ -453,7 +470,11 @@ export default function AccountingReports() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button onClick={resetFilters} variant="outline" className="flex-1">
+                      <Button
+                        onClick={resetFilters}
+                        variant="outline"
+                        className="flex-1"
+                      >
                         <X className="h-4 w-4 mr-2" />
                         Reset All
                       </Button>
@@ -746,49 +767,88 @@ export default function AccountingReports() {
                   {isMobile ? (
                     <div className="space-y-3">
                       {isLoading ? (
-                        <div className="text-center py-8 text-gray-500">Loading transactions...</div>
-                      ) : !Array.isArray(filteredTransactions) || filteredTransactions.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">No transactions found</div>
+                        <div className="text-center py-8 text-gray-500">
+                          Loading transactions...
+                        </div>
+                      ) : !Array.isArray(filteredTransactions) ||
+                        filteredTransactions.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          No transactions found
+                        </div>
                       ) : (
                         filteredTransactions.map((transaction) => (
-                          <Card key={transaction.transaction_id} className="border">
+                          <Card
+                            key={transaction.transaction_id}
+                            className="border"
+                          >
                             <CardContent className="p-4 space-y-2">
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Date</span>
-                                <span className="text-sm font-medium">{formatDate(transaction.transaction_dat)}</span>
+                                <span className="text-xs text-gray-500">
+                                  Date
+                                </span>
+                                <span className="text-sm font-medium">
+                                  {formatDate(transaction.transaction_dat)}
+                                </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Voucher</span>
+                                <span className="text-xs text-gray-500">
+                                  Voucher
+                                </span>
                                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                                   {transaction.voucher_type}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Head</span>
-                                <span className="text-sm font-medium">{getAccountDetails(transaction.acc_id).headName}</span>
+                                <span className="text-xs text-gray-500">
+                                  Head
+                                </span>
+                                <span className="text-sm font-medium">
+                                  {
+                                    getAccountDetails(transaction.acc_id)
+                                      .headName
+                                  }
+                                </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Account</span>
-                                <span className="text-sm font-medium">{getAccountName(transaction.acc_id)}</span>
+                                <span className="text-xs text-gray-500">
+                                  Account
+                                </span>
+                                <span className="text-sm font-medium">
+                                  {getAccountName(transaction.acc_id)}
+                                </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Reference</span>
-                                <span className="text-sm">{transaction.reference || "-"}</span>
+                                <span className="text-xs text-gray-500">
+                                  Reference
+                                </span>
+                                <span className="text-sm">
+                                  {transaction.reference || "-"}
+                                </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Debit</span>
+                                <span className="text-xs text-gray-500">
+                                  Debit
+                                </span>
                                 <span className="text-sm font-medium text-green-700">
-                                  {transaction.debit >= 0 ? formatCurrency(transaction.debit) : "-"}
+                                  {transaction.debit >= 0
+                                    ? formatCurrency(transaction.debit)
+                                    : "-"}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Credit</span>
+                                <span className="text-xs text-gray-500">
+                                  Credit
+                                </span>
                                 <span className="text-sm font-medium text-red-700">
-                                  {transaction.credit >= 0 ? formatCurrency(transaction.credit) : "-"}
+                                  {transaction.credit >= 0
+                                    ? formatCurrency(transaction.credit)
+                                    : "-"}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Remarks</span>
+                                <span className="text-xs text-gray-500">
+                                  Remarks
+                                </span>
                                 <span className="text-sm text-gray-600 truncate max-w-[60%]">
                                   {transaction.remarks || "-"}
                                 </span>
@@ -797,7 +857,9 @@ export default function AccountingReports() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleViewTransaction(transaction)}
+                                  onClick={() =>
+                                    handleViewTransaction(transaction)
+                                  }
                                 >
                                   <Eye className="h-4 w-4 mr-2" />
                                   View
@@ -812,108 +874,112 @@ export default function AccountingReports() {
                     <div className="border rounded-lg overflow-hidden">
                       <div className="max-h-[600px] overflow-auto">
                         <table className="w-full">
-                      <thead className="bg-blue-50 sticky top-0">
-                        <tr className="border-b">
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Date
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Voucher
-                          </th>
+                          <thead className="bg-blue-50 sticky top-0">
+                            <tr className="border-b">
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Date
+                              </th>
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Voucher
+                              </th>
 
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Head
-                          </th>
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Head
+                              </th>
 
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Account
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Reference
-                          </th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                            Debit
-                          </th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                            Credit
-                          </th>
-                          {/* <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Account
+                              </th>
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Reference
+                              </th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                Debit
+                              </th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                Credit
+                              </th>
+                              {/* <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
                             Balance
                           </th> */}
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Remarks
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white">
-                        {isLoading ? (
-                          <tr>
-                            <td
-                              colSpan={9}
-                              className="text-center py-8 text-gray-500"
-                            >
-                              Loading transactions...
-                            </td>
-                          </tr>
-                        ) : !Array.isArray(filteredTransactions) ||
-                          filteredTransactions.length === 0 ? (
-                          <tr>
-                            <td
-                              colSpan={9}
-                              className="text-center py-8 text-gray-500"
-                            >
-                              No transactions found
-                            </td>
-                          </tr>
-                        ) : (
-                          (() => {
-                            let runningBalance = 0;
-                            return filteredTransactions.map((transaction) => {
-                              runningBalance +=
-                                (transaction.debit || 0) -
-                                (transaction.credit || 0);
-                              return (
-                                <tr
-                                  key={transaction.transaction_id}
-                                  className="border-b hover:bg-gray-50"
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Remarks
+                              </th>
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white">
+                            {isLoading ? (
+                              <tr>
+                                <td
+                                  colSpan={9}
+                                  className="text-center py-8 text-gray-500"
                                 >
-                                  <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                    {formatDate(transaction.transaction_dat)}
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                                      {transaction.voucher_type}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 font-medium text-sm">
-                                    {highlightText(
-                                      getAccountDetails(transaction.acc_id)
-                                        .headName
-                                    )}
-                                  </td>
-                                  <td className="px-4 py-3 font-medium text-sm">
-                                    {highlightText(
-                                      getAccountName(transaction.acc_id),
-                                      filters.accountSearch
-                                    )}
-                                  </td>
-                                  <td className="px-4 py-3 text-sm text-gray-600">
-                                    {transaction.reference || "-"}
-                                  </td>
-                                  <td className="px-4 py-3 text-right font-medium text-green-700 text-sm">
-                                    {transaction.debit >= 0
-                                      ? formatCurrency(transaction.debit)
-                                      : "-"}
-                                  </td>
-                                  <td className="px-4 py-3 text-right font-medium text-red-700 text-sm">
-                                    {transaction.credit >= 0
-                                      ? formatCurrency(transaction.credit)
-                                      : "-"}
-                                  </td>
-                                  {/* <td
+                                  Loading transactions...
+                                </td>
+                              </tr>
+                            ) : !Array.isArray(filteredTransactions) ||
+                              filteredTransactions.length === 0 ? (
+                              <tr>
+                                <td
+                                  colSpan={9}
+                                  className="text-center py-8 text-gray-500"
+                                >
+                                  No transactions found
+                                </td>
+                              </tr>
+                            ) : (
+                              (() => {
+                                let runningBalance = 0;
+                                return filteredTransactions.map(
+                                  (transaction) => {
+                                    runningBalance +=
+                                      (transaction.debit || 0) -
+                                      (transaction.credit || 0);
+                                    return (
+                                      <tr
+                                        key={transaction.transaction_id}
+                                        className="border-b hover:bg-gray-50"
+                                      >
+                                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                          {formatDate(
+                                            transaction.transaction_dat
+                                          )}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                            {transaction.voucher_type}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 font-medium text-sm">
+                                          {highlightText(
+                                            getAccountDetails(
+                                              transaction.acc_id
+                                            ).headName
+                                          )}
+                                        </td>
+                                        <td className="px-4 py-3 font-medium text-sm">
+                                          {highlightText(
+                                            getAccountName(transaction.acc_id),
+                                            filters.accountSearch
+                                          )}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">
+                                          {transaction.reference || "-"}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-medium text-green-700 text-sm">
+                                          {transaction.debit >= 0
+                                            ? formatCurrency(transaction.debit)
+                                            : "-"}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-medium text-red-700 text-sm">
+                                          {transaction.credit >= 0
+                                            ? formatCurrency(transaction.credit)
+                                            : "-"}
+                                        </td>
+                                        {/* <td
                                     className={`px-4 py-3 text-right font-bold text-sm ${
                                       runningBalance >= 0
                                         ? "text-blue-700"
@@ -923,29 +989,30 @@ export default function AccountingReports() {
                                     {formatCurrency(Math.abs(runningBalance))}{" "}
                                     {runningBalance < 0 ? "Cr" : "Dr"}
                                   </td> */}
-                                  <td className="px-4 py-3 text-sm text-gray-600  truncate">
-                                    {highlightText(
-                                      transaction.remarks || "-",
-                                      filters.accountSearch
-                                    )}
-                                  </td>
-                                  <td className="px-4 py-3 text-sm text-gray-600 truncate">
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      onClick={() =>
-                                        handleViewTransaction(transaction)
-                                      }
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                  </td>
-                                </tr>
-                              );
-                            });
-                          })()
-                        )}
-                      </tbody>
+                                        <td className="px-4 py-3 text-sm text-gray-600  truncate">
+                                          {highlightText(
+                                            transaction.remarks || "-",
+                                            filters.accountSearch
+                                          )}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-600 truncate">
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                              handleViewTransaction(transaction)
+                                            }
+                                          >
+                                            <Eye className="h-4 w-4" />
+                                          </Button>
+                                        </td>
+                                      </tr>
+                                    );
+                                  }
+                                );
+                              })()
+                            )}
+                          </tbody>
                         </table>
                       </div>
                     </div>
@@ -998,15 +1065,25 @@ export default function AccountingReports() {
                   {isMobile ? (
                     <div className="space-y-3">
                       {(() => {
-                        if (!Array.isArray(filteredTransactions) || filteredTransactions.length === 0) {
-                          return <div className="text-center py-8 text-gray-500">No data available</div>;
+                        if (
+                          !Array.isArray(filteredTransactions) ||
+                          filteredTransactions.length === 0
+                        ) {
+                          return (
+                            <div className="text-center py-8 text-gray-500">
+                              No data available
+                            </div>
+                          );
                         }
 
                         const accountSummary = {};
                         filteredTransactions.forEach((t) => {
                           const accountName = getAccountName(t.acc_id);
                           if (!accountSummary[accountName]) {
-                            accountSummary[accountName] = { debit: 0, credit: 0 };
+                            accountSummary[accountName] = {
+                              debit: 0,
+                              credit: 0,
+                            };
                           }
                           accountSummary[accountName].debit += t.debit || 0;
                           accountSummary[accountName].credit += t.credit || 0;
@@ -1014,41 +1091,57 @@ export default function AccountingReports() {
 
                         return (
                           <>
-                            {Object.entries(accountSummary).map(([account, amounts]) => (
-                              <Card key={account} className="border">
-                                <CardContent className="p-4 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-500">Account</span>
-                                    <span className="text-sm font-medium">{account}</span>
-                                  </div>
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-500">Debit</span>
-                                    <span className="text-sm font-medium text-green-700">
-                                      {formatCurrency(amounts.debit)}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-500">Credit</span>
-                                    <span className="text-sm font-medium text-red-700">
-                                      {formatCurrency(amounts.credit)}
-                                    </span>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
+                            {Object.entries(accountSummary).map(
+                              ([account, amounts]) => (
+                                <Card key={account} className="border">
+                                  <CardContent className="p-4 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-500">
+                                        Account
+                                      </span>
+                                      <span className="text-sm font-medium">
+                                        {account}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-500">
+                                        Debit
+                                      </span>
+                                      <span className="text-sm font-medium text-green-700">
+                                        {formatCurrency(amounts.debit)}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-500">
+                                        Credit
+                                      </span>
+                                      <span className="text-sm font-medium text-red-700">
+                                        {formatCurrency(amounts.credit)}
+                                      </span>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )
+                            )}
                             <Card className="border-2 border-blue-200 bg-blue-50">
                               <CardContent className="p-4 space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-sm font-bold">TOTAL</span>
+                                  <span className="text-sm font-bold">
+                                    TOTAL
+                                  </span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-600">Total Debit</span>
+                                  <span className="text-xs text-gray-600">
+                                    Total Debit
+                                  </span>
                                   <span className="text-sm font-bold text-green-700">
                                     {formatCurrency(summary.totalDebit)}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-600">Total Credit</span>
+                                  <span className="text-xs text-gray-600">
+                                    Total Credit
+                                  </span>
                                   <span className="text-sm font-bold text-red-700">
                                     {formatCurrency(summary.totalCredit)}
                                   </span>
@@ -1063,86 +1156,88 @@ export default function AccountingReports() {
                     <div className="border rounded-lg overflow-hidden">
                       <div className="max-h-[600px] overflow-auto">
                         <table className="w-full">
-                      <thead className="bg-blue-50 sticky top-0">
-                        <tr className="border-b">
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Account Name
-                          </th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                            Debit
-                          </th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                            Credit
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white">
-                        {(() => {
-                          if (
-                            !Array.isArray(filteredTransactions) ||
-                            filteredTransactions.length === 0
-                          ) {
-                            return (
-                              <tr>
-                                <td
-                                  colSpan={3}
-                                  className="text-center py-8 text-gray-500"
-                                >
-                                  No data available
-                                </td>
-                              </tr>
-                            );
-                          }
-
-                          const accountSummary = {};
-                          filteredTransactions.forEach((t) => {
-                            const accountName = getAccountName(t.acc_id);
-                            if (!accountSummary[accountName]) {
-                              accountSummary[accountName] = {
-                                debit: 0,
-                                credit: 0,
-                              };
-                            }
-                            accountSummary[accountName].debit += t.debit || 0;
-                            accountSummary[accountName].credit += t.credit || 0;
-                          });
-
-                          return (
-                            <>
-                              {Object.entries(accountSummary).map(
-                                ([account, amounts]) => (
-                                  <tr
-                                    key={account}
-                                    className="border-b hover:bg-gray-50"
-                                  >
-                                    <td className="px-4 py-3 font-medium text-sm">
-                                      {highlightText(
-                                        account,
-                                        filters.accountSearch
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-3 text-right font-medium text-green-700 text-sm">
-                                      {formatCurrency(amounts.debit)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right font-medium text-red-700 text-sm">
-                                      {formatCurrency(amounts.credit)}
+                          <thead className="bg-blue-50 sticky top-0">
+                            <tr className="border-b">
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Account Name
+                              </th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                Debit
+                              </th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                Credit
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white">
+                            {(() => {
+                              if (
+                                !Array.isArray(filteredTransactions) ||
+                                filteredTransactions.length === 0
+                              ) {
+                                return (
+                                  <tr>
+                                    <td
+                                      colSpan={3}
+                                      className="text-center py-8 text-gray-500"
+                                    >
+                                      No data available
                                     </td>
                                   </tr>
-                                )
-                              )}
-                              <tr className="bg-blue-50 font-bold border-t-2">
-                                <td className="px-4 py-3 text-sm">TOTAL</td>
-                                <td className="px-4 py-3 text-right text-green-700 text-sm">
-                                  {formatCurrency(summary.totalDebit)}
-                                </td>
-                                <td className="px-4 py-3 text-right text-red-700 text-sm">
-                                  {formatCurrency(summary.totalCredit)}
-                                </td>
-                              </tr>
-                            </>
-                          );
-                        })()}
-                      </tbody>
+                                );
+                              }
+
+                              const accountSummary = {};
+                              filteredTransactions.forEach((t) => {
+                                const accountName = getAccountName(t.acc_id);
+                                if (!accountSummary[accountName]) {
+                                  accountSummary[accountName] = {
+                                    debit: 0,
+                                    credit: 0,
+                                  };
+                                }
+                                accountSummary[accountName].debit +=
+                                  t.debit || 0;
+                                accountSummary[accountName].credit +=
+                                  t.credit || 0;
+                              });
+
+                              return (
+                                <>
+                                  {Object.entries(accountSummary).map(
+                                    ([account, amounts]) => (
+                                      <tr
+                                        key={account}
+                                        className="border-b hover:bg-gray-50"
+                                      >
+                                        <td className="px-4 py-3 font-medium text-sm">
+                                          {highlightText(
+                                            account,
+                                            filters.accountSearch
+                                          )}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-medium text-green-700 text-sm">
+                                          {formatCurrency(amounts.debit)}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-medium text-red-700 text-sm">
+                                          {formatCurrency(amounts.credit)}
+                                        </td>
+                                      </tr>
+                                    )
+                                  )}
+                                  <tr className="bg-blue-50 font-bold border-t-2">
+                                    <td className="px-4 py-3 text-sm">TOTAL</td>
+                                    <td className="px-4 py-3 text-right text-green-700 text-sm">
+                                      {formatCurrency(summary.totalDebit)}
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-red-700 text-sm">
+                                      {formatCurrency(summary.totalCredit)}
+                                    </td>
+                                  </tr>
+                                </>
+                              );
+                            })()}
+                          </tbody>
                         </table>
                       </div>
                     </div>
@@ -1163,40 +1258,64 @@ export default function AccountingReports() {
                 <MobileListToggle title="Day Book">
                   {isMobile ? (
                     <div className="space-y-3">
-                      {!Array.isArray(filteredTransactions) || filteredTransactions.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">No transactions found</div>
+                      {!Array.isArray(filteredTransactions) ||
+                      filteredTransactions.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          No transactions found
+                        </div>
                       ) : (
                         filteredTransactions.map((transaction) => (
-                          <Card key={transaction.transaction_id} className="border">
+                          <Card
+                            key={transaction.transaction_id}
+                            className="border"
+                          >
                             <CardContent className="p-4 space-y-2">
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Date</span>
-                                <span className="text-sm font-medium">{formatDate(transaction.transaction_dat)}</span>
+                                <span className="text-xs text-gray-500">
+                                  Date
+                                </span>
+                                <span className="text-sm font-medium">
+                                  {formatDate(transaction.transaction_dat)}
+                                </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Voucher</span>
+                                <span className="text-xs text-gray-500">
+                                  Voucher
+                                </span>
                                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                                   {transaction.voucher_type}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Account</span>
-                                <span className="text-sm font-medium">{getAccountName(transaction.acc_id)}</span>
+                                <span className="text-xs text-gray-500">
+                                  Account
+                                </span>
+                                <span className="text-sm font-medium">
+                                  {getAccountName(transaction.acc_id)}
+                                </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Remarks</span>
+                                <span className="text-xs text-gray-500">
+                                  Remarks
+                                </span>
                                 <span className="text-xs text-gray-500 truncate max-w-[60%]">
                                   {transaction.remarks || "-"}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Amount</span>
+                                <span className="text-xs text-gray-500">
+                                  Amount
+                                </span>
                                 <span className="text-sm font-medium">
-                                  {formatCurrency(transaction.debit || transaction.credit || 0)}
+                                  {formatCurrency(
+                                    transaction.debit || transaction.credit || 0
+                                  )}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Type</span>
+                                <span className="text-xs text-gray-500">
+                                  Type
+                                </span>
                                 {transaction.debit ? (
                                   <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
                                     Debit
@@ -1216,84 +1335,86 @@ export default function AccountingReports() {
                     <div className="border rounded-lg overflow-hidden">
                       <div className="max-h-[600px] overflow-auto">
                         <table className="w-full">
-                      <thead className="bg-blue-50 sticky top-0">
-                        <tr className="border-b">
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Date
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Voucher
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Particulars
-                          </th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                            Amount
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                            Type
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white">
-                        {!Array.isArray(filteredTransactions) ||
-                        filteredTransactions.length === 0 ? (
-                          <tr>
-                            <td
-                              colSpan={5}
-                              className="text-center py-8 text-gray-500"
-                            >
-                              No transactions found
-                            </td>
-                          </tr>
-                        ) : (
-                          filteredTransactions.map((transaction) => (
-                            <tr
-                              key={transaction.transaction_id}
-                              className="border-b hover:bg-gray-50"
-                            >
-                              <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                {formatDate(transaction.transaction_dat)}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                                  {transaction.voucher_type}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="font-medium text-sm">
-                                  {highlightText(
-                                    getAccountName(transaction.acc_id),
-                                    filters.accountSearch
-                                  )}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {highlightText(
-                                    transaction.remarks || "",
-                                    filters.accountSearch
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-right font-medium text-sm">
-                                {formatCurrency(
-                                  transaction.debit || transaction.credit || 0
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                {transaction.debit ? (
-                                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-                                    Debit
-                                  </span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-                                    Credit
-                                  </span>
-                                )}
-                              </td>
+                          <thead className="bg-blue-50 sticky top-0">
+                            <tr className="border-b">
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Date
+                              </th>
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Voucher
+                              </th>
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Particulars
+                              </th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                Amount
+                              </th>
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                Type
+                              </th>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
+                          </thead>
+                          <tbody className="bg-white">
+                            {!Array.isArray(filteredTransactions) ||
+                            filteredTransactions.length === 0 ? (
+                              <tr>
+                                <td
+                                  colSpan={5}
+                                  className="text-center py-8 text-gray-500"
+                                >
+                                  No transactions found
+                                </td>
+                              </tr>
+                            ) : (
+                              filteredTransactions.map((transaction) => (
+                                <tr
+                                  key={transaction.transaction_id}
+                                  className="border-b hover:bg-gray-50"
+                                >
+                                  <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                    {formatDate(transaction.transaction_dat)}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                      {transaction.voucher_type}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="font-medium text-sm">
+                                      {highlightText(
+                                        getAccountName(transaction.acc_id),
+                                        filters.accountSearch
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {highlightText(
+                                        transaction.remarks || "",
+                                        filters.accountSearch
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3 text-right font-medium text-sm">
+                                    {formatCurrency(
+                                      transaction.debit ||
+                                        transaction.credit ||
+                                        0
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    {transaction.debit ? (
+                                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                                        Debit
+                                      </span>
+                                    ) : (
+                                      <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                                        Credit
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
                         </table>
                       </div>
                     </div>
@@ -1303,7 +1424,6 @@ export default function AccountingReports() {
             </Card>
           </TabsContent>
         </Tabs>
-
 
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetContent className="w-[500px] sm:max-w-[500px] max-h-[85vh] overflow-y-auto px-3 py-2">
