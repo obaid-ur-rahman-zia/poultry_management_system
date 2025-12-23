@@ -35,6 +35,7 @@ export async function createTransactions(unitExpense, supplierId, tx) {
       financial_year: financialYear,
       reference: "Unit Expense",
       transaction_dat: expenseDate,
+      voucher_type: "UE",
     };
 
     // Get floc information

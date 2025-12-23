@@ -792,7 +792,7 @@ export default function AccountingReports() {
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="text-xs text-gray-500">
-                                  Voucher
+                                  Type
                                 </span>
                                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                                   {transaction.voucher_type}
@@ -880,7 +880,7 @@ export default function AccountingReports() {
                                 Date
                               </th>
                               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Voucher
+                                Type
                               </th>
 
                               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
