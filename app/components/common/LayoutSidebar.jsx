@@ -46,11 +46,11 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import Image from "next/image";
-import { navigationItems } from "@/utils/links";
+import { navigationItems } from "@/app/(interfaces)/reports/incomeReports/links";
 import MobileBottomNav from "./MobileBottomNav";
 
-const Sidebar = ({ 
-  isOpen, 
+const Sidebar = ({
+  isOpen,
   toggleSidebar,
   isPinned,
   setIsPinned,
@@ -60,7 +60,7 @@ const Sidebar = ({
   setIsHovered,
   handleMouseEnter,
   handleMouseLeave,
-  isExpanded
+  isExpanded,
 }) => {
   const pathname = usePathname();
   const [expandedSections, setExpandedSections] = useState({
@@ -85,7 +85,6 @@ const Sidebar = ({
       [section]: !prev[section],
     }));
   };
-
 
   const isActive = (href) => pathname === href;
 
@@ -146,7 +145,11 @@ const Sidebar = ({
     return <div className="group relative">{linkContent}</div>;
   };
 
-  const GroupHeader = ({ item, sectionKey, isExpanded: expanded = isExpanded }) => {
+  const GroupHeader = ({
+    item,
+    sectionKey,
+    isExpanded: expanded = isExpanded,
+  }) => {
     const Icon = item.icon;
     const sectionExpanded = expandedSections[sectionKey];
 
@@ -233,11 +236,7 @@ const Sidebar = ({
               {navigationItems.map((item) => {
                 if (item.type === "single") {
                   return (
-                    <SidebarLink
-                      key={item.id}
-                      item={item}
-                      isExpanded={true}
-                    />
+                    <SidebarLink key={item.id} item={item} isExpanded={true} />
                   );
                 }
 
@@ -245,7 +244,11 @@ const Sidebar = ({
                   const sectionExpanded = expandedSections[item.id];
                   return (
                     <div key={item.id} className="space-y-1">
-                      <GroupHeader item={item} sectionKey={item.id} isExpanded={true} />
+                      <GroupHeader
+                        item={item}
+                        sectionKey={item.id}
+                        isExpanded={true}
+                      />
                       {sectionExpanded && (
                         <div className="ml-4 space-y-1 border-l-2 border-border pl-2">
                           {item.children.map((child) => (
@@ -278,7 +281,13 @@ const Sidebar = ({
           bg-primary border-r border-border shadow-lg
           transition-all duration-300 ease-in-out
           ${isExpanded ? "w-64" : "w-16"}
-          ${!isPinned && isExpanded ? "z-50 shadow-2xl" : isPinned ? "z-10" : "z-50"}
+          ${
+            !isPinned && isExpanded
+              ? "z-50 shadow-2xl"
+              : isPinned
+              ? "z-10"
+              : "z-50"
+          }
           flex-col shrink-0
         `}
       >
@@ -309,29 +318,32 @@ const Sidebar = ({
 
           {/* Desktop Controls */}
           <div className="hidden lg:flex items-center gap-1">
-             {/* Pin/Unpin Button */}
-             <Tooltip delayDuration={300}>
-               <TooltipTrigger asChild>
-                 <button
-                   onClick={togglePin}
-                   className={`h-8 w-8 items-center bg-accent justify-center rounded-md hover:bg-secondary hover:text-accent-foreground transition-colors flex ${
-                     isPinned ? "bg-secondary text-accent-foreground" : ""
-                   }`}
-                 >
-                   {isPinned ? (
-                     <div className="relative h-4 w-4">
-                       <Circle className="h-4 w-4 absolute" strokeWidth={2} />
-                       <Circle className="h-2.5 w-2.5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="currentColor" />
-                     </div>
-                   ) : (
-                     <Circle className="h-4 w-4" strokeWidth={2} />
-                   )}
-                 </button>
-               </TooltipTrigger>
-               <TooltipContent side="right">
-                 {isPinned ? "Unpin sidebar" : "Pin sidebar"}
-               </TooltipContent>
-             </Tooltip>
+            {/* Pin/Unpin Button */}
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={togglePin}
+                  className={`h-8 w-8 items-center bg-accent justify-center rounded-md hover:bg-secondary hover:text-accent-foreground transition-colors flex ${
+                    isPinned ? "bg-secondary text-accent-foreground" : ""
+                  }`}
+                >
+                  {isPinned ? (
+                    <div className="relative h-4 w-4">
+                      <Circle className="h-4 w-4 absolute" strokeWidth={2} />
+                      <Circle
+                        className="h-2.5 w-2.5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        fill="currentColor"
+                      />
+                    </div>
+                  ) : (
+                    <Circle className="h-4 w-4" strokeWidth={2} />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {isPinned ? "Unpin sidebar" : "Pin sidebar"}
+              </TooltipContent>
+            </Tooltip>
 
             {/* Collapse/Expand Button - Only show when pinned */}
             {/* {isPinned && (
@@ -448,8 +460,8 @@ const LayoutSidebar = ({ children }) => {
         </button>
 
         {/* Sidebar - Desktop as aside, Mobile as Sheet */}
-        <Sidebar 
-          isOpen={sidebarOpen} 
+        <Sidebar
+          isOpen={sidebarOpen}
           toggleSidebar={toggleSidebar}
           isPinned={isPinned}
           setIsPinned={setIsPinned}
@@ -463,9 +475,7 @@ const LayoutSidebar = ({ children }) => {
         />
 
         {/* Content Area with mobile padding for bottom nav */}
-        <div className="flex-1 lg:pb-0 pb-16">
-          {children}
-        </div>
+        <div className="flex-1 lg:pb-0 pb-16">{children}</div>
 
         {/* Mobile Bottom Navigation */}
         <MobileBottomNav />
