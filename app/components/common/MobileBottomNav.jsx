@@ -61,9 +61,9 @@ const MobileBottomNav = () => {
         `}
       >
         <Icon className="h-5 w-5" />
-        <span className="text-xs font-medium truncate w-full text-center">
+        {/* <span className="text-xs font-medium truncate w-full text-center">
           {item.title}
-        </span>
+        </span> */}
         {active && (
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-8 rounded-full bg-primary" />
         )}
@@ -145,7 +145,7 @@ const MobileBottomNav = () => {
             `}
           >
             <MoreHorizontal className="h-5 w-5" />
-            <span className="text-xs font-medium">More</span>
+            {/* <span className="text-xs font-medium">More</span> */}
           </button>
         </div>
       </nav>
