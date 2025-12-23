@@ -64,12 +64,15 @@ class UnitSaleController {
   async checkFsRate(req) {
     try {
       const { searchParams } = new URL(req.url);
-      const prounit_id = searchParams.get("prounit_id") || searchParams.get("farm_id");
+      const prounit_id =
+        searchParams.get("prounit_id") || searchParams.get("farm_id");
       const floc_id = searchParams.get("floc_id");
       const sale_date = searchParams.get("sale_date");
 
       if (!prounit_id || !floc_id || !sale_date) {
-        const error = new Error("prounit_id (or farm_id), floc_id, and sale_date are required");
+        const error = new Error(
+          "prounit_id (or farm_id), floc_id, and sale_date are required"
+        );
         ErrorLogger.log(
           "Failed to check F.S Rate in Method: UnitSaleController.checkFsRate",
           error
@@ -77,20 +80,30 @@ class UnitSaleController {
         return errorResponse(error, 400);
       }
 
-      const fsRate = await UnitSaleRepository.checkFsRateForToday(prounit_id, floc_id, sale_date);
-      
+      const fsRate = await UnitSaleRepository.checkFsRateForToday(
+        prounit_id,
+        floc_id,
+        sale_date
+      );
+
       if (fsRate) {
-        return successResponse({
-          exists: true,
-          farm_rate: fsRate.farm_rate,
-          sale_rate: fsRate.sale_rate,
-        }, "F.S Rate found");
+        return successResponse(
+          {
+            exists: true,
+            farm_rate: fsRate.farm_rate,
+            sale_rate: fsRate.sale_rate,
+          },
+          "F.S Rate found"
+        );
       } else {
-        return successResponse({
-          exists: false,
-          farm_rate: null,
-          sale_rate: null,
-        }, "F.S Rate not found");
+        return successResponse(
+          {
+            exists: false,
+            farm_rate: null,
+            sale_rate: null,
+          },
+          "F.S Rate not found"
+        );
       }
     } catch (err) {
       ErrorLogger.log(
@@ -104,11 +117,14 @@ class UnitSaleController {
   async getPreviousFsRates(req) {
     try {
       const { searchParams } = new URL(req.url);
-      const prounit_id = searchParams.get("prounit_id") || searchParams.get("farm_id");
+      const prounit_id =
+        searchParams.get("prounit_id") || searchParams.get("farm_id");
       const floc_id = searchParams.get("floc_id");
 
       if (!prounit_id || !floc_id) {
-        const error = new Error("prounit_id (or farm_id) and floc_id are required");
+        const error = new Error(
+          "prounit_id (or farm_id) and floc_id are required"
+        );
         ErrorLogger.log(
           "Failed to get previous F.S Rates in Method: UnitSaleController.getPreviousFsRates",
           error
@@ -116,8 +132,11 @@ class UnitSaleController {
         return errorResponse(error, 400);
       }
 
-      const rates = await UnitSaleRepository.getPreviousFsRates(prounit_id, floc_id);
-      const formattedRates = rates.map(rate => ({
+      const rates = await UnitSaleRepository.getPreviousFsRates(
+        prounit_id,
+        floc_id
+      );
+      const formattedRates = rates.map((rate) => ({
         date: rate.rate_date,
         farm_rate: rate.farm_rate,
         sale_rate: rate.sale_rate,
@@ -138,9 +157,27 @@ class UnitSaleController {
       const { req_object } = await req.json();
       // Support both prounit_id and farm_id for backward compatibility
       const prounit_id = req_object.prounit_id || req_object.farm_id;
-      const { sale_date, floc_id, customer_id, product_id, price, quantity, set_fs_rate, farm_rate, sale_rate } = req_object;
+      const {
+        sale_date,
+        floc_id,
+        customer_id,
+        product_id,
+        price,
+        quantity,
+        set_fs_rate,
+        farm_rate,
+        sale_rate,
+      } = req_object;
 
-      if (!sale_date || !prounit_id || !floc_id || !customer_id || !product_id || !price || !quantity) {
+      if (
+        !sale_date ||
+        !prounit_id ||
+        !floc_id ||
+        !customer_id ||
+        !product_id ||
+        !price ||
+        !quantity
+      ) {
         const error = new Error(
           "sale_date, prounit_id (or farm_id), floc_id, customer_id, product_id, price, and quantity are required in Method: UnitSaleController.create"
         );
@@ -175,40 +212,46 @@ class UnitSaleController {
               });
 
               if (!existingRate) {
-                await UnitSaleRepository.createDailyFsRate({
-                  rate_date: sale_date,
-                  prounit_id: Number(prounit_id),
-                  floc_id: Number(floc_id),
-                  farm_rate: Number(farm_rate),
-                  sale_rate: Number(sale_rate),
-                  insert_by: req_object.insert_by || "user 1",
-                  update_by: req_object.update_by || "user 1",
-                  status: 1,
-                }, tx);
+                await UnitSaleRepository.createDailyFsRate(
+                  {
+                    rate_date: sale_date,
+                    prounit_id: Number(prounit_id),
+                    floc_id: Number(floc_id),
+                    farm_rate: Number(farm_rate),
+                    sale_rate: Number(sale_rate),
+                    insert_by: req_object.insert_by || "user 1",
+                    update_by: req_object.update_by || "user 1",
+                    status: 1,
+                  },
+                  tx
+                );
               }
             }
 
             // Create unit sale
-            const createdSale = await UnitSaleRepository.create({
-              sale_date,
-              prounit_id: Number(prounit_id),
-              floc_id: Number(floc_id),
-              customer_id: Number(customer_id),
-              farm_rate: farm_rate ? Number(farm_rate) : null,
-              sale_rate: sale_rate ? Number(sale_rate) : null,
-              product_id: Number(product_id),
-              price: Number(price),
-              quantity: Number(quantity),
-              tax_type: req_object.tax_type || "flat",
-              tax_value: req_object.tax_value || 0,
-              discount_type: req_object.discount_type || "percentage",
-              discount_value: req_object.discount_value || 0,
-              total: Number(req_object.total),
-              description: req_object.description || null,
-              insert_by: req_object.insert_by || "user 1",
-              update_by: req_object.update_by || "user 1",
-              status: req_object.status ?? 1,
-            }, tx);
+            const createdSale = await UnitSaleRepository.create(
+              {
+                sale_date,
+                prounit_id: Number(prounit_id),
+                floc_id: Number(floc_id),
+                customer_id: Number(customer_id),
+                farm_rate: farm_rate ? Number(farm_rate) : null,
+                sale_rate: sale_rate ? Number(sale_rate) : null,
+                product_id: Number(product_id),
+                price: Number(price),
+                quantity: Number(quantity),
+                tax_type: req_object.tax_type || "flat",
+                tax_value: req_object.tax_value || 0,
+                discount_type: req_object.discount_type || "percentage",
+                discount_value: req_object.discount_value || 0,
+                total: Number(req_object.total),
+                description: req_object.description || null,
+                insert_by: req_object.insert_by || "user 1",
+                update_by: req_object.update_by || "user 1",
+                status: req_object.status ?? 1,
+              },
+              tx
+            );
 
             // CRITICAL: Validate sale was created successfully
             if (!createdSale || !createdSale.sale_id) {
@@ -268,18 +311,36 @@ class UnitSaleController {
 
       // Support both prounit_id and farm_id for backward compatibility
       const prounit_id = req_object.prounit_id || req_object.farm_id;
-      
+
       const result = await UnitSaleRepository.update(sale_id, {
         ...req_object,
         prounit_id: prounit_id !== undefined ? Number(prounit_id) : undefined,
         floc_id: req_object.floc_id ? Number(req_object.floc_id) : undefined,
-        farm_rate: req_object.farm_rate !== undefined ? (req_object.farm_rate ? Number(req_object.farm_rate) : null) : undefined,
-        sale_rate: req_object.sale_rate !== undefined ? (req_object.sale_rate ? Number(req_object.sale_rate) : null) : undefined,
-        product_id: req_object.product_id ? Number(req_object.product_id) : undefined,
+        farm_rate:
+          req_object.farm_rate !== undefined
+            ? req_object.farm_rate
+              ? Number(req_object.farm_rate)
+              : null
+            : undefined,
+        sale_rate:
+          req_object.sale_rate !== undefined
+            ? req_object.sale_rate
+              ? Number(req_object.sale_rate)
+              : null
+            : undefined,
+        product_id: req_object.product_id
+          ? Number(req_object.product_id)
+          : undefined,
         price: req_object.price ? Number(req_object.price) : undefined,
         quantity: req_object.quantity ? Number(req_object.quantity) : undefined,
-        tax_value: req_object.tax_value !== undefined ? Number(req_object.tax_value) : undefined,
-        discount_value: req_object.discount_value !== undefined ? Number(req_object.discount_value) : undefined,
+        tax_value:
+          req_object.tax_value !== undefined
+            ? Number(req_object.tax_value)
+            : undefined,
+        discount_value:
+          req_object.discount_value !== undefined
+            ? Number(req_object.discount_value)
+            : undefined,
         total: req_object.total ? Number(req_object.total) : undefined,
       });
 
@@ -333,7 +394,39 @@ class UnitSaleController {
       return errorResponse(err, 500);
     }
   }
+
+  async readReportDetail(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const customer_id = searchParams.get("customer_id");
+      const product_id = searchParams.get("product_id");
+
+      if (!start_dat || !end_dat) {
+        const error = new Error("start_dat and end_dat are required");
+        ErrorLogger.log(
+          "Failed to read report detail in Method: UnitSaleController.readReportDetail",
+          error
+        );
+        return errorResponse(error, 400);
+      }
+      const unitSale = await UnitSaleRepository.readReportDetail({
+        start_dat: start_dat,
+        end_dat: end_dat,
+        customer_id: customer_id || null,
+        product_id: product_id || null,
+      });
+
+      return successResponse(unitSale, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to read report detail in Method: UnitSaleController.readReportDetail",
+        err
+      );
+      return errorResponse(err, 500);
+    }
+  }
 }
 
 export default new UnitSaleController();
-

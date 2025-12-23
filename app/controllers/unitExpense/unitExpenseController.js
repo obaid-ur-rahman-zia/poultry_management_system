@@ -66,9 +66,25 @@ class UnitExpenseController {
       const { req_object } = await req.json();
       // Support both prounit_id and farm_id for backward compatibility
       const prounit_id = req_object.prounit_id || req_object.farm_id;
-      const { expense_date, floc_id, supplier_id, product_id, price, quantity, total } = req_object;
+      const {
+        expense_date,
+        floc_id,
+        supplier_id,
+        product_id,
+        price,
+        quantity,
+        total,
+      } = req_object;
 
-      if (!expense_date || !prounit_id || !floc_id || !supplier_id || !product_id || !price || !quantity) {
+      if (
+        !expense_date ||
+        !prounit_id ||
+        !floc_id ||
+        !supplier_id ||
+        !product_id ||
+        !price ||
+        !quantity
+      ) {
         const error = new Error(
           "expense_date, prounit_id (or farm_id), floc_id, supplier_id, product_id, price, and quantity are required in Method: UnitExpenseController.create"
         );
@@ -84,24 +100,27 @@ class UnitExpenseController {
         async (tx) => {
           try {
             // Create unit expense
-            const createdExpense = await UnitExpenseRepository.create({
-              expense_date,
-              prounit_id: Number(prounit_id),
-              floc_id: Number(floc_id),
-              supplier_id: Number(supplier_id),
-              product_id: Number(product_id),
-              price: Number(price),
-              quantity: Number(quantity),
-              tax_type: req_object.tax_type || "flat",
-              tax_value: req_object.tax_value || 0,
-              discount_type: req_object.discount_type || "percentage",
-              discount_value: req_object.discount_value || 0,
-              total: Number(total),
-              description: req_object.description || null,
-              insert_by: req_object.insert_by || "user 1",
-              update_by: req_object.update_by || "user 1",
-              status: req_object.status ?? 1,
-            }, tx);
+            const createdExpense = await UnitExpenseRepository.create(
+              {
+                expense_date,
+                prounit_id: Number(prounit_id),
+                floc_id: Number(floc_id),
+                supplier_id: Number(supplier_id),
+                product_id: Number(product_id),
+                price: Number(price),
+                quantity: Number(quantity),
+                tax_type: req_object.tax_type || "flat",
+                tax_value: req_object.tax_value || 0,
+                discount_type: req_object.discount_type || "percentage",
+                discount_value: req_object.discount_value || 0,
+                total: Number(total),
+                description: req_object.description || null,
+                insert_by: req_object.insert_by || "user 1",
+                update_by: req_object.update_by || "user 1",
+                status: req_object.status ?? 1,
+              },
+              tx
+            );
 
             // CRITICAL: Validate expense was created successfully
             if (!createdExpense || !createdExpense.expense_id) {
@@ -109,7 +128,11 @@ class UnitExpenseController {
             }
 
             // Create all related transactions - this will throw if any transaction fails
-            await createTransactions(createdExpense, req_object.supplier_id, tx);
+            await createTransactions(
+              createdExpense,
+              req_object.supplier_id,
+              tx
+            );
 
             return createdExpense;
           } catch (transactionError) {
@@ -163,16 +186,24 @@ class UnitExpenseController {
 
       // Support both prounit_id and farm_id for backward compatibility
       const prounit_id = req_object.prounit_id || req_object.farm_id;
-      
+
       const result = await UnitExpenseRepository.update(expense_id, {
         ...req_object,
         prounit_id: prounit_id !== undefined ? Number(prounit_id) : undefined,
         floc_id: req_object.floc_id ? Number(req_object.floc_id) : undefined,
-        product_id: req_object.product_id ? Number(req_object.product_id) : undefined,
+        product_id: req_object.product_id
+          ? Number(req_object.product_id)
+          : undefined,
         price: req_object.price ? Number(req_object.price) : undefined,
         quantity: req_object.quantity ? Number(req_object.quantity) : undefined,
-        tax_value: req_object.tax_value !== undefined ? Number(req_object.tax_value) : undefined,
-        discount_value: req_object.discount_value !== undefined ? Number(req_object.discount_value) : undefined,
+        tax_value:
+          req_object.tax_value !== undefined
+            ? Number(req_object.tax_value)
+            : undefined,
+        discount_value:
+          req_object.discount_value !== undefined
+            ? Number(req_object.discount_value)
+            : undefined,
         total: req_object.total ? Number(req_object.total) : undefined,
       });
 
@@ -226,7 +257,39 @@ class UnitExpenseController {
       return errorResponse(err, 500);
     }
   }
+
+  async readReportDetail(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const supplier_id = searchParams.get("supplier_id");
+      const product_id = searchParams.get("product_id");
+
+      if (!start_dat || !end_dat) {
+        const error = new Error("start_dat and end_dat are required");
+        ErrorLogger.log(
+          "Failed to read report detail in Method: UnitExpenseController.readReportDetail",
+          error
+        );
+        return errorResponse(error, 400);
+      }
+      const unitExpense = await UnitExpenseRepository.readReportDetail({
+        start_dat: start_dat,
+        end_dat: end_dat,
+        supplier_id: supplier_id || null,
+        product_id: product_id || null,
+      });
+
+      return successResponse(unitExpense, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to read report detail in Method: UnitExpenseController.readReportDetail",
+        err
+      );
+      return errorResponse(err, 500);
+    }
+  }
 }
 
 export default new UnitExpenseController();
-
