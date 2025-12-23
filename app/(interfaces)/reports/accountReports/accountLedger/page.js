@@ -129,10 +129,7 @@ export default function AccountLedgerModal() {
 
   const accountOptions = accounts.map((a) => ({
     value: a.acc_id,
-    label:
-      a.is_customer === 1
-        ? a.account_nam + "-" + a.subarea.subarea_nam
-        : a.account_nam,
+    label: a.account_nam,
   }));
 
   const handleDownloadPDF = async () => {
@@ -317,9 +314,7 @@ export default function AccountLedgerModal() {
                       </span>
                       {selectedAccountData.is_customer === 1 ? (
                         <span className="text-gray-900">
-                          {selectedAccountData.account_nam +
-                            "-" +
-                            selectedAccountData.subarea.subarea_nam}
+                          {selectedAccountData.account_nam}
                         </span>
                       ) : (
                         <span className="text-gray-900">

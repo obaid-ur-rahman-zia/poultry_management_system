@@ -41,6 +41,100 @@ class TransactionRepository {
     });
   }
 
+  async readTrialBalance(req_object) {
+    const { start_dat, end_dat } = req_object;
+
+    const dateFilter = {};
+    if (start_dat && end_dat) {
+      dateFilter.transaction_dat = {
+        gte: new Date(start_dat),
+        lte: new Date(end_dat),
+      };
+    } else if (start_dat) {
+      dateFilter.transaction_dat = {
+        gte: new Date(start_dat),
+      };
+    } else if (end_dat) {
+      dateFilter.transaction_dat = {
+        lte: new Date(end_dat),
+      };
+    }
+
+    const transactions = await prisma.transaction.groupBy({
+      by: ["acc_id"],
+      where: {
+        isDeleted: false,
+        ...dateFilter,
+      },
+      _sum: {
+        debit: true,
+        credit: true,
+      },
+    });
+    const accountIds = transactions.map((t) => t.acc_id);
+    const accounts = await prisma.accounts.findMany({
+      where: {
+        acc_id: {
+          in: accountIds,
+        },
+      },
+      select: {
+        acc_id: true,
+        account_nam: true,
+        head_id: true,
+        sub_id: true,
+        account_id: true,
+      },
+    });
+    const accountMap = new Map(accounts.map((acc) => [acc.acc_id, acc]));
+    const balances = transactions
+      .map((trans) => {
+        const account = accountMap.get(trans.acc_id);
+        if (!account) return null;
+
+        const totalDebit = trans._sum.debit || 0;
+        const totalCredit = trans._sum.credit || 0;
+        const balance = totalDebit - totalCredit;
+
+        if (balance === 0) return null;
+
+        return {
+          acc_id: trans.acc_id,
+          account_nam: account.account_nam,
+          head_id: account.head_id,
+          sub_id: account.sub_id,
+          account_id: account.account_id,
+          debit_balance: balance > 0 ? balance : 0,
+          credit_balance: balance < 0 ? Math.abs(balance) : 0,
+        };
+      })
+      .filter((item) => item !== null);
+
+    const debitAccounts = balances
+      .filter((acc) => acc.debit_balance > 0)
+      .sort((a, b) => a.account_nam.localeCompare(b.account_nam));
+
+    const creditAccounts = balances
+      .filter((acc) => acc.credit_balance > 0)
+      .sort((a, b) => a.account_nam.localeCompare(b.account_nam));
+
+    const sortedBalances = [...debitAccounts, ...creditAccounts];
+
+    const totalDebit = sortedBalances.reduce(
+      (sum, acc) => sum + acc.debit_balance,
+      0
+    );
+    const totalCredit = sortedBalances.reduce(
+      (sum, acc) => sum + acc.credit_balance,
+      0
+    );
+    return {
+      balances: sortedBalances,
+      totalDebit,
+      totalCredit,
+    };
+  }
+
   // Get opening balance (transactions before start date)
   async readOpeningBalance(req_object) {
     const { acc_id, start_dat } = req_object;
@@ -82,7 +176,7 @@ class TransactionRepository {
 
   async create(data, tx) {
     const prismaClient = tx ? tx : prisma;
-    
+
     return prismaClient.transaction.create({
       data: {
         record_no: data.record_no || null,

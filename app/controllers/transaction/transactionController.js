@@ -68,7 +68,6 @@ class TransactionController {
       return errorResponse(err, 500);
     }
   }
-
   async readLastTransaction(req) {
     try {
       const { searchParams } = new URL(req.url);
@@ -170,6 +169,25 @@ class TransactionController {
       }
       ErrorLogger.log(
         "Failed to create Transaction in Method: TransactionController.create",
+        err
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  async readTrialBalance(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const trialBalance = await transactionRepository.readTrialBalance({
+        start_dat: start_dat || null,
+        end_dat: end_dat || null,
+      });
+      return successResponse(trialBalance, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to read trial balance in Method: TransactionController.readTrialBalance",
         err
       );
       return errorResponse(err, 500);

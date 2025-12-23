@@ -103,12 +103,12 @@ class UnitSaleRepository {
       update_by: data.update_by || "user 1",
       status: data.status ?? 1,
     };
-    
+
     // Add customer_id if provided (requires schema migration)
     if (data.customer_id !== undefined) {
       createData.customer_id = Number(data.customer_id);
     }
-    
+
     return prismaClient.unit_sale.create({
       data: createData,
       include: {
@@ -124,28 +124,63 @@ class UnitSaleRepository {
     // Support both prounit_id and farm_id for backward compatibility
     const prounit_id = req_object.prounit_id || req_object.farm_id;
     const updateData = {
-      sale_date: req_object.sale_date ? new Date(req_object.sale_date) : undefined,
-      floc_id: req_object.floc_id !== undefined ? req_object.floc_id : undefined,
-      customer_id: req_object.customer_id !== undefined ? Number(req_object.customer_id) : undefined,
-      farm_rate: req_object.farm_rate !== undefined ? (req_object.farm_rate ? Number(req_object.farm_rate) : null) : undefined,
-      sale_rate: req_object.sale_rate !== undefined ? (req_object.sale_rate ? Number(req_object.sale_rate) : null) : undefined,
-      product_id: req_object.product_id !== undefined ? req_object.product_id : undefined,
-      price: req_object.price !== undefined ? Number(req_object.price) : undefined,
-      quantity: req_object.quantity !== undefined ? Number(req_object.quantity) : undefined,
-      tax_type: req_object.tax_type !== undefined ? req_object.tax_type : undefined,
-      tax_value: req_object.tax_value !== undefined ? Number(req_object.tax_value) : undefined,
-      discount_type: req_object.discount_type !== undefined ? req_object.discount_type : undefined,
-      discount_value: req_object.discount_value !== undefined ? Number(req_object.discount_value) : undefined,
-      total: req_object.total !== undefined ? Number(req_object.total) : undefined,
-      description: req_object.description !== undefined ? req_object.description : undefined,
+      sale_date: req_object.sale_date
+        ? new Date(req_object.sale_date)
+        : undefined,
+      floc_id:
+        req_object.floc_id !== undefined ? req_object.floc_id : undefined,
+      customer_id:
+        req_object.customer_id !== undefined
+          ? Number(req_object.customer_id)
+          : undefined,
+      farm_rate:
+        req_object.farm_rate !== undefined
+          ? req_object.farm_rate
+            ? Number(req_object.farm_rate)
+            : null
+          : undefined,
+      sale_rate:
+        req_object.sale_rate !== undefined
+          ? req_object.sale_rate
+            ? Number(req_object.sale_rate)
+            : null
+          : undefined,
+      product_id:
+        req_object.product_id !== undefined ? req_object.product_id : undefined,
+      price:
+        req_object.price !== undefined ? Number(req_object.price) : undefined,
+      quantity:
+        req_object.quantity !== undefined
+          ? Number(req_object.quantity)
+          : undefined,
+      tax_type:
+        req_object.tax_type !== undefined ? req_object.tax_type : undefined,
+      tax_value:
+        req_object.tax_value !== undefined
+          ? Number(req_object.tax_value)
+          : undefined,
+      discount_type:
+        req_object.discount_type !== undefined
+          ? req_object.discount_type
+          : undefined,
+      discount_value:
+        req_object.discount_value !== undefined
+          ? Number(req_object.discount_value)
+          : undefined,
+      total:
+        req_object.total !== undefined ? Number(req_object.total) : undefined,
+      description:
+        req_object.description !== undefined
+          ? req_object.description
+          : undefined,
       update_by: req_object.update_by || "user 1",
       status: req_object.status ?? 1,
     };
-    
+
     if (prounit_id !== undefined) {
       updateData.prounit_id = Number(prounit_id);
     }
-    
+
     return prismaClient.unit_sale.update({
       where: {
         sale_id: Number(sale_id),
@@ -169,7 +204,45 @@ class UnitSaleRepository {
       },
     });
   }
+
+  async readReportDetail(req_object) {
+    const { start_dat, end_dat, customer_id, product_id } = req_object;
+
+    const whereClause = {
+      sale_date: {
+        gte: new Date(start_dat),
+        lte: new Date(end_dat),
+      },
+    };
+
+    if (customer_id) {
+      whereClause.customer_id = parseInt(customer_id);
+    }
+
+    if (product_id) {
+      whereClause.product_id = parseInt(product_id);
+    }
+
+    return prisma.unit_sale.findMany({
+      where: whereClause,
+      include: {
+        customer: {
+          select: {
+            account_nam: true,
+            account_contact: true,
+          },
+        },
+        product: {
+          select: {
+            product_title: true,
+          },
+        },
+      },
+      orderBy: {
+        sale_date: "asc",
+      },
+    });
+  }
 }
 
 export default new UnitSaleRepository();
-
