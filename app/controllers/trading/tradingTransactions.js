@@ -26,6 +26,7 @@ export async function createTransactions(trading, tx) {
       remarks: `Trading#${trading.trading_id}${trading.do_number ? ` DO#${trading.do_number}` : ""}`,
       financial_year: financialYear,
       reference: "Trading",
+      voucher_type: "TR",
     };
 
     // Buy from account - Debit (payment being taken from)

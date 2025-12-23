@@ -35,6 +35,7 @@ export async function createTransactions(unitSale, customerId, tx) {
       financial_year: financialYear,
       reference: "Unit Sale",
       transaction_dat: saleDate,
+      voucher_type: "US",
     };
 
     // Get floc information

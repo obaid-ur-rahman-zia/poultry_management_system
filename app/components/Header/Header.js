@@ -352,6 +352,7 @@ const Header = () => {
                                 <Button
                                     variant="ghost"
                                     className="hidden lg:flex h-9 gap-2 px-3 hover:bg-accent"
+                                    onClick={() => window.open("https://switch2itech.cloud", "_blank")}
                                 >
                                     <ExternalLink className="h-4 w-4" />
                                     {/* <span className="text-sm font-semibold">VISIT WEBSITE</span> */}
