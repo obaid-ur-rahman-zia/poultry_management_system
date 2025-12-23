@@ -24,7 +24,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { navigationItems } from "@/app/(interfaces)/reports/incomeReports/links";
+import { navigationItems } from "@/lib/links";
 
 const MobileBottomNav = () => {
   const pathname = usePathname();

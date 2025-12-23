@@ -140,7 +140,7 @@ class UnitExpenseRepository {
   }
 
   async readReportDetail(req_object) {
-    const { start_dat, end_dat, supplier_id, product_id } = req_object;
+    const { start_dat, end_dat, supplier_id, product_id, floc_id } = req_object;
 
     const whereClause = {
       expense_date: {
@@ -155,6 +155,9 @@ class UnitExpenseRepository {
 
     if (product_id) {
       whereClause.product_id = parseInt(product_id);
+    }
+    if (floc_id) {
+      whereClause.floc_id = parseInt(floc_id);
     }
 
     return prisma.unit_expense.findMany({

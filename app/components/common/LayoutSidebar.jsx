@@ -46,7 +46,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import Image from "next/image";
-import { navigationItems } from "@/app/(interfaces)/reports/incomeReports/links";
+import { navigationItems } from "@/lib/links";
 import MobileBottomNav from "./MobileBottomNav";
 
 const Sidebar = ({

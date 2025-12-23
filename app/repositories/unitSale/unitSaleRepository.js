@@ -206,7 +206,7 @@ class UnitSaleRepository {
   }
 
   async readReportDetail(req_object) {
-    const { start_dat, end_dat, customer_id, product_id } = req_object;
+    const { start_dat, end_dat, customer_id, product_id, floc_id } = req_object;
 
     const whereClause = {
       sale_date: {
@@ -221,6 +221,9 @@ class UnitSaleRepository {
 
     if (product_id) {
       whereClause.product_id = parseInt(product_id);
+    }
+    if (floc_id) {
+      whereClause.floc_id = parseInt(floc_id);
     }
 
     return prisma.unit_sale.findMany({
@@ -243,6 +246,111 @@ class UnitSaleRepository {
       },
     });
   }
+
+  async readProfitLossReport(req_object) {
+    const { start_dat, end_dat, group_by } = req_object;
+
+    // Fetch expenses
+    const expenses = await prisma.unit_expense.findMany({
+      where: {
+        expense_date: {
+          gte: new Date(start_dat),
+          lte: new Date(end_dat),
+        },
+        status: 1,
+      },
+      select: {
+        expense_date: true,
+        total: true,
+      },
+    });
+
+    // Fetch sales
+    const sales = await prisma.unit_sale.findMany({
+      where: {
+        sale_date: {
+          gte: new Date(start_dat),
+          lte: new Date(end_dat),
+        },
+        status: 1,
+      },
+      select: {
+        sale_date: true,
+        total: true,
+      },
+    });
+
+    // Group data based on group_by parameter
+    const groupedData = new Map();
+
+    // Process expenses
+    expenses.forEach((expense) => {
+      const key = getGroupKey(expense.expense_date, group_by);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, {
+          purchase: 0,
+          sale: 0,
+          date: expense.expense_date,
+        });
+      }
+      groupedData.get(key).purchase += expense.total;
+    });
+
+    // Process sales
+    sales.forEach((sale) => {
+      const key = getGroupKey(sale.sale_date, group_by);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, { purchase: 0, sale: 0, date: sale.sale_date });
+      }
+      groupedData.get(key).sale += sale.total;
+    });
+
+    // Convert to array and calculate profit/loss
+    const results = Array.from(groupedData.entries())
+      .map(([key, data]) => ({
+        period: key,
+        date: data.date,
+        purchase_amount: data.purchase,
+        sale_amount: data.sale,
+        profit_loss: data.sale - data.purchase,
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Calculate grand totals
+    const grandTotalPurchase = results.reduce(
+      (sum, row) => sum + row.purchase_amount,
+      0
+    );
+    const grandTotalSale = results.reduce(
+      (sum, row) => sum + row.sale_amount,
+      0
+    );
+    const netProfit = grandTotalSale - grandTotalPurchase;
+
+    return {
+      results,
+      grandTotalPurchase,
+      grandTotalSale,
+      netProfit,
+    };
+  }
+}
+
+function getGroupKey(date, groupBy) {
+  const d = new Date(date);
+
+  if (groupBy === "date") {
+    // Format: YYYY-MM-DD
+    return d.toISOString().split("T")[0];
+  } else if (groupBy === "month") {
+    // Format: YYYY-MM
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  } else if (groupBy === "year") {
+    // Format: YYYY
+    return d.getFullYear().toString();
+  }
+
+  return d.toISOString().split("T")[0]; // Default to date
 }
 
 export default new UnitSaleRepository();
