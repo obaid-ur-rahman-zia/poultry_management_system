@@ -64,9 +64,29 @@ class TradingController {
   async create(req) {
     try {
       const { req_object } = await req.json();
-      const { trading_date, buy_from_account, product_id, buy_price, buy_quantity, buy_total, sale_to_account, sale_price, sale_quantity, sale_total } = req_object;
+      const {
+        trading_date,
+        buy_from_account,
+        product_id,
+        buy_price,
+        buy_quantity,
+        buy_total,
+        sale_to_account,
+        sale_price,
+        sale_quantity,
+        sale_total,
+      } = req_object;
 
-      if (!trading_date || !buy_from_account || !product_id || !buy_price || !buy_quantity || !sale_to_account || !sale_price || !sale_quantity) {
+      if (
+        !trading_date ||
+        !buy_from_account ||
+        !product_id ||
+        !buy_price ||
+        !buy_quantity ||
+        !sale_to_account ||
+        !sale_price ||
+        !sale_quantity
+      ) {
         const error = new Error(
           "trading_date, buy_from_account, product_id, buy_price, buy_quantity, sale_to_account, sale_price, and sale_quantity are required in Method: TradingController.create"
         );
@@ -82,32 +102,36 @@ class TradingController {
         async (tx) => {
           try {
             // Create trading
-            const createdTrading = await TradingRepository.create({
-              trading_date,
-              buy_from_account: Number(buy_from_account),
-              do_number: req_object.do_number || null,
-              product_id: Number(product_id),
-              buy_quantity: Number(buy_quantity),
-              buy_price: Number(buy_price),
-              buy_tax_type: req_object.buy_tax_type || "flat",
-              buy_tax_value: req_object.buy_tax_value || 0,
-              buy_discount_type: req_object.buy_discount_type || "percentage",
-              buy_discount_value: req_object.buy_discount_value || 0,
-              buy_total: Number(buy_total),
-              buy_detail: req_object.buy_detail || null,
-              sale_to_account: Number(sale_to_account),
-              sale_price: Number(sale_price),
-              sale_quantity: Number(sale_quantity),
-              sale_tax_type: req_object.sale_tax_type || "flat",
-              sale_tax_value: req_object.sale_tax_value || 0,
-              sale_discount_type: req_object.sale_discount_type || "percentage",
-              sale_discount_value: req_object.sale_discount_value || 0,
-              sale_total: Number(sale_total),
-              sale_detail: req_object.sale_detail || null,
-              insert_by: req_object.insert_by || "user 1",
-              update_by: req_object.update_by || "user 1",
-              status: req_object.status ?? 1,
-            }, tx);
+            const createdTrading = await TradingRepository.create(
+              {
+                trading_date,
+                buy_from_account: Number(buy_from_account),
+                do_number: req_object.do_number || null,
+                product_id: Number(product_id),
+                buy_quantity: Number(buy_quantity),
+                buy_price: Number(buy_price),
+                buy_tax_type: req_object.buy_tax_type || "flat",
+                buy_tax_value: req_object.buy_tax_value || 0,
+                buy_discount_type: req_object.buy_discount_type || "percentage",
+                buy_discount_value: req_object.buy_discount_value || 0,
+                buy_total: Number(buy_total),
+                buy_detail: req_object.buy_detail || null,
+                sale_to_account: Number(sale_to_account),
+                sale_price: Number(sale_price),
+                sale_quantity: Number(sale_quantity),
+                sale_tax_type: req_object.sale_tax_type || "flat",
+                sale_tax_value: req_object.sale_tax_value || 0,
+                sale_discount_type:
+                  req_object.sale_discount_type || "percentage",
+                sale_discount_value: req_object.sale_discount_value || 0,
+                sale_total: Number(sale_total),
+                sale_detail: req_object.sale_detail || null,
+                insert_by: req_object.insert_by || "user 1",
+                update_by: req_object.update_by || "user 1",
+                status: req_object.status ?? 1,
+              },
+              tx
+            );
 
             // CRITICAL: Validate trading was created successfully
             if (!createdTrading || !createdTrading.trading_id) {
@@ -167,19 +191,49 @@ class TradingController {
 
       const result = await TradingRepository.update(trading_id, {
         ...req_object,
-        buy_from_account: req_object.buy_from_account ? Number(req_object.buy_from_account) : undefined,
-        product_id: req_object.product_id ? Number(req_object.product_id) : undefined,
-        buy_quantity: req_object.buy_quantity ? Number(req_object.buy_quantity) : undefined,
-        buy_price: req_object.buy_price ? Number(req_object.buy_price) : undefined,
-        buy_tax_value: req_object.buy_tax_value !== undefined ? Number(req_object.buy_tax_value) : undefined,
-        buy_discount_value: req_object.buy_discount_value !== undefined ? Number(req_object.buy_discount_value) : undefined,
-        buy_total: req_object.buy_total ? Number(req_object.buy_total) : undefined,
-        sale_to_account: req_object.sale_to_account ? Number(req_object.sale_to_account) : undefined,
-        sale_price: req_object.sale_price ? Number(req_object.sale_price) : undefined,
-        sale_quantity: req_object.sale_quantity ? Number(req_object.sale_quantity) : undefined,
-        sale_tax_value: req_object.sale_tax_value !== undefined ? Number(req_object.sale_tax_value) : undefined,
-        sale_discount_value: req_object.sale_discount_value !== undefined ? Number(req_object.sale_discount_value) : undefined,
-        sale_total: req_object.sale_total ? Number(req_object.sale_total) : undefined,
+        buy_from_account: req_object.buy_from_account
+          ? Number(req_object.buy_from_account)
+          : undefined,
+        product_id: req_object.product_id
+          ? Number(req_object.product_id)
+          : undefined,
+        buy_quantity: req_object.buy_quantity
+          ? Number(req_object.buy_quantity)
+          : undefined,
+        buy_price: req_object.buy_price
+          ? Number(req_object.buy_price)
+          : undefined,
+        buy_tax_value:
+          req_object.buy_tax_value !== undefined
+            ? Number(req_object.buy_tax_value)
+            : undefined,
+        buy_discount_value:
+          req_object.buy_discount_value !== undefined
+            ? Number(req_object.buy_discount_value)
+            : undefined,
+        buy_total: req_object.buy_total
+          ? Number(req_object.buy_total)
+          : undefined,
+        sale_to_account: req_object.sale_to_account
+          ? Number(req_object.sale_to_account)
+          : undefined,
+        sale_price: req_object.sale_price
+          ? Number(req_object.sale_price)
+          : undefined,
+        sale_quantity: req_object.sale_quantity
+          ? Number(req_object.sale_quantity)
+          : undefined,
+        sale_tax_value:
+          req_object.sale_tax_value !== undefined
+            ? Number(req_object.sale_tax_value)
+            : undefined,
+        sale_discount_value:
+          req_object.sale_discount_value !== undefined
+            ? Number(req_object.sale_discount_value)
+            : undefined,
+        sale_total: req_object.sale_total
+          ? Number(req_object.sale_total)
+          : undefined,
       });
 
       await RedisService.del("trading:all");
@@ -232,7 +286,35 @@ class TradingController {
       return errorResponse(err, 500);
     }
   }
+
+  async readReportDetail(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+
+      if (!start_dat || !end_dat) {
+        const error = new Error("start_dat and end_dat are required");
+        ErrorLogger.log(
+          "Failed to read report detail in Method: TradingController.readReportDetail",
+          error
+        );
+        return errorResponse(error, 400);
+      }
+      const trading = await TradingRepository.readReportDetail({
+        start_dat: start_dat,
+        end_dat: end_dat,
+      });
+
+      return successResponse(trading, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to read report detail in Method: TradingController.readReportDetail",
+        err
+      );
+      return errorResponse(err, 500);
+    }
+  }
 }
 
 export default new TradingController();
-

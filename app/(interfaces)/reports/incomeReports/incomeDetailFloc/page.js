@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { FileText } from "lucide-react";
 import Select from "react-select";
 import { Controller, useForm } from "react-hook-form";
-import { set } from "date-fns";
+import { exportToCSV } from "@/app/utils/exportToCsv";
 
 const selectStyles = {
   control: (provided, state) => ({
@@ -138,7 +138,6 @@ export default function PurchaseReportModal() {
     }
   };
 
-  //   const handleDownloadPDF = async () => {
   //     try {
   //       setIsLoading(true);
   //       const res = await fetch(
@@ -175,6 +174,55 @@ export default function PurchaseReportModal() {
   );
   const totalPages = Math.ceil(purchaseData.length / purchasesPerPage);
 
+  const handleExport = () => {
+    if (!currentPurchases.length) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const headers = [
+      "Sale ID",
+      "Floc ID",
+      "Sale Date",
+      "Customer Name",
+      "Customer Contact",
+      "Product",
+      "Price",
+      "Farm Rate",
+      "Sale Rate",
+      "Quantity",
+      "Discount",
+      "Tax",
+      "Line Total",
+    ];
+
+    const rows = currentPurchases.map((purchase) => [
+      purchase.sale_id,
+      purchase.floc_id,
+      new Date(purchase.sale_date).toLocaleDateString(),
+      purchase.customer.account_nam,
+      purchase.customer.account_contact || "N/A",
+      purchase.product.product_title,
+      Number(purchase.price).toFixed(2),
+      Number(purchase.farm_rate).toFixed(2),
+      Number(purchase.sale_rate).toFixed(2),
+      purchase.quantity,
+      `${Number(purchase.discount_value || 0).toFixed(2)} ${
+        purchase.discount_type || ""
+      }`,
+      `${Number(purchase.tax_value || 0).toFixed(2)} ${
+        purchase.tax_type || ""
+      }`,
+      Number(purchase.total).toFixed(2),
+    ]);
+
+    exportToCSV(
+      `Unit_Sale_Report_${startDate}_to_${endDate}.csv`,
+      headers,
+      rows
+    );
+  };
+
   return (
     <div>
       {/* Card to trigger report */}
@@ -188,9 +236,10 @@ export default function PurchaseReportModal() {
             </div>
           </div>
 
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Unit Sale Report by Floc
+          <h3 className="text-lg font-semibold text-gray-900 ">
+            Unit Sale Report
           </h3>
+          <h1 className="text-sm font-bold text-gray-900 mb-4">Floc Wise</h1>
 
           <div className="space-y-3 mb-4">
             <div>
@@ -231,7 +280,7 @@ export default function PurchaseReportModal() {
                   <Select
                     {...field}
                     options={flocOptions}
-                    placeholder="Select Product..."
+                    placeholder="Select Floc..."
                     value={
                       selectedFloc
                         ? flocOptions.find((o) => o.value === selectedFloc)
@@ -302,14 +351,13 @@ export default function PurchaseReportModal() {
             {/* Header */}
             <div className="flex items-center justify-end p-1 border-b">
               <div className="flex gap-1">
-                {/* <button
-                  onClick={handleDownloadPDF}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  disabled={isLoading}
+                <button
+                  onClick={handleExport}
+                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  title="Export CSV"
                 >
-                  <Printer className="w-4 h-4" />
-                  {isLoading ? "Loading..." : "Download PDF"}
-                </button> */}
+                  Export
+                </button>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"

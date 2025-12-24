@@ -248,42 +248,46 @@ class UnitSaleRepository {
   }
 
   async readProfitLossReport(req_object) {
-    const { start_dat, end_dat, group_by } = req_object;
-
-    // Fetch expenses
-    const expenses = await prisma.unit_expense.findMany({
-      where: {
-        expense_date: {
-          gte: new Date(start_dat),
-          lte: new Date(end_dat),
-        },
-        status: 1,
+    const { start_dat, end_dat, group_by, floc_id } = req_object;
+    const whereClauseExpense = {
+      expense_date: {
+        gte: new Date(start_dat),
+        lte: new Date(end_dat),
       },
+      status: 1,
+    };
+    console.log("Floc ID", floc_id);
+    if (floc_id) {
+      whereClauseExpense.floc_id = parseInt(floc_id);
+    }
+    const expenses = await prisma.unit_expense.findMany({
+      where: whereClauseExpense,
       select: {
         expense_date: true,
         total: true,
       },
     });
 
-    // Fetch sales
-    const sales = await prisma.unit_sale.findMany({
-      where: {
-        sale_date: {
-          gte: new Date(start_dat),
-          lte: new Date(end_dat),
-        },
-        status: 1,
+    const whereClauseSale = {
+      sale_date: {
+        gte: new Date(start_dat),
+        lte: new Date(end_dat),
       },
+      status: 1,
+    };
+    if (floc_id) {
+      whereClauseSale.floc_id = parseInt(floc_id);
+    }
+    const sales = await prisma.unit_sale.findMany({
+      where: whereClauseSale,
       select: {
         sale_date: true,
         total: true,
       },
     });
 
-    // Group data based on group_by parameter
     const groupedData = new Map();
 
-    // Process expenses
     expenses.forEach((expense) => {
       const key = getGroupKey(expense.expense_date, group_by);
       if (!groupedData.has(key)) {
@@ -296,7 +300,6 @@ class UnitSaleRepository {
       groupedData.get(key).purchase += expense.total;
     });
 
-    // Process sales
     sales.forEach((sale) => {
       const key = getGroupKey(sale.sale_date, group_by);
       if (!groupedData.has(key)) {
@@ -340,13 +343,10 @@ function getGroupKey(date, groupBy) {
   const d = new Date(date);
 
   if (groupBy === "date") {
-    // Format: YYYY-MM-DD
     return d.toISOString().split("T")[0];
   } else if (groupBy === "month") {
-    // Format: YYYY-MM
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   } else if (groupBy === "year") {
-    // Format: YYYY
     return d.getFullYear().toString();
   }
 

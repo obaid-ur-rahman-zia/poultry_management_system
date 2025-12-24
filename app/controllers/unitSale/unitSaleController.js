@@ -436,6 +436,7 @@ class UnitSaleController {
       const start_dat = searchParams.get("start_dat");
       const end_dat = searchParams.get("end_dat");
       const group_by = searchParams.get("group_by") || "date";
+      const floc_id = searchParams.get("floc_id");
 
       if (!start_dat || !end_dat) {
         const error = new Error("start_dat and end_dat are required");
@@ -445,11 +446,12 @@ class UnitSaleController {
         );
         return errorResponse(error, 400);
       }
-
+      console.log("Floc ID controller", floc_id);
       const report = await UnitSaleRepository.readProfitLossReport({
-        start_dat,
-        end_dat,
-        group_by,
+        start_dat: start_dat,
+        end_dat: end_dat,
+        group_by: group_by,
+        floc_id: floc_id || null,
       });
 
       return successResponse(report, "Success");
