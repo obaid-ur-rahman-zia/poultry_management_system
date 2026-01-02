@@ -2,7 +2,7 @@
 import React, { useState, Suspense } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, AlertCircle, Sparkles, Shield, Zap } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, AlertCircle, Sparkles, Shield, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
