@@ -4,6 +4,7 @@ import { Printer, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { FileText } from "lucide-react";
+import { exportToCSV } from "@/app/utils/exportToCsv";
 
 export default function TrialBalanceModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +75,44 @@ export default function TrialBalanceModal() {
     } else {
       return `From Beginning To ${new Date().toLocaleDateString()}`;
     }
+  };
+
+  const handleExport = () => {
+    if (!trialBalanceData.length) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const headers = [
+      "Sr No",
+      "Account Code",
+      "Account Name",
+      "Debit Balance",
+      "Credit Balance",
+    ];
+
+    const rows = trialBalanceData.map((account, index) => [
+      index + 1,
+      formatAccountCode(account.head_id, account.sub_id, account.account_id),
+      account.account_nam,
+      account.debit_balance > 0 ? account.debit_balance.toFixed(2) : "",
+      account.credit_balance > 0 ? account.credit_balance.toFixed(2) : "",
+    ]);
+
+    // Grand Total row (correct for trial balance)
+    rows.push([
+      "",
+      "",
+      "Grand Total",
+      totalDebit.toFixed(2),
+      totalCredit.toFixed(2),
+    ]);
+
+    exportToCSV(
+      `Trial_Balance_${getDateRangeText().replace(/\s+/g, "_")}.csv`,
+      headers,
+      rows
+    );
   };
 
   return (
@@ -150,6 +189,13 @@ export default function TrialBalanceModal() {
             {/* Header */}
             <div className="flex items-center justify-end  border-b">
               <div className="flex gap-1">
+                <button
+                  onClick={handleExport}
+                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  title="Export CSV"
+                >
+                  Export
+                </button>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"

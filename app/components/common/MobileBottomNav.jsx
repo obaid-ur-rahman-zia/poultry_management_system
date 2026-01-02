@@ -24,7 +24,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { navigationItems } from "@/utils/links";
+import { navigationItems } from "@/lib/links";
 
 const MobileBottomNav = () => {
   const pathname = usePathname();
@@ -33,7 +33,7 @@ const MobileBottomNav = () => {
 
   // Get single items (non-group items) for main navbar
   const singleItems = navigationItems.filter((item) => item.type === "single");
-  
+
   // Get group items for "More" sheet
   const groupItems = navigationItems.filter((item) => item.type === "group");
 
@@ -54,9 +54,10 @@ const MobileBottomNav = () => {
         className={`
           relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg
           transition-colors min-w-[60px]
-          ${active
-            ? "text-primary bg-primary/10"
-            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+          ${
+            active
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
           }
         `}
       >
@@ -97,9 +98,10 @@ const MobileBottomNav = () => {
                   onClick={() => onOpenChange(false)}
                   className={`
                     flex items-center gap-3 p-4 rounded-lg transition-colors
-                    ${active
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent"
+                    ${
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-accent"
                     }
                   `}
                 >
@@ -138,9 +140,10 @@ const MobileBottomNav = () => {
             className={`
               flex flex-col items-center justify-center gap-1 p-2 rounded-lg
               transition-colors min-w-[60px]
-              ${moreSheetOpen
-                ? "text-primary bg-primary/10"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              ${
+                moreSheetOpen
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
               }
             `}
           >
@@ -177,9 +180,10 @@ const MobileBottomNav = () => {
                         onClick={() => setMoreSheetOpen(false)}
                         className={`
                           flex items-center gap-3 p-4 rounded-lg transition-colors
-                          ${active
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-accent"
+                          ${
+                            active
+                              ? "bg-primary text-primary-foreground"
+                              : "hover:bg-accent"
                           }
                         `}
                       >
@@ -239,4 +243,3 @@ const MobileBottomNav = () => {
 };
 
 export default MobileBottomNav;
-

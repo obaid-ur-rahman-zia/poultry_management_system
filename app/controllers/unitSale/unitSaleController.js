@@ -402,6 +402,7 @@ class UnitSaleController {
       const end_dat = searchParams.get("end_dat");
       const customer_id = searchParams.get("customer_id");
       const product_id = searchParams.get("product_id");
+      const floc_id = searchParams.get("floc_id");
 
       if (!start_dat || !end_dat) {
         const error = new Error("start_dat and end_dat are required");
@@ -416,12 +417,47 @@ class UnitSaleController {
         end_dat: end_dat,
         customer_id: customer_id || null,
         product_id: product_id || null,
+        floc_id: floc_id || null,
       });
 
       return successResponse(unitSale, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to read report detail in Method: UnitSaleController.readReportDetail",
+        err
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  async readProfitLossReport(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const group_by = searchParams.get("group_by") || "date";
+      const floc_id = searchParams.get("floc_id");
+
+      if (!start_dat || !end_dat) {
+        const error = new Error("start_dat and end_dat are required");
+        ErrorLogger.log(
+          "Failed to read profit/loss report in Method: unitSaleController.readProfitLossReport",
+          error
+        );
+        return errorResponse(error, 400);
+      }
+      console.log("Floc ID controller", floc_id);
+      const report = await UnitSaleRepository.readProfitLossReport({
+        start_dat: start_dat,
+        end_dat: end_dat,
+        group_by: group_by,
+        floc_id: floc_id || null,
+      });
+
+      return successResponse(report, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to read profit/loss report in Method: UnitSaleController.readProfitLossReport",
         err
       );
       return errorResponse(err, 500);
