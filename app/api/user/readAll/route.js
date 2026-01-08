@@ -3,6 +3,48 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { errorResponse } from "@/app/utils/response";
 
+/**
+ * @swagger
+ * /api/user/readAll:
+ *   get:
+ *     summary: Get all users
+ *     description: Retrieve a list of all users. Only accessible by SUPER_ADMIN and ADMIN roles.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: integer
+ *           enum: [0, 1]
+ *         description: Filter users by status (1 = active, 0 = inactive)
+ *       - in: query
+ *         name: excludeSuperAdmin
+ *         schema:
+ *           type: boolean
+ *         description: Exclude SUPER_ADMIN users from results
+ *     responses:
+ *       200:
+ *         description: List of users retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       403:
+ *         description: Unauthorized - Only SUPER_ADMIN and ADMIN can access this endpoint
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export async function GET(req) {
   // Check if user is SUPER_ADMIN or ADMIN
   const session = await getServerSession(authOptions);
