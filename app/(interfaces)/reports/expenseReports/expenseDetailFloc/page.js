@@ -1,21 +1,120 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Printer, X, ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
+import Select from "react-select";
+import { Controller, useForm } from "react-hook-form";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 
+const selectStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    borderColor: state.isFocused ? "#6366F1" : "#E5E7EB",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(99, 102, 241, 0.1)" : "none",
+    borderWidth: "2px",
+    minHeight: "30px",
+    "&:hover": {
+      borderColor: "#6366F1",
+    },
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#6366F1"
+      : state.isFocused
+      ? "#F0F9FF"
+      : "white",
+    color: state.isSelected ? "white" : "#374151",
+  }),
+  menu: (provided) => ({
+    ...provided,
+    boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+    border: "1px solid #E5E7EB",
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: "#9CA3AF",
+  }),
+};
+
 export default function PurchaseReportModal() {
+  const { control, setValue, watch } = useForm();
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [purchaseData, setPurchaseData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [floc, setFloc] = useState([]);
+  const [unit, setUnit] = useState([]);
+  const selectedFloc = watch("floc");
+  const selectedUnit = watch("unit");
+
   const purchasesPerPage = 10;
 
+  useEffect(() => {
+    fetchUnits();
+  }, []);
+
+  useEffect(() => {
+    if (selectedUnit) {
+      fetchFlocsByUnit(selectedUnit);
+    } else {
+      setFloc([]);
+      setValue("floc_id", "");
+    }
+  }, [selectedUnit]);
+
+  const fetchUnits = async () => {
+    try {
+      const response = await fetch("/api/unit/readAll");
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const unitsData =
+          result.response_result?.data || result.response_result || [];
+        setUnit(Array.isArray(unitsData) ? unitsData : []);
+      }
+    } catch (error) {
+      console.error("Error fetching units:", error);
+      setUnit([]);
+    }
+  };
+
+  const unitOptions = unit.map((u) => ({
+    value: u.prounit_id.toString(),
+    label: u.prounit_nam,
+  }));
+
+  const flocOptions = floc.map((f) => ({
+    value: f.floc_id.toString(),
+    label: `Floc #${f.floc_id} - ${new Date(
+      f.starting_date
+    ).toLocaleDateString()}`,
+  }));
+
+  const fetchFlocsByUnit = async (prounitId) => {
+    try {
+      const response = await fetch(
+        `/api/floc/readByFarmId?farm_id=${prounitId}`
+      );
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const flocsData =
+          result.response_result?.data || result.response_result || [];
+        setFloc(Array.isArray(flocsData) ? flocsData : []);
+      }
+    } catch (error) {
+      console.error("Error fetching flocs:", error);
+      setFloc([]);
+    }
+  };
+
   const fetchReport = async () => {
+    if (!selectedFloc) {
+      toast.error("Please select Floc");
+      return;
+    }
     if (!startDate || !endDate) {
       toast.error("Please select both start and end dates");
       return;
@@ -23,8 +122,9 @@ export default function PurchaseReportModal() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(
-        `/api/unitExpense/read/readReportDetail?start_dat=${startDate}&end_dat=${endDate}`
+      let res;
+      res = await fetch(
+        `/api/unitExpense/read/readReportDetail?start_dat=${startDate}&end_dat=${endDate}&floc_id=${selectedFloc}`
       );
       const data = await res.json();
       setPurchaseData(data.response_result);
@@ -132,12 +232,67 @@ export default function PurchaseReportModal() {
             </div>
           </div>
 
-          <h3 className="text-lg font-semibold text-gray-900 ">
+          <h3 className="text-lg font-semibold text-gray-900">
             Unit Expense Report
           </h3>
-          <h1 className="text-sm font-bold text-gray-900 mb-4">All</h1>
+
+          <h1 className="text-sm font-bold text-gray-900 mb-4">FLoc Wise</h1>
 
           <div className="space-y-3 mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Unit
+              </label>
+              <Controller
+                name="unit"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={unitOptions}
+                    placeholder="Select Unit..."
+                    value={
+                      selectedUnit
+                        ? unitOptions.find((o) => o.value === selectedUnit)
+                        : null
+                    }
+                    isSearchable
+                    styles={selectStyles}
+                    className="w-full text-sm"
+                    onChange={(opt) => {
+                      field.onChange(opt.value);
+                    }}
+                  />
+                )}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Floc
+              </label>
+              <Controller
+                name="floc"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={flocOptions}
+                    placeholder="Select Floc..."
+                    value={
+                      selectedFloc
+                        ? flocOptions.find((o) => o.value === selectedFloc)
+                        : null
+                    }
+                    isSearchable
+                    styles={selectStyles}
+                    className="w-full text-sm"
+                    onChange={(opt) => {
+                      field.onChange(opt.value);
+                    }}
+                  />
+                )}
+              />
+            </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Start Date
@@ -167,6 +322,8 @@ export default function PurchaseReportModal() {
               onClick={() => {
                 setStartDate("");
                 setEndDate("");
+                setValue("supplier", "");
+                setValue("product", "");
               }}
               disabled={isLoading}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

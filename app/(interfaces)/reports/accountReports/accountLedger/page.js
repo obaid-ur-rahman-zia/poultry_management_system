@@ -6,6 +6,7 @@ import Select from "react-select";
 import { FileText } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { exportToCSV } from "@/app/utils/exportToCsv";
 
 // Custom Select Styles
 const selectStyles = {
@@ -167,6 +168,58 @@ export default function AccountLedgerModal() {
       setIsLoading(false);
     }
   };
+
+  const handleExport = () => {
+    if (!transactions.length) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const headers = [
+      "Sr No",
+      "Date",
+      "Transaction No",
+      "Description",
+      "Debit",
+      "Credit",
+      "Running Balance",
+    ];
+
+    const rows = [];
+
+    // 🔹 Opening Balance row
+    rows.push([
+      "",
+      new Date(startDate).toLocaleDateString(),
+      "",
+      "Opening Balance",
+      "",
+      "",
+      openingBalance.toFixed(2),
+    ]);
+
+    // 🔹 Transaction rows
+    transactions.forEach((trans, index) => {
+      const runningBalance = calculateRunningBalance(index);
+
+      rows.push([
+        index + 1,
+        new Date(trans.transaction_dat).toLocaleDateString(),
+        trans.t_id,
+        trans.remarks || "-",
+        trans.debit ? trans.debit.toFixed(2) : "",
+        trans.credit ? trans.credit.toFixed(2) : "",
+        runningBalance.toFixed(2),
+      ]);
+    });
+
+    exportToCSV(
+      `Account_Ledger_${selectedAccountData.account_nam}_${startDate}_to_${endDate}.csv`,
+      headers,
+      rows
+    );
+  };
+
   return (
     <div>
       {/* Card to trigger ledger */}
@@ -269,6 +322,13 @@ export default function AccountLedgerModal() {
             {/* Header */}
             <div className="flex items-center justify-end p-1 border-b print:hidden">
               <div className="flex gap-1">
+                <button
+                  onClick={handleExport}
+                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  title="Export CSV"
+                >
+                  Export
+                </button>
                 <button
                   onClick={handleDownloadPDF}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"

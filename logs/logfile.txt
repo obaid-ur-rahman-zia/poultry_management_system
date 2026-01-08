@@ -14,3 +14,18 @@ custom-exception:  [Failed to create supplier in Method: SupplierController.crea
 system-exception:  [Error: Account with this CNIC already exists]
 
 
+exception-time:       [2025-12-23T20:16:13.763Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [Error: Unit already has an active floc. Please end the current floc first.]
+
+
+exception-time:       [2025-12-23T21:02:44.575Z]  
+custom-exception:  [Failed to read profit/loss report in Method: UnitSaleController.readProfitLossReport] | 
+system-exception:  [ReferenceError: getGroupKey is not defined]
+
+
+exception-time:       [2026-01-02T20:31:53.038Z]  
+custom-exception:  [Failed to create account - duplicate name and type in Method: AccountsController.create] | 
+system-exception:  [Error: An account with this name already exists for this account type]
+
+

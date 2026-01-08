@@ -82,8 +82,10 @@ class CustomerController {
         config = await configService.getAccountConfig("Customer");
       } catch (error) {
         // Config not found, find or create Customer subhead
-        let customerSubhead = await AccountSubHeadRepository.findByName("Customer");
-        
+        let customerSubhead = await AccountSubHeadRepository.findByName(
+          "Customer"
+        );
+
         if (!customerSubhead) {
           // Get first account head to use for the subhead
           const firstHead = await prisma.account_head.findFirst({
@@ -91,7 +93,9 @@ class CustomerController {
           });
 
           if (!firstHead) {
-            throw new Error("No account head found. Please create an account head first.");
+            throw new Error(
+              "No account head found. Please create an account head first."
+            );
           }
 
           // Create Customer subhead
@@ -126,6 +130,7 @@ class CustomerController {
       await RedisService.del("customers:all");
       await RedisService.del("suppliers:all");
       await RedisService.del("employees:all");
+      await RedisService.del("accounts:all");
       return successResponse(
         {
           acc_id: customer.acc_id,

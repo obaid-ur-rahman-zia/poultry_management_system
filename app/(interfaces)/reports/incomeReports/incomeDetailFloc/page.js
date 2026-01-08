@@ -1,21 +1,120 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Printer, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
+import Select from "react-select";
+import { Controller, useForm } from "react-hook-form";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 
+const selectStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    borderColor: state.isFocused ? "#6366F1" : "#E5E7EB",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(99, 102, 241, 0.1)" : "none",
+    borderWidth: "2px",
+    minHeight: "30px",
+    "&:hover": {
+      borderColor: "#6366F1",
+    },
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#6366F1"
+      : state.isFocused
+      ? "#F0F9FF"
+      : "white",
+    color: state.isSelected ? "white" : "#374151",
+  }),
+  menu: (provided) => ({
+    ...provided,
+    boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+    border: "1px solid #E5E7EB",
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: "#9CA3AF",
+  }),
+};
+
 export default function PurchaseReportModal() {
+  const { control, setValue, watch } = useForm();
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [purchaseData, setPurchaseData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [floc, setFloc] = useState([]);
+  const [unit, setUnit] = useState([]);
+  const selectedFloc = watch("floc");
+  const selectedUnit = watch("unit");
+
   const purchasesPerPage = 10;
+  useEffect(() => {
+    fetchUnits();
+  }, []);
+
+  useEffect(() => {
+    if (selectedUnit) {
+      fetchFlocsByUnit(selectedUnit);
+    } else {
+      setFloc([]);
+      setValue("floc_id", "");
+    }
+  }, [selectedUnit]);
+
+  const fetchUnits = async () => {
+    try {
+      const response = await fetch("/api/unit/readAll");
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const unitsData =
+          result.response_result?.data || result.response_result || [];
+        setUnit(Array.isArray(unitsData) ? unitsData : []);
+      }
+    } catch (error) {
+      console.error("Error fetching units:", error);
+      setUnit([]);
+    }
+  };
+
+  const unitOptions = unit.map((u) => ({
+    value: u.prounit_id.toString(),
+    label: u.prounit_nam,
+  }));
+
+  const flocOptions = floc.map((f) => ({
+    value: f.floc_id.toString(),
+    label: `Floc #${f.floc_id} - ${new Date(
+      f.starting_date
+    ).toLocaleDateString()}`,
+  }));
+
+  const fetchFlocsByUnit = async (prounitId) => {
+    try {
+      const response = await fetch(
+        `/api/floc/readByFarmId?farm_id=${prounitId}`
+      );
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const flocsData =
+          result.response_result?.data || result.response_result || [];
+        setFloc(Array.isArray(flocsData) ? flocsData : []);
+      }
+    } catch (error) {
+      console.error("Error fetching flocs:", error);
+      setFloc([]);
+    }
+  };
 
   const fetchReport = async () => {
+    if (!selectedFloc) {
+      toast.error("Please select Floc");
+      return;
+    }
     if (!startDate || !endDate) {
       toast.error("Please select both start and end dates");
       return;
@@ -23,8 +122,9 @@ export default function PurchaseReportModal() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(
-        `/api/unitExpense/read/readReportDetail?start_dat=${startDate}&end_dat=${endDate}`
+      let res;
+      res = await fetch(
+        `/api/unitSale/read/readReportDetail?start_dat=${startDate}&end_dat=${endDate}&floc_id=${selectedFloc}`
       );
       const data = await res.json();
       setPurchaseData(data.response_result);
@@ -81,13 +181,15 @@ export default function PurchaseReportModal() {
     }
 
     const headers = [
-      "Expense ID",
+      "Sale ID",
       "Floc ID",
-      "Expense Date",
-      "Supplier Name",
-      "Supplier Contact",
+      "Sale Date",
+      "Customer Name",
+      "Customer Contact",
       "Product",
       "Price",
+      "Farm Rate",
+      "Sale Rate",
       "Quantity",
       "Discount",
       "Tax",
@@ -95,13 +197,15 @@ export default function PurchaseReportModal() {
     ];
 
     const rows = currentPurchases.map((purchase) => [
-      purchase.expense_id,
+      purchase.sale_id,
       purchase.floc_id,
-      new Date(purchase.expense_date).toLocaleDateString(),
-      purchase.supplier.account_nam,
-      purchase.supplier.account_contact || "N/A",
+      new Date(purchase.sale_date).toLocaleDateString(),
+      purchase.customer.account_nam,
+      purchase.customer.account_contact || "N/A",
       purchase.product.product_title,
       Number(purchase.price).toFixed(2),
+      Number(purchase.farm_rate).toFixed(2),
+      Number(purchase.sale_rate).toFixed(2),
       purchase.quantity,
       `${Number(purchase.discount_value || 0).toFixed(2)} ${
         purchase.discount_type || ""
@@ -113,7 +217,7 @@ export default function PurchaseReportModal() {
     ]);
 
     exportToCSV(
-      `Unit_Expense_Report_${startDate}_to_${endDate}.csv`,
+      `Unit_Sale_Report_${startDate}_to_${endDate}.csv`,
       headers,
       rows
     );
@@ -133,11 +237,65 @@ export default function PurchaseReportModal() {
           </div>
 
           <h3 className="text-lg font-semibold text-gray-900 ">
-            Unit Expense Report
+            Unit Sale Report
           </h3>
-          <h1 className="text-sm font-bold text-gray-900 mb-4">All</h1>
+          <h1 className="text-sm font-bold text-gray-900 mb-4">Floc Wise</h1>
 
           <div className="space-y-3 mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Unit
+              </label>
+              <Controller
+                name="unit"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={unitOptions}
+                    placeholder="Select Unit..."
+                    value={
+                      selectedUnit
+                        ? unitOptions.find((o) => o.value === selectedUnit)
+                        : null
+                    }
+                    isSearchable
+                    styles={selectStyles}
+                    className="w-full text-sm"
+                    onChange={(opt) => {
+                      field.onChange(opt.value);
+                    }}
+                  />
+                )}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Floc
+              </label>
+              <Controller
+                name="floc"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={flocOptions}
+                    placeholder="Select Floc..."
+                    value={
+                      selectedFloc
+                        ? flocOptions.find((o) => o.value === selectedFloc)
+                        : null
+                    }
+                    isSearchable
+                    styles={selectStyles}
+                    className="w-full text-sm"
+                    onChange={(opt) => {
+                      field.onChange(opt.value);
+                    }}
+                  />
+                )}
+              />
+            </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Start Date
@@ -167,6 +325,8 @@ export default function PurchaseReportModal() {
               onClick={() => {
                 setStartDate("");
                 setEndDate("");
+                setValue("floc", "");
+                setValue("unit", "");
               }}
               disabled={isLoading}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -213,7 +373,7 @@ export default function PurchaseReportModal() {
               {/* Report Header */}
               <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Unit Expense Report
+                  Unit Sale Report
                 </h1>
                 <p className="text-gray-600 text-sm">
                   From:{" "}
@@ -231,34 +391,32 @@ export default function PurchaseReportModal() {
               {currentPurchases.map((purchase) => {
                 return (
                   <div
-                    key={purchase.expense_id}
+                    key={purchase.sale_id}
                     className="mb-8 border border-gray-300 rounded-lg p-4"
                   >
                     {/* Purchase Info */}
                     <div className="mb-3 space-y-2">
                       <div className="flex justify-between text-sm">
                         <div>
-                          <span className="font-semibold">Expense ID: </span>
-                          <span>{purchase.expense_id}</span>
+                          <span className="font-semibold">Sale ID: </span>
+                          <span>{purchase.sale_id}</span>
                           <span className="ml-6 font-semibold">Floc ID: </span>
                           <span>{purchase.floc_id}</span>
                         </div>
                         <div>
-                          <span className="font-semibold">Expense Date: </span>
+                          <span className="font-semibold">Sale Date: </span>
                           <span>
-                            {new Date(
-                              purchase.expense_date
-                            ).toLocaleDateString()}
+                            {new Date(purchase.sale_date).toLocaleDateString()}
                           </span>
-
-                          <span className="ml-6 font-semibold">Supplier: </span>
-                          <span>{purchase.supplier.account_nam}</span>
+                          <span className="ml-6 font-semibold">Customer: </span>
+                          <span>{purchase.customer.account_nam}</span>
                           <span>
                             {" "}
-                            ({purchase.supplier.account_contact || "N/A"})
+                            ({purchase.customer.account_contact || "N/A"})
                           </span>
                         </div>
                       </div>
+                      <div className="text-sm"></div>
                     </div>
 
                     {/* Products Table */}
@@ -271,6 +429,12 @@ export default function PurchaseReportModal() {
                             </th>
                             <th className="px-2 py-2 text-right font-bold text-gray-700">
                               Price
+                            </th>
+                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                              Farm Rate
+                            </th>
+                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                              Sale Rate
                             </th>
                             <th className="px-2 py-2 text-right font-bold text-gray-700">
                               Qty
@@ -288,7 +452,7 @@ export default function PurchaseReportModal() {
                         </thead>
                         <tbody>
                           <tr
-                            key={purchase.expense_id}
+                            key={purchase.sale_id}
                             className="border-b border-gray-200 hover:bg-gray-50"
                           >
                             <td className="px-2 py-2">
@@ -296,6 +460,14 @@ export default function PurchaseReportModal() {
                             </td>
                             <td className="px-2 py-2 text-right">
                               {Number(purchase.price).toFixed(2)}
+                            </td>
+
+                            <td className="px-2 py-2 text-right">
+                              {Number(purchase.farm_rate).toFixed(2)}
+                            </td>
+
+                            <td className="px-2 py-2 text-right">
+                              {Number(purchase.sale_rate).toFixed(2)}
                             </td>
                             <td className="px-2 py-2 text-right">
                               {purchase.quantity}

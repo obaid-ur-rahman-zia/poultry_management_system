@@ -265,6 +265,7 @@ class UnitExpenseController {
       const end_dat = searchParams.get("end_dat");
       const supplier_id = searchParams.get("supplier_id");
       const product_id = searchParams.get("product_id");
+      const floc_id = searchParams.get("floc_id");
 
       if (!start_dat || !end_dat) {
         const error = new Error("start_dat and end_dat are required");
@@ -279,6 +280,7 @@ class UnitExpenseController {
         end_dat: end_dat,
         supplier_id: supplier_id || null,
         product_id: product_id || null,
+        floc_id: floc_id || null,
       });
 
       return successResponse(unitExpense, "Success");

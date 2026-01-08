@@ -97,7 +97,7 @@ class EmployeeController {
       await RedisService.del("employees:all");
       await RedisService.del("customers:all");
       await RedisService.del("suppliers:all");
-
+      await RedisService.del("accounts:all");
       return successResponse(
         {
           acc_id: employee.acc_id,
