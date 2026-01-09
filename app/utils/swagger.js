@@ -14,11 +14,11 @@ const options = {
     },
     servers: [
       {
-        url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+        url: process.env.NEXTAUTH_URL || 'http://localhost:3000',
         description: 'Development server',
       },
       {
-        url: 'https://api.production.com',
+        url: process.env.NEXTAUTH_URL || 'https://api.production.com',
         description: 'Production server',
       },
     ],
