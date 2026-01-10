@@ -899,6 +899,7 @@ model unit_sale {
   discount_type  String   @db.VarChar(20) // "flat" or "percentage"
   discount_value Float    @default(0)
   total          Float
+  van_number     String?  @db.VarChar(50)
   description    String?  @db.VarChar(500)
   insert_dat     DateTime @default(now()) @db.Timestamp(0)
   update_dat     DateTime @default(now()) @db.Timestamp(0)

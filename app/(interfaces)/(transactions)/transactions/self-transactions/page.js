@@ -276,92 +276,61 @@ export default function SelfTransactionPage() {
     return (
         <div className="p-6 space-y-6">
             {/* Form Section */}
-            <Card className={"max-w-4xl mx-auto"}>
+            <Card className={"max-w-xl mx-auto"}>
                 <CardContent>
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="self-transaction-form">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Date */}
-                            <div className="space-y-2">
-                                <Label htmlFor="transaction_date">Date *</Label>
-                                <Input
-                                    id="transaction_date"
-                                    type="date"
-                                    {...register("transaction_date", {
-                                        required: "Date is required",
-                                    })}
-                                />
-                                {errors.transaction_date && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.transaction_date.message}
-                                    </p>
-                                )}
-                            </div>
+                        {/* Date */}
+                        <div className="space-y-2 w-full">
+                            <Label htmlFor="transaction_date">Date *</Label>
+                            <Input
+                                id="transaction_date"
+                                type="date"
+                                className="w-full"
+                                {...register("transaction_date", {
+                                    required: "Date is required",
+                                })}
+                            />
+                            {errors.transaction_date && (
+                                <p className="text-sm text-destructive">
+                                    {errors.transaction_date.message}
+                                </p>
+                            )}
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Cash or Bank Radio */}
-                                <div className="space-y-4">
-                                    <Label>Transaction Mode</Label>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="radio"
-                                                id="cash"
-                                                name="transaction_mode"
-                                                checked={!isBank}
-                                                onChange={() => setValue("is_bank", false)}
-                                                className="w-4 h-4"
-                                            />
-                                            <Label htmlFor="cash" className="cursor-pointer">Cash</Label>
-                                        </div>
-                                        {/* <div className="flex items-center gap-2">
-                                            <input
-                                                type="radio"
-                                                id="bank"
-                                                name="transaction_mode"
-                                                checked={isBank}
-                                                onChange={() => setValue("is_bank", true)}
-                                                className="w-4 h-4"
-                                            />
-                                            <Label htmlFor="bank" className="cursor-pointer">Bank</Label>
-                                        </div> */}
-                                    </div>
-
-
+                        {/* Transaction Mode */}
+                        <div className="space-y-2 w-full hidden">
+                            <Label>Transaction Mode</Label>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        id="cash"
+                                        name="transaction_mode"
+                                        checked={!isBank}
+                                        onChange={() => setValue("is_bank", false)}
+                                        className="w-4 h-4"
+                                    />
+                                    <Label htmlFor="cash" className="cursor-pointer">Cash</Label>
                                 </div>
-                                    {/* Receive or Pay */}
-                                    <div className="space-y-4">
-                                        <Label>Transaction Action</Label>
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="radio"
-                                                    id="receive"
-                                                    value="receive"
-                                                    checked={transactionType === "receive"}
-                                                    onChange={(e) => setValue("transaction_type", e.target.value)}
-                                                    className="w-4 h-4"
-                                                />
-                                                <Label htmlFor="receive" className="cursor-pointer">Receive</Label>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="radio"
-                                                    id="pay"
-                                                    value="pay"
-                                                    checked={transactionType === "pay"}
-                                                    onChange={(e) => setValue("transaction_type", e.target.value)}
-                                                    className="w-4 h-4"
-                                                />
-                                                <Label htmlFor="pay" className="cursor-pointer">Pay</Label>
-                                            </div>
-                                        </div>
-                                    </div>
+                                {/* <div className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        id="bank"
+                                        name="transaction_mode"
+                                        checked={isBank}
+                                        onChange={() => setValue("is_bank", true)}
+                                        className="w-4 h-4"
+                                    />
+                                    <Label htmlFor="bank" className="cursor-pointer">Bank</Label>
+                                </div> */}
                             </div>
+                        </div>
 
-                            {/* Account Selection */}
-                            <div className="flex items-center flex-wrap justify-between gap-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="account_id">Account *</Label>
+                        {/* Account Selection with Balance */}
+                        <div className="space-y-2 w-full">
+                            <Label htmlFor="account_id">Account *</Label>
+                            <div className="flex items-start gap-4 w-full">
+                                <div className="flex-1 space-y-2">
                                     <Controller
                                         name="account_id"
                                         control={control}
@@ -380,16 +349,15 @@ export default function SelfTransactionPage() {
                                             />
                                         )}
                                     />
+                                    {errors.account_id && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.account_id.message}
+                                        </p>
+                                    )}
                                 </div>
-                                {errors.account_id && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.account_id.message}
-                                    </p>
-                                )}
                                 {/* Current Balance */}
                                 {selectedAccount && (
                                     <div className="space-y-2 flex items-center gap-2">
-                                        <Label>Current Balance</Label>
                                         {balanceLoading ? (
                                             <p className="text-sm text-muted-foreground">Loading...</p>
                                         ) : currentBalance ? (
@@ -397,10 +365,6 @@ export default function SelfTransactionPage() {
                                                 <p className={`text-lg font-semibold ${currentBalance.balance >= 0 ? "text-green-600" : "text-red-600"}`}>
                                                     {currentBalance.balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
                                                 </p>
-                                                {/* <p className="text-xs text-muted-foreground">
-                                                Debit: {currentBalance.totalDebit?.toLocaleString() || "0.00"} | 
-                                                Credit: {currentBalance.totalCredit?.toLocaleString() || "0.00"}
-                                            </p> */}
                                             </div>
                                         ) : (
                                             <p className="text-sm text-muted-foreground">No balance data</p>
@@ -408,50 +372,79 @@ export default function SelfTransactionPage() {
                                     </div>
                                 )}
                             </div>
+                        </div>
 
-
-
-                            {/* Amount */}
-                            <div className="space-y-2">
-                                <Label htmlFor="amount">Amount *</Label>
-                                <Input
-                                    id="amount"
-                                    type="number"
-                                    step="0.01"
-                                    {...register("amount", {
-                                        required: "Amount is required",
-                                        min: { value: 0.01, message: "Amount must be greater than 0" },
-                                    })}
-                                    placeholder="0.00"
-                                />
-                                {errors.amount && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.amount.message}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Net Balance */}
-                            {selectedAccount && amount && netBalance !== null && (
-                                <div className="space-y-2">
-                                    <Label>Net Balance</Label>
-                                    <div className="p-2 bg-muted rounded-md">
-                                        <p className={`text-lg font-semibold ${netBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                            {netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {transactionType === "receive" ? "After receiving" : "After paying"} {parseFloat(amount || 0).toLocaleString()}
-                                        </p>
-                                    </div>
+                        {/* Transaction Action */}
+                        <div className="space-y-2 w-full">
+                            <Label>Transaction Action</Label>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        id="receive"
+                                        value="receive"
+                                        checked={transactionType === "receive"}
+                                        onChange={(e) => setValue("transaction_type", e.target.value)}
+                                        className="w-4 h-4"
+                                    />
+                                    <Label htmlFor="receive" className="cursor-pointer">Receive</Label>
                                 </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        id="pay"
+                                        value="pay"
+                                        checked={transactionType === "pay"}
+                                        onChange={(e) => setValue("transaction_type", e.target.value)}
+                                        className="w-4 h-4"
+                                    />
+                                    <Label htmlFor="pay" className="cursor-pointer">Pay</Label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Amount */}
+                        <div className="space-y-2 w-full">
+                            <Label htmlFor="amount">Amount *</Label>
+                            <Input
+                                id="amount"
+                                type="number"
+                                step="0.01"
+                                className="w-full"
+                                {...register("amount", {
+                                    required: "Amount is required",
+                                    min: { value: 0.01, message: "Amount must be greater than 0" },
+                                })}
+                                placeholder="0.00"
+                            />
+                            {errors.amount && (
+                                <p className="text-sm text-destructive">
+                                    {errors.amount.message}
+                                </p>
                             )}
                         </div>
 
+                        {/* Net Balance */}
+                        {selectedAccount && amount && netBalance !== null && (
+                            <div className="space-y-2 w-full">
+                                <Label>Net Balance</Label>
+                                <div className="p-2 bg-muted rounded-md">
+                                    <p className={`text-lg font-semibold ${netBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                        {netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {transactionType === "receive" ? "After receiving" : "After paying"} {parseFloat(amount || 0).toLocaleString()}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Description */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 w-full">
                             <Label htmlFor="description">Description</Label>
                             <Textarea
                                 id="description"
+                                className="w-full"
                                 {...register("description")}
                                 placeholder="Enter description"
                                 rows={3}

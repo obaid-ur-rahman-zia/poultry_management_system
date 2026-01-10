@@ -92,115 +92,193 @@ class RedisService {
   constructor() {
     this.client = null;
     this.isConnected = false;
+    this.isEnabled = process.env.REDIS_ENABLED !== "false"; // Allow disabling Redis via env
+    this.connectionAttempted = false;
+    this.connectionFailed = false;
+    this.errorLogged = false; // Track if we've already logged the error to avoid spam
   }
 
   async connect() {
-    if (this.isConnected) {
+    // If Redis is disabled, skip connection
+    if (!this.isEnabled) {
+      return null;
+    }
+
+    // If already connected, return client
+    if (this.isConnected && this.client) {
       return this.client;
     }
+
+    // If connection already failed, don't retry immediately
+    if (this.connectionFailed) {
+      return null;
+    }
+
+    // Prevent multiple simultaneous connection attempts
+    if (this.connectionAttempted) {
+      return null;
+    }
+
+    this.connectionAttempted = true;
 
     try {
       this.client = createClient({
         url: process.env.REDIS_URL || "redis://localhost:6379",
         // Add other Redis configuration options as needed
-        retry_unfulfilled_commands: true,
+        retry_unfulfilled_commands: false, // Disable retry to prevent repeated errors
         socket: {
-          reconnectStrategy: (retries) => Math.min(retries * 50, 1000),
+          connectTimeout: 5000, // 5 second timeout
+          reconnectStrategy: false, // Disable automatic reconnection to prevent error spam
         },
       });
 
       this.client.on("error", (err) => {
-        console.error("Redis Client Error:", err);
+        // Only log error once to avoid spam
+        if (!this.errorLogged) {
+          console.warn("Redis Client Error (Redis is optional, continuing without cache):", err.message || err.code);
+          this.errorLogged = true;
+        }
+        this.isConnected = false;
+        this.connectionFailed = true;
       });
 
       this.client.on("connect", () => {
-        console.log("Connected to Redis");
+        console.log("✓ Connected to Redis");
+        this.isConnected = true;
+        this.connectionFailed = false;
+        this.errorLogged = false;
       });
 
       this.client.on("disconnect", () => {
-        console.log("Disconnected from Redis");
         this.isConnected = false;
       });
 
-      await this.client.connect();
+      // Set connection timeout
+      const connectPromise = this.client.connect();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Connection timeout")), 5000);
+      });
+
+      await Promise.race([connectPromise, timeoutPromise]);
       this.isConnected = true;
+      this.connectionFailed = false;
+      this.connectionAttempted = false;
+      this.errorLogged = false; // Reset error logged flag on success
       return this.client;
     } catch (error) {
-      console.error("Failed to connect to Redis:", error);
-      throw error;
+      // Clean up failed client
+      if (this.client) {
+        try {
+          // Remove all event listeners
+          this.client.removeAllListeners();
+          // Try to disconnect if client exists
+          if (this.client.isOpen) {
+            await this.client.quit().catch(() => {});
+          }
+        } catch (cleanupError) {
+          // Ignore cleanup errors
+        }
+        this.client = null;
+      }
+
+      // Only log once to avoid spam
+      if (!this.errorLogged) {
+        console.warn("⚠ Redis connection failed (Redis is optional, continuing without cache)");
+        console.warn("   Error:", error.message || error.code || "Connection refused");
+        console.warn("   To enable Redis cache, ensure Redis server is running on", process.env.REDIS_URL || "redis://localhost:6379");
+        console.warn("   Or set REDIS_ENABLED=false in .env to disable Redis completely");
+        this.errorLogged = true;
+      }
+      this.isConnected = false;
+      this.connectionFailed = true;
+      this.connectionAttempted = false;
+      return null; // Return null instead of throwing
     }
   }
 
   async set(key, value) {
     try {
-      if (!this.isConnected) await this.connect();
+      const client = await this.connect();
+      if (!client || !this.isConnected) {
+        return null; // Gracefully fail if Redis is not available
+      }
       const str = typeof value === "string" ? value : JSON.stringify(value);
       return await this.client.set(key, str);
     } catch (err) {
-      console.error("Redis SET error:", err);
+      // Silently fail - Redis is optional
       return null;
     }
   }
 
   async get(key) {
     try {
-      if (!this.isConnected) await this.connect();
+      const client = await this.connect();
+      if (!client || !this.isConnected) {
+        return null; // Gracefully fail if Redis is not available
+      }
       const data = await this.client.get(key);
+      if (!data) return null;
       try {
         return JSON.parse(data);
       } catch {
         return data;
       }
     } catch (err) {
-      console.error("Redis GET error:", err);
+      // Silently fail - Redis is optional
       return null;
     }
   }
 
   async setex(key, ttl, value) {
     try {
-      if (!this.isConnected) {
-        await this.connect();
+      const client = await this.connect();
+      if (!client || !this.isConnected) {
+        return null; // Gracefully fail if Redis is not available
       }
-      return await this.client.setEx(key, ttl, value);
+      const str = typeof value === "string" ? value : JSON.stringify(value);
+      return await this.client.setEx(key, ttl, str);
     } catch (error) {
-      console.error("Redis SETEX error:", error);
+      // Silently fail - Redis is optional
       return null;
     }
   }
 
   async del(key) {
     try {
-      if (!this.isConnected) {
-        await this.connect();
+      const client = await this.connect();
+      if (!client || !this.isConnected) {
+        return null; // Gracefully fail if Redis is not available
       }
       return await this.client.del(key);
     } catch (error) {
-      console.error("Redis DEL error:", error);
+      // Silently fail - Redis is optional
       return null;
     }
   }
 
   async exists(key) {
     try {
-      if (!this.isConnected) {
-        await this.connect();
+      const client = await this.connect();
+      if (!client || !this.isConnected) {
+        return false; // Gracefully fail if Redis is not available
       }
-      return await this.client.exists(key);
+      const result = await this.client.exists(key);
+      return result === 1;
     } catch (error) {
-      console.error("Redis EXISTS error:", error);
+      // Silently fail - Redis is optional
       return false;
     }
   }
 
   async flushAll() {
     try {
-      if (!this.isConnected) {
-        await this.connect();
+      const client = await this.connect();
+      if (!client || !this.isConnected) {
+        return null; // Gracefully fail if Redis is not available
       }
       return await this.client.flushAll();
     } catch (error) {
-      console.error("Redis FLUSHALL error:", error);
+      // Silently fail - Redis is optional
       return null;
     }
   }
@@ -219,14 +297,26 @@ class RedisService {
   // Health check method
   async ping() {
     try {
-      if (!this.isConnected) {
-        await this.connect();
+      const client = await this.connect();
+      if (!client || !this.isConnected) {
+        return null;
       }
       return await this.client.ping();
     } catch (error) {
-      console.error("Redis PING error:", error);
       return null;
     }
+  }
+
+  // Method to manually reset connection state (useful for retrying)
+  resetConnection() {
+    this.connectionAttempted = false;
+    this.connectionFailed = false;
+    this.errorLogged = false;
+  }
+
+  // Check if Redis is available
+  isAvailable() {
+    return this.isEnabled && this.isConnected && this.client !== null;
   }
 }
 

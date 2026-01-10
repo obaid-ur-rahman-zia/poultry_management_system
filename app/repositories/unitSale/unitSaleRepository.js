@@ -98,13 +98,14 @@ class UnitSaleRepository {
       discount_type: data.discount_type || "percentage",
       discount_value: Number(data.discount_value) || 0,
       total: Number(data.total),
+      van_number: data.van_number || null,
       description: data.description || null,
       insert_by: data.insert_by || "user 1",
       update_by: data.update_by || "user 1",
       status: data.status ?? 1,
     };
 
-    // Add customer_id if provided (requires schema migration)
+    // Add customer_id if provided
     if (data.customer_id !== undefined) {
       createData.customer_id = Number(data.customer_id);
     }
@@ -169,6 +170,10 @@ class UnitSaleRepository {
           : undefined,
       total:
         req_object.total !== undefined ? Number(req_object.total) : undefined,
+      van_number:
+        req_object.van_number !== undefined
+          ? req_object.van_number || null
+          : undefined,
       description:
         req_object.description !== undefined
           ? req_object.description

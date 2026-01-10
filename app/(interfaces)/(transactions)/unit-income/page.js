@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Plus, Search, Edit2, Trash2, History, PlusCircle } from "lucide-react";
@@ -62,9 +62,10 @@ export default function UnitSalePage() {
             product_id: "",
             price: "",
             quantity: "",
+            van_number: "",
             tax_type: "flat",
             tax_value: "",
-            discount_type: "percentage",
+            discount_type: "flat",
             discount_value: "",
             description: "",
         },
@@ -90,6 +91,8 @@ export default function UnitSalePage() {
         customer_address: "",
         customer_contact: "",
     });
+    const [customerBalance, setCustomerBalance] = useState(null);
+    const [loadingBalance, setLoadingBalance] = useState(false);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -104,6 +107,7 @@ export default function UnitSalePage() {
     const farmRate = watch("farm_rate");
     const saleRate = watch("sale_rate");
     const selectedProduct = watch("product_id");
+    const selectedCustomer = watch("customer_id");
     const price = watch("price");
     const quantity = watch("quantity");
     const taxType = watch("tax_type");
@@ -129,35 +133,6 @@ export default function UnitSalePage() {
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
-
-    useEffect(() => {
-        if (selectedUnit) {
-            fetchFlocsByUnit(selectedUnit);
-        } else {
-            setAvailableFlocs([]);
-            setValue("floc_id", "");
-        }
-    }, [selectedUnit]);
-
-    useEffect(() => {
-        // Check if F.S Rate is already set for today
-        if (selectedUnit && selectedFloc && saleDate) {
-            checkFsRateForToday();
-        } else {
-            setFsRateSet(false);
-            setFsRateEditable(true);
-        }
-    }, [selectedUnit, selectedFloc, saleDate]);
-
-    useEffect(() => {
-        // If product is "chick", apply farm rate as price
-        if (selectedProduct && farmRate && Array.isArray(products)) {
-            const product = products.find(p => p.product_id === parseInt(selectedProduct));
-            if (product && product.product_title?.toLowerCase().includes("chick")) {
-                setValue("price", farmRate);
-            }
-        }
-    }, [selectedProduct, farmRate, products]);
 
     const fetchUnits = async () => {
         try {
@@ -212,7 +187,8 @@ export default function UnitSalePage() {
         }
     };
 
-    const checkFsRateForToday = async () => {
+    const checkFsRateForToday = useCallback(async () => {
+        if (!selectedUnit || !selectedFloc || !saleDate) return;
         try {
             const response = await fetch(
                 `/api/unitSale/checkFsRate?prounit_id=${selectedUnit}&floc_id=${selectedFloc}&sale_date=${saleDate}`
@@ -223,8 +199,13 @@ export default function UnitSalePage() {
                 if (data.exists) {
                     setFsRateSet(true);
                     setFsRateEditable(false);
-                    setValue("farm_rate", data.farm_rate?.toString() || "");
+                    const farmRateValue = data.farm_rate?.toString() || "";
+                    setValue("farm_rate", farmRateValue);
                     setValue("sale_rate", data.sale_rate?.toString() || "");
+                    // Set farm_rate as price when F.S rate is loaded, but keep price editable
+                    if (farmRateValue) {
+                        setValue("price", farmRateValue);
+                    }
                 } else {
                     setFsRateSet(false);
                     setFsRateEditable(true);
@@ -235,7 +216,67 @@ export default function UnitSalePage() {
             setFsRateSet(false);
             setFsRateEditable(true);
         }
-    };
+    }, [selectedUnit, selectedFloc, saleDate, setValue]);
+
+    const fetchCustomerBalance = useCallback(async (accId) => {
+        if (!accId) {
+            setCustomerBalance(null);
+            return;
+        }
+        setLoadingBalance(true);
+        try {
+            const response = await fetch(`/api/transaction/read/balance?acc_id=${accId}`);
+            const result = await response.json();
+            if (result.response_status === "success" && result.response_result) {
+                setCustomerBalance(result.response_result.balance || 0);
+            } else {
+                setCustomerBalance(null);
+            }
+        } catch (error) {
+            console.error("Error fetching customer balance:", error);
+            setCustomerBalance(null);
+        } finally {
+            setLoadingBalance(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (selectedUnit) {
+            fetchFlocsByUnit(selectedUnit);
+        } else {
+            setAvailableFlocs([]);
+            setValue("floc_id", "");
+        }
+    }, [selectedUnit]);
+
+    useEffect(() => {
+        // Check if F.S Rate is already set for today
+        if (selectedUnit && selectedFloc && saleDate) {
+            checkFsRateForToday();
+        } else {
+            setFsRateSet(false);
+            setFsRateEditable(true);
+        }
+    }, [selectedUnit, selectedFloc, saleDate, checkFsRateForToday]);
+
+    useEffect(() => {
+        // If product is "chick", apply farm rate as price
+        if (selectedProduct && farmRate && Array.isArray(products)) {
+            const product = products.find(p => p.product_id === parseInt(selectedProduct));
+            if (product && product.product_title?.toLowerCase().includes("chick")) {
+                setValue("price", farmRate);
+            }
+        }
+    }, [selectedProduct, farmRate, products, setValue]);
+
+    useEffect(() => {
+        // Fetch customer balance when customer is selected
+        if (selectedCustomer) {
+            fetchCustomerBalance(selectedCustomer);
+        } else {
+            setCustomerBalance(null);
+        }
+    }, [selectedCustomer, fetchCustomerBalance]);
 
     const fetchPreviousFsRates = async () => {
         try {
@@ -309,6 +350,7 @@ export default function UnitSalePage() {
             setCustomers([]);
         }
     };
+
 
 
     const handleCreateCustomer = async () => {
@@ -450,8 +492,8 @@ export default function UnitSalePage() {
     };
 
     const onSubmit = async (data) => {
-        if (!data.prounit_id || !data.floc_id || !data.customer_id || !data.product_id || !data.price || !data.quantity) {
-            toast.error("Please fill all required fields");
+        if (!data.prounit_id || !data.floc_id || !data.customer_id || !data.product_id || !data.price || !data.quantity || !data.van_number) {
+            toast.error("Please fill all required fields including Van Number");
             return;
         }
 
@@ -474,6 +516,7 @@ export default function UnitSalePage() {
                 product_id: parseInt(data.product_id),
                 price: parseFloat(data.price),
                 quantity: parseFloat(data.quantity),
+                van_number: data.van_number?.trim() || null,
                 tax_type: data.tax_type,
                 tax_value: data.tax_value ? parseFloat(data.tax_value) : 0,
                 discount_type: data.discount_type,
@@ -513,12 +556,14 @@ export default function UnitSalePage() {
                     product_id: "",
                     price: "",
                     quantity: "",
+                    van_number: "",
                     tax_type: "flat",
                     tax_value: "",
                     discount_type: "percentage",
                     discount_value: "",
                     description: "",
                 });
+                setCustomerBalance(null);
                 setFsRateSet(false);
                 setFsRateEditable(true);
                 setIsEditMode(false);
@@ -547,6 +592,7 @@ export default function UnitSalePage() {
             product_id: sale.product_id?.toString() || "",
             price: sale.price?.toString() || "",
             quantity: sale.quantity?.toString() || "",
+            van_number: sale.van_number || "",
             tax_type: sale.tax_type || "flat",
             tax_value: sale.tax_value?.toString() || "",
             discount_type: sale.discount_type || "percentage",
@@ -555,6 +601,10 @@ export default function UnitSalePage() {
         });
         setFsRateSet(true);
         setFsRateEditable(false);
+        // Fetch customer balance if customer is selected
+        if (sale.customer_id) {
+            fetchCustomerBalance(sale.customer_id.toString());
+        }
         // Fetch flocs for the selected unit
         if (prounitId) {
             fetchFlocsByUnit(prounitId);
@@ -769,7 +819,14 @@ export default function UnitSalePage() {
                                                         label: customer.account_nam,
                                                     })) : []}
                                                     value={field.value}
-                                                    onValueChange={field.onChange}
+                                                    onValueChange={(value) => {
+                                                        field.onChange(value);
+                                                        if (value) {
+                                                            fetchCustomerBalance(value);
+                                                        } else {
+                                                            setCustomerBalance(null);
+                                                        }
+                                                    }}
                                                     placeholder={customers.length > 0 ? "Select customer" : "No customers"}
                                                     searchPlaceholder="Search customers..."
                                                     emptyText="No customer found."
@@ -790,6 +847,17 @@ export default function UnitSalePage() {
                                     <p className="text-sm text-destructive">
                                         {errors.customer_id.message}
                                     </p>
+                                )}
+                                {customerBalance !== null && (
+                                    <div className="mt-1">
+                                        <p className="text-xs text-muted-foreground">
+                                            Balance:{" "}
+                                            <span className={`font-semibold ${customerBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {customerBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                            {loadingBalance && <span className="ml-2 text-xs">Loading...</span>}
+                                        </p>
+                                    </div>
                                 )}
                             </div>
 
@@ -822,8 +890,44 @@ export default function UnitSalePage() {
                             </div>
                         </div>
 
-                        {/* First Row: Price, Discount Type, Discount Value, Discounted Amount */}
+                        {/* First Row: Van Number, Quantity, Price, Total */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Van Number */}
+                            <div className="space-y-2">
+                                <Label htmlFor="van_number">Van Number *</Label>
+                                <Input
+                                    id="van_number"
+                                    type="text"
+                                    {...register("van_number", {
+                                        required: "Van Number is required",
+                                    })}
+                                    placeholder="Enter van number"
+                                />
+                                {errors.van_number && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.van_number.message}
+                                    </p>
+                                )}
+                            </div>
+                            {/* Quantity */}
+                            <div className="space-y-2">
+                                <Label htmlFor="quantity">Quantity *</Label>
+                                <Input
+                                    id="quantity"
+                                    type="number"
+                                    step="0.01"
+                                    {...register("quantity", {
+                                        required: "Quantity is required",
+                                        min: { value: 0.01, message: "Quantity must be greater than 0" },
+                                    })}
+                                    placeholder="0.00"
+                                />
+                                {errors.quantity && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.quantity.message}
+                                    </p>
+                                )}
+                            </div>
                             {/* Price */}
                             <div className="space-y-2">
                                 <Label htmlFor="price">Price *</Label>
@@ -843,9 +947,19 @@ export default function UnitSalePage() {
                                     </p>
                                 )}
                             </div>
+                            
+                            {/* Total */}
+                            <div className="space-y-2">
+                                <Label>Total Amount</Label>
+                                <div className="p-2 bg-muted rounded-md">
+                                    <p className="text-lg font-semibold">
+                                        {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                </div>
+                            </div>
 
                             {/* Discount Type */}
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label>Discount Type</Label>
                                 <Controller
                                     name="discount_type"
@@ -867,10 +981,10 @@ export default function UnitSalePage() {
                                         </RadioGroup>
                                     )}
                                 />
-                            </div>
+                            </div> */}
 
                             {/* Discount Value */}
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label htmlFor="discount_value">Discount Value</Label>
                                 <Input
                                     id="discount_value"
@@ -881,43 +995,25 @@ export default function UnitSalePage() {
                                     })}
                                     placeholder="0.00"
                                 />
-                            </div>
+                            </div> */}
 
                             {/* Discounted Amount */}
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label>Discounted Amount</Label>
                                 <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
                                     <p className="text-sm font-semibold">
                                         {discountValue ? calculateDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
                                     </p>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {/* Quantity */}
-                            <div className="space-y-2">
-                                <Label htmlFor="quantity">Quantity *</Label>
-                                <Input
-                                    id="quantity"
-                                    type="number"
-                                    step="0.01"
-                                    {...register("quantity", {
-                                        required: "Quantity is required",
-                                        min: { value: 0.01, message: "Quantity must be greater than 0" },
-                                    })}
-                                    placeholder="0.00"
-                                />
-                                {errors.quantity && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.quantity.message}
-                                    </p>
-                                )}
-                            </div>
+                            
 
                             {/* Tax Type */}
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label>Tax Type</Label>
                                 <Controller
                                     name="tax_type"
@@ -939,10 +1035,10 @@ export default function UnitSalePage() {
                                         </RadioGroup>
                                     )}
                                 />
-                            </div>
+                            </div> */}
 
                             {/* Tax Value */}
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label htmlFor="tax_value">Tax Value</Label>
                                 <Input
                                     id="tax_value"
@@ -953,30 +1049,22 @@ export default function UnitSalePage() {
                                     })}
                                     placeholder="0.00"
                                 />
-                            </div>
+                            </div> */}
 
                             {/* Tax Applied Amount */}
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label>Tax Applied Amount</Label>
                                 <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
                                     <p className="text-sm font-semibold">
                                         {taxValue ? calculateTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
                                     </p>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Third Row: Total, Description */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Total */}
-                            <div className="space-y-2">
-                                <Label>Total Amount</Label>
-                                <div className="p-2 bg-muted rounded-md">
-                                    <p className="text-lg font-semibold">
-                                        {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
-                                </div>
-                            </div>
+                            
 
                             {/* Description */}
                             <div className="space-y-2">
@@ -1005,12 +1093,14 @@ export default function UnitSalePage() {
                                         product_id: "",
                                         price: "",
                                         quantity: "",
+                                        van_number: "",
                                         tax_type: "flat",
                                         tax_value: "",
                                         discount_type: "percentage",
                                         discount_value: "",
                                         description: "",
                                     });
+                                    setCustomerBalance(null);
                                     setFsRateSet(false);
                                     setFsRateEditable(true);
                                     setIsEditMode(false);
@@ -1208,6 +1298,12 @@ export default function UnitSalePage() {
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Van Number</span>
+                                                <span className="text-sm font-medium">
+                                                    {sale.van_number || "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
                                                 <span className="text-xs text-gray-500">F.S Rate</span>
                                                 <span className="text-sm">
                                                     {sale.farm_rate && sale.sale_rate
@@ -1262,6 +1358,7 @@ export default function UnitSalePage() {
                                                 <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Floc</th>
                                                 <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">Customer</th>
                                                 <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Product</th>
+                                                <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">Van Number</th>
                                                 <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">F.S Rate</th>
                                                 <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Price</th>
                                                 <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">Quantity</th>
@@ -1286,6 +1383,9 @@ export default function UnitSalePage() {
                                                     </td>
                                                     <td className="p-2 align-middle whitespace-nowrap">
                                                         {Array.isArray(products) && products.find(p => p.product_id === sale.product_id)?.product_title || "N/A"}
+                                                    </td>
+                                                    <td className="p-2 align-middle whitespace-nowrap hidden md:table-cell">
+                                                        {sale.van_number || "N/A"}
                                                     </td>
                                                     <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
                                                         {sale.farm_rate && sale.sale_rate

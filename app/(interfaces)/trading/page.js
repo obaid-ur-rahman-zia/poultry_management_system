@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Combobox } from "@/components/ui/combobox";
+import { Switch } from "@/components/ui/switch";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 import {
   Dialog,
@@ -61,8 +62,11 @@ export default function TradingPage() {
       buy_price: "",
       buy_tax_type: "flat",
       buy_tax_value: "",
-      buy_discount_type: "percentage",
+      buy_tax_percentage: false,
+      buy_further_tax_value: "",
+      buy_further_tax_percentage: false,
       buy_discount_value: "",
+      buy_other_discount_value: "",
       buy_detail: "",
       // Sale To section
       sale_to_account: "",
@@ -70,8 +74,11 @@ export default function TradingPage() {
       sale_quantity: "",
       sale_tax_type: "flat",
       sale_tax_value: "",
-      sale_discount_type: "percentage",
+      sale_tax_percentage: false,
+      sale_further_tax_value: "",
+      sale_further_tax_percentage: false,
       sale_discount_value: "",
+      sale_other_discount_value: "",
       sale_detail: "",
     },
   });
@@ -95,15 +102,21 @@ export default function TradingPage() {
   const buyPrice = watch("buy_price");
   const buyTaxType = watch("buy_tax_type");
   const buyTaxValue = watch("buy_tax_value");
-  const buyDiscountType = watch("buy_discount_type");
+  const buyTaxPercentage = watch("buy_tax_percentage");
+  const buyFurtherTaxValue = watch("buy_further_tax_value");
+  const buyFurtherTaxPercentage = watch("buy_further_tax_percentage");
   const buyDiscountValue = watch("buy_discount_value");
+  const buyOtherDiscountValue = watch("buy_other_discount_value");
 
   const saleQuantity = watch("sale_quantity");
   const salePrice = watch("sale_price");
   const saleTaxType = watch("sale_tax_type");
   const saleTaxValue = watch("sale_tax_value");
-  const saleDiscountType = watch("sale_discount_type");
+  const saleTaxPercentage = watch("sale_tax_percentage");
+  const saleFurtherTaxValue = watch("sale_further_tax_value");
+  const saleFurtherTaxPercentage = watch("sale_further_tax_percentage");
   const saleDiscountValue = watch("sale_discount_value");
+  const saleOtherDiscountValue = watch("sale_other_discount_value");
 
   useEffect(() => {
     fetchAccounts();
@@ -132,6 +145,49 @@ export default function TradingPage() {
       setValue("sale_price", buyPrice);
     }
   }, [buyPrice, setValue]);
+
+  // Sync sale discount values with buy discount values (only when buy values are set)
+  useEffect(() => {
+    const buyDiscountStr = buyDiscountValue?.toString().trim();
+    if (buyDiscountStr && buyDiscountStr !== "") {
+      setValue("sale_discount_value", buyDiscountValue);
+    }
+  }, [buyDiscountValue, setValue]);
+
+  useEffect(() => {
+    const buyOtherDiscountStr = buyOtherDiscountValue?.toString().trim();
+    if (buyOtherDiscountStr && buyOtherDiscountStr !== "") {
+      setValue("sale_other_discount_value", buyOtherDiscountValue);
+    }
+  }, [buyOtherDiscountValue, setValue]);
+
+  // Sync sale tax values with buy tax values (only when buy values are set)
+  useEffect(() => {
+    const buyTaxStr = buyTaxValue?.toString().trim();
+    if (buyTaxStr && buyTaxStr !== "") {
+      setValue("sale_tax_value", buyTaxValue);
+    }
+  }, [buyTaxValue, setValue]);
+
+  useEffect(() => {
+    if (buyTaxPercentage !== undefined && buyTaxPercentage !== null) {
+      setValue("sale_tax_percentage", buyTaxPercentage);
+      setValue("sale_tax_type", buyTaxPercentage ? "percentage" : "flat");
+    }
+  }, [buyTaxPercentage, setValue]);
+
+  useEffect(() => {
+    const buyFurtherTaxStr = buyFurtherTaxValue?.toString().trim();
+    if (buyFurtherTaxStr && buyFurtherTaxStr !== "") {
+      setValue("sale_further_tax_value", buyFurtherTaxValue);
+    }
+  }, [buyFurtherTaxValue, setValue]);
+
+  useEffect(() => {
+    if (buyFurtherTaxPercentage !== undefined && buyFurtherTaxPercentage !== null) {
+      setValue("sale_further_tax_percentage", buyFurtherTaxPercentage);
+    }
+  }, [buyFurtherTaxPercentage, setValue]);
 
   const fetchAccounts = async () => {
     try {
@@ -193,11 +249,19 @@ export default function TradingPage() {
 
   const calculateBuyDiscountAmount = () => {
     const priceValue = parseFloat(buyPrice) || 0;
-    if (!buyDiscountValue) return 0;
+    let totalDiscount = 0;
     
-    return buyDiscountType === "percentage"
-      ? (priceValue * parseFloat(buyDiscountValue)) / 100
-      : parseFloat(buyDiscountValue);
+    // Percentage discount
+    if (buyDiscountValue) {
+      totalDiscount += (priceValue * parseFloat(buyDiscountValue)) / 100;
+    }
+    
+    // Flat discount
+    if (buyOtherDiscountValue) {
+      totalDiscount += parseFloat(buyOtherDiscountValue);
+    }
+    
+    return totalDiscount;
   };
 
   const calculateBuyTaxAmount = () => {
@@ -205,11 +269,23 @@ export default function TradingPage() {
     const discountAmount = calculateBuyDiscountAmount();
     const priceAfterDiscount = Math.max(0, priceValue - discountAmount);
     
-    if (!buyTaxValue) return 0;
+    let totalTax = 0;
     
-    return buyTaxType === "percentage"
-      ? (priceAfterDiscount * parseFloat(buyTaxValue)) / 100
-      : parseFloat(buyTaxValue);
+    // Calculate main tax
+    if (buyTaxValue) {
+      totalTax += buyTaxPercentage
+        ? (priceAfterDiscount * parseFloat(buyTaxValue)) / 100
+        : parseFloat(buyTaxValue);
+    }
+    
+    // Calculate further tax (applied on price after discount)
+    if (buyFurtherTaxValue) {
+      totalTax += buyFurtherTaxPercentage
+        ? (priceAfterDiscount * parseFloat(buyFurtherTaxValue)) / 100
+        : parseFloat(buyFurtherTaxValue);
+    }
+    
+    return totalTax;
   };
 
   const calculateBuyTotal = () => {
@@ -217,18 +293,20 @@ export default function TradingPage() {
     const quantityValue = parseFloat(buyQuantity) || 0;
 
     let discountedPrice = priceValue;
+    
+    // Calculate total discount (percentage + flat)
+    let totalDiscount = 0;
     if (buyDiscountValue) {
-      const discountAmount = buyDiscountType === "percentage"
-        ? (priceValue * parseFloat(buyDiscountValue)) / 100
-        : parseFloat(buyDiscountValue);
-      discountedPrice = Math.max(0, priceValue - discountAmount);
+      totalDiscount += (priceValue * parseFloat(buyDiscountValue)) / 100;
     }
+    if (buyOtherDiscountValue) {
+      totalDiscount += parseFloat(buyOtherDiscountValue);
+    }
+    discountedPrice = Math.max(0, priceValue - totalDiscount);
 
     let finalUnitPrice = discountedPrice;
-    if (buyTaxValue) {
-      const taxAmount = buyTaxType === "percentage"
-        ? (discountedPrice * parseFloat(buyTaxValue)) / 100
-        : parseFloat(buyTaxValue);
+    const taxAmount = calculateBuyTaxAmount();
+    if (taxAmount > 0) {
       finalUnitPrice = Math.max(0, discountedPrice + taxAmount);
     }
 
@@ -238,11 +316,19 @@ export default function TradingPage() {
 
   const calculateSaleDiscountAmount = () => {
     const priceValue = parseFloat(salePrice) || 0;
-    if (!saleDiscountValue) return 0;
+    let totalDiscount = 0;
     
-    return saleDiscountType === "percentage"
-      ? (priceValue * parseFloat(saleDiscountValue)) / 100
-      : parseFloat(saleDiscountValue);
+    // Percentage discount
+    if (saleDiscountValue) {
+      totalDiscount += (priceValue * parseFloat(saleDiscountValue)) / 100;
+    }
+    
+    // Flat discount
+    if (saleOtherDiscountValue) {
+      totalDiscount += parseFloat(saleOtherDiscountValue);
+    }
+    
+    return totalDiscount;
   };
 
   const calculateSaleTaxAmount = () => {
@@ -250,11 +336,23 @@ export default function TradingPage() {
     const discountAmount = calculateSaleDiscountAmount();
     const priceAfterDiscount = Math.max(0, priceValue - discountAmount);
     
-    if (!saleTaxValue) return 0;
+    let totalTax = 0;
     
-    return saleTaxType === "percentage"
-      ? (priceAfterDiscount * parseFloat(saleTaxValue)) / 100
-      : parseFloat(saleTaxValue);
+    // Calculate main tax
+    if (saleTaxValue) {
+      totalTax += saleTaxPercentage
+        ? (priceAfterDiscount * parseFloat(saleTaxValue)) / 100
+        : parseFloat(saleTaxValue);
+    }
+    
+    // Calculate further tax (applied on price after discount)
+    if (saleFurtherTaxValue) {
+      totalTax += saleFurtherTaxPercentage
+        ? (priceAfterDiscount * parseFloat(saleFurtherTaxValue)) / 100
+        : parseFloat(saleFurtherTaxValue);
+    }
+    
+    return totalTax;
   };
 
   const calculateSaleTotal = () => {
@@ -262,18 +360,20 @@ export default function TradingPage() {
     const quantityValue = parseFloat(saleQuantity) || 0;
 
     let discountedPrice = priceValue;
+    
+    // Calculate total discount (percentage + flat)
+    let totalDiscount = 0;
     if (saleDiscountValue) {
-      const discountAmount = saleDiscountType === "percentage"
-        ? (priceValue * parseFloat(saleDiscountValue)) / 100
-        : parseFloat(saleDiscountValue);
-      discountedPrice = Math.max(0, priceValue - discountAmount);
+      totalDiscount += (priceValue * parseFloat(saleDiscountValue)) / 100;
     }
+    if (saleOtherDiscountValue) {
+      totalDiscount += parseFloat(saleOtherDiscountValue);
+    }
+    discountedPrice = Math.max(0, priceValue - totalDiscount);
 
     let finalUnitPrice = discountedPrice;
-    if (saleTaxValue) {
-      const taxAmount = saleTaxType === "percentage"
-        ? (discountedPrice * parseFloat(saleTaxValue)) / 100
-        : parseFloat(saleTaxValue);
+    const taxAmount = calculateSaleTaxAmount();
+    if (taxAmount > 0) {
       finalUnitPrice = Math.max(0, discountedPrice + taxAmount);
     }
 
@@ -300,7 +400,7 @@ export default function TradingPage() {
         buy_price: parseFloat(data.buy_price),
         buy_tax_type: data.buy_tax_type,
         buy_tax_value: data.buy_tax_value ? parseFloat(data.buy_tax_value) : 0,
-        buy_discount_type: data.buy_discount_type,
+        buy_discount_type: "percentage", // Always percentage for buy_discount_value
         buy_discount_value: data.buy_discount_value ? parseFloat(data.buy_discount_value) : 0,
         buy_total: buyTotal,
         buy_detail: data.buy_detail?.trim() || "",
@@ -309,7 +409,7 @@ export default function TradingPage() {
         sale_quantity: parseFloat(data.sale_quantity),
         sale_tax_type: data.sale_tax_type,
         sale_tax_value: data.sale_tax_value ? parseFloat(data.sale_tax_value) : 0,
-        sale_discount_type: data.sale_discount_type,
+        sale_discount_type: "percentage", // Always percentage for sale_discount_value
         sale_discount_value: data.sale_discount_value ? parseFloat(data.sale_discount_value) : 0,
         sale_total: saleTotal,
         sale_detail: data.sale_detail?.trim() || "",
@@ -339,16 +439,22 @@ export default function TradingPage() {
           buy_price: "",
           buy_tax_type: "flat",
           buy_tax_value: "",
-          buy_discount_type: "percentage",
+          buy_tax_percentage: false,
+          buy_further_tax_value: "",
+          buy_further_tax_percentage: false,
           buy_discount_value: "",
+          buy_other_discount_value: "",
           buy_detail: "",
           sale_to_account: "",
           sale_price: "",
           sale_quantity: "",
           sale_tax_type: "flat",
           sale_tax_value: "",
-          sale_discount_type: "percentage",
+          sale_tax_percentage: false,
+          sale_further_tax_value: "",
+          sale_further_tax_percentage: false,
           sale_discount_value: "",
+          sale_other_discount_value: "",
           sale_detail: "",
         });
         setIsEditMode(false);
@@ -366,6 +472,15 @@ export default function TradingPage() {
   const handleEdit = (trade) => {
     setIsEditMode(true);
     setEditingTradeId(trade.trading_id);
+    
+    // If discount_type was "flat", move the value to other_discount_value
+    // If discount_type was "percentage", keep it in discount_value
+    const buyDiscountValue = trade.buy_discount_type === "flat" ? "" : (trade.buy_discount_value?.toString() || "");
+    const buyOtherDiscountValue = trade.buy_discount_type === "flat" ? (trade.buy_discount_value?.toString() || "") : "";
+    
+    const saleDiscountValue = trade.sale_discount_type === "flat" ? "" : (trade.sale_discount_value?.toString() || "");
+    const saleOtherDiscountValue = trade.sale_discount_type === "flat" ? (trade.sale_discount_value?.toString() || "") : "";
+    
     reset({
       trading_date: trade.trading_date ? new Date(trade.trading_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       buy_from_account: trade.buy_from_account?.toString() || "",
@@ -375,16 +490,22 @@ export default function TradingPage() {
       buy_price: trade.buy_price?.toString() || "",
       buy_tax_type: trade.buy_tax_type || "flat",
       buy_tax_value: trade.buy_tax_value?.toString() || "",
-      buy_discount_type: trade.buy_discount_type || "percentage",
-      buy_discount_value: trade.buy_discount_value?.toString() || "",
+      buy_tax_percentage: trade.buy_tax_type === "percentage" || false,
+      buy_further_tax_value: trade.buy_further_tax_value?.toString() || "",
+      buy_further_tax_percentage: (trade.buy_further_tax_type === "percentage") || false,
+      buy_discount_value: buyDiscountValue,
+      buy_other_discount_value: buyOtherDiscountValue,
       buy_detail: trade.buy_detail || "",
       sale_to_account: trade.sale_to_account?.toString() || "",
       sale_price: trade.sale_price?.toString() || "",
       sale_quantity: trade.sale_quantity?.toString() || "",
       sale_tax_type: trade.sale_tax_type || "flat",
       sale_tax_value: trade.sale_tax_value?.toString() || "",
-      sale_discount_type: trade.sale_discount_type || "percentage",
-      sale_discount_value: trade.sale_discount_value?.toString() || "",
+      sale_tax_percentage: trade.sale_tax_type === "percentage" || false,
+      sale_further_tax_value: trade.sale_further_tax_value?.toString() || "",
+      sale_further_tax_percentage: (trade.sale_further_tax_type === "percentage") || false,
+      sale_discount_value: saleDiscountValue,
+      sale_other_discount_value: saleOtherDiscountValue,
       sale_detail: trade.sale_detail || "",
     });
   };
@@ -421,16 +542,22 @@ export default function TradingPage() {
       buy_price: "",
       buy_tax_type: "flat",
       buy_tax_value: "",
-      buy_discount_type: "percentage",
+      buy_tax_percentage: false,
+      buy_further_tax_value: "",
+      buy_further_tax_percentage: false,
       buy_discount_value: "",
+      buy_other_discount_value: "",
       buy_detail: "",
       sale_to_account: "",
       sale_price: "",
       sale_quantity: "",
       sale_tax_type: "flat",
       sale_tax_value: "",
-      sale_discount_type: "percentage",
+      sale_tax_percentage: false,
+      sale_further_tax_value: "",
+      sale_further_tax_percentage: false,
       sale_discount_value: "",
+      sale_other_discount_value: "",
       sale_detail: "",
     });
     setIsEditMode(false);
@@ -463,9 +590,9 @@ export default function TradingPage() {
     <div className="container mx-auto sm:p-0 md:p-6 space-y-4 md:space-y-6">
       {/* Trading Form */}
       <Card className="max-w-7xl mx-auto">
-        <CardHeader className="p-4 pb-0 sm:p-0 sm:pl-4 mb-0!">
+        {/* <CardHeader className="p-4 pb-0 sm:p-0 sm:pl-4 mb-0!">
           <CardTitle className="text-lg sm:text-xl mb-0!">{isEditMode ? "Edit Trade" : "Create New Trade"}</CardTitle>
-        </CardHeader>
+        </CardHeader> */}
         <CardContent className="p-4 pt-0 sm:p-0">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
@@ -565,7 +692,7 @@ export default function TradingPage() {
                     )}
                   </div>
 
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label>Discount Type</Label>
                     <Controller
                       name="buy_discount_type"
@@ -587,10 +714,10 @@ export default function TradingPage() {
                         </RadioGroup>
                       )}
                     />
-                  </div>
+                  </div> */}
 
                   <div className="space-y-2">
-                    <Label htmlFor="buy_discount_value">Discount Value</Label>
+                    <Label htmlFor="buy_discount_value">Discount Value ( % )</Label>
                     <Input
                       id="buy_discount_value"
                       type="number"
@@ -601,17 +728,28 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="buy_other_discount_value">Other Discount Value ( flat )</Label>
+                    <Input
+                      id="buy_other_discount_value"
+                      type="number"
+                      step="0.01"
+                      {...register("buy_other_discount_value", { min: 0 })}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>Discounted Amount</Label>
                     <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
                       <p className="text-sm font-semibold">
-                        {buyDiscountValue ? calculateBuyDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                        {(buyDiscountValue || buyOtherDiscountValue) ? calculateBuyDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
                       </p>
                     </div>
                   </div>
-                </div>
+                {/* </div> */}
 
                 {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
+                {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4"> */}
                   <div className="space-y-2">
                     <Label htmlFor="buy_quantity">Quantity *</Label>
                     <Input
@@ -627,31 +765,21 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Tax Type</Label>
-                    <Controller
-                      name="buy_tax_type"
-                      control={control}
-                      render={({ field }) => (
-                        <RadioGroup
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          className="flex flex-col gap-2"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="flat" id="buy-tax-flat" />
-                            <Label htmlFor="buy-tax-flat" className="font-normal cursor-pointer">Flat</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="percentage" id="buy-tax-percentage" />
-                            <Label htmlFor="buy-tax-percentage" className="font-normal cursor-pointer">Percentage</Label>
-                          </div>
-                        </RadioGroup>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_tax_value">Tax Value</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="buy_tax_value">Tax Value</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Flat</span>
+                        <Switch
+                          id="buy_tax_percentage"
+                          checked={buyTaxPercentage}
+                          onCheckedChange={(checked) => {
+                            setValue("buy_tax_percentage", checked);
+                            setValue("buy_tax_type", checked ? "percentage" : "flat");
+                          }}
+                        />
+                        <span className="text-xs text-muted-foreground">%</span>
+                      </div>
+                    </div>
                     <Input
                       id="buy_tax_value"
                       type="number"
@@ -662,10 +790,32 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Tax Applied Amount</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="buy_further_tax_value">Further Tax Value</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Flat</span>
+                        <Switch
+                          id="buy_further_tax_percentage"
+                          checked={buyFurtherTaxPercentage}
+                          onCheckedChange={(checked) => setValue("buy_further_tax_percentage", checked)}
+                        />
+                        <span className="text-xs text-muted-foreground">%</span>
+                      </div>
+                    </div>
+                    <Input
+                      id="buy_further_tax_value"
+                      type="number"
+                      step="0.01"
+                      {...register("buy_further_tax_value", { min: 0 })}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tax Applied Amount {(buyTaxValue || buyFurtherTaxValue) ? `(Total)` : ""}</Label>
                     <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
                       <p className="text-sm font-semibold">
-                        {buyTaxValue ? calculateBuyTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                        {(buyTaxValue || buyFurtherTaxValue) ? calculateBuyTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
                       </p>
                     </div>
                   </div>
@@ -743,31 +893,7 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Discount Type</Label>
-                    <Controller
-                      name="sale_discount_type"
-                      control={control}
-                      render={({ field }) => (
-                        <RadioGroup
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          className="flex flex-col gap-2"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="percentage" id="sale-discount-percentage" />
-                            <Label htmlFor="sale-discount-percentage" className="font-normal cursor-pointer">Percentage</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="flat" id="sale-discount-flat" />
-                            <Label htmlFor="sale-discount-flat" className="font-normal cursor-pointer">Flat</Label>
-                          </div>
-                        </RadioGroup>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sale_discount_value">Discount Value</Label>
+                    <Label htmlFor="sale_discount_value">Discount Value ( % )</Label>
                     <Input
                       id="sale_discount_value"
                       type="number"
@@ -778,17 +904,28 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="sale_other_discount_value">Other Discount Value ( flat )</Label>
+                    <Input
+                      id="sale_other_discount_value"
+                      type="number"
+                      step="0.01"
+                      {...register("sale_other_discount_value", { min: 0 })}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>Discounted Amount</Label>
                     <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
                       <p className="text-sm font-semibold">
-                        {saleDiscountValue ? calculateSaleDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                        {(saleDiscountValue || saleOtherDiscountValue) ? calculateSaleDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
                       </p>
                     </div>
                   </div>
-                </div>
+                {/* </div> */}
 
                 {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
+                {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4"> */}
                   <div className="space-y-2">
                     <Label htmlFor="sale_quantity">Quantity *</Label>
                     <Input
@@ -804,31 +941,21 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Tax Type</Label>
-                    <Controller
-                      name="sale_tax_type"
-                      control={control}
-                      render={({ field }) => (
-                        <RadioGroup
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          className="flex flex-col gap-2"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="flat" id="sale-tax-flat" />
-                            <Label htmlFor="sale-tax-flat" className="font-normal cursor-pointer">Flat</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="percentage" id="sale-tax-percentage" />
-                            <Label htmlFor="sale-tax-percentage" className="font-normal cursor-pointer">Percentage</Label>
-                          </div>
-                        </RadioGroup>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sale_tax_value">Tax Value</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="sale_tax_value">Tax Value</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Flat</span>
+                        <Switch
+                          id="sale_tax_percentage"
+                          checked={saleTaxPercentage}
+                          onCheckedChange={(checked) => {
+                            setValue("sale_tax_percentage", checked);
+                            setValue("sale_tax_type", checked ? "percentage" : "flat");
+                          }}
+                        />
+                        <span className="text-xs text-muted-foreground">%</span>
+                      </div>
+                    </div>
                     <Input
                       id="sale_tax_value"
                       type="number"
@@ -839,10 +966,32 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Tax Applied Amount</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="sale_further_tax_value">Further Tax Value</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Flat</span>
+                        <Switch
+                          id="sale_further_tax_percentage"
+                          checked={saleFurtherTaxPercentage}
+                          onCheckedChange={(checked) => setValue("sale_further_tax_percentage", checked)}
+                        />
+                        <span className="text-xs text-muted-foreground">%</span>
+                      </div>
+                    </div>
+                    <Input
+                      id="sale_further_tax_value"
+                      type="number"
+                      step="0.01"
+                      {...register("sale_further_tax_value", { min: 0 })}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tax Applied Amount {(saleTaxValue || saleFurtherTaxValue) ? `(Total)` : ""}</Label>
                     <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
                       <p className="text-sm font-semibold">
-                        {saleTaxValue ? calculateSaleTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                        {(saleTaxValue || saleFurtherTaxValue) ? calculateSaleTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
                       </p>
                     </div>
                   </div>

@@ -333,10 +333,10 @@ export default function OppositeTransactionsPage() {
   return (
         <div className="p-6 space-y-6">
             {/* Form Section */}
-            <Card className={"max-w-5xl mx-auto"}>
+            <Card className={"max-w-xl mx-auto"}>
                 <CardContent>
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="opposite-transaction-form">
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1  gap-4">
                             {/* Date */}
                             <div className="space-y-2">
                                 <Label htmlFor="transaction_date">Date *</Label>

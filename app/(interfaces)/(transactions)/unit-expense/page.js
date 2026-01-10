@@ -796,15 +796,6 @@ export default function UnitExpensePage() {
                             </div>
                         </div>
 
-                        {/* Description */}
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Input
-                                id="description"
-                                {...register("description")}
-                                placeholder="Enter description"
-                            />
-                        </div>
 
                         <div className="flex justify-end gap-2">
                             <Button

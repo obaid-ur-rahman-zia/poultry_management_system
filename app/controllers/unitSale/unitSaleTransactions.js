@@ -29,9 +29,18 @@ export async function createTransactions(unitSale, customerId, tx) {
       ? unitSale.sale_date
       : new Date(unitSale.sale_date);
 
+    // Build remarks with van_number if available
+    let remarks = `Unit Sale#${unitSale.sale_id}`;
+    if (unitSale.van_number) {
+      remarks += ` - Van: ${unitSale.van_number}`;
+    }
+    if (unitSale.description) {
+      remarks += ` - ${unitSale.description}`;
+    }
+
     const saleConstants = {
       reference_id: unitSale.sale_id,
-      remarks: `Unit Sale#${unitSale.sale_id}${unitSale.description ? ` - ${unitSale.description}` : ""}`,
+      remarks: remarks,
       financial_year: financialYear,
       reference: "Unit Sale",
       transaction_dat: saleDate,

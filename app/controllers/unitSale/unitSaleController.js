@@ -245,6 +245,7 @@ class UnitSaleController {
                 discount_type: req_object.discount_type || "percentage",
                 discount_value: req_object.discount_value || 0,
                 total: Number(req_object.total),
+                van_number: req_object.van_number || null,
                 description: req_object.description || null,
                 insert_by: req_object.insert_by || "user 1",
                 update_by: req_object.update_by || "user 1",
