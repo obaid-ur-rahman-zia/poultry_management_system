@@ -151,7 +151,10 @@ class WholeSaleController {
           } catch (error) {
             // Log error before re-throwing
             // This will cause the entire transaction to rollback
-            console.error("Transaction error in WholeSaleController.create:", error);
+            console.error(
+              "Transaction error in WholeSaleController.create:",
+              error
+            );
             throw error;
           }
         },
@@ -267,7 +270,10 @@ class WholeSaleController {
             return updatedWholeSale;
           } catch (error) {
             // Log error before re-throwing
-            console.error("Transaction error in WholeSaleController.update:", error);
+            console.error(
+              "Transaction error in WholeSaleController.update:",
+              error
+            );
             throw error;
           }
         },
@@ -334,7 +340,10 @@ class WholeSaleController {
             await WholeSaleRepository.delete(sale_id, tx);
           } catch (error) {
             // Log error before re-throwing
-            console.error("Transaction error in WholeSaleController.delete:", error);
+            console.error(
+              "Transaction error in WholeSaleController.delete:",
+              error
+            );
             throw error;
           }
         },
@@ -410,6 +419,35 @@ class WholeSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get previous F.S Rates in Method: WholeSaleController.getPreviousFsRates",
+        err
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  async readReportDetail(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+
+      if (!start_dat || !end_dat) {
+        const error = new Error("start_dat and end_dat are required");
+        ErrorLogger.log(
+          "Failed to read report detail in Method: WholeSaleController.readReportDetail",
+          error
+        );
+        return errorResponse(error, 400);
+      }
+      const wholeSale = await WholeSaleRepository.readReportDetail({
+        start_dat: start_dat,
+      end_dat: end_dat,
+      });
+
+      return successResponse(wholeSale, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to read report detail in Method: WholeSaleController.readReportDetail",
         err
       );
       return errorResponse(err, 500);

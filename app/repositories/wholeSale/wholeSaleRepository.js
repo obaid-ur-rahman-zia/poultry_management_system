@@ -84,7 +84,9 @@ class WholeSaleRepository {
             ? req_object.van_number.trim()
             : undefined,
         weight:
-          req_object.weight !== undefined ? Number(req_object.weight) : undefined,
+          req_object.weight !== undefined
+            ? Number(req_object.weight)
+            : undefined,
         former_rate:
           req_object.former_rate !== undefined
             ? Number(req_object.former_rate)
@@ -108,7 +110,9 @@ class WholeSaleRepository {
             ? Number(req_object.purcher_amount)
             : undefined,
         profit:
-          req_object.profit !== undefined ? Number(req_object.profit) : undefined,
+          req_object.profit !== undefined
+            ? Number(req_object.profit)
+            : undefined,
         update_by: req_object.update_by || "user 1",
         update_dat: new Date(),
       },
@@ -145,10 +149,7 @@ class WholeSaleRepository {
           gte: date,
           lt: nextDay,
         },
-        OR: [
-          { farm_rate: { not: null } },
-          { sale_rate: { not: null } },
-        ],
+        OR: [{ farm_rate: { not: null } }, { sale_rate: { not: null } }],
         status: 1,
       },
       orderBy: {
@@ -163,10 +164,7 @@ class WholeSaleRepository {
     // Get distinct F.S Rates from whole_sale entries, ordered by date descending
     const salesWithFsRate = await prisma.whole_sale.findMany({
       where: {
-        OR: [
-          { farm_rate: { not: null } },
-          { sale_rate: { not: null } },
-        ],
+        OR: [{ farm_rate: { not: null } }, { sale_rate: { not: null } }],
         status: 1,
       },
       select: {
@@ -196,6 +194,38 @@ class WholeSaleRepository {
 
     // Format the data
     return Array.from(rateMap.values());
+  }
+
+  async readReportDetail(req_object) {
+    const { start_dat, end_dat } = req_object;
+
+    const whereClause = {
+      sale_date: {
+        gte: new Date(start_dat),
+        lte: new Date(end_dat),
+      },
+    };
+
+    return prisma.whole_sale.findMany({
+      where: whereClause,
+      include: {
+        former_account_ref: {
+          select: {
+            account_nam: true,
+            account_contact: true,
+          },
+        },
+        purcher_account_ref: {
+          select: {
+            account_nam: true,
+            account_contact: true,
+          },
+        },
+      },
+      orderBy: {
+        sale_date: "asc",
+      },
+    });
   }
 }
 

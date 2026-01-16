@@ -14,12 +14,7 @@ import {
   History,
   PlusCircle,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,26 +59,12 @@ export default function SalePage() {
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid  grid-cols-1">
           <TabsTrigger value="whole-sale">Whole Sale</TabsTrigger>
-          <TabsTrigger value="local-sale">Local Sale</TabsTrigger>
-          <TabsTrigger value="feed-supply">Feed Supply</TabsTrigger>
         </TabsList>
 
         <TabsContent value="whole-sale" className="space-y-4">
           <WholeSaleTab />
-        </TabsContent>
-
-        <TabsContent value="local-sale" className="space-y-4">
-          <div className="text-center py-8 text-muted-foreground">
-            Local Sale - Coming Soon
-          </div>
-        </TabsContent>
-
-        <TabsContent value="feed-supply" className="space-y-4">
-          <div className="text-center py-8 text-muted-foreground">
-            Feed Supply - Coming Soon
-          </div>
         </TabsContent>
       </Tabs>
     </div>
@@ -187,7 +168,10 @@ function WholeSaleTab() {
       const response = await fetch("/api/supplier/readAll");
       const result = await response.json();
       if (result.response_status === "success") {
-        const supplierData = result.response_result?.supplier_data || result.response_result?.data || [];
+        const supplierData =
+          result.response_result?.supplier_data ||
+          result.response_result?.data ||
+          [];
         setSupplierAccounts(supplierData);
       }
     } catch (error) {
@@ -202,7 +186,10 @@ function WholeSaleTab() {
       const response = await fetch("/api/customer/readAll");
       const result = await response.json();
       if (result.response_status === "success") {
-        const customerData = result.response_result?.customer_data || result.response_result?.data || [];
+        const customerData =
+          result.response_result?.customer_data ||
+          result.response_result?.data ||
+          [];
         setCustomerAccounts(customerData);
       }
     } catch (error) {
@@ -217,7 +204,8 @@ function WholeSaleTab() {
       const response = await fetch("/api/company/readAll");
       const result = await response.json();
       if (result.response_status === "success") {
-        const companiesData = result.response_result?.data || result.response_result || [];
+        const companiesData =
+          result.response_result?.data || result.response_result || [];
         setCompanies(Array.isArray(companiesData) ? companiesData : []);
       }
     } catch (error) {
@@ -228,7 +216,12 @@ function WholeSaleTab() {
 
   // Handle Create Supplier
   const handleCreateSupplier = async () => {
-    if (!supplierFormData.supplier_name || !supplierFormData.supplier_cnic || !supplierFormData.supplier_address || !supplierFormData.supplier_contact) {
+    if (
+      !supplierFormData.supplier_name ||
+      !supplierFormData.supplier_cnic ||
+      !supplierFormData.supplier_address ||
+      !supplierFormData.supplier_contact
+    ) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -240,7 +233,9 @@ function WholeSaleTab() {
           supplier_cnic: supplierFormData.supplier_cnic.trim(),
           supplier_address: supplierFormData.supplier_address.trim(),
           supplier_contact: supplierFormData.supplier_contact.trim(),
-          supplier_company_id: supplierFormData.supplier_company_id ? parseInt(supplierFormData.supplier_company_id) : null,
+          supplier_company_id: supplierFormData.supplier_company_id
+            ? parseInt(supplierFormData.supplier_company_id)
+            : null,
           supplier_alternate_name: "",
           supplier_reference: "",
         },
@@ -279,7 +274,12 @@ function WholeSaleTab() {
 
   // Handle Create Customer
   const handleCreateCustomer = async () => {
-    if (!customerFormData.customer_name || !customerFormData.customer_cnic || !customerFormData.customer_address || !customerFormData.customer_contact) {
+    if (
+      !customerFormData.customer_name ||
+      !customerFormData.customer_cnic ||
+      !customerFormData.customer_address ||
+      !customerFormData.customer_contact
+    ) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -332,7 +332,9 @@ function WholeSaleTab() {
     }
     setLoadingSupplierBalance(true);
     try {
-      const response = await fetch(`/api/transaction/read/balance?acc_id=${accId}`);
+      const response = await fetch(
+        `/api/transaction/read/balance?acc_id=${accId}`
+      );
       const result = await response.json();
       if (result.response_status === "success" && result.response_result) {
         setSupplierBalance(result.response_result.balance || 0);
@@ -355,7 +357,9 @@ function WholeSaleTab() {
     }
     setLoadingCustomerBalance(true);
     try {
-      const response = await fetch(`/api/transaction/read/balance?acc_id=${accId}`);
+      const response = await fetch(
+        `/api/transaction/read/balance?acc_id=${accId}`
+      );
       const result = await response.json();
       if (result.response_status === "success" && result.response_result) {
         setCustomerBalance(result.response_result.balance || 0);
@@ -422,7 +426,8 @@ function WholeSaleTab() {
       const response = await fetch("/api/wholeSale/readAll");
       const result = await response.json();
       if (result.response_status === "success") {
-        const salesData = result.response_result?.data || result.response_result || [];
+        const salesData =
+          result.response_result?.data || result.response_result || [];
         setWholeSales(salesData);
       } else {
         toast.error(result.response_message || "Failed to fetch whole sales");
@@ -448,7 +453,9 @@ function WholeSaleTab() {
     if (!saleDate) return;
     try {
       const response = await fetch(
-        `/api/wholeSale/checkFsRate?sale_date=${saleDate.toISOString().split("T")[0]}`
+        `/api/wholeSale/checkFsRate?sale_date=${
+          saleDate.toISOString().split("T")[0]
+        }`
       );
       const result = await response.json();
       if (result.response_status === "success") {
@@ -476,7 +483,8 @@ function WholeSaleTab() {
       const response = await fetch("/api/wholeSale/previousFsRates");
       const result = await response.json();
       if (result.response_status === "success") {
-        const ratesData = result.response_result?.data || result.response_result || [];
+        const ratesData =
+          result.response_result?.data || result.response_result || [];
         setPreviousFsRates(ratesData);
       }
     } catch (error) {
@@ -553,13 +561,13 @@ function WholeSaleTab() {
             ? "Whole sale updated successfully"
             : "Whole sale created successfully"
         );
-        
+
         // If F.S Rate was set, update the state
         if (!fsRateSet && (data.farm_rate || data.sale_rate)) {
           setFsRateSet(true);
           setFsRateEditable(false);
         }
-        
+
         reset({
           sale_date: new Date().toISOString().split("T")[0],
           farm_rate: "",
@@ -618,9 +626,11 @@ function WholeSaleTab() {
   };
 
   // Calculate Net Balance (Supplier Balance + Former Amount)
-  const supplierNetBalance = (supplierBalance || 0) + (parseFloat(formerAmount) || 0);
+  const supplierNetBalance =
+    (supplierBalance || 0) + (parseFloat(formerAmount) || 0);
   // Calculate Net Balance (Customer Balance + Purcher Amount)
-  const customerNetBalance = (customerBalance || 0) + (parseFloat(purcherAmount) || 0);
+  const customerNetBalance =
+    (customerBalance || 0) + (parseFloat(purcherAmount) || 0);
 
   // Filter whole sales
   const filteredWholeSales = wholeSales.filter((sale) => {
@@ -661,7 +671,9 @@ function WholeSaleTab() {
                       className="w-full justify-start text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {saleDate ? format(saleDate, "dd MMMM yyyy") : "Pick a date"}
+                      {saleDate
+                        ? format(saleDate, "dd MMMM yyyy")
+                        : "Pick a date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -671,7 +683,10 @@ function WholeSaleTab() {
                       onSelect={(date) => {
                         if (date) {
                           setSaleDate(date);
-                          setValue("sale_date", date.toISOString().split("T")[0]);
+                          setValue(
+                            "sale_date",
+                            date.toISOString().split("T")[0]
+                          );
                         }
                       }}
                       initialFocus
@@ -784,20 +799,20 @@ function WholeSaleTab() {
                   )}
                 </div>
                 <div className="flex gap-2 items-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    disabled
-                  >
+                  <Button type="button" variant="outline" size="icon" disabled>
                     <Equal className="h-4 w-4" />
                   </Button>
                   <div className="flex-1">
                     {loadingSupplierBalance ? (
-                      <div className="text-sm text-muted-foreground">Loading...</div>
+                      <div className="text-sm text-muted-foreground">
+                        Loading...
+                      </div>
                     ) : (
                       <div className="text-sm">
-                        Balance {supplierBalance !== null ? supplierBalance.toFixed(2) : "0"}
+                        Balance{" "}
+                        {supplierBalance !== null
+                          ? supplierBalance.toFixed(2)
+                          : "0"}
                       </div>
                     )}
                   </div>
@@ -908,20 +923,20 @@ function WholeSaleTab() {
                   )}
                 </div>
                 <div className="flex gap-2 items-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    disabled
-                  >
+                  <Button type="button" variant="outline" size="icon" disabled>
                     <Equal className="h-4 w-4" />
                   </Button>
                   <div className="flex-1">
                     {loadingCustomerBalance ? (
-                      <div className="text-sm text-muted-foreground">Loading...</div>
+                      <div className="text-sm text-muted-foreground">
+                        Loading...
+                      </div>
                     ) : (
                       <div className="text-sm">
-                        Balance {customerBalance !== null ? customerBalance.toFixed(2) : "0"}
+                        Balance{" "}
+                        {customerBalance !== null
+                          ? customerBalance.toFixed(2)
+                          : "0"}
                       </div>
                     )}
                   </div>
@@ -971,18 +986,16 @@ function WholeSaleTab() {
                 {...register("profit")}
                 readOnly
                 className={`bg-muted ${
-                  parseFloat(watch("profit") || 0) < 0 ? "text-red-600 font-semibold" : ""
+                  parseFloat(watch("profit") || 0) < 0
+                    ? "text-red-600 font-semibold"
+                    : ""
                 }`}
               />
             </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCreateNew}
-              >
+              <Button type="button" variant="outline" onClick={handleCreateNew}>
                 New
               </Button>
               {!isEditMode && (
@@ -1137,7 +1150,9 @@ function WholeSaleTab() {
                               )?.account_nam || "N/A"}
                             </TableCell>
                             <TableCell>{sale.purcher_rate || "N/A"}</TableCell>
-                            <TableCell>{sale.purcher_amount || "N/A"}</TableCell>
+                            <TableCell>
+                              {sale.purcher_amount || "N/A"}
+                            </TableCell>
                             <TableCell
                               className={
                                 parseFloat(sale.profit || 0) < 0
@@ -1155,19 +1170,63 @@ function WholeSaleTab() {
                                   onClick={() => {
                                     setIsEditMode(true);
                                     setEditingSaleId(sale.sale_id);
-                                    setValue("sale_date", sale.sale_date ? new Date(sale.sale_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]);
-                                    setSaleDate(sale.sale_date ? new Date(sale.sale_date) : new Date());
-                                    setValue("farm_rate", sale.farm_rate?.toString() || "");
-                                    setValue("sale_rate", sale.sale_rate?.toString() || "");
-                                    setValue("former_account", sale.former_account?.toString() || "");
-                                    setValue("van_number", sale.van_number || "");
-                                    setValue("weight", sale.weight?.toString() || "");
-                                    setValue("former_rate", sale.former_rate?.toString() || "");
-                                    setValue("former_amount", sale.former_amount?.toString() || "");
-                                    setValue("purcher_account", sale.purcher_account?.toString() || "");
-                                    setValue("purcher_rate", sale.purcher_rate?.toString() || "");
-                                    setValue("purcher_amount", sale.purcher_amount?.toString() || "");
-                                    setValue("profit", sale.profit?.toString() || "");
+                                    setValue(
+                                      "sale_date",
+                                      sale.sale_date
+                                        ? new Date(sale.sale_date)
+                                            .toISOString()
+                                            .split("T")[0]
+                                        : new Date().toISOString().split("T")[0]
+                                    );
+                                    setSaleDate(
+                                      sale.sale_date
+                                        ? new Date(sale.sale_date)
+                                        : new Date()
+                                    );
+                                    setValue(
+                                      "farm_rate",
+                                      sale.farm_rate?.toString() || ""
+                                    );
+                                    setValue(
+                                      "sale_rate",
+                                      sale.sale_rate?.toString() || ""
+                                    );
+                                    setValue(
+                                      "former_account",
+                                      sale.former_account?.toString() || ""
+                                    );
+                                    setValue(
+                                      "van_number",
+                                      sale.van_number || ""
+                                    );
+                                    setValue(
+                                      "weight",
+                                      sale.weight?.toString() || ""
+                                    );
+                                    setValue(
+                                      "former_rate",
+                                      sale.former_rate?.toString() || ""
+                                    );
+                                    setValue(
+                                      "former_amount",
+                                      sale.former_amount?.toString() || ""
+                                    );
+                                    setValue(
+                                      "purcher_account",
+                                      sale.purcher_account?.toString() || ""
+                                    );
+                                    setValue(
+                                      "purcher_rate",
+                                      sale.purcher_rate?.toString() || ""
+                                    );
+                                    setValue(
+                                      "purcher_amount",
+                                      sale.purcher_amount?.toString() || ""
+                                    );
+                                    setValue(
+                                      "profit",
+                                      sale.profit?.toString() || ""
+                                    );
                                     document
                                       .getElementById("whole-sale-form")
                                       ?.scrollIntoView({ behavior: "smooth" });
@@ -1180,23 +1239,42 @@ function WholeSaleTab() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={async () => {
-                                    if (!confirm("Are you sure you want to delete this whole sale?")) {
+                                    if (
+                                      !confirm(
+                                        "Are you sure you want to delete this whole sale?"
+                                      )
+                                    ) {
                                       return;
                                     }
                                     try {
-                                      const response = await fetch(`/api/wholeSale?sale_id=${sale.sale_id}`, {
-                                        method: "DELETE",
-                                      });
+                                      const response = await fetch(
+                                        `/api/wholeSale?sale_id=${sale.sale_id}`,
+                                        {
+                                          method: "DELETE",
+                                        }
+                                      );
                                       const result = await response.json();
-                                      if (result.response_status === "success") {
-                                        toast.success("Whole sale deleted successfully");
+                                      if (
+                                        result.response_status === "success"
+                                      ) {
+                                        toast.success(
+                                          "Whole sale deleted successfully"
+                                        );
                                         fetchWholeSales();
                                       } else {
-                                        toast.error(result.response_message || "Failed to delete whole sale");
+                                        toast.error(
+                                          result.response_message ||
+                                            "Failed to delete whole sale"
+                                        );
                                       }
                                     } catch (error) {
-                                      console.error("Error deleting whole sale:", error);
-                                      toast.error("Failed to delete whole sale");
+                                      console.error(
+                                        "Error deleting whole sale:",
+                                        error
+                                      );
+                                      toast.error(
+                                        "Failed to delete whole sale"
+                                      );
                                     }
                                   }}
                                   className="h-8 w-8 p-0"
@@ -1218,12 +1296,16 @@ function WholeSaleTab() {
       </Card>
 
       {/* Create Supplier Dialog */}
-      <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
+      <Dialog
+        open={isSupplierDialogOpen}
+        onOpenChange={setIsSupplierDialogOpen}
+      >
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create New Supplier</DialogTitle>
             <DialogDescription>
-              Create a new supplier account. The supplier will be created with is_supplier flag set to true.
+              Create a new supplier account. The supplier will be created with
+              is_supplier flag set to true.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1232,7 +1314,12 @@ function WholeSaleTab() {
               <Input
                 id="supplier_name"
                 value={supplierFormData.supplier_name}
-                onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_name: e.target.value })}
+                onChange={(e) =>
+                  setSupplierFormData({
+                    ...supplierFormData,
+                    supplier_name: e.target.value,
+                  })
+                }
                 placeholder="Enter supplier name"
               />
             </div>
@@ -1241,7 +1328,12 @@ function WholeSaleTab() {
               <Input
                 id="supplier_cnic"
                 value={supplierFormData.supplier_cnic}
-                onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_cnic: e.target.value })}
+                onChange={(e) =>
+                  setSupplierFormData({
+                    ...supplierFormData,
+                    supplier_cnic: e.target.value,
+                  })
+                }
                 placeholder="XXXXX-XXXXXXX-X"
               />
             </div>
@@ -1250,7 +1342,12 @@ function WholeSaleTab() {
               <Input
                 id="supplier_address"
                 value={supplierFormData.supplier_address}
-                onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_address: e.target.value })}
+                onChange={(e) =>
+                  setSupplierFormData({
+                    ...supplierFormData,
+                    supplier_address: e.target.value,
+                  })
+                }
                 placeholder="Enter address"
               />
             </div>
@@ -1259,7 +1356,12 @@ function WholeSaleTab() {
               <Input
                 id="supplier_contact"
                 value={supplierFormData.supplier_contact}
-                onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_contact: e.target.value })}
+                onChange={(e) =>
+                  setSupplierFormData({
+                    ...supplierFormData,
+                    supplier_contact: e.target.value,
+                  })
+                }
                 placeholder="Enter contact number"
               />
             </div>
@@ -1270,7 +1372,10 @@ function WholeSaleTab() {
                 onValueChange={(value) => {
                   // Convert "none" to empty string, otherwise use the value
                   const finalValue = value === "none" ? "" : value;
-                  setSupplierFormData({ ...supplierFormData, supplier_company_id: finalValue });
+                  setSupplierFormData({
+                    ...supplierFormData,
+                    supplier_company_id: finalValue,
+                  });
                 }}
               >
                 <SelectTrigger>
@@ -1278,11 +1383,15 @@ function WholeSaleTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
-                  {Array.isArray(companies) && companies.map((company) => (
-                    <SelectItem key={company.company_id} value={company.company_id.toString()}>
-                      {company.company_nam}
-                    </SelectItem>
-                  ))}
+                  {Array.isArray(companies) &&
+                    companies.map((company) => (
+                      <SelectItem
+                        key={company.company_id}
+                        value={company.company_id.toString()}
+                      >
+                        {company.company_nam}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -1312,12 +1421,16 @@ function WholeSaleTab() {
       </Dialog>
 
       {/* Create Customer Dialog */}
-      <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
+      <Dialog
+        open={isCustomerDialogOpen}
+        onOpenChange={setIsCustomerDialogOpen}
+      >
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create New Customer</DialogTitle>
             <DialogDescription>
-              Create a new customer account. The customer will be created with is_customer flag set to true.
+              Create a new customer account. The customer will be created with
+              is_customer flag set to true.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1326,7 +1439,12 @@ function WholeSaleTab() {
               <Input
                 id="customer_name"
                 value={customerFormData.customer_name}
-                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_name: e.target.value })}
+                onChange={(e) =>
+                  setCustomerFormData({
+                    ...customerFormData,
+                    customer_name: e.target.value,
+                  })
+                }
                 placeholder="Enter customer name"
               />
             </div>
@@ -1335,7 +1453,12 @@ function WholeSaleTab() {
               <Input
                 id="customer_cnic"
                 value={customerFormData.customer_cnic}
-                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_cnic: e.target.value })}
+                onChange={(e) =>
+                  setCustomerFormData({
+                    ...customerFormData,
+                    customer_cnic: e.target.value,
+                  })
+                }
                 placeholder="XXXXX-XXXXXXX-X"
               />
             </div>
@@ -1344,7 +1467,12 @@ function WholeSaleTab() {
               <Input
                 id="customer_address"
                 value={customerFormData.customer_address}
-                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_address: e.target.value })}
+                onChange={(e) =>
+                  setCustomerFormData({
+                    ...customerFormData,
+                    customer_address: e.target.value,
+                  })
+                }
                 placeholder="Enter address"
               />
             </div>
@@ -1353,7 +1481,12 @@ function WholeSaleTab() {
               <Input
                 id="customer_contact"
                 value={customerFormData.customer_contact}
-                onChange={(e) => setCustomerFormData({ ...customerFormData, customer_contact: e.target.value })}
+                onChange={(e) =>
+                  setCustomerFormData({
+                    ...customerFormData,
+                    customer_contact: e.target.value,
+                  })
+                }
                 placeholder="Enter contact number"
               />
             </div>
@@ -1431,7 +1564,8 @@ function WholeSaleTab() {
                           {rate.farm_rate?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }) || "0.00"} /{" "}
+                          }) || "0.00"}{" "}
+                          /{" "}
                           {rate.sale_rate?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,

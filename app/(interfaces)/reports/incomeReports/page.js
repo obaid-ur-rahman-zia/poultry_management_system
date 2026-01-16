@@ -3,6 +3,7 @@ import UnitSaleFloc from "./incomeDetailFloc/page";
 import UnitSaleCustomer from "./incomeDetailCustomer/page";
 import MonthlyIncomeProfit from "./monthlyIncomeProfit/page";
 import MonthlyIncomeProfitFloc from "./monthlyIncomeProfitFloc/page";
+import WholeSaleReport from "./wholeSaleDetailReport/page";
 export default function ReportPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -14,6 +15,7 @@ export default function ReportPage() {
           <UnitSaleFloc />
           <MonthlyIncomeProfit />
           <MonthlyIncomeProfitFloc />
+          <WholeSaleReport />
         </div>
       </div>
     </main>
