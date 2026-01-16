@@ -59,7 +59,7 @@ export default function SalePage() {
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid  grid-cols-1">
+        <TabsList className="grid grid-cols-1">
           <TabsTrigger value="whole-sale">Whole Sale</TabsTrigger>
         </TabsList>
 
