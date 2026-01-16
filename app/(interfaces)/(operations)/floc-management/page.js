@@ -87,6 +87,7 @@ export default function FlocManagementPage() {
   const [filterUnit, setFilterUnit] = useState("all");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+  const [showInactiveFlocs, setShowInactiveFlocs] = useState(false);
 
   const formStackholders = watch("stackholders") || [{ stackholder_id: "", percentage: "" }];
   const selectedFarm = watch("farm_id");
@@ -537,6 +538,24 @@ export default function FlocManagementPage() {
 
   // Filter flocs
   const filteredFlocs = flocs.filter((floc) => {
+    // Exclude ended flocs only if showInactiveFlocs is false
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (!showInactiveFlocs) {
+      // Only exclude ended flocs when switch is off (default behavior)
+      if (floc.ending_date) {
+        const endDate = new Date(floc.ending_date);
+        endDate.setHours(0, 0, 0, 0);
+        
+        // If ending_date is today or in the past, exclude this floc
+        if (endDate <= today) {
+          return false;
+        }
+      }
+    }
+    // If showInactiveFlocs is true, show all flocs (both active and inactive)
+    
     const flocProunitId = floc.prounit_id || floc.farm_id;
     const matchesSearch = searchQuery === "" || 
       floc.unit?.prounit_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -928,7 +947,7 @@ export default function FlocManagementPage() {
         <CardContent>
           {/* Filters */}
           <div className="space-y-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="space-y-2">
                 <Label>Search</Label>
                 <div className="relative">
@@ -958,6 +977,19 @@ export default function FlocManagementPage() {
                   searchPlaceholder="Search farms..."
                   emptyText="No farm found."
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Show Inactive Flocs</Label>
+                <div className="flex items-center gap-2 pt-2">
+                  <Switch
+                    checked={showInactiveFlocs}
+                    onCheckedChange={setShowInactiveFlocs}
+                  />
+                  {/* <Label className="text-sm text-muted-foreground">
+                    {showInactiveFlocs ? "Showing all flocs" : "Showing active flocs only"}
+                  </Label> */}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -1027,7 +1059,7 @@ export default function FlocManagementPage() {
                               {floc.ending_date 
                                 ? new Date(floc.ending_date).toLocaleDateString()
                                 : "Not set"}
-                              {floc.ending_date && !floc.clear_description && (
+                              {floc.ending_date && !floc.clear_description && isActive && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -1055,7 +1087,7 @@ export default function FlocManagementPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={isActive ? "default" : "outline"}>
+                          <Badge variant={isActive ? "default" : "destructive"}>
                             {isActive ? "Active" : "Ended"}
                           </Badge>
                         </TableCell>

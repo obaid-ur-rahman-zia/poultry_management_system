@@ -610,6 +610,8 @@ model accounts {
   self_transactions     self_transaction[]     @relation("SelfTransactionAccount")
   trading_buy_from      trading[]              @relation("TradingBuyFrom")
   trading_sale_to       trading[]              @relation("TradingSaleTo")
+  whole_sale_former     whole_sale[]           @relation("WholeSaleFormer")
+  whole_sale_purcher    whole_sale[]           @relation("WholeSalePurcher")
   user_cash_in_hand     user?                  @relation("UserCashInHand")
   unit_expenses         unit_expense[]         @relation("UnitExpenseSupplier")
   unit_sales            unit_sale[]            @relation("UnitSaleCustomer")
@@ -978,4 +980,32 @@ model trading {
   @@index([sale_to_account])
   @@index([product_id])
   @@index([trading_date])
+}
+
+model whole_sale {
+  sale_id          Int      @id @default(autoincrement())
+  sale_date        DateTime
+  farm_rate        Float?
+  sale_rate        Float?
+  former_account   Int
+  van_number       String   @db.VarChar(100)
+  weight           Float
+  former_rate      Float
+  former_amount    Float
+  purcher_account  Int
+  purcher_rate     Float?
+  purcher_amount   Float
+  profit           Float    @default(0)
+  insert_dat       DateTime @default(now()) @db.Timestamp(0)
+  update_dat       DateTime @default(now()) @db.Timestamp(0)
+  insert_by        String   @default("user 1") @db.VarChar(50)
+  update_by        String   @default("user 1") @db.VarChar(50)
+  status           Int      @default(1)
+
+  former_account_ref  accounts @relation("WholeSaleFormer", fields: [former_account], references: [acc_id])
+  purcher_account_ref accounts @relation("WholeSalePurcher", fields: [purcher_account], references: [acc_id])
+
+  @@index([former_account])
+  @@index([purcher_account])
+  @@index([sale_date])
 }

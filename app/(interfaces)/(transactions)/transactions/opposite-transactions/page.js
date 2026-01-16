@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2, PlusCircle } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, PlusCircle, Equal } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -73,6 +73,10 @@ export default function OppositeTransactionsPage() {
     const [newBankAccountName, setNewBankAccountName] = useState("");
     const [newBankAccountNo, setNewBankAccountNo] = useState("");
     const [bankSubHead, setBankSubHead] = useState(null);
+    const [paidByBalance, setPaidByBalance] = useState(null);
+    const [receivedByBalance, setReceivedByBalance] = useState(null);
+    const [loadingPaidByBalance, setLoadingPaidByBalance] = useState(false);
+    const [loadingReceivedByBalance, setLoadingReceivedByBalance] = useState(false);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -80,6 +84,9 @@ export default function OppositeTransactionsPage() {
     const [filterReceivedBy, setFilterReceivedBy] = useState("all");
     const [filterDate, setFilterDate] = useState("");
     const [isMobile, setIsMobile] = useState(false);
+
+    const selectedPaidBy = watch("paid_by");
+    const selectedReceivedBy = watch("received_by");
 
     useEffect(() => {
         fetchAccounts();
@@ -152,6 +159,68 @@ export default function OppositeTransactionsPage() {
             }
         }
     }, [subHeads, accounts]);
+
+    // Fetch Paid By balance
+    const fetchPaidByBalance = async (accId) => {
+        if (!accId) {
+            setPaidByBalance(null);
+            return;
+        }
+        setLoadingPaidByBalance(true);
+        try {
+            const response = await fetch(`/api/transaction/read/balance?acc_id=${accId}`);
+            const result = await response.json();
+            if (result.response_status === "success" && result.response_result) {
+                setPaidByBalance(result.response_result.balance || 0);
+            } else {
+                setPaidByBalance(null);
+            }
+        } catch (error) {
+            console.error("Error fetching paid by balance:", error);
+            setPaidByBalance(null);
+        } finally {
+            setLoadingPaidByBalance(false);
+        }
+    };
+
+    // Fetch Received By balance
+    const fetchReceivedByBalance = async (accId) => {
+        if (!accId) {
+            setReceivedByBalance(null);
+            return;
+        }
+        setLoadingReceivedByBalance(true);
+        try {
+            const response = await fetch(`/api/transaction/read/balance?acc_id=${accId}`);
+            const result = await response.json();
+            if (result.response_status === "success" && result.response_result) {
+                setReceivedByBalance(result.response_result.balance || 0);
+            } else {
+                setReceivedByBalance(null);
+            }
+        } catch (error) {
+            console.error("Error fetching received by balance:", error);
+            setReceivedByBalance(null);
+        } finally {
+            setLoadingReceivedByBalance(false);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedPaidBy) {
+            fetchPaidByBalance(selectedPaidBy);
+        } else {
+            setPaidByBalance(null);
+        }
+    }, [selectedPaidBy]);
+
+    useEffect(() => {
+        if (selectedReceivedBy) {
+            fetchReceivedByBalance(selectedReceivedBy);
+        } else {
+            setReceivedByBalance(null);
+        }
+    }, [selectedReceivedBy]);
 
     const fetchTransactions = async () => {
         setLoading(true);
@@ -380,6 +449,26 @@ export default function OppositeTransactionsPage() {
                                         {errors.paid_by.message}
                                     </p>
                                 )}
+                                {/* Paid By Balance Display */}
+                                <div className="flex gap-2 items-center">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        disabled
+                                    >
+                                        <Equal className="h-4 w-4" />
+                                    </Button>
+                                    <div className="flex-1">
+                                        {loadingPaidByBalance ? (
+                                            <div className="text-sm text-muted-foreground">Loading...</div>
+                                        ) : (
+                                            <div className="text-sm">
+                                                Balance {paidByBalance !== null ? paidByBalance.toFixed(2) : "0"}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Bank Account */}
@@ -449,6 +538,26 @@ export default function OppositeTransactionsPage() {
                                         {errors.received_by.message}
                                     </p>
                                 )}
+                                {/* Received By Balance Display */}
+                                <div className="flex gap-2 items-center">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        disabled
+                                    >
+                                        <Equal className="h-4 w-4" />
+                                    </Button>
+                                    <div className="flex-1">
+                                        {loadingReceivedByBalance ? (
+                                            <div className="text-sm text-muted-foreground">Loading...</div>
+                                        ) : (
+                                            <div className="text-sm">
+                                                Balance {receivedByBalance !== null ? receivedByBalance.toFixed(2) : "0"}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Amount */}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2, PlusCircle } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, PlusCircle, Equal } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -85,6 +85,10 @@ export default function UnitExpensePage() {
         supplier_company_id: "",
     });
     const [companies, setCompanies] = useState([]);
+    const [supplierBalance, setSupplierBalance] = useState(null);
+    const [loadingSupplierBalance, setLoadingSupplierBalance] = useState(false);
+    const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
+    const [newCompanyName, setNewCompanyName] = useState("");
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -94,6 +98,7 @@ export default function UnitExpensePage() {
     const [isMobile, setIsMobile] = useState(false);
 
     const selectedUnit = watch("prounit_id");
+    const selectedSupplier = watch("supplier_id");
     const price = watch("price");
     const quantity = watch("quantity");
     const taxType = watch("tax_type");
@@ -126,6 +131,15 @@ export default function UnitExpensePage() {
             setValue("floc_id", "");
         }
     }, [selectedUnit]);
+
+    // Fetch Supplier balance when supplier is selected
+    useEffect(() => {
+        if (selectedSupplier) {
+            fetchSupplierBalance(selectedSupplier);
+        } else {
+            setSupplierBalance(null);
+        }
+    }, [selectedSupplier]);
 
     const fetchUnits = async () => {
         try {
@@ -209,8 +223,73 @@ export default function UnitExpensePage() {
         }
     };
 
+    // Fetch Supplier balance
+    const fetchSupplierBalance = async (accId) => {
+        if (!accId) {
+            setSupplierBalance(null);
+            return;
+        }
+        setLoadingSupplierBalance(true);
+        try {
+            const response = await fetch(`/api/transaction/read/balance?acc_id=${accId}`);
+            const result = await response.json();
+            if (result.response_status === "success" && result.response_result) {
+                setSupplierBalance(result.response_result.balance || 0);
+            } else {
+                setSupplierBalance(null);
+            }
+        } catch (error) {
+            console.error("Error fetching supplier balance:", error);
+            setSupplierBalance(null);
+        } finally {
+            setLoadingSupplierBalance(false);
+        }
+    };
+
+    // Handle Create Company
+    const handleCreateCompany = async () => {
+        if (!newCompanyName.trim()) {
+            toast.error("Company name is required");
+            return;
+        }
+
+        try {
+            const payload = {
+                req_object: {
+                    company_nam: newCompanyName.trim(),
+                    insert_by: "user",
+                    update_by: "user",
+                    status: 1,
+                },
+            };
+
+            const response = await fetch("/api/company", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            if (result.response_status === "success") {
+                toast.success("Company created successfully");
+                await fetchCompanies();
+                const newCompany = result.response_result;
+                if (newCompany && newCompany.company_id) {
+                    setSupplierFormData({ ...supplierFormData, supplier_company_id: newCompany.company_id.toString() });
+                }
+                setNewCompanyName("");
+                setIsCompanyDialogOpen(false);
+            } else {
+                toast.error(result.response_message || "Failed to create company");
+            }
+        } catch (error) {
+            console.error("Error creating company:", error);
+            toast.error("Failed to create company");
+        }
+    };
+
     const handleCreateSupplier = async () => {
-        if (!supplierFormData.supplier_name || !supplierFormData.supplier_cnic || !supplierFormData.supplier_address || !supplierFormData.supplier_contact || !supplierFormData.supplier_company_id) {
+        if (!supplierFormData.supplier_name || !supplierFormData.supplier_cnic || !supplierFormData.supplier_address || !supplierFormData.supplier_contact) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -222,7 +301,7 @@ export default function UnitExpensePage() {
                     supplier_cnic: supplierFormData.supplier_cnic.trim(),
                     supplier_address: supplierFormData.supplier_address.trim(),
                     supplier_contact: supplierFormData.supplier_contact.trim(),
-                    supplier_company_id: parseInt(supplierFormData.supplier_company_id),
+                    supplier_company_id: supplierFormData.supplier_company_id ? parseInt(supplierFormData.supplier_company_id) : null,
                     supplier_alternate_name: "",
                     supplier_reference: "",
                 },
@@ -598,6 +677,26 @@ export default function UnitExpensePage() {
                                         {errors.supplier_id.message}
                                     </p>
                                 )}
+                                {/* Supplier Balance Display */}
+                                <div className="flex gap-2 items-center">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        disabled
+                                    >
+                                        <Equal className="h-4 w-4" />
+                                    </Button>
+                                    <div className="flex-1">
+                                        {loadingSupplierBalance ? (
+                                            <div className="text-sm text-muted-foreground">Loading...</div>
+                                        ) : (
+                                            <div className="text-sm">
+                                                Balance {supplierBalance !== null ? supplierBalance.toFixed(2) : "0"}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Product Selection */}
@@ -1077,22 +1176,38 @@ export default function UnitExpensePage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="supplier_company_id">Company *</Label>
-                            <Select
-                                value={supplierFormData.supplier_company_id}
-                                onValueChange={(value) => setSupplierFormData({ ...supplierFormData, supplier_company_id: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select company" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Array.isArray(companies) && companies.map((company) => (
-                                        <SelectItem key={company.company_id} value={company.company_id.toString()}>
-                                            {company.company_nam}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Label htmlFor="supplier_company_id">Company</Label>
+                            <div className="flex gap-2">
+                                <Select
+                                    value={supplierFormData.supplier_company_id || undefined}
+                                    onValueChange={(value) => {
+                                        // Convert "none" to empty string, otherwise use the value
+                                        const finalValue = value === "none" ? "" : value;
+                                        setSupplierFormData({ ...supplierFormData, supplier_company_id: finalValue });
+                                    }}
+                                >
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="Select company (optional)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">None</SelectItem>
+                                        {Array.isArray(companies) && companies.map((company) => (
+                                            <SelectItem key={company.company_id} value={company.company_id.toString()}>
+                                                {company.company_nam}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setIsCompanyDialogOpen(true)}
+                                    title="Add New Company"
+                                >
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>
@@ -1114,6 +1229,44 @@ export default function UnitExpensePage() {
                         </Button>
                         <Button type="button" onClick={handleCreateSupplier}>
                             Create Supplier
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Create Company Dialog */}
+            <Dialog open={isCompanyDialogOpen} onOpenChange={setIsCompanyDialogOpen}>
+                <DialogContent className="max-w-[95vw] sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Create New Company</DialogTitle>
+                        <DialogDescription>
+                            Create a new company. This company will be available for selection when creating suppliers.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="company_name">Company Name *</Label>
+                            <Input
+                                id="company_name"
+                                value={newCompanyName}
+                                onChange={(e) => setNewCompanyName(e.target.value)}
+                                placeholder="Enter company name"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                setIsCompanyDialogOpen(false);
+                                setNewCompanyName("");
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="button" onClick={handleCreateCompany}>
+                            Create Company
                         </Button>
                     </DialogFooter>
                 </DialogContent>

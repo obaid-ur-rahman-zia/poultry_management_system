@@ -12,6 +12,8 @@ import {
   Trash2,
   Phone,
   PlusCircle,
+  ArrowUp,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
 import {
   Table,
   TableBody,
@@ -60,10 +70,11 @@ export default function AccountPage() {
       head_id: "",
       account_nam: "",
       contact_numbers: [""],
-      account_no: "",
+      bank_account_numbers: [""],
+      address: "",
+      account_opening_date: new Date(),
       opening_balance: "",
       balance_type: "credit",
-      address: "",
       reference: "",
     },
   });
@@ -80,6 +91,7 @@ export default function AccountPage() {
   const [newSubHeadHeadId, setNewSubHeadHeadId] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isFiltersDialogOpen, setIsFiltersDialogOpen] = useState(false);
+  const [accountOpeningDate, setAccountOpeningDate] = useState(new Date());
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,7 +99,8 @@ export default function AccountPage() {
   const [filterContact, setFilterContact] = useState("");
   const [filterName, setFilterName] = useState("");
 
-  const contactNumbers = watch("contact_numbers");
+  const contactNumbers = watch("contact_numbers") || [""];
+  const bankAccountNumbers = watch("bank_account_numbers") || [""];
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -167,18 +180,41 @@ export default function AccountPage() {
     }
   };
 
-  const handleAddContact = () => {
+  const handleGetData = async () => {
+    // Scroll to accounts list section
+    const accountsListElement = document.getElementById("get-data");
+    if (accountsListElement) {
+      accountsListElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleAddContactNumber = () => {
     const currentContacts = watch("contact_numbers") || [""];
     setValue("contact_numbers", [...currentContacts, ""]);
   };
 
-  const handleRemoveContact = (index) => {
+  const handleRemoveContactNumber = (index) => {
     const currentContacts = watch("contact_numbers") || [""];
     if (currentContacts.length > 1) {
       const newContacts = currentContacts.filter((_, i) => i !== index);
       setValue("contact_numbers", newContacts);
     } else {
-      toast.error("At least one contact number is required");
+      toast.error("At least one contact number field is required");
+    }
+  };
+
+  const handleAddBankAccount = () => {
+    const currentBankAccounts = watch("bank_account_numbers") || [""];
+    setValue("bank_account_numbers", [...currentBankAccounts, ""]);
+  };
+
+  const handleRemoveBankAccount = (index) => {
+    const currentBankAccounts = watch("bank_account_numbers") || [""];
+    if (currentBankAccounts.length > 1) {
+      const newBankAccounts = currentBankAccounts.filter((_, i) => i !== index);
+      setValue("bank_account_numbers", newBankAccounts);
+    } else {
+      toast.error("At least one bank account field is required");
     }
   };
 
@@ -244,7 +280,10 @@ export default function AccountPage() {
 
   const onSubmit = async (data) => {
     // Validate at least one contact number
-    const validContacts = data.contact_numbers.filter((c) => c.trim());
+    const validContacts = (data.contact_numbers || [])
+      .map((c) => c?.trim())
+      .filter((c) => c && c.trim());
+    
     if (validContacts.length === 0) {
       toast.error("At least one contact number is required");
       return;
@@ -265,6 +304,12 @@ export default function AccountPage() {
           : Math.abs(openingBalanceValue);
     }
 
+    // Combine bank account numbers
+    const bankAccounts = (data.bank_account_numbers || [])
+      .map((acc) => acc?.trim())
+      .filter((acc) => acc && acc.trim());
+    const accountNo = bankAccounts.length > 0 ? bankAccounts.join(", ") : null;
+
     const payload = {
       req_object: {
         account_nam: data.account_nam.trim(),
@@ -273,7 +318,7 @@ export default function AccountPage() {
         account_reference: data.reference.trim(),
         head_id: parseInt(data.head_id),
         sub_id: parseInt(data.sub_id),
-        account_no: data.account_no?.trim() || null,
+        account_no: accountNo,
         ...(finalBalance !== null && { opening_balance: finalBalance }),
         insert_by: "user",
         update_by: "user",
@@ -311,12 +356,14 @@ export default function AccountPage() {
           head_id: "",
           account_nam: "",
           contact_numbers: [""],
-          account_no: "",
+          bank_account_numbers: [""],
+          address: "",
+          account_opening_date: new Date(),
           opening_balance: "",
           balance_type: "credit",
-          address: "",
           reference: "",
         });
+        setAccountOpeningDate(new Date());
         setIsEditMode(false);
         setEditingAccountId(null);
         fetchAccounts();
@@ -337,12 +384,14 @@ export default function AccountPage() {
       head_id: "",
       account_nam: "",
       contact_numbers: [""],
-      account_no: "",
+      bank_account_numbers: [""],
+      address: "",
+      account_opening_date: new Date(),
       opening_balance: "",
       balance_type: "credit",
-      address: "",
       reference: "",
     });
+    setAccountOpeningDate(new Date());
     // Scroll to form
     document
       .getElementById("account-form")
@@ -356,24 +405,46 @@ export default function AccountPage() {
     const contacts =
       account.contact_numbers && account.contact_numbers.length > 0
         ? account.contact_numbers
-        : [""];
+        : account.account_contact
+        ? account.account_contact.includes("[")
+          ? JSON.parse(account.account_contact)
+          : account.account_contact.split(",").map((c) => c.trim())
+        : [];
+
+    // Ensure at least one empty contact field
+    const contactNumbers = contacts.length > 0 ? contacts : [""];
+
+    // Parse bank account numbers if stored as comma-separated
+    const bankAccounts = account.account_no
+      ? account.account_no.split(",").map((acc) => acc.trim())
+      : [];
+
+    // Ensure at least one empty bank account field
+    const bankAccountNumbers = bankAccounts.length > 0 ? bankAccounts : [""];
 
     // Determine balance type from opening balance
     const openingBalance = account.opening_balance || 0;
     const balanceType = openingBalance < 0 ? "debit" : "credit";
     const balanceValue = Math.abs(openingBalance);
 
+    // Set account opening date or use current date
+    const openingDate = account.account_opening_date
+      ? new Date(account.account_opening_date)
+      : new Date();
+
     reset({
       sub_id: account.sub_id?.toString() || "",
       head_id: account.head_id?.toString() || "",
       account_nam: account.account_nam || "",
-      contact_numbers: contacts,
-      account_no: account.account_no || "",
+      contact_numbers: contactNumbers,
+      bank_account_numbers: bankAccountNumbers,
+      address: account.account_address || "",
+      account_opening_date: openingDate,
       opening_balance: balanceValue.toString(),
       balance_type: balanceType,
-      address: account.account_address || "",
       reference: account.account_reference || "",
     });
+    setAccountOpeningDate(openingDate);
     // Scroll to form
     document
       .getElementById("account-form")
@@ -486,183 +557,132 @@ export default function AccountPage() {
             className="space-y-4"
             id="account-form"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Account Type (Subhead) */}
-              <div className="space-y-2">
-                <Label htmlFor="sub_id">Account Type *</Label>
-                <div className="flex gap-2">
-                  <Controller
-                    name="sub_id"
-                    control={control}
-                    rules={{ required: "Account type is required" }}
-                    render={({ field }) => (
-                      <div className="flex-1">
-                        <Combobox
-                          options={subHeads.map((subHead) => ({
-                            value: subHead.sub_id.toString(),
-                            label: `${subHead.subhead_nam}${
-                              subHead.head?.head_nam &&
-                              subHead.head.head_nam !== "Main Head"
-                                ? ` (${subHead.head.head_nam})`
-                                : ""
-                            }`,
-                          }))}
-                          value={field.value}
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            // Find the selected subhead and set head_id
-                            const selectedSubHead = subHeads.find(
-                              (sh) => sh.sub_id.toString() === value
+            {/* Account Type with Get Data Button */}
+            <div className="space-y-2">
+              <Label htmlFor="sub_id">Account Type</Label>
+              <div className="flex gap-2 items-start">
+                <Controller
+                  name="sub_id"
+                  control={control}
+                  rules={{ required: "Account type is required" }}
+                  render={({ field }) => (
+                    <div className="flex-1">
+                      <Combobox
+                        options={subHeads.map((subHead) => ({
+                          value: subHead.sub_id.toString(),
+                          label: `${subHead.subhead_nam}${
+                            subHead.head?.head_nam &&
+                            subHead.head.head_nam !== "Main Head"
+                              ? ` (${subHead.head.head_nam})`
+                              : ""
+                          }`,
+                        }))}
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Find the selected subhead and set head_id
+                          const selectedSubHead = subHeads.find(
+                            (sh) => sh.sub_id.toString() === value
+                          );
+                          if (selectedSubHead) {
+                            setValue(
+                              "head_id",
+                              selectedSubHead.head_id.toString()
                             );
-                            if (selectedSubHead) {
-                              setValue(
-                                "head_id",
-                                selectedSubHead.head_id.toString()
-                              );
-                            }
-                          }}
-                          placeholder="Select Account"
-                          searchPlaceholder="Search account types..."
-                          emptyText="No account type found."
-                        />
-                      </div>
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      // Set default head if not set
-                      if (!newSubHeadHeadId && accountHeads.length > 0) {
-                        setNewSubHeadHeadId(accountHeads[0].head_id.toString());
-                      }
-                      setIsSubHeadDialogOpen(true);
-                    }}
-                    title="Add Account Type (Subhead)"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
-                </div>
-                {errors.sub_id && (
-                  <p className="text-sm text-destructive">
-                    {errors.sub_id.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="account_nam">Name *</Label>
-                <Input
-                  id="account_nam"
-                  {...register("account_nam", {
-                    required: "Name is required",
-                  })}
-                  placeholder="Enter account name"
+                          }
+                        }}
+                        placeholder="Select Account Type"
+                        searchPlaceholder="Search account types..."
+                        emptyText="No account type found."
+                      />
+                    </div>
+                  )}
                 />
-                {errors.account_nam && (
-                  <p className="text-sm text-destructive">
-                    {errors.account_nam.message}
-                  </p>
-                )}
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleGetData}
+                  className="rounded-full px-4"
+                >
+                  <ArrowUp className="h-4 w-4 mr-2" />
+                  Get Data
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    // Set default head if not set
+                    if (!newSubHeadHeadId && accountHeads.length > 0) {
+                      setNewSubHeadHeadId(accountHeads[0].head_id.toString());
+                    }
+                    setIsSubHeadDialogOpen(true);
+                  }}
+                  title="Add Account Type (Subhead)"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
               </div>
-
-              {/* Account No (Bank) */}
-              <div className="space-y-2">
-                <Label htmlFor="account_no">Account No (Bank)</Label>
-                <Input
-                  id="account_no"
-                  {...register("account_no")}
-                  placeholder="Enter bank account number"
-                />
-              </div>
-
-              {/* Opening Balance - Only show when not in edit mode */}
-              {!isEditMode && (
-                <div className="space-y-2">
-                  <Label htmlFor="opening_balance">Opening Balance</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="opening_balance"
-                      type="number"
-                      step="0.01"
-                      {...register("opening_balance")}
-                      placeholder="0.00"
-                      className="flex-1"
-                    />
-                    <Controller
-                      name="balance_type"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger className="w-fit">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="credit">CR</SelectItem>
-                            <SelectItem value="debit">DB</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
-                  {/* {watch("balance_type") === "debit" && (
-                                        <p className="text-xs text-muted-foreground">
-                                            Debit balance will be shown as negative
-                                        </p>
-                                    )} */}
-                </div>
+              {errors.sub_id && (
+                <p className="text-sm text-destructive">
+                  {errors.sub_id.message}
+                </p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Reference */}
-              <div className="space-y-2">
-                <Label htmlFor="reference">Reference</Label>
-                <Input
-                  id="reference"
-                  {...register("reference")}
-                  placeholder="Enter reference"
-                />
-              </div>
+            {/* Name - Full Width */}
+            <div className="space-y-2">
+              <Label htmlFor="account_nam">Name</Label>
+              <Input
+                id="account_nam"
+                {...register("account_nam", {
+                  required: "Name is required",
+                })}
+                placeholder="Enter account name"
+              />
+              {errors.account_nam && (
+                <p className="text-sm text-destructive">
+                  {errors.account_nam.message}
+                </p>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Contact Numbers - Dynamic */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label>Contact Numbers *</Label>
-
-                  <Button
-                    type="button"
-                    size={"sm"}
-                    variant="default"
-                    onClick={handleAddContact}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
-                </div>
-                {contactNumbers?.map((contact, index) => (
-                  <div key={index} className="space-y-1">
+            {/* Dynamic Contact Numbers - Two Column Grid */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label>Contact Numbers</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddContactNumber}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Contact
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {contactNumbers.map((contact, index) => (
+                  <div key={index} className="space-y-2">
+                    {/* <Label htmlFor={`contact_numbers.${index}`}>
+                      {index === 0 ? "Mobile" : "Contact No"}
+                    </Label> */}
                     <div className="flex gap-2">
                       <Input
+                        id={`contact_numbers.${index}`}
                         {...register(`contact_numbers.${index}`, {
-                          required:
-                            index === 0
-                              ? "At least one contact number is required"
-                              : false,
+                          required: index === 0 ? "At least one contact number is required" : false,
                         })}
-                        placeholder={`Contact ${index + 1}`}
+                        placeholder={
+                          index === 0
+                            ? "Enter mobile number"
+                            : "Enter contact number"
+                        }
                         type="tel"
                         className={
                           errors.contact_numbers?.[index]
-                            ? "border-destructive"
-                            : ""
+                            ? "border-destructive flex-1"
+                            : "flex-1"
                         }
                       />
                       {contactNumbers.length > 1 && (
@@ -670,7 +690,7 @@ export default function AccountPage() {
                           type="button"
                           variant="outline"
                           size="icon"
-                          onClick={() => handleRemoveContact(index)}
+                          onClick={() => handleRemoveContactNumber(index)}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -684,20 +704,156 @@ export default function AccountPage() {
                   </div>
                 ))}
               </div>
+            </div>
 
-              {/* Address */}
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  {...register("address")}
-                  placeholder="Enter address"
-                  rows={3}
-                />
+            {/* Dynamic Bank Account Numbers */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label>Bank Account Numbers</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddBankAccount}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Bank Account
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {bankAccountNumbers.map((bankAccount, index) => (
+                  <div key={index} className="space-y-2">
+                    {/* <Label htmlFor={`bank_account_numbers.${index}`}>
+                      {index === bankAccountNumbers.length - 1 && index > 0
+                        ? "Bank Account No."
+                        : "Bank Account No"}
+                    </Label> */}
+                    <div className="flex gap-2">
+                      <Input
+                        id={`bank_account_numbers.${index}`}
+                        {...register(`bank_account_numbers.${index}`)}
+                        placeholder="Enter bank account number"
+                        className="flex-1"
+                      />
+                      {bankAccountNumbers.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleRemoveBankAccount(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="flex justify-end gap-2">
+            {/* Address - Full Width */}
+            <div className="space-y-2">
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                {...register("address")}
+                placeholder="Enter address"
+              />
+            </div>
+
+            {/* Account Opening Date */}
+            <div className="space-y-2">
+              <Label>Account Opening Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {accountOpeningDate ? (
+                      format(accountOpeningDate, "dd MMMM yyyy")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={accountOpeningDate}
+                    onSelect={(date) => {
+                      if (date) {
+                        setAccountOpeningDate(date);
+                        setValue("account_opening_date", date);
+                      }
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Opening Balance with Radio Buttons */}
+            {!isEditMode && (
+              <div className="space-y-2">
+                <Label htmlFor="opening_balance">Opening Balance</Label>
+                <div className="flex gap-4 items-center">
+                  <Input
+                    id="opening_balance"
+                    type="number"
+                    step="0.01"
+                    {...register("opening_balance")}
+                    placeholder="0"
+                    className="w-32"
+                  />
+                  <Controller
+                    name="balance_type"
+                    control={control}
+                    render={({ field }) => (
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="flex gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="credit" id="credit" />
+                          <Label htmlFor="credit" className="cursor-pointer">
+                            Credit
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="debit" id="debit" />
+                          <Label htmlFor="debit" className="cursor-pointer">
+                            Debit
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCreateNew}
+              >
+                New
+              </Button>
+              {!isEditMode && (
+                <Button type="submit" disabled={isSubmitting} variant="outline">
+                  {isSubmitting ? "Saving..." : "Save"}
+                </Button>
+              )}
+              {isEditMode && (
+                <Button type="submit" disabled={isSubmitting} variant="outline">
+                  {isSubmitting ? "Updating..." : "Update"}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -705,16 +861,10 @@ export default function AccountPage() {
                   reset();
                   setIsEditMode(false);
                   setEditingAccountId(null);
+                  setAccountOpeningDate(new Date());
                 }}
               >
-                {isEditMode ? "Cancel Edit" : "Clear Form"}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Saving..."
-                  : isEditMode
-                  ? "Update Account"
-                  : "Create Account"}
+                Reset
               </Button>
             </div>
           </form>
@@ -722,7 +872,7 @@ export default function AccountPage() {
       </Card>
 
       {/* Accounts List */}
-      <Card>
+      <Card id="get-data">
         <CardContent>
           <MobileListToggle title="Accounts">
             {isMobile ? (
