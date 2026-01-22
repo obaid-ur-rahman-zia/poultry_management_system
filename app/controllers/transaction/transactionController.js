@@ -5,22 +5,41 @@ import transactionRepository from "@/app/repositories/transaction/transactionRep
 import RedisService from "@/app/utils/redis";
 
 class TransactionController {
-  async readAll() {
-    const cacheKey = "transactions:all";
+  async readAll(req) {
     try {
-      const cachedData = await RedisService.get(cacheKey);
-      if (cachedData) {
-        console.log("Transaction Cache Hit");
-        return successResponse(cachedData, "Success");
-      }
-      console.log("Transaction Cache Miss");
-      const data = await transactionRepository.readAll();
-      await RedisService.setex(cacheKey, 300, JSON.stringify({ data }));
-      return successResponse({ data }, "Success");
+      const { searchParams } = new URL(req.url);
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "100");
+      const startDate = searchParams.get("startDate");
+      const endDate = searchParams.get("endDate");
+      const voucherType = searchParams.get("voucherType");
+      const financialYear = searchParams.get("financialYear");
+
+      const { data, totalCount } = await transactionRepository.readAll({
+        page,
+        limit,
+        startDate,
+        endDate,
+        voucherType,
+        financialYear,
+      });
+
+      return successResponse(
+        {
+          data,
+          pagination: {
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit),
+            currentPage: page,
+            itemsPerPage: limit,
+          },
+        },
+        "Success",
+      );
     } catch (err) {
       ErrorLogger.log(
         "Failed to get transactions in Method: transactionController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -39,7 +58,7 @@ class TransactionController {
       if (!start_dat || !end_dat || !acc_id) {
         ErrorLogger.log(
           "Missing start_dat, end_dat or acc_id Parameeter: TransactionController.readAccountLedger",
-          "error"
+          "error",
         );
         return errorResponse("error", 400);
       }
@@ -58,12 +77,12 @@ class TransactionController {
           data,
           openingBalance,
         },
-        "Success"
+        "Success",
       );
     } catch (err) {
       ErrorLogger.log(
         "Failed to get transactions in Method: transactionController.readAccountLedger",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -77,7 +96,7 @@ class TransactionController {
         const error = new Error("acc_id is required");
         ErrorLogger.log(
           "Failed to get transactions in Method: transactionController.readLastTransaction",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -90,7 +109,7 @@ class TransactionController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get transactions in Method: transactionController.readLastTransaction",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -101,7 +120,7 @@ class TransactionController {
       if (!acc_id) {
         ErrorLogger.log(
           "Missing acc_id Parameeter: TransactionController.getAccountBalance",
-          "error"
+          "error",
         );
         return errorResponse("error", 400);
       }
@@ -120,12 +139,12 @@ class TransactionController {
           totalCredit,
           balance,
         },
-        "Success"
+        "Success",
       );
     } catch (error) {
       ErrorLogger.log(
         "Failed to get Balance in Method: TransactionController.getAccountBalance",
-        error
+        error,
       );
       return errorResponse(error, 500);
     }
@@ -148,7 +167,7 @@ class TransactionController {
           const error = new Error(`${field} is required`);
           ErrorLogger.log(
             "Failed to create Transaction in Method: TransactionController.create",
-            error
+            error,
           );
           return errorResponse(error, 400);
         }
@@ -163,13 +182,13 @@ class TransactionController {
       if (err.code === "P2002") {
         ErrorLogger.log(
           "transaction already exists in Method: TransactionController.create",
-          err
+          err,
         );
         return errorResponse(new Error("Transaction already exists"), 400);
       }
       ErrorLogger.log(
         "Failed to create Transaction in Method: TransactionController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -188,7 +207,7 @@ class TransactionController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to read trial balance in Method: TransactionController.readTrialBalance",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }

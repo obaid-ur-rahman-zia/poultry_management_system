@@ -1,13 +1,54 @@
 import prisma from "@/lib/prisma";
 
 class TransactionRepository {
-  async readAll() {
-    return prisma.transaction.findMany({
-      orderBy: { t_id: "desc" },
-      where: {
-        isDeleted: false,
-      },
-    });
+  async readAll(options = {}) {
+    const {
+      page = 1,
+      limit = 100,
+      startDate,
+      endDate,
+      voucherType,
+      financialYear,
+    } = options;
+
+    const skip = (page - 1) * limit;
+    const where = {
+      isDeleted: false,
+    };
+
+    if (startDate) {
+      where.transaction_dat = {
+        ...where.transaction_dat,
+        gte: new Date(startDate),
+      };
+    }
+
+    if (endDate) {
+      where.transaction_dat = {
+        ...where.transaction_dat,
+        lte: new Date(endDate),
+      };
+    }
+
+    if (voucherType && voucherType !== "all") {
+      where.voucher_type = voucherType;
+    }
+
+    if (financialYear && financialYear !== "all") {
+      where.financial_year = financialYear;
+    }
+
+    const [data, totalCount] = await Promise.all([
+      prisma.transaction.findMany({
+        orderBy: { t_id: "desc" },
+        where,
+        skip: skip,
+        take: parseInt(limit),
+      }),
+      prisma.transaction.count({ where }),
+    ]);
+
+    return { data, totalCount };
   }
 
   async getBalance(acc_id) {
@@ -122,11 +163,11 @@ class TransactionRepository {
 
     const totalDebit = sortedBalances.reduce(
       (sum, acc) => sum + acc.debit_balance,
-      0
+      0,
     );
     const totalCredit = sortedBalances.reduce(
       (sum, acc) => sum + acc.credit_balance,
-      0
+      0,
     );
     return {
       balances: sortedBalances,

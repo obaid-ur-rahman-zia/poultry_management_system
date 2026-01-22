@@ -62,6 +62,6 @@ import transactionController from "@/app/controllers/transaction/transactionCont
  *       500:
  *         description: Internal server error
  */
-export async function GET() {
-    return transactionController.readAll()
+export async function GET(req) {
+  return transactionController.readAll(req);
 }

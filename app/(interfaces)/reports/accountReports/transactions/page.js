@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   Dialog,
   DialogContent,
@@ -46,7 +46,15 @@ import {
   X,
   Eye,
 } from "lucide-react";
-import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function AccountingReports() {
   const [transactions, setTransactions] = useState([]);
@@ -54,10 +62,14 @@ export default function AccountingReports() {
   const [accounts, setAccounts] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    itemsPerPage: 100,
+  });
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
@@ -67,17 +79,8 @@ export default function AccountingReports() {
   });
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
     fetchAccounts();
-    fetchTransactions();
+    fetchTransactions(1);
   }, []);
 
   const fetchAccounts = async () => {
@@ -102,10 +105,26 @@ export default function AccountingReports() {
     }
   };
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/transaction/readAll");
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: "100",
+      });
+
+      if (filters.startDate) queryParams.append("startDate", filters.startDate);
+      if (filters.endDate) queryParams.append("endDate", filters.endDate);
+      if (filters.voucherType && filters.voucherType !== "all") {
+        queryParams.append("voucherType", filters.voucherType);
+      }
+      if (filters.financialYear && filters.financialYear !== "all") {
+        queryParams.append("financialYear", filters.financialYear);
+      }
+
+      const response = await fetch(
+        `/api/transaction/readAll?${queryParams.toString()}`
+      );
       const data = await response.json();
 
       if (data.response_code === 200) {
@@ -114,6 +133,9 @@ export default function AccountingReports() {
           : [];
         setTransactions(transactionData);
         setFilteredTransactions(transactionData);
+        if (data.response_result.pagination) {
+          setPagination(data.response_result.pagination);
+        }
       } else {
         console.error("Failed to fetch transactions:", data.response_message);
         setTransactions([]);
@@ -129,6 +151,17 @@ export default function AccountingReports() {
     }
   };
 
+  // Effect to trigger server-side search when filters change (except accountSearch)
+  useEffect(() => {
+    fetchTransactions(1);
+  }, [
+    filters.startDate,
+    filters.endDate,
+    filters.voucherType,
+    filters.financialYear,
+  ]);
+
+  // Effect to handle client-side search on top of current page data
   useEffect(() => {
     if (!Array.isArray(transactions)) {
       setFilteredTransactions([]);
@@ -136,27 +169,6 @@ export default function AccountingReports() {
     }
 
     let filtered = [...transactions];
-
-    if (filters.startDate) {
-      filtered = filtered.filter(
-        (t) => new Date(t.transaction_dat) >= new Date(filters.startDate)
-      );
-    }
-    if (filters.endDate) {
-      filtered = filtered.filter(
-        (t) => new Date(t.transaction_dat) <= new Date(filters.endDate)
-      );
-    }
-
-    if (filters.voucherType !== "all") {
-      filtered = filtered.filter((t) => t.voucher_type === filters.voucherType);
-    }
-
-    if (filters.financialYear !== "all") {
-      filtered = filtered.filter(
-        (t) => t.financial_year === filters.financialYear
-      );
-    }
 
     if (filters.accountSearch) {
       filtered = filtered.filter((t) => {
@@ -171,7 +183,7 @@ export default function AccountingReports() {
     }
 
     setFilteredTransactions(filtered);
-  }, [filters, transactions, accounts]);
+  }, [filters.accountSearch, transactions, accounts]);
 
   const getAccountName = (accountId) => {
     return accounts[accountId]?.name || "Unknown Account";
@@ -332,163 +344,26 @@ export default function AccountingReports() {
 
   return (
     <TooltipProvider>
-      <div className="w-full p-3 sm:p-6 space-y-3 bg-gray-50 min-h-screen">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="w-full p-6 space-y-3 bg-gray-50 min-h-screen">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900">
               Accounting Reports
             </h1>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            {!isMobile && (
-              <div className="w-full sm:w-92">
-                <div className="relative">
-                  <Input
-                    placeholder="Search by account name or remarks..."
-                    value={filters.accountSearch}
-                    onChange={(e) =>
-                      setFilters({ ...filters, accountSearch: e.target.value })
-                    }
-                  />
-                  <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
-                </div>
+          <div className="flex gap-2">
+            <div className="w-92">
+              <div className="relative">
+                <Input
+                  placeholder="Search by account name or remarks..."
+                  value={filters.accountSearch}
+                  onChange={(e) =>
+                    setFilters({ ...filters, accountSearch: e.target.value })
+                  }
+                />
+                <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
               </div>
-            )}
-
-            {isMobile && (
-              <Dialog
-                open={isFilterDialogOpen}
-                onOpenChange={setIsFilterDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    <Search className="h-4 w-4 mr-2" />
-                    Search & Filters
-                    {activeFilterCount > 0 && (
-                      <span className="ml-2 bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Search & Filters</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div>
-                      <Label className="text-sm font-semibold">Search</Label>
-                      <div className="relative mt-1">
-                        <Input
-                          placeholder="Search by account name or remarks..."
-                          value={filters.accountSearch}
-                          onChange={(e) =>
-                            setFilters({
-                              ...filters,
-                              accountSearch: e.target.value,
-                            })
-                          }
-                        />
-                        <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <Label className="text-sm font-semibold">
-                          Start Date
-                        </Label>
-                        <Input
-                          type="date"
-                          value={filters.startDate}
-                          onChange={(e) =>
-                            setFilters({
-                              ...filters,
-                              startDate: e.target.value,
-                            })
-                          }
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-semibold">
-                          End Date
-                        </Label>
-                        <Input
-                          type="date"
-                          value={filters.endDate}
-                          onChange={(e) =>
-                            setFilters({ ...filters, endDate: e.target.value })
-                          }
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-semibold">
-                          Voucher Type
-                        </Label>
-                        <Select
-                          value={filters.voucherType}
-                          onValueChange={(value) =>
-                            setFilters({ ...filters, voucherType: value })
-                          }
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="CR">Cash Receipt</SelectItem>
-                            <SelectItem value="CP">Cash Payment</SelectItem>
-                            <SelectItem value="BR">Bank Receipt</SelectItem>
-                            <SelectItem value="BP">Bank Payment</SelectItem>
-                            <SelectItem value="JV">Journal Voucher</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-semibold">
-                          Financial Year
-                        </Label>
-                        <Select
-                          value={filters.financialYear}
-                          onValueChange={(value) =>
-                            setFilters({ ...filters, financialYear: value })
-                          }
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Years</SelectItem>
-                            {getFinancialYears().map((year) => (
-                              <SelectItem key={year} value={year}>
-                                {year}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={resetFilters}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Reset All
-                      </Button>
-                      <Button
-                        onClick={() => setIsFilterDialogOpen(false)}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700"
-                      >
-                        Apply
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+            </div>
 
             <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
               <Tooltip>
@@ -744,242 +619,121 @@ export default function AccountingReports() {
           </Card>
         )}
 
-        <Tabs defaultValue="ledger" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="ledger">General Ledger</TabsTrigger>
-            <TabsTrigger value="trial">Trial Balance</TabsTrigger>
-            <TabsTrigger value="daybook">Day Book</TabsTrigger>
-          </TabsList>
+        <Card>
+          <CardHeader>
+            <p className="text-sm text-gray-500">
+              Showing{" "}
+              {Array.isArray(filteredTransactions)
+                ? filteredTransactions.length
+                : 0}{" "}
+              transactions
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-lg overflow-hidden">
+              <div className="max-h-[600px] overflow-auto">
+                <table className="w-full">
+                  <thead className="bg-blue-50 sticky top-0">
+                    <tr className="border-b">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                        Voucher
+                      </th>
 
-          <TabsContent value="ledger">
-            <Card>
-              <CardHeader>
-                <p className="text-sm text-gray-500">
-                  Showing{" "}
-                  {Array.isArray(filteredTransactions)
-                    ? filteredTransactions.length
-                    : 0}{" "}
-                  transactions
-                </p>
-              </CardHeader>
-              <CardContent>
-                <MobileListToggle title="General Ledger">
-                  {isMobile ? (
-                    <div className="space-y-3">
-                      {isLoading ? (
-                        <div className="text-center py-8 text-gray-500">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                        Head
+                      </th>
+
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                        Account
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                        Reference
+                      </th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                        Debit
+                      </th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                        Credit
+                      </th>
+                      {/* <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                            Balance
+                          </th> */}
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                        Remarks
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    {isLoading ? (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="text-center py-8 text-gray-500"
+                        >
                           Loading transactions...
-                        </div>
-                      ) : !Array.isArray(filteredTransactions) ||
-                        filteredTransactions.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
+                        </td>
+                      </tr>
+                    ) : !Array.isArray(filteredTransactions) ||
+                      filteredTransactions.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="text-center py-8 text-gray-500"
+                        >
                           No transactions found
-                        </div>
-                      ) : (
-                        filteredTransactions.map((transaction) => (
-                          <Card
-                            key={transaction.transaction_id}
-                            className="border"
-                          >
-                            <CardContent className="p-4 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Date
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {formatDate(transaction.transaction_dat)}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Type
-                                </span>
+                        </td>
+                      </tr>
+                    ) : (
+                      (() => {
+                        let runningBalance = 0;
+                        return filteredTransactions.map((transaction) => {
+                          runningBalance +=
+                            (transaction.debit || 0) -
+                            (transaction.credit || 0);
+                          return (
+                            <tr
+                              key={transaction.transaction_id}
+                              className="border-b hover:bg-gray-50"
+                            >
+                              <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                {formatDate(transaction.transaction_dat)}
+                              </td>
+                              <td className="px-4 py-3">
                                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                                   {transaction.voucher_type}
                                 </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Head
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {
-                                    getAccountDetails(transaction.acc_id)
-                                      .headName
-                                  }
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Account
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {getAccountName(transaction.acc_id)}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Reference
-                                </span>
-                                <span className="text-sm">
-                                  {transaction.reference || "-"}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Debit
-                                </span>
-                                <span className="text-sm font-medium text-green-700">
-                                  {transaction.debit >= 0
-                                    ? formatCurrency(transaction.debit)
-                                    : "-"}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Credit
-                                </span>
-                                <span className="text-sm font-medium text-red-700">
-                                  {transaction.credit >= 0
-                                    ? formatCurrency(transaction.credit)
-                                    : "-"}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Remarks
-                                </span>
-                                <span className="text-sm text-gray-600 truncate max-w-[60%]">
-                                  {transaction.remarks || "-"}
-                                </span>
-                              </div>
-                              <div className="flex justify-end pt-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleViewTransaction(transaction)
-                                  }
-                                >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))
-                      )}
-                    </div>
-                  ) : (
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className="max-h-[600px] overflow-auto">
-                        <table className="w-full">
-                          <thead className="bg-blue-50 sticky top-0">
-                            <tr className="border-b">
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Date
-                              </th>
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Type
-                              </th>
-
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Head
-                              </th>
-
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Account
-                              </th>
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Reference
-                              </th>
-                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                Debit
-                              </th>
-                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                Credit
-                              </th>
-                              {/* <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                            Balance
-                          </th> */}
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Remarks
-                              </th>
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white">
-                            {isLoading ? (
-                              <tr>
-                                <td
-                                  colSpan={9}
-                                  className="text-center py-8 text-gray-500"
-                                >
-                                  Loading transactions...
-                                </td>
-                              </tr>
-                            ) : !Array.isArray(filteredTransactions) ||
-                              filteredTransactions.length === 0 ? (
-                              <tr>
-                                <td
-                                  colSpan={9}
-                                  className="text-center py-8 text-gray-500"
-                                >
-                                  No transactions found
-                                </td>
-                              </tr>
-                            ) : (
-                              (() => {
-                                let runningBalance = 0;
-                                return filteredTransactions.map(
-                                  (transaction) => {
-                                    runningBalance +=
-                                      (transaction.debit || 0) -
-                                      (transaction.credit || 0);
-                                    return (
-                                      <tr
-                                        key={transaction.transaction_id}
-                                        className="border-b hover:bg-gray-50"
-                                      >
-                                        <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                          {formatDate(
-                                            transaction.transaction_dat
-                                          )}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                                            {transaction.voucher_type}
-                                          </span>
-                                        </td>
-                                        <td className="px-4 py-3 font-medium text-sm">
-                                          {highlightText(
-                                            getAccountDetails(
-                                              transaction.acc_id
-                                            ).headName
-                                          )}
-                                        </td>
-                                        <td className="px-4 py-3 font-medium text-sm">
-                                          {highlightText(
-                                            getAccountName(transaction.acc_id),
-                                            filters.accountSearch
-                                          )}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">
-                                          {transaction.reference || "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-medium text-green-700 text-sm">
-                                          {transaction.debit >= 0
-                                            ? formatCurrency(transaction.debit)
-                                            : "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-medium text-red-700 text-sm">
-                                          {transaction.credit >= 0
-                                            ? formatCurrency(transaction.credit)
-                                            : "-"}
-                                        </td>
-                                        {/* <td
+                              </td>
+                              <td className="px-4 py-3 font-medium text-sm">
+                                {highlightText(
+                                  getAccountDetails(transaction.acc_id).headName
+                                )}
+                              </td>
+                              <td className="px-4 py-3 font-medium text-sm">
+                                {highlightText(
+                                  getAccountName(transaction.acc_id),
+                                  filters.accountSearch
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600">
+                                {transaction.reference || "-"}
+                              </td>
+                              <td className="px-4 py-3 text-right font-medium text-green-700 text-sm">
+                                {transaction.debit >= 0
+                                  ? formatCurrency(transaction.debit)
+                                  : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-right font-medium text-red-700 text-sm">
+                                {transaction.credit >= 0
+                                  ? formatCurrency(transaction.credit)
+                                  : "-"}
+                              </td>
+                              {/* <td
                                     className={`px-4 py-3 text-right font-bold text-sm ${
                                       runningBalance >= 0
                                         ? "text-blue-700"
@@ -989,444 +743,114 @@ export default function AccountingReports() {
                                     {formatCurrency(Math.abs(runningBalance))}{" "}
                                     {runningBalance < 0 ? "Cr" : "Dr"}
                                   </td> */}
-                                        <td className="px-4 py-3 text-sm text-gray-600  truncate">
-                                          {highlightText(
-                                            transaction.remarks || "-",
-                                            filters.accountSearch
-                                          )}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600 truncate">
-                                          <Button
-                                            variant="outline"
-                                            size="icon"
-                                            onClick={() =>
-                                              handleViewTransaction(transaction)
-                                            }
-                                          >
-                                            <Eye className="h-4 w-4" />
-                                          </Button>
-                                        </td>
-                                      </tr>
-                                    );
-                                  }
-                                );
-                              })()
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {Array.isArray(filteredTransactions) &&
-                    filteredTransactions.length > 0 && (
-                      <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-600">Total Debit:</span>
-                            <span className="font-bold text-green-700 ml-2">
-                              Rs. {formatCurrency(summary.totalDebit)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Total Credit:</span>
-                            <span className="font-bold text-red-700 ml-2">
-                              Rs. {formatCurrency(summary.totalCredit)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Net Balance:</span>
-                            <span
-                              className={`font-bold ml-2 ${
-                                summary.netBalance >= 0
-                                  ? "text-blue-700"
-                                  : "text-orange-700"
-                              }`}
-                            >
-                              Rs. {formatCurrency(Math.abs(summary.netBalance))}{" "}
-                              {summary.netBalance < 0 ? "Cr" : "Dr"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                </MobileListToggle>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="trial">
-            <Card>
-              <CardHeader>
-                <p className="text-sm text-gray-500">Summary by account</p>
-              </CardHeader>
-              <CardContent>
-                <MobileListToggle title="Trial Balance">
-                  {isMobile ? (
-                    <div className="space-y-3">
-                      {(() => {
-                        if (
-                          !Array.isArray(filteredTransactions) ||
-                          filteredTransactions.length === 0
-                        ) {
-                          return (
-                            <div className="text-center py-8 text-gray-500">
-                              No data available
-                            </div>
-                          );
-                        }
-
-                        const accountSummary = {};
-                        filteredTransactions.forEach((t) => {
-                          const accountName = getAccountName(t.acc_id);
-                          if (!accountSummary[accountName]) {
-                            accountSummary[accountName] = {
-                              debit: 0,
-                              credit: 0,
-                            };
-                          }
-                          accountSummary[accountName].debit += t.debit || 0;
-                          accountSummary[accountName].credit += t.credit || 0;
-                        });
-
-                        return (
-                          <>
-                            {Object.entries(accountSummary).map(
-                              ([account, amounts]) => (
-                                <Card key={account} className="border">
-                                  <CardContent className="p-4 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs text-gray-500">
-                                        Account
-                                      </span>
-                                      <span className="text-sm font-medium">
-                                        {account}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs text-gray-500">
-                                        Debit
-                                      </span>
-                                      <span className="text-sm font-medium text-green-700">
-                                        {formatCurrency(amounts.debit)}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs text-gray-500">
-                                        Credit
-                                      </span>
-                                      <span className="text-sm font-medium text-red-700">
-                                        {formatCurrency(amounts.credit)}
-                                      </span>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              )
-                            )}
-                            <Card className="border-2 border-blue-200 bg-blue-50">
-                              <CardContent className="p-4 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-bold">
-                                    TOTAL
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-600">
-                                    Total Debit
-                                  </span>
-                                  <span className="text-sm font-bold text-green-700">
-                                    {formatCurrency(summary.totalDebit)}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-600">
-                                    Total Credit
-                                  </span>
-                                  <span className="text-sm font-bold text-red-700">
-                                    {formatCurrency(summary.totalCredit)}
-                                  </span>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  ) : (
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className="max-h-[600px] overflow-auto">
-                        <table className="w-full">
-                          <thead className="bg-blue-50 sticky top-0">
-                            <tr className="border-b">
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Account Name
-                              </th>
-                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                Debit
-                              </th>
-                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                Credit
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white">
-                            {(() => {
-                              if (
-                                !Array.isArray(filteredTransactions) ||
-                                filteredTransactions.length === 0
-                              ) {
-                                return (
-                                  <tr>
-                                    <td
-                                      colSpan={3}
-                                      className="text-center py-8 text-gray-500"
-                                    >
-                                      No data available
-                                    </td>
-                                  </tr>
-                                );
-                              }
-
-                              const accountSummary = {};
-                              filteredTransactions.forEach((t) => {
-                                const accountName = getAccountName(t.acc_id);
-                                if (!accountSummary[accountName]) {
-                                  accountSummary[accountName] = {
-                                    debit: 0,
-                                    credit: 0,
-                                  };
-                                }
-                                accountSummary[accountName].debit +=
-                                  t.debit || 0;
-                                accountSummary[accountName].credit +=
-                                  t.credit || 0;
-                              });
-
-                              return (
-                                <>
-                                  {Object.entries(accountSummary).map(
-                                    ([account, amounts]) => (
-                                      <tr
-                                        key={account}
-                                        className="border-b hover:bg-gray-50"
-                                      >
-                                        <td className="px-4 py-3 font-medium text-sm">
-                                          {highlightText(
-                                            account,
-                                            filters.accountSearch
-                                          )}
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-medium text-green-700 text-sm">
-                                          {formatCurrency(amounts.debit)}
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-medium text-red-700 text-sm">
-                                          {formatCurrency(amounts.credit)}
-                                        </td>
-                                      </tr>
-                                    )
-                                  )}
-                                  <tr className="bg-blue-50 font-bold border-t-2">
-                                    <td className="px-4 py-3 text-sm">TOTAL</td>
-                                    <td className="px-4 py-3 text-right text-green-700 text-sm">
-                                      {formatCurrency(summary.totalDebit)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-red-700 text-sm">
-                                      {formatCurrency(summary.totalCredit)}
-                                    </td>
-                                  </tr>
-                                </>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </MobileListToggle>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="daybook">
-            <Card>
-              <CardHeader>
-                <p className="text-sm text-gray-500">
-                  Daily transaction summary
-                </p>
-              </CardHeader>
-              <CardContent>
-                <MobileListToggle title="Day Book">
-                  {isMobile ? (
-                    <div className="space-y-3">
-                      {!Array.isArray(filteredTransactions) ||
-                      filteredTransactions.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          No transactions found
-                        </div>
-                      ) : (
-                        filteredTransactions.map((transaction) => (
-                          <Card
-                            key={transaction.transaction_id}
-                            className="border"
-                          >
-                            <CardContent className="p-4 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Date
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {formatDate(transaction.transaction_dat)}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Voucher
-                                </span>
-                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                                  {transaction.voucher_type}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Account
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {getAccountName(transaction.acc_id)}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Remarks
-                                </span>
-                                <span className="text-xs text-gray-500 truncate max-w-[60%]">
-                                  {transaction.remarks || "-"}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Amount
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {formatCurrency(
-                                    transaction.debit || transaction.credit || 0
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  Type
-                                </span>
-                                {transaction.debit ? (
-                                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-                                    Debit
-                                  </span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-                                    Credit
-                                  </span>
+                              <td className="px-4 py-3 text-sm text-gray-600  truncate">
+                                {highlightText(
+                                  transaction.remarks || "-",
+                                  filters.accountSearch
                                 )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))
-                      )}
-                    </div>
-                  ) : (
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className="max-h-[600px] overflow-auto">
-                        <table className="w-full">
-                          <thead className="bg-blue-50 sticky top-0">
-                            <tr className="border-b">
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Date
-                              </th>
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Voucher
-                              </th>
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Particulars
-                              </th>
-                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                Amount
-                              </th>
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                Type
-                              </th>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600 truncate">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleViewTransaction(transaction)
+                                  }
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody className="bg-white">
-                            {!Array.isArray(filteredTransactions) ||
-                            filteredTransactions.length === 0 ? (
-                              <tr>
-                                <td
-                                  colSpan={5}
-                                  className="text-center py-8 text-gray-500"
-                                >
-                                  No transactions found
-                                </td>
-                              </tr>
-                            ) : (
-                              filteredTransactions.map((transaction) => (
-                                <tr
-                                  key={transaction.transaction_id}
-                                  className="border-b hover:bg-gray-50"
-                                >
-                                  <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                    {formatDate(transaction.transaction_dat)}
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                                      {transaction.voucher_type}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="font-medium text-sm">
-                                      {highlightText(
-                                        getAccountName(transaction.acc_id),
-                                        filters.accountSearch
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      {highlightText(
-                                        transaction.remarks || "",
-                                        filters.accountSearch
-                                      )}
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3 text-right font-medium text-sm">
-                                    {formatCurrency(
-                                      transaction.debit ||
-                                        transaction.credit ||
-                                        0
-                                    )}
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    {transaction.debit ? (
-                                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-                                        Debit
-                                      </span>
-                                    ) : (
-                                      <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-                                        Credit
-                                      </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
+                          );
+                        });
+                      })()
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {Array.isArray(filteredTransactions) &&
+              filteredTransactions.length > 0 && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Total Debit:</span>
+                      <span className="font-bold text-green-700 ml-2">
+                        Rs. {formatCurrency(summary.totalDebit)}
+                      </span>
                     </div>
-                  )}
-                </MobileListToggle>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                    <div>
+                      <span className="text-gray-600">Total Credit:</span>
+                      <span className="font-bold text-red-700 ml-2">
+                        Rs. {formatCurrency(summary.totalCredit)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Net Balance:</span>
+                      <span
+                        className={`font-bold ml-2 ${
+                          summary.netBalance >= 0
+                            ? "text-blue-700"
+                            : "text-orange-700"
+                        }`}
+                      >
+                        Rs. {formatCurrency(Math.abs(summary.netBalance))}{" "}
+                        {summary.netBalance < 0 ? "Cr" : "Dr"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+          </CardContent>
+        </Card>
+        {pagination.totalPages > 1 && (
+          <div className="mt-4 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      fetchTransactions(Math.max(1, pagination.currentPage - 1))
+                    }
+                    className={
+                      pagination.currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+
+                <PaginationItem>
+                  <span className="px-4 text-sm text-gray-600">
+                    Page {pagination.currentPage} of {pagination.totalPages}
+                  </span>
+                </PaginationItem>
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      fetchTransactions(
+                        Math.min(
+                          pagination.totalPages,
+                          pagination.currentPage + 1
+                        )
+                      )
+                    }
+                    className={
+                      pagination.currentPage === pagination.totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
 
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent className="w-[500px] sm:max-w-[500px] max-h-[85vh] overflow-y-auto px-3 py-2">
+          <SheetContent className="w-[500px] sm:max-w-[500px] max-h-screen overflow-y-auto px-3 py-2">
             <SheetHeader className="pb-2">
               <SheetTitle className="text-lg font-bold flex items-center justify-between w-full">
                 <div className="flex items-center justify-between w-full">
