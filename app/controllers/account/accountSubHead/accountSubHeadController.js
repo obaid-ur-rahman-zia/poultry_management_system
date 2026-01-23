@@ -19,7 +19,7 @@ class AccountSubHeadController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all account subheads in Method: AccountSubHeadController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -40,7 +40,7 @@ class AccountSubHeadController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get accounts manage in Method: AccountSubHeadController.readAccountsManage",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -55,7 +55,7 @@ class AccountSubHeadController {
         const error = new Error("Missing head_id");
         ErrorLogger.log(
           "Failed to get all account subheads in Method: AccountSubHeadController.readByHead",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -65,7 +65,7 @@ class AccountSubHeadController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all account subheads in Method: AccountSubHeadController.readByHead",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -81,7 +81,7 @@ class AccountSubHeadController {
         const error = new Error("sub_id is required");
         ErrorLogger.log(
           "Failed to get account subhead by id in Method: AccountSubHeadController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -90,7 +90,7 @@ class AccountSubHeadController {
       if (!result) {
         ErrorLogger.log(
           "Failed to get account subhead by id in Method: AccountSubHeadController.readById",
-          new Error("Subhead not found")
+          new Error("Subhead not found"),
         );
         return errorResponse(new Error("Subhead not found"), 404);
       }
@@ -99,7 +99,28 @@ class AccountSubHeadController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get account subhead by id in Method: AccountSubHeadController.readById",
-        err
+        err,
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  // 📊 Get Subhead Trial Balance
+  async readTrialBalance(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const startDate = searchParams.get("startDate");
+      const endDate = searchParams.get("endDate");
+
+      const data = await AccountSubHeadRepository.readTrialBalance(
+        startDate,
+        endDate,
+      );
+      return successResponse(data, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to get subhead trial balance in Method: AccountSubHeadController.readTrialBalance",
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -113,20 +134,20 @@ class AccountSubHeadController {
 
       if (!head_id || !subhead_nam) {
         const error = new Error(
-          "head_id and subhead_nam are required in Method: AccountSubHeadController.create"
+          "head_id and subhead_nam are required in Method: AccountSubHeadController.create",
         );
         return errorResponse(error, 400);
       }
 
       // Check for duplicate subhead name
-      const duplicate = await AccountSubHeadRepository.checkDuplicate(subhead_nam.trim());
+      const duplicate = await AccountSubHeadRepository.checkDuplicate(
+        subhead_nam.trim(),
+      );
       if (duplicate) {
-        const error = new Error(
-          "A subhead with this name already exists"
-        );
+        const error = new Error("A subhead with this name already exists");
         ErrorLogger.log(
           "Failed to create subhead - duplicate name in Method: AccountSubHeadController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -147,21 +168,21 @@ class AccountSubHeadController {
           sub_id: createdSubhead.sub_id,
           subhead_id: createdSubhead.subhead_id,
         },
-        "Subhead created successfully"
+        "Subhead created successfully",
       );
     } catch (err) {
       if (err.code === "P2002") {
         // unique constraint violation
         return errorResponse(
           new Error(
-            "Subhead with this combination already exists in Method: AccountSubHeadController.create"
+            "Subhead with this combination already exists in Method: AccountSubHeadController.create",
           ),
-          400
+          400,
         );
       }
       ErrorLogger.log(
         "Failed to create account subhead in Method: AccountSubHeadController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -175,20 +196,21 @@ class AccountSubHeadController {
 
       if (!sub_id || !subhead_nam) {
         const error = new Error(
-          "sub_id and subhead_nam are required in Method: AccountSubHeadController.update"
+          "sub_id and subhead_nam are required in Method: AccountSubHeadController.update",
         );
         return errorResponse(error, 400);
       }
 
       // Check for duplicate subhead name, excluding current subhead
-      const duplicate = await AccountSubHeadRepository.checkDuplicate(subhead_nam.trim(), sub_id);
+      const duplicate = await AccountSubHeadRepository.checkDuplicate(
+        subhead_nam.trim(),
+        sub_id,
+      );
       if (duplicate) {
-        const error = new Error(
-          "A subhead with this name already exists"
-        );
+        const error = new Error("A subhead with this name already exists");
         ErrorLogger.log(
           "Failed to update subhead - duplicate name in Method: AccountSubHeadController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -200,7 +222,7 @@ class AccountSubHeadController {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update account subhead in Method: AccountSubHeadController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Subhead not found"), 404);
       }
@@ -218,7 +240,7 @@ class AccountSubHeadController {
       if (!sub_id) {
         ErrorLogger.log(
           "Failed to delete account subhead in Method: AccountSubHeadController.delete",
-          new Error("sub_id is required")
+          new Error("sub_id is required"),
         );
         return errorResponse(new Error("sub_id is required"), 400);
       }
@@ -229,13 +251,13 @@ class AccountSubHeadController {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to delete account subhead in Method: AccountSubHeadController.delete",
-          err
+          err,
         );
         return errorResponse(new Error("Subhead not found"), 404);
       }
       ErrorLogger.log(
         "Failed to delete account subhead in Method: AccountSubHeadController.delete",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
