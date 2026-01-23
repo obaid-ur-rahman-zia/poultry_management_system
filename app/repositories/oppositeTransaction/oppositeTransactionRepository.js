@@ -15,6 +15,30 @@ class OppositeTransactionRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.opposite_transaction.findMany({
+        skip,
+        take,
+        orderBy: { transaction_id: "desc" },
+        include: {
+          paid_by_account: true,
+          bank_account_ref: true,
+          received_by_account: true,
+        },
+        where: {
+          status: 1,
+        },
+      }),
+      prisma.opposite_transaction.count({
+        where: {
+          status: 1,
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
   async readById(transaction_id) {
     return prisma.opposite_transaction.findUnique({
       where: {

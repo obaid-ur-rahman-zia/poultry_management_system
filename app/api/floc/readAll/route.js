@@ -41,7 +41,7 @@ import FlocController from "@/app/controllers/floc/flocController";
  *       500:
  *         description: Internal server error
  */
-export async function GET() {
-  return FlocController.readAll();
+export async function GET(req) {
+  return FlocController.readAll(req);
 }
 

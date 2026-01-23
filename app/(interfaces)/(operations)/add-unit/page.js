@@ -23,6 +23,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function UnitPage() {
   const {
@@ -49,19 +64,39 @@ export default function UnitPage() {
   const [filterName, setFilterName] = useState("");
   const [filterAddress, setFilterAddress] = useState("");
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
   useEffect(() => {
     fetchUnits();
   }, []);
 
-  const fetchUnits = async () => {
+  const fetchUnits = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/unit/readAll");
+      const response = await fetch(`/api/unit/readAll?page=${page}&limit=${limit}`);
       const result = await response.json();
       
       if (result.response_status === "success") {
-        const unitsData = result.response_result?.data || result.response_result || [];
-        setUnits(unitsData);
+        const responseData = result.response_result;
+        
+        // Handle paginated response
+        if (responseData?.pagination) {
+          const unitsData = responseData.data || [];
+          setUnits(unitsData);
+          setTotalPages(responseData.pagination.totalPages || 1);
+          setTotalItems(responseData.pagination.total || 0);
+          setCurrentPage(responseData.pagination.page || page);
+        } else {
+          // Fallback for non-paginated response
+          const unitsData = responseData?.data || responseData || [];
+          setUnits(unitsData);
+          setTotalPages(1);
+          setTotalItems(unitsData.length);
+        }
       } else {
         toast.error(result.response_message || "Failed to fetch units");
       }
@@ -108,7 +143,7 @@ export default function UnitPage() {
         });
         setIsEditMode(false);
         setEditingUnitId(null);
-        fetchUnits();
+        fetchUnits(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to save unit");
       }
@@ -158,7 +193,7 @@ export default function UnitPage() {
 
       if (result.response_status === "success") {
         toast.success("Unit deleted successfully");
-        fetchUnits();
+        fetchUnits(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete unit");
       }
@@ -168,7 +203,7 @@ export default function UnitPage() {
     }
   };
 
-  // Filter units
+  // Filter units (client-side filtering on paginated data)
   const filteredUnits = units.filter((unit) => {
     const matchesSearch = searchQuery === "" || 
       unit.prounit_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -186,6 +221,21 @@ export default function UnitPage() {
 
     return matchesSearch && matchesCapacity && matchesName && matchesAddress;
   });
+
+  // Reset to page 1 when filters change and refetch
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchUnits(1, itemsPerPage);
+    }
+  }, [searchQuery, filterCapacity, filterName, filterAddress]);
+
+  // Fetch units when page or itemsPerPage changes
+  useEffect(() => {
+    fetchUnits(currentPage, itemsPerPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div className="p-6 space-y-6">
@@ -366,6 +416,86 @@ export default function UnitPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalItems > 0 && totalPages > 1 && (
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                <Select
+                  value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                        fetchUnits(1, Number(value));
+                      }}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => {
+                        const newPage = Math.max(1, currentPage - 1);
+                        setCurrentPage(newPage);
+                        fetchUnits(newPage, itemsPerPage);
+                      }}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  fetchUnits(pageNum, itemsPerPage);
+                                }}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  <PaginationItem>
+                          <PaginationNext
+                            onClick={() => {
+                              const newPage = Math.min(totalPages, currentPage + 1);
+                              setCurrentPage(newPage);
+                              fetchUnits(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+              <div className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} units
+              </div>
             </div>
           )}
         </CardContent>

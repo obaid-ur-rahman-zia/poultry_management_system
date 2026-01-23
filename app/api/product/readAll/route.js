@@ -30,6 +30,6 @@ import ProductController from "@/app/controllers/product/productController";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function GET() {
-  return ProductController.readAll();
+export async function GET(req) {
+  return ProductController.readAll(req);
 }

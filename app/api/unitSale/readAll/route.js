@@ -58,7 +58,7 @@ import UnitSaleController from "@/app/controllers/unitSale/unitSaleController";
  *       500:
  *         description: Internal server error
  */
-export async function GET() {
-  return UnitSaleController.readAll();
+export async function GET(req) {
+  return UnitSaleController.readAll(req);
 }
 

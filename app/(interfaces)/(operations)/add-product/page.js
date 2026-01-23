@@ -51,6 +51,14 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function ProductPage() {
   const {
@@ -93,6 +101,12 @@ export default function ProductPage() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterPrice, setFilterPrice] = useState("");
   const [filterName, setFilterName] = useState("");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     fetchCategories();
@@ -144,20 +158,32 @@ export default function ProductPage() {
   };
 
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/product/readAll");
+      const response = await fetch(`/api/product/readAll?page=${page}&limit=${limit}`);
       const result = await response.json();
       
       if (result.response_status === "success") {
-        // API returns { products, nextId }, so we need to extract products
-        const productsData = result.response_result?.products || result.response_result?.data || result.response_result || [];
-        // Ensure productsData is an array
-        setProducts(Array.isArray(productsData) ? productsData : []);
+        const responseData = result.response_result;
+        
+        // Handle paginated response
+        if (responseData?.pagination) {
+          const productsData = responseData.products || [];
+          setProducts(Array.isArray(productsData) ? productsData : []);
+          setTotalPages(responseData.pagination.totalPages || 1);
+          setTotalItems(responseData.pagination.total || 0);
+          setCurrentPage(responseData.pagination.page || page);
+        } else {
+          // Fallback for non-paginated response
+          const productsData = responseData?.products || responseData?.data || responseData || [];
+          setProducts(Array.isArray(productsData) ? productsData : []);
+          setTotalPages(1);
+          setTotalItems(productsData.length);
+        }
       } else {
         toast.error(result.response_message || "Failed to fetch products");
-        setProducts([]); // Set empty array on error
+        setProducts([]);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -297,7 +323,7 @@ export default function ProductPage() {
         });
         setIsEditMode(false);
         setEditingProductId(null);
-        fetchProducts();
+        fetchProducts(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to save product");
       }
@@ -349,7 +375,7 @@ export default function ProductPage() {
 
       if (result.response_status === "success") {
         toast.success("Product deleted successfully");
-        fetchProducts();
+        fetchProducts(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete product");
       }
@@ -360,6 +386,7 @@ export default function ProductPage() {
   };
 
   // Filter products - ensure products is an array
+  // Filter products (client-side filtering on paginated data)
   const filteredProducts = (Array.isArray(products) ? products : []).filter((product) => {
     const matchesSearch = searchQuery === "" || 
       product.product_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -378,6 +405,21 @@ export default function ProductPage() {
 
     return matchesSearch && matchesCategory && matchesPrice && matchesName;
   });
+
+  // Reset to page 1 when filters change and refetch
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchProducts(1, itemsPerPage);
+    }
+  }, [searchQuery, filterCategory, filterPrice, filterName]);
+
+  // Fetch products when page or itemsPerPage changes
+  useEffect(() => {
+    fetchProducts(currentPage, itemsPerPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div className="p-6 space-y-6">
@@ -674,7 +716,7 @@ export default function ProductPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className={"max-h-[500px] overflow-y-auto"}>
-                  {filteredProducts.map((product) => (
+                  {paginatedProducts.map((product) => (
                     <TableRow key={product.product_id}>
                       <TableCell className="font-medium">
                         {product.product_title || "N/A"}
@@ -720,6 +762,86 @@ export default function ProductPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalItems > 0 && totalPages > 1 && (
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                <Select
+                  value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                        fetchProducts(1, Number(value));
+                      }}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => {
+                              const newPage = Math.max(1, currentPage - 1);
+                              setCurrentPage(newPage);
+                              fetchProducts(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                  </PaginationItem>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  fetchProducts(pageNum, itemsPerPage);
+                                }}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  <PaginationItem>
+                          <PaginationNext
+                            onClick={() => {
+                              const newPage = Math.min(totalPages, currentPage + 1);
+                              setCurrentPage(newPage);
+                              fetchProducts(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+              <div className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} products
+              </div>
             </div>
           )}
         </CardContent>

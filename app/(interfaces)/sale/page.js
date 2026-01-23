@@ -50,6 +50,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function SalePage() {
   const [activeTab, setActiveTab] = useState("whole-sale");
@@ -146,6 +154,12 @@ function WholeSaleTab() {
   const [filterCustomer, setFilterCustomer] = useState("all");
   const [filterDate, setFilterDate] = useState("");
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
   useEffect(() => {
     fetchSupplierAccounts();
     fetchCustomerAccounts();
@@ -157,15 +171,23 @@ function WholeSaleTab() {
     setValue("sale_date", currentDate);
   }, []);
 
-  // Fetch all accounts for search dialog
+  // Fetch all accounts for search dialog (fetch all without pagination for search)
   const fetchAllAccounts = async () => {
     try {
-      const response = await fetch("/api/account/accounts/readAll");
+      // Fetch all accounts without pagination using all=true parameter
+      const response = await fetch("/api/account/accounts/readAll?all=true");
       const result = await response.json();
       if (result.success || result.response_status === "success") {
-        const accountsData =
-          result.data || result.response_result?.data || result.response_result || [];
-        setAllAccounts(accountsData);
+        const responseData = result.response_result;
+        // Handle response (with or without pagination)
+        if (responseData?.pagination) {
+          const accountsData = responseData.data || [];
+          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+        } else {
+          // Non-paginated response (all accounts)
+          const accountsData = responseData?.data || responseData || [];
+          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+        }
       }
     } catch (error) {
       console.error("Error fetching all accounts:", error);
@@ -456,15 +478,28 @@ function WholeSaleTab() {
   }, [formerAmount, purcherAmount, setValue]);
 
   // Fetch whole sales
-  const fetchWholeSales = async () => {
+  const fetchWholeSales = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/wholeSale/readAll");
+      const response = await fetch(`/api/wholeSale/readAll?page=${page}&limit=${limit}`);
       const result = await response.json();
       if (result.response_status === "success") {
-        const salesData =
-          result.response_result?.data || result.response_result || [];
-        setWholeSales(salesData);
+        const responseData = result.response_result;
+        
+        // Handle paginated response
+        if (responseData?.pagination) {
+          const salesData = responseData.data || [];
+          setWholeSales(salesData);
+          setTotalPages(responseData.pagination.totalPages || 1);
+          setTotalItems(responseData.pagination.total || 0);
+          setCurrentPage(responseData.pagination.page || page);
+        } else {
+          // Fallback for non-paginated response
+          const salesData = responseData?.data || responseData || [];
+          setWholeSales(salesData);
+          setTotalPages(1);
+          setTotalItems(salesData.length);
+        }
       } else {
         toast.error(result.response_message || "Failed to fetch whole sales");
       }
@@ -622,7 +657,7 @@ function WholeSaleTab() {
         setCustomerBalance(null);
         setIsEditMode(false);
         setEditingSaleId(null);
-        fetchWholeSales();
+        fetchWholeSales(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to save whole sale");
       }
@@ -667,7 +702,7 @@ function WholeSaleTab() {
   const customerNetBalance =
     (customerBalance || 0) + (parseFloat(purcherAmount) || 0);
 
-  // Filter whole sales
+  // Filter whole sales (client-side filtering on paginated data)
   const filteredWholeSales = wholeSales.filter((sale) => {
     const matchesSearch =
       searchQuery === "" ||
@@ -684,6 +719,21 @@ function WholeSaleTab() {
         new Date(sale.sale_date).toISOString().split("T")[0] === filterDate);
     return matchesSearch && matchesSupplier && matchesCustomer && matchesDate;
   });
+
+  // Reset to page 1 when filters change and refetch
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchWholeSales(1, itemsPerPage);
+    }
+  }, [searchQuery, filterSupplier, filterCustomer, filterDate]);
+
+  // Fetch whole sales when page or itemsPerPage changes
+  useEffect(() => {
+    fetchWholeSales(currentPage, itemsPerPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, itemsPerPage]);
 
   return (
     <>
@@ -830,7 +880,11 @@ function WholeSaleTab() {
                     size="sm"
                     onClick={() => {
                       setAccountSearchField("former");
-                      setAccountSearchType("former");
+                      // Find "Former" subhead and set its sub_id as default
+                      const formerSubhead = accountSubHeads.find(
+                        (sh) => sh.subhead_nam?.toLowerCase().includes("former")
+                      );
+                      setAccountSearchType(formerSubhead ? formerSubhead.sub_id.toString() : "all");
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
@@ -950,7 +1004,11 @@ function WholeSaleTab() {
                     size="sm"
                     onClick={() => {
                       setAccountSearchField("purcher");
-                      setAccountSearchType("purcher");
+                      // Find "Purcher" subhead and set its sub_id as default
+                      const purcherSubhead = accountSubHeads.find(
+                        (sh) => sh.subhead_nam?.toLowerCase().includes("purcher")
+                      );
+                      setAccountSearchType(purcherSubhead ? purcherSubhead.sub_id.toString() : "all");
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
@@ -1272,7 +1330,7 @@ function WholeSaleTab() {
                                         toast.success(
                                           "Whole sale deleted successfully"
                                         );
-                                        fetchWholeSales();
+                                        fetchWholeSales(currentPage, itemsPerPage);
                                       } else {
                                         toast.error(
                                           result.response_message ||
@@ -1301,6 +1359,86 @@ function WholeSaleTab() {
                     </Table>
                   </div>
                 )}
+
+                {/* Pagination */}
+                {totalItems > 0 && totalPages > 1 && (
+                  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                      <Select
+                        value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                        fetchWholeSales(1, Number(value));
+                      }}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => {
+                              const newPage = Math.max(1, currentPage - 1);
+                              setCurrentPage(newPage);
+                              fetchWholeSales(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  fetchWholeSales(pageNum, itemsPerPage);
+                                }}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => {
+                              const newPage = Math.min(totalPages, currentPage + 1);
+                              setCurrentPage(newPage);
+                              fetchWholeSales(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                    <div className="text-sm text-muted-foreground">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} sales
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </MobileListToggle>
@@ -1313,6 +1451,12 @@ function WholeSaleTab() {
         onOpenChange={setIsAccountSearchDialogOpen}
       >
         <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Search Accounts</DialogTitle>
+            <DialogDescription>
+              Search and select an account from all available accounts
+            </DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex items-center gap-4">
               <div className="flex-1 space-y-2">

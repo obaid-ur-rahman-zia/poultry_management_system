@@ -41,6 +41,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function TradingPage() {
   const {
@@ -96,6 +104,12 @@ export default function TradingPage() {
   const [filterSaleAccount, setFilterSaleAccount] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Watch form values
   const buyQuantity = watch("buy_quantity");
@@ -228,14 +242,28 @@ export default function TradingPage() {
     }
   };
 
-  const fetchTrades = async () => {
+  const fetchTrades = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/trading/readAll");
+      const response = await fetch(`/api/trading/readAll?page=${page}&limit=${limit}`);
       const result = await response.json();
       if (result.response_status === "success") {
-        const tradesData = result.response_result?.data || result.response_result || [];
-        setTrades(Array.isArray(tradesData) ? tradesData : []);
+        const responseData = result.response_result;
+        
+        // Handle paginated response
+        if (responseData?.pagination) {
+          const tradesData = responseData.data || [];
+          setTrades(Array.isArray(tradesData) ? tradesData : []);
+          setTotalPages(responseData.pagination.totalPages || 1);
+          setTotalItems(responseData.pagination.total || 0);
+          setCurrentPage(responseData.pagination.page || page);
+        } else {
+          // Fallback for non-paginated response
+          const tradesData = responseData?.data || responseData || [];
+          setTrades(Array.isArray(tradesData) ? tradesData : []);
+          setTotalPages(1);
+          setTotalItems(tradesData.length);
+        }
       } else {
         toast.error(result.response_message || "Failed to fetch trades");
       }
@@ -459,7 +487,7 @@ export default function TradingPage() {
         });
         setIsEditMode(false);
         setEditingTradeId(null);
-        fetchTrades();
+        fetchTrades(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to save trade");
       }
@@ -522,7 +550,7 @@ export default function TradingPage() {
       const result = await response.json();
       if (result.response_status === "success") {
         toast.success("Trade deleted successfully");
-        fetchTrades();
+        fetchTrades(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete trade");
       }
@@ -564,7 +592,7 @@ export default function TradingPage() {
     setEditingTradeId(null);
   };
 
-  // Filter trades
+  // Filter trades (client-side filtering on paginated data)
   const filteredTrades = trades.filter((trade) => {
     const matchesSearch = searchQuery === "" ||
       trade.do_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -585,6 +613,21 @@ export default function TradingPage() {
 
     return matchesSearch && matchesBuyAccount && matchesSaleAccount && matchesDate;
   });
+
+  // Reset to page 1 when filters change and refetch
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchTrades(1, itemsPerPage);
+    }
+  }, [searchQuery, filterBuyAccount, filterSaleAccount, filterDate]);
+
+  // Fetch trades when page or itemsPerPage changes
+  useEffect(() => {
+    fetchTrades(currentPage, itemsPerPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div className="container mx-auto sm:p-0 md:p-6 space-y-4 md:space-y-6">
@@ -1344,6 +1387,86 @@ export default function TradingPage() {
                   </Table>
                 </div>
               </div>
+            )}
+
+            {/* Pagination */}
+            {totalItems > 0 && totalPages > 1 && (
+                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                        fetchTrades(1, Number(value));
+                      }}
+                    >
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => {
+                              const newPage = Math.max(1, currentPage - 1);
+                              setCurrentPage(newPage);
+                              fetchTrades(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                      </PaginationItem>
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        return (
+                          <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  fetchTrades(pageNum, itemsPerPage);
+                                }}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+                      <PaginationItem>
+                          <PaginationNext
+                            onClick={() => {
+                              const newPage = Math.min(totalPages, currentPage + 1);
+                              setCurrentPage(newPage);
+                              fetchTrades(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                  <div className="text-sm text-muted-foreground">
+                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} trades
+                  </div>
+                </div>
             )}
           </MobileListToggle>
         </CardContent>

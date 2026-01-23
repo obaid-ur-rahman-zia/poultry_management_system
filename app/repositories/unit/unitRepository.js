@@ -7,6 +7,18 @@ class UnitRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.pro_unit.findMany({
+        skip,
+        take,
+        orderBy: { prounit_id: "asc" },
+      }),
+      prisma.pro_unit.count(),
+    ]);
+    return { data, total };
+  }
+
   async create(data, tx = null) {
     const prismaClient = tx || prisma;
     const createData = {

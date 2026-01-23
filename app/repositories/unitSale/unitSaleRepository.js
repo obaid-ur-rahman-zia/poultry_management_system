@@ -15,6 +15,30 @@ class UnitSaleRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.unit_sale.findMany({
+        skip,
+        take,
+        orderBy: { sale_id: "desc" },
+        include: {
+          unit: true,
+          floc: true,
+          product: true,
+        },
+        where: {
+          status: 1,
+        },
+      }),
+      prisma.unit_sale.count({
+        where: {
+          status: 1,
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
   async readById(sale_id) {
     return prisma.unit_sale.findUnique({
       where: {

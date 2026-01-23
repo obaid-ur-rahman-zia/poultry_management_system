@@ -11,6 +11,22 @@ class AccountsRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.accounts.findMany({
+        skip,
+        take,
+        orderBy: [{ acc_id: "asc" }],
+        include: {
+          head: true,
+          subhead: true,
+        },
+      }),
+      prisma.accounts.count(),
+    ]);
+    return { data, total };
+  }
+
   async readByHead(head_id) {
     return prisma.accounts.findMany({
       where: { head_id: Number(head_id) },

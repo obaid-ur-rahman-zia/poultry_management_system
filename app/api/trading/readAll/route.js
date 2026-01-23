@@ -59,6 +59,6 @@ import TradingController from "@/app/controllers/trading/tradingController";
  *         description: Internal server error
  */
 export async function GET(req) {
-  return TradingController.readAll();
+  return TradingController.readAll(req);
 }
 

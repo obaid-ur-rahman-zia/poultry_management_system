@@ -4,23 +4,62 @@ import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
 
 class ProductController {
-  async readAll() {
+  async readAll(req) {
     const cacheKey = "products:all";
     try {
-      const cachedData = await RedisService.get(cacheKey);
+      // Extract pagination params
+      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const getAll = searchParams.get("all") === "true";
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "10");
+      const skip = (page - 1) * limit;
+
+      // If getAll is true, fetch all products without pagination
+      let products, total;
+      if (getAll) {
+        products = await ProductRepository.readAll();
+        total = products.length;
+      } else {
+        // Get total count and paginated products
+        const result = await ProductRepository.readAllWithPagination(skip, limit);
+        products = result.data;
+        total = result.total;
+      }
+
+      const nextId = await ProductRepository.readNextId();
+
+      // Use cache key with pagination to avoid cache conflicts
+      const userCacheKey = getAll
+        ? `${cacheKey}:all`
+        : `${cacheKey}:page:${page}:limit:${limit}`;
+
+      const cachedData = await RedisService.get(userCacheKey);
       if (cachedData) {
         console.log("Product Cache Hit");
         return successResponse(cachedData, "Success");
       }
       console.log("Product Cache Miss");
-      const products = await ProductRepository.readAll();
-      const nextId = await ProductRepository.readNextId();
-      await RedisService.setex(
-        cacheKey,
-        300,
-        JSON.stringify({ products, nextId })
-      );
-      return successResponse({ products, nextId }, "Success");
+
+      // If getAll, return all products without pagination structure
+      if (getAll) {
+        const response = { products, nextId };
+        await RedisService.setex(userCacheKey, 300, JSON.stringify(response));
+        return successResponse(response, "Success");
+      }
+
+      const paginatedResponse = {
+        products,
+        nextId,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+
+      await RedisService.setex(userCacheKey, 300, JSON.stringify(paginatedResponse));
+      return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get products in Method: ProductController.readAll",

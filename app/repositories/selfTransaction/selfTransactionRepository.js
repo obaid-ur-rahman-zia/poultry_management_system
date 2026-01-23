@@ -13,6 +13,28 @@ class SelfTransactionRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.self_transaction.findMany({
+        skip,
+        take,
+        orderBy: { transaction_id: "desc" },
+        include: {
+          account: true,
+        },
+        where: {
+          status: 1,
+        },
+      }),
+      prisma.self_transaction.count({
+        where: {
+          status: 1,
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
   async readById(transaction_id) {
     return prisma.self_transaction.findUnique({
       where: {

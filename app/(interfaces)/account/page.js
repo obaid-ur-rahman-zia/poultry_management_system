@@ -54,6 +54,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 export default function AccountPage() {
   const {
@@ -98,6 +107,12 @@ export default function AccountPage() {
   const [filterAccountType, setFilterAccountType] = useState("all");
   const [filterContact, setFilterContact] = useState("");
   const [filterName, setFilterName] = useState("");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const contactNumbers = watch("contact_numbers") || [""];
   const bankAccountNumbers = watch("bank_account_numbers") || [""];
@@ -150,25 +165,29 @@ export default function AccountPage() {
     }
   };
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/account/accounts/readAll");
+      const response = await fetch(`/api/account/accounts/readAll?page=${page}&limit=${limit}`);
       const result = await response.json();
 
       if (result.response_status === "success") {
-        const accountsData =
-          result.response_result?.data || result.response_result || [];
-        // Parse contact numbers if stored as JSON string
-        // const formattedAccounts = accountsData.map(account => ({
-        //     ...account,
-        //     contact_numbers: account.account_contact
-        //         ? (account.account_contact.includes('[')
-        //             ? JSON.parse(account.account_contact)
-        //             : account.account_contact.split(',').filter(c => c.trim()))
-        //         : [],
-        // }));
-        setAccounts(accountsData);
+        const responseData = result.response_result;
+        
+        // Handle paginated response
+        if (responseData?.pagination) {
+          const accountsData = responseData.data || [];
+          setAccounts(accountsData);
+          setTotalPages(responseData.pagination.totalPages || 1);
+          setTotalItems(responseData.pagination.total || 0);
+          setCurrentPage(responseData.pagination.page || page);
+        } else {
+          // Fallback for non-paginated response
+          const accountsData = responseData?.data || responseData || [];
+          setAccounts(accountsData);
+          setTotalPages(1);
+          setTotalItems(accountsData.length);
+        }
       } else {
         toast.error(result.response_message || "Failed to fetch accounts");
       }
@@ -366,7 +385,7 @@ export default function AccountPage() {
         setAccountOpeningDate(new Date());
         setIsEditMode(false);
         setEditingAccountId(null);
-        fetchAccounts();
+        fetchAccounts(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to save account");
       }
@@ -468,7 +487,7 @@ export default function AccountPage() {
 
       if (result.response_status === "success") {
         toast.success("Account deleted successfully");
-        fetchAccounts();
+        fetchAccounts(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete account");
       }
@@ -518,7 +537,7 @@ export default function AccountPage() {
     return parts.length > 0 ? parts : textStr;
   };
 
-  // Filter accounts
+  // Filter accounts (client-side filtering on paginated data)
   const filteredAccounts = accounts.filter((account) => {
     const matchesSearch =
       searchQuery === "" ||
@@ -546,6 +565,21 @@ export default function AccountPage() {
 
     return matchesSearch && matchesAccountType && matchesContact && matchesName;
   });
+
+  // Reset to page 1 when filters change and refetch
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchAccounts(1, itemsPerPage);
+    }
+  }, [searchQuery, filterAccountType, filterContact, filterName]);
+
+  // Fetch accounts when page or itemsPerPage changes
+  useEffect(() => {
+    fetchAccounts(currentPage, itemsPerPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4">
@@ -885,7 +919,8 @@ export default function AccountPage() {
                     Filters & Search
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    {filteredAccounts.length} accounts
+                    {totalItems} accounts
+                    {totalPages > 1 && ` (Page ${currentPage}/${totalPages})`}
                   </p>
                 </div>
 
@@ -1245,6 +1280,86 @@ export default function AccountPage() {
                           })}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {totalItems > 0 && totalPages > 1 && (
+                  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                      <Select
+                        value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                        fetchAccounts(1, Number(value));
+                      }}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => {
+                              const newPage = Math.max(1, currentPage - 1);
+                              setCurrentPage(newPage);
+                              fetchAccounts(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  fetchAccounts(pageNum, itemsPerPage);
+                                }}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => {
+                              const newPage = Math.min(totalPages, currentPage + 1);
+                              setCurrentPage(newPage);
+                              fetchAccounts(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                    <div className="text-sm text-muted-foreground">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} accounts
                     </div>
                   </div>
                 )}

@@ -1,6 +1,6 @@
 import OppositeTransactionController from "@/app/controllers/oppositeTransaction/oppositeTransactionController";
 
-export async function GET() {
-  return OppositeTransactionController.readAll();
+export async function GET(req) {
+  return OppositeTransactionController.readAll(req);
 }
 

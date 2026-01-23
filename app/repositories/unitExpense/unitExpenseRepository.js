@@ -15,6 +15,30 @@ class UnitExpenseRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.unit_expense.findMany({
+        skip,
+        take,
+        orderBy: { expense_id: "desc" },
+        include: {
+          unit: true,
+          floc: true,
+          product: true,
+        },
+        where: {
+          status: 1,
+        },
+      }),
+      prisma.unit_expense.count({
+        where: {
+          status: 1,
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
   async readById(expense_id) {
     return prisma.unit_expense.findUnique({
       where: {

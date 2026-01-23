@@ -139,3 +139,43 @@ custom-exception:  [Failed to get previous F.S Rates in Method: WholeSaleControl
 system-exception:  [PrismaClientValidationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].whole_sale.findMany()` invocation in H:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__78734482._.js:205:173    202 }   203 async getPreviousFsRates() {   204     // Get distinct F.S Rates from whole_sale entries, ordered by date descending → 205     const salesWithFsRate = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].whole_sale.findMany({             where: {               OR: [                 {                   farm_rate: {                     not: null                   }                 },                 {                   sale_rate: {                     not: null                   }                 }               ],               status: 1             },             select: {               sale_date: true,               farm_rate: true,               sale_rate: true             },             orderBy: {               sale_date: "desc"             },             take: 30           })  Unknown argument `farm_rate`. Did you mean `fs_rate`? Available options are marked with ?.]
 
 
+exception-time:       [2026-01-23T19:50:15.666Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2026-01-23T19:50:16.456Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2026-01-23T19:50:17.088Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2026-01-23T19:50:17.671Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2026-01-23T19:50:31.851Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2026-01-23T19:50:32.337Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2026-01-23T19:50:32.890Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [SyntaxError: "[object Object]" is not valid JSON]
+
+
+exception-time:       [2026-01-23T20:13:00.185Z]  
+custom-exception:  [Failed to get all flocs in Method: FlocController.readAll] | 
+system-exception:  [TypeError: Invalid URL]
+
+
