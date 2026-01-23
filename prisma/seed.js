@@ -1,5 +1,6 @@
 // import { PrismaClient } from "../src/generated/prisma";
 import prisma from "../lib/prisma.js";
+import Bcrypt from "bcryptjs";
 
 async function main() {
   console.log("🌱 Seeding data...");
@@ -7,9 +8,7 @@ async function main() {
   // ---- Account Heads ----
   console.log("Creating Account Heads...");
   await prisma.account_head.createMany({
-    data: [
-      { head_nam: "Main Head" },
-    ],
+    data: [{ head_nam: "Main Head" }],
     skipDuplicates: true,
   });
 
@@ -90,11 +89,12 @@ async function main() {
 
   // ---- Users ----
   console.log("Creating Users...");
+  const hashedPassword = await Bcrypt.hash("Admin@poultry123", 10);
   const superAdmin = await prisma.user.create({
     data: {
       user_nam: "Super Admin",
       email: "admin@system.com",
-      password: "$2b$10$VHtLxoMZtiQPGwIqh2Z53eT09.W8X7aSwyucIj6FKS9IuJqg.gGhO",
+      password: hashedPassword,
       role: "SUPER_ADMIN",
       status: 1,
     },
@@ -106,7 +106,7 @@ async function main() {
     where: {
       subhead_nam: {
         equals: "Cash In Hand",
-        mode: 'insensitive',
+        mode: "insensitive",
       },
     },
   });
@@ -143,7 +143,7 @@ async function main() {
   if (cashInHandSubhead) {
     console.log("Creating Cash In Hand account for Super Admin...");
     const accountName = `Cash Account (${superAdmin.user_nam})`;
-    
+
     const cashInHandAccount = await prisma.accounts.create({
       data: {
         head_id: cashInHandSubhead.head_id,
@@ -162,7 +162,9 @@ async function main() {
       data: { cash_in_hand_account_id: cashInHandAccount.acc_id },
     });
 
-    console.log(`✅ Cash In Hand account created for Super Admin: ${accountName}`);
+    console.log(
+      `✅ Cash In Hand account created for Super Admin: ${accountName}`,
+    );
   }
 
   console.log("✅ Seed completed!");

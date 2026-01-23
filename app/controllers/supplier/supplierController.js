@@ -21,13 +21,13 @@ class SupplierController {
       await RedisService.setex(
         cacheKey,
         300,
-        JSON.stringify({ supplier_data, nextId })
+        JSON.stringify({ supplier_data, nextId }),
       );
       return successResponse({ supplier_data, nextId }, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get suppliers in Method: SupplierController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -49,28 +49,27 @@ class SupplierController {
         !supplier_name ||
         !supplier_cnic ||
         !supplier_address ||
-        !supplier_contact ||
-        !supplier_company_id
+        !supplier_contact
       ) {
         const error = new Error(
-          "supplier Name, Supplier Cnic, Supplier Address, Supplier Contact, Company_id are required"
+          "supplier Name, Supplier Cnic, Supplier Address, Supplier Contact are required",
         );
         ErrorLogger.log(
           "Failed to create supplier in Method: SupplierController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
 
       //check if account_cnic is unique
       const duplicate = await SupplierRepository.checkDuplicate(
-        req_object.supplier_cnic.trim()
+        req_object.supplier_cnic.trim(),
       );
       if (duplicate) {
         const error = new Error("Account with this CNIC already exists");
         ErrorLogger.log(
           "Failed to create supplier in Method: SupplierController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -82,9 +81,8 @@ class SupplierController {
         config = await configService.getAccountConfig("Supplier");
       } catch (error) {
         // Config not found, find or create Supplier subhead
-        let supplierSubhead = await AccountSubHeadRepository.findByName(
-          "Supplier"
-        );
+        let supplierSubhead =
+          await AccountSubHeadRepository.findByName("Supplier");
 
         if (!supplierSubhead) {
           // Get first account head to use for the subhead
@@ -94,7 +92,7 @@ class SupplierController {
 
           if (!firstHead) {
             throw new Error(
-              "No account head found. Please create an account head first."
+              "No account head found. Please create an account head first.",
             );
           }
 
@@ -135,24 +133,24 @@ class SupplierController {
           acc_id: supplier.acc_id,
           account_id: supplier.account_id,
         },
-        "Supplier created successfully"
+        "Supplier created successfully",
       );
     } catch (err) {
       if (err.code === "P2002") {
         return errorResponse(
           new Error("Supplier with this combination already exists"),
-          400
+          400,
         );
       }
       if (err.code === "P2003") {
         return errorResponse(
           new Error("Invalid company_id - referenced record does not exist"),
-          400
+          400,
         );
       }
       ErrorLogger.log(
         "Failed to create supplier in Method: SupplierController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -167,7 +165,7 @@ class SupplierController {
         const error = new Error("acc_id is required");
         ErrorLogger.log(
           "Failed to get supplier by id in Method: SupplierController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -176,7 +174,7 @@ class SupplierController {
       if (!result) {
         ErrorLogger.log(
           "Failed to get supplier by id in Method: SupplierController.readById",
-          new Error("Supplier not found")
+          new Error("Supplier not found"),
         );
         return errorResponse(new Error("Supplier not found"), 404);
       }
@@ -185,7 +183,7 @@ class SupplierController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get supplier by id in Method: SupplierController.readById",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -200,7 +198,7 @@ class SupplierController {
         const error = new Error("acc_id is required");
         ErrorLogger.log(
           "Failed to update supplier in Method: SupplierController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -221,19 +219,19 @@ class SupplierController {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update supplier in Method: SupplierController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Supplier not found"), 404);
       }
       if (err.code === "P2003") {
         return errorResponse(
           new Error("Invalid company_id - referenced record does not exist"),
-          400
+          400,
         );
       }
       ErrorLogger.log(
         "Failed to update supplier in Method: SupplierController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -248,7 +246,7 @@ class SupplierController {
         const error = new Error("company_id is required");
         ErrorLogger.log(
           "Failed to get suppliers by group in Method: SupplierController.readByCompany",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -258,7 +256,7 @@ class SupplierController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get suppliers by group in Method: SupplierController.readBySupplierGroup",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }

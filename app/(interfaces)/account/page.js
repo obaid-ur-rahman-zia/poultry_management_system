@@ -548,17 +548,17 @@ export default function AccountPage() {
   });
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
+    <div className="p-3 sm:p-4 md:p-2 space-y-2 md:space-y-6">
       {/* Form Section */}
       <Card className={"max-w-4xl mx-auto"}>
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className="p-2 sm:p-4">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4"
+            className="space-y-2"
             id="account-form"
           >
             {/* Account Type with Get Data Button */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="sub_id">Account Type</Label>
               <div className="flex gap-2 items-start">
                 <Controller
@@ -631,7 +631,7 @@ export default function AccountPage() {
             </div>
 
             {/* Name - Full Width */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="account_nam">Name</Label>
               <Input
                 id="account_nam"
@@ -648,7 +648,7 @@ export default function AccountPage() {
             </div>
 
             {/* Dynamic Contact Numbers - Two Column Grid */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <Label>Contact Numbers</Label>
                 <Button
@@ -707,7 +707,7 @@ export default function AccountPage() {
             </div>
 
             {/* Dynamic Bank Account Numbers */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <Label>Bank Account Numbers</Label>
                 <Button

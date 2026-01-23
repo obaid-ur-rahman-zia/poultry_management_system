@@ -10,68 +10,64 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 class AccountsController {
-  async readAll() {
+   async readAll() {
     const cacheKey = "accounts:all";
     try {
       // Get logged-in user session
-      const session = await getServerSession(authOptions);
-      let userCashInHandAccountId = null;
+      // const session = await getServerSession(authOptions);
+      // let userCashInHandAccountId = null;
 
-      if (session && session.user?.id) {
-        const userId = parseInt(session.user.id);
-        const user = await UserRepository.readById(userId);
-        if (user && user.cash_in_hand_account_id) {
-          userCashInHandAccountId = user.cash_in_hand_account_id;
-        }
-      }
+      // if (session && session.user?.id) {
+      //   const userId = parseInt(session.user.id);
+      //   const user = await UserRepository.readById(userId);
+      //   if (user && user.cash_in_hand_account_id) {
+      //     userCashInHandAccountId = user.cash_in_hand_account_id;
+      //   }
+      // }
 
-      // Find "Cash In Hand" subhead
-      const cashInHandSubhead = await AccountSubHeadRepository.findByName(
-        "Cash In Hand"
-      );
-      const cashInHandSubId = cashInHandSubhead?.sub_id || null;
+      // // Find "Cash In Hand" subhead
+      // const cashInHandSubhead = await AccountSubHeadRepository.findByName(
+      //   "Cash In Hand"
+      // );
+      // const cashInHandSubId = cashInHandSubhead?.sub_id || null;
 
-      // Get all accounts
-      const allAccounts = await AccountsRepository.readAll();
+      // // Get all accounts
+      // const allAccounts = await AccountsRepository.readAll();
 
-      // Filter accounts based on user's cash in hand account
-      let filteredAccounts = allAccounts;
+      // // Filter accounts based on user's cash in hand account
+      // let filteredAccounts = allAccounts;
 
-      if (userCashInHandAccountId && cashInHandSubId) {
-        // filteredAccounts = allAccounts.filter((account) => {
-        //   // If account is from "Cash In Hand" subhead, only show user's cash in hand account
-        //   if (account.sub_id === cashInHandSubId) {
-        //     return account.acc_id === userCashInHandAccountId;
-        //   }
-        //   // For all other subheads, show all accounts
-        //   return true;
-        // });
+      // if (userCashInHandAccountId && cashInHandSubId) {
+      //   // filteredAccounts = allAccounts.filter((account) => {
+      //   //   // If account is from "Cash In Hand" subhead, only show user's cash in hand account
+      //   //   if (account.sub_id === cashInHandSubId) {
+      //   //     return account.acc_id === userCashInHandAccountId;
+      //   //   }
+      //   //   // For all other subheads, show all accounts
+      //   //   return true;
+      //   // });
 
-        filteredAccounts = allAccounts;
-      }
+      //   filteredAccounts = allAccounts;
+      // }
 
-      // Use cache key with user ID to avoid cache conflicts
-      const userCacheKey = userCashInHandAccountId
-        ? `accounts:all:user:${userCashInHandAccountId}`
-        : cacheKey;
+      // // Use cache key with user ID to avoid cache conflicts
+      // const userCacheKey = userCashInHandAccountId
+      //   ? `accounts:all:user:${userCashInHandAccountId}`
+      //   : cacheKey;
 
-      const cachedData = await RedisService.get(userCacheKey);
+      const cachedData = await RedisService.get(cacheKey);
       if (cachedData) {
         console.log("Account Cache Hit");
         return successResponse(cachedData, "Success");
       }
       console.log("Account Cache Miss");
-
-      await RedisService.setex(
-        userCacheKey,
-        300,
-        JSON.stringify(filteredAccounts)
-      );
+      const filteredAccounts = await AccountsRepository.readAll();
+      await RedisService.setex(cacheKey, 300, JSON.stringify(filteredAccounts));
       return successResponse(filteredAccounts, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all accounts in Method: AccountsController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
