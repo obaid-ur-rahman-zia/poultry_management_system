@@ -283,7 +283,7 @@ export default function AccountPage() {
     const validContacts = (data.contact_numbers || [])
       .map((c) => c?.trim())
       .filter((c) => c && c.trim());
-    
+
     if (validContacts.length === 0) {
       toast.error("At least one contact number is required");
       return;
@@ -406,10 +406,10 @@ export default function AccountPage() {
       account.contact_numbers && account.contact_numbers.length > 0
         ? account.contact_numbers
         : account.account_contact
-        ? account.account_contact.includes("[")
-          ? JSON.parse(account.account_contact)
-          : account.account_contact.split(",").map((c) => c.trim())
-        : [];
+          ? account.account_contact.includes("[")
+            ? JSON.parse(account.account_contact)
+            : account.account_contact.split(",").map((c) => c.trim())
+          : [];
 
     // Ensure at least one empty contact field
     const contactNumbers = contacts.length > 0 ? contacts : [""];
@@ -548,9 +548,9 @@ export default function AccountPage() {
   });
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4">
       {/* Form Section */}
-      <Card className={"max-w-4xl mx-auto"}>
+      <Card className={"max-w-2xl p-0! mx-auto"}>
         <CardContent className="p-4 sm:p-6">
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -559,8 +559,8 @@ export default function AccountPage() {
           >
             {/* Account Type with Get Data Button */}
             <div className="space-y-2">
-              <Label htmlFor="sub_id">Account Type</Label>
-              <div className="flex gap-2 items-start">
+              <div className="flex gap-2 items-center">
+                <Label htmlFor="sub_id">Account Type</Label>
                 <Controller
                   name="sub_id"
                   control={control}
@@ -570,12 +570,11 @@ export default function AccountPage() {
                       <Combobox
                         options={subHeads.map((subHead) => ({
                           value: subHead.sub_id.toString(),
-                          label: `${subHead.subhead_nam}${
-                            subHead.head?.head_nam &&
-                            subHead.head.head_nam !== "Main Head"
+                          label: `${subHead.subhead_nam}${subHead.head?.head_nam &&
+                              subHead.head.head_nam !== "Main Head"
                               ? ` (${subHead.head.head_nam})`
                               : ""
-                          }`,
+                            }`,
                         }))}
                         value={field.value}
                         onValueChange={(value) => {
@@ -631,7 +630,7 @@ export default function AccountPage() {
             </div>
 
             {/* Name - Full Width */}
-            <div className="space-y-2">
+            <div className="space-y-2 flex gap-2">
               <Label htmlFor="account_nam">Name</Label>
               <Input
                 id="account_nam"
@@ -720,7 +719,7 @@ export default function AccountPage() {
                   Add Bank Account
                 </Button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {bankAccountNumbers.map((bankAccount, index) => (
                   <div key={index} className="space-y-2">
                     {/* <Label htmlFor={`bank_account_numbers.${index}`}>
@@ -752,7 +751,7 @@ export default function AccountPage() {
             </div>
 
             {/* Address - Full Width */}
-            <div className="space-y-2">
+            <div className="space-y-2 flex gap-2">
               <Label htmlFor="address">Address</Label>
               <Input
                 id="address"
@@ -762,13 +761,13 @@ export default function AccountPage() {
             </div>
 
             {/* Account Opening Date */}
-            <div className="space-y-2">
+            <div className="space-y-2 flex gap-2">
               <Label>Account Opening Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w- justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {accountOpeningDate ? (
@@ -797,8 +796,8 @@ export default function AccountPage() {
             {/* Opening Balance with Radio Buttons */}
             {!isEditMode && (
               <div className="space-y-2">
-                <Label htmlFor="opening_balance">Opening Balance</Label>
                 <div className="flex gap-4 items-center">
+                <Label htmlFor="opening_balance">Opening Balance</Label>
                   <Input
                     id="opening_balance"
                     type="number"
@@ -1014,7 +1013,7 @@ export default function AccountPage() {
                               >
                                 {subHead.subhead_nam}{" "}
                                 {subHead.head?.head_nam &&
-                                subHead.head.head_nam !== "Main Head"
+                                  subHead.head.head_nam !== "Main Head"
                                   ? `(${subHead.head.head_nam})`
                                   : ""}
                               </SelectItem>
@@ -1094,7 +1093,7 @@ export default function AccountPage() {
                             >
                               {subHead.subhead_nam}{" "}
                               {subHead.head?.head_nam &&
-                              subHead.head.head_nam !== "Main Head"
+                                subHead.head.head_nam !== "Main Head"
                                 ? `(${subHead.head.head_nam})`
                                 : ""}
                             </SelectItem>
@@ -1186,9 +1185,9 @@ export default function AccountPage() {
                                 <td className="p-2 align-middle whitespace-nowrap font-medium">
                                   {searchQuery || filterName
                                     ? highlightText(
-                                        account.account_nam || "N/A",
-                                        searchQuery || filterName
-                                      )
+                                      account.account_nam || "N/A",
+                                      searchQuery || filterName
+                                    )
                                     : account.account_nam || "N/A"}
                                 </td>
                                 <td className="p-2 align-middle hidden md:table-cell">
@@ -1202,9 +1201,9 @@ export default function AccountPage() {
                                         <Phone className="h-3 w-3 inline mr-1" />
                                         {filterContact
                                           ? highlightText(
-                                              contact,
-                                              filterContact
-                                            )
+                                            contact,
+                                            filterContact
+                                          )
                                           : contact}
                                       </Badge>
                                     ))}
@@ -1213,9 +1212,9 @@ export default function AccountPage() {
                                 <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
                                   {searchQuery
                                     ? highlightText(
-                                        account.account_no || "N/A",
-                                        searchQuery
-                                      )
+                                      account.account_no || "N/A",
+                                      searchQuery
+                                    )
                                     : account.account_no || "N/A"}
                                 </td>
                                 <td className="p-2 align-middle max-w-xs truncate hidden xl:table-cell">
@@ -1224,9 +1223,9 @@ export default function AccountPage() {
                                 <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
                                   {searchQuery
                                     ? highlightText(
-                                        account.account_reference || "N/A",
-                                        searchQuery
-                                      )
+                                      account.account_reference || "N/A",
+                                      searchQuery
+                                    )
                                     : account.account_reference || "N/A"}
                                 </td>
                                 <td className="p-2 align-middle whitespace-nowrap">
