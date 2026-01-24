@@ -2,10 +2,9 @@
 import React, { useState } from "react";
 import { X, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { toast } from "react-toastify";
-
 import { exportToCSV } from "@/app/utils/exportToCsv";
 
-export default function ProfitLossModal() {
+export default function WholeSaleProfitModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -62,6 +61,7 @@ export default function ProfitLossModal() {
       end_dat = `${endDate}-12-31`;
     }
 
+    // Basic validation after transformation (string comparison still works for ISO dates usually, but Date object is safer)
     if (new Date(start_dat) > new Date(end_dat)) {
       toast.error("Start date must be before end date");
       return;
@@ -70,17 +70,21 @@ export default function ProfitLossModal() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `/api/unitSale/read/readProfitReport?start_dat=${start_dat}&end_dat=${end_dat}&group_by=${groupBy}`,
+        `/api/wholeSale/read/readProfitReport?start_dat=${start_dat}&end_dat=${end_dat}&group_by=${groupBy}`,
       );
       const data = await res.json();
-      console.log("Profit/Loss Data", data);
+      console.log("Whole Sale Profit/Loss Data", data);
 
-      setReportData(data.response_result.results);
-      setGrandTotalPurchase(data.response_result.grandTotalPurchase);
-      setGrandTotalSale(data.response_result.grandTotalSale);
-      setNetProfit(data.response_result.netProfit);
-      setIsOpen(true);
-      setCurrentPage(1);
+      if (data.response_code === 200) {
+        setReportData(data.response_result.results);
+        setGrandTotalPurchase(data.response_result.grandTotalPurchase);
+        setGrandTotalSale(data.response_result.grandTotalSale);
+        setNetProfit(data.response_result.netProfit);
+        setIsOpen(true);
+        setCurrentPage(1);
+      } else {
+        toast.error(data.response_message || "Failed to fetch report");
+      }
     } catch (error) {
       console.error("Error fetching report:", error);
       toast.error("Failed to fetch report");
@@ -111,8 +115,8 @@ export default function ProfitLossModal() {
 
     const headers = [
       getPeriodHeader(),
-      "Purchase Amount",
-      "Sale Amount",
+      "Whole Sale Purchase",
+      "Whole Sale Amount",
       "Profit",
       "Loss",
     ];
@@ -140,7 +144,7 @@ export default function ProfitLossModal() {
     ]);
 
     exportToCSV(
-      `Profit_Loss_Report_${groupBy}_${startDate}_to_${endDate}.csv`,
+      `Whole_Sale_Profit_Loss_Report_${groupBy}_${startDate}_to_${endDate}.csv`,
       headers,
       rows,
     );
@@ -203,7 +207,7 @@ export default function ProfitLossModal() {
           </div>
 
           <h3 className="text-lg font-semibold text-gray-900 ">
-            Profit / Loss Report
+            Whole Sale Profit / Loss Report
           </h3>
 
           <h1 className="text-sm font-bold text-gray-900 mb-4">All</h1>
@@ -298,7 +302,7 @@ export default function ProfitLossModal() {
               {/* Report Header */}
               <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  Profit & Loss Report
+                  Whole Sale Profit & Loss Report
                 </h1>
                 <p className="text-gray-600 text-sm">
                   From:{" "}
@@ -326,10 +330,10 @@ export default function ProfitLossModal() {
                         {getPeriodHeader()}
                       </th>
                       <th className="px-4 py-2 text-right font-bold text-gray-700">
-                        Purchase Amount
+                        Whole Sale Purchase
                       </th>
                       <th className="px-4 py-2 text-right font-bold text-gray-700">
-                        Sale Amount
+                        Whole Sale Amount
                       </th>
                       <th className="px-4 py-2 text-right font-bold text-gray-700">
                         Profit
@@ -358,7 +362,9 @@ export default function ProfitLossModal() {
                           {row.profit_loss > 0 ? row.profit_loss.toFixed(2) : 0}
                         </td>
                         <td className="px-4 py-2 text-right font-semibold">
-                          {row.profit_loss < 0 ? row.profit_loss.toFixed(2) : 0}
+                          {row.profit_loss < 0
+                            ? Math.abs(row.profit_loss).toFixed(2)
+                            : 0}
                         </td>
                       </tr>
                     ))}
@@ -374,10 +380,10 @@ export default function ProfitLossModal() {
                           {grandTotalSale.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          {netProfit.toFixed(2) > 0 ? netProfit.toFixed(2) : 0}
+                          {netProfit > 0 ? netProfit.toFixed(2) : 0}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          {netProfit.toFixed(2) < 0 ? netProfit.toFixed(2) : 0}
+                          {netProfit < 0 ? Math.abs(netProfit).toFixed(2) : 0}
                         </td>
                       </tr>
                     )}

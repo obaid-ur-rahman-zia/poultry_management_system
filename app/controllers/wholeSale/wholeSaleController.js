@@ -63,7 +63,7 @@ class WholeSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all whole sales in Method: WholeSaleController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -78,7 +78,7 @@ class WholeSaleController {
         const error = new Error("sale_id is required");
         ErrorLogger.log(
           "Failed to get whole sale by id in Method: WholeSaleController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -87,7 +87,7 @@ class WholeSaleController {
       if (!result) {
         ErrorLogger.log(
           "Failed to get whole sale by id in Method: WholeSaleController.readById",
-          new Error("Whole sale not found")
+          new Error("Whole sale not found"),
         );
         return errorResponse(new Error("Whole sale not found"), 404);
       }
@@ -96,7 +96,7 @@ class WholeSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get whole sale by id in Method: WholeSaleController.readById",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -129,11 +129,11 @@ class WholeSaleController {
         !purcher_amount
       ) {
         const error = new Error(
-          "sale_date, former_account, purcher_account, van_number, weight, former_rate, former_amount, and purcher_amount are required in Method: WholeSaleController.create"
+          "sale_date, former_account, purcher_account, van_number, weight, former_rate, former_amount, and purcher_amount are required in Method: WholeSaleController.create",
         );
         ErrorLogger.log(
           "Failed to create whole sale in Method: WholeSaleController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -176,7 +176,7 @@ class WholeSaleController {
             // Create whole sale
             const createdWholeSale = await WholeSaleRepository.create(
               saleData,
-              tx
+              tx,
             );
 
             // CRITICAL: Validate wholeSale was created successfully
@@ -194,7 +194,7 @@ class WholeSaleController {
             // This will cause the entire transaction to rollback
             console.error(
               "Transaction error in WholeSaleController.create:",
-              error
+              error,
             );
             throw error;
           }
@@ -203,7 +203,7 @@ class WholeSaleController {
           maxWait: 5000, // default: 2000
           timeout: 10000, // default: 5000
           isolationLevel: "Serializable", // Ensure strict isolation
-        }
+        },
       );
 
       // Clear cache AFTER transaction commits successfully
@@ -217,7 +217,7 @@ class WholeSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to create whole sale in Method: WholeSaleController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -232,7 +232,7 @@ class WholeSaleController {
         const error = new Error("sale_id is required");
         ErrorLogger.log(
           "Failed to update whole sale in Method: WholeSaleController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -270,11 +270,11 @@ class WholeSaleController {
         !purcher_amount
       ) {
         const error = new Error(
-          "sale_date, former_account, purcher_account, van_number, weight, former_rate, former_amount, and purcher_amount are required"
+          "sale_date, former_account, purcher_account, van_number, weight, former_rate, former_amount, and purcher_amount are required",
         );
         ErrorLogger.log(
           "Failed to update whole sale in Method: WholeSaleController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -290,14 +290,14 @@ class WholeSaleController {
             await transactionRepository.softDeleteByReferenceId(
               sale_id,
               "Whole Sale",
-              tx
+              tx,
             );
 
             // Update the whole sale record
             const updatedWholeSale = await WholeSaleRepository.update(
               sale_id,
               saleData,
-              tx
+              tx,
             );
 
             // CRITICAL: Validate update was successful
@@ -313,7 +313,7 @@ class WholeSaleController {
             // Log error before re-throwing
             console.error(
               "Transaction error in WholeSaleController.update:",
-              error
+              error,
             );
             throw error;
           }
@@ -322,7 +322,7 @@ class WholeSaleController {
           maxWait: 5000,
           timeout: 10000,
           isolationLevel: "Serializable",
-        }
+        },
       );
 
       // Clear cache AFTER transaction commits successfully
@@ -336,7 +336,7 @@ class WholeSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to update whole sale in Method: WholeSaleController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -351,7 +351,7 @@ class WholeSaleController {
         const error = new Error("sale_id is required");
         ErrorLogger.log(
           "Failed to delete whole sale in Method: WholeSaleController.delete",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -361,7 +361,7 @@ class WholeSaleController {
       if (!existingWholeSale || existingWholeSale.status === 0) {
         ErrorLogger.log(
           "Failed to delete whole sale in Method: WholeSaleController.delete",
-          new Error("Whole sale not found")
+          new Error("Whole sale not found"),
         );
         return errorResponse(new Error("Whole sale not found"), 404);
       }
@@ -374,7 +374,7 @@ class WholeSaleController {
             await transactionRepository.softDeleteByReferenceId(
               sale_id,
               "Whole Sale",
-              tx
+              tx,
             );
 
             // Delete (soft delete) the whole sale record
@@ -383,7 +383,7 @@ class WholeSaleController {
             // Log error before re-throwing
             console.error(
               "Transaction error in WholeSaleController.delete:",
-              error
+              error,
             );
             throw error;
           }
@@ -392,7 +392,7 @@ class WholeSaleController {
           maxWait: 5000,
           timeout: 10000,
           isolationLevel: "Serializable",
-        }
+        },
       );
 
       // Clear cache after successful deletion
@@ -403,7 +403,7 @@ class WholeSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to delete whole sale in Method: WholeSaleController.delete",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -418,7 +418,7 @@ class WholeSaleController {
         const error = new Error("sale_date is required");
         ErrorLogger.log(
           "Failed to check F.S Rate in Method: WholeSaleController.checkFsRate",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -432,7 +432,7 @@ class WholeSaleController {
             farm_rate: fsRate.farm_rate,
             sale_rate: fsRate.sale_rate,
           },
-          "F.S Rate found"
+          "F.S Rate found",
         );
       } else {
         return successResponse(
@@ -441,13 +441,13 @@ class WholeSaleController {
             farm_rate: null,
             sale_rate: null,
           },
-          "F.S Rate not found"
+          "F.S Rate not found",
         );
       }
     } catch (err) {
       ErrorLogger.log(
         "Failed to check F.S Rate in Method: WholeSaleController.checkFsRate",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -460,7 +460,7 @@ class WholeSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get previous F.S Rates in Method: WholeSaleController.getPreviousFsRates",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -476,20 +476,52 @@ class WholeSaleController {
         const error = new Error("start_dat and end_dat are required");
         ErrorLogger.log(
           "Failed to read report detail in Method: WholeSaleController.readReportDetail",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
       const wholeSale = await WholeSaleRepository.readReportDetail({
         start_dat: start_dat,
-      end_dat: end_dat,
+        end_dat: end_dat,
       });
 
       return successResponse(wholeSale, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to read report detail in Method: WholeSaleController.readReportDetail",
-        err
+        err,
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  async readProfitLossReport(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const group_by = searchParams.get("group_by") || "date";
+
+      if (!start_dat || !end_dat) {
+        const error = new Error("start_dat and end_dat are required");
+        ErrorLogger.log(
+          "Failed to read profit/loss report in Method: WholeSaleController.readProfitLossReport",
+          error,
+        );
+        return errorResponse(error, 400);
+      }
+
+      const report = await WholeSaleRepository.readProfitLossReport({
+        start_dat: start_dat,
+        end_dat: end_dat,
+        group_by: group_by,
+      });
+
+      return successResponse(report, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to read profit/loss report in Method: WholeSaleController.readProfitLossReport",
+        err,
       );
       return errorResponse(err, 500);
     }

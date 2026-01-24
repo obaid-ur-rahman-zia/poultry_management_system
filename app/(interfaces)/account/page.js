@@ -588,7 +588,7 @@ export default function AccountPage() {
         <CardContent className="p-4 sm:p-6">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4"
+            className="space-y-2"
             id="account-form"
           >
             {/* Account Type with Get Data Button */}
@@ -681,7 +681,7 @@ export default function AccountPage() {
             </div>
 
             {/* Dynamic Contact Numbers - Two Column Grid */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <Label>Contact Numbers</Label>
                 <Button
@@ -740,7 +740,7 @@ export default function AccountPage() {
             </div>
 
             {/* Dynamic Bank Account Numbers */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <Label>Bank Account Numbers</Label>
                 <Button

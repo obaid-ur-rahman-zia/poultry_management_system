@@ -1,5 +1,6 @@
 // import { PrismaClient } from "../src/generated/prisma";
 import prisma from "../lib/prisma.js";
+import Bcrypt from "bcryptjs";
 
 async function main() {
   console.log("🌱 Seeding data...");
@@ -7,9 +8,7 @@ async function main() {
   // ---- Account Heads ----
   console.log("Creating Account Heads...");
   await prisma.account_head.createMany({
-    data: [
-      { head_nam: "Main Head" },
-    ],
+    data: [{ head_nam: "Main Head" }],
     skipDuplicates: true,
   });
 
@@ -186,7 +185,7 @@ async function main() {
     where: {
       subhead_nam: {
         equals: "Cash In Hand",
-        mode: 'insensitive',
+        mode: "insensitive",
       },
     },
   });

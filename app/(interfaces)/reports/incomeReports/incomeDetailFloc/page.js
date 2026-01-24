@@ -24,8 +24,8 @@ const selectStyles = {
     backgroundColor: state.isSelected
       ? "#6366F1"
       : state.isFocused
-      ? "#F0F9FF"
-      : "white",
+        ? "#F0F9FF"
+        : "white",
     color: state.isSelected ? "white" : "#374151",
   }),
   menu: (provided) => ({
@@ -89,14 +89,14 @@ export default function PurchaseReportModal() {
   const flocOptions = floc.map((f) => ({
     value: f.floc_id.toString(),
     label: `Floc #${f.floc_id} - ${new Date(
-      f.starting_date
+      f.starting_date,
     ).toLocaleDateString()}`,
   }));
 
   const fetchFlocsByUnit = async (prounitId) => {
     try {
       const response = await fetch(
-        `/api/floc/readByFarmId?farm_id=${prounitId}`
+        `/api/floc/readByFarmId?farm_id=${prounitId}`,
       );
       const result = await response.json();
       if (result.response_status === "success") {
@@ -124,7 +124,7 @@ export default function PurchaseReportModal() {
     try {
       let res;
       res = await fetch(
-        `/api/unitSale/read/readReportDetail?start_dat=${startDate}&end_dat=${endDate}&floc_id=${selectedFloc}`
+        `/api/unitSale/read/readReportDetail?start_dat=${startDate}&end_dat=${endDate}&floc_id=${selectedFloc}`,
       );
       const data = await res.json();
       setPurchaseData(data.response_result);
@@ -170,7 +170,7 @@ export default function PurchaseReportModal() {
   const indexOfFirstPurchase = indexOfLastPurchase - purchasesPerPage;
   const currentPurchases = purchaseData.slice(
     indexOfFirstPurchase,
-    indexOfLastPurchase
+    indexOfLastPurchase,
   );
   const totalPages = Math.ceil(purchaseData.length / purchasesPerPage);
 
@@ -181,9 +181,9 @@ export default function PurchaseReportModal() {
     }
 
     const headers = [
-      "Sale ID",
+      "Income ID",
       "Floc ID",
-      "Sale Date",
+      "Income Date",
       "Customer Name",
       "Customer Contact",
       "Product",
@@ -219,7 +219,7 @@ export default function PurchaseReportModal() {
     exportToCSV(
       `Unit_Sale_Report_${startDate}_to_${endDate}.csv`,
       headers,
-      rows
+      rows,
     );
   };
 
@@ -237,7 +237,7 @@ export default function PurchaseReportModal() {
           </div>
 
           <h3 className="text-lg font-semibold text-gray-900 ">
-            Unit Sale Report
+            Unit Income Report
           </h3>
           <h1 className="text-sm font-bold text-gray-900 mb-4">Floc Wise</h1>
 
@@ -373,7 +373,7 @@ export default function PurchaseReportModal() {
               {/* Report Header */}
               <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Unit Sale Report
+                  Unit Income Report
                 </h1>
                 <p className="text-gray-600 text-sm">
                   From:{" "}
@@ -398,13 +398,13 @@ export default function PurchaseReportModal() {
                     <div className="mb-3 space-y-2">
                       <div className="flex justify-between text-sm">
                         <div>
-                          <span className="font-semibold">Sale ID: </span>
+                          <span className="font-semibold">Income ID: </span>
                           <span>{purchase.sale_id}</span>
                           <span className="ml-6 font-semibold">Floc ID: </span>
                           <span>{purchase.floc_id}</span>
                         </div>
                         <div>
-                          <span className="font-semibold">Sale Date: </span>
+                          <span className="font-semibold">Income Date: </span>
                           <span>
                             {new Date(purchase.sale_date).toLocaleDateString()}
                           </span>

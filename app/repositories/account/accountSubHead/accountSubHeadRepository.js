@@ -60,7 +60,7 @@ class AccountSubHeadRepository {
     const where = {
       subhead_nam: {
         equals: subhead_nam.trim(),
-        mode: 'insensitive', // Case-insensitive comparison
+        mode: "insensitive", // Case-insensitive comparison
       },
       status: 1, // Only check active subheads
     };
@@ -105,7 +105,7 @@ class AccountSubHeadRepository {
       {
         timeout: 10000, // ⏱ 10 seconds
         maxWait: 5000, // optional: how long to wait for a connection (5s)
-      }
+      },
     );
   }
 
@@ -139,7 +139,7 @@ class AccountSubHeadRepository {
       where: {
         subhead_nam: {
           equals: subheadName.trim(),
-          mode: 'insensitive',
+          mode: "insensitive",
         },
         status: 1,
       },
@@ -147,6 +147,99 @@ class AccountSubHeadRepository {
         head: true,
       },
     });
+  }
+
+  async readTrialBalance(startDate, endDate) {
+    // 1. Get all active subheads with their active accounts
+    const subheads = await prisma.account_sub_head.findMany({
+      where: { status: 1 },
+      orderBy: { subhead_id: "asc" },
+      include: {
+        accounts: {
+          where: { status: 1 },
+          select: {
+            acc_id: true,
+            account_nam: true,
+            account_contact: true,
+          },
+        },
+      },
+    });
+
+    // 2. Aggregate transactions
+    const whereCondition = { isDeleted: false };
+    if (startDate && endDate) {
+      whereCondition.transaction_dat = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+
+    const transactionAggregates = await prisma.transaction.groupBy({
+      by: ["acc_id"],
+      _sum: {
+        debit: true,
+        credit: true,
+      },
+      where: whereCondition,
+    });
+
+    // Map aggregates for O(1) access
+    const aggMap = {};
+    transactionAggregates.forEach((agg) => {
+      aggMap[agg.acc_id] = {
+        debit: agg._sum.debit || 0,
+        credit: agg._sum.credit || 0,
+      };
+    });
+
+    // 3. Construct the report
+    let grandTotalDebit = 0;
+    let grandTotalCredit = 0;
+
+    const reportData = subheads.map((subhead) => {
+      let subheadDebit = 0;
+      let subheadCredit = 0;
+
+      const processedAccounts = subhead.accounts.map((acc) => {
+        const stats = aggMap[acc.acc_id] || { debit: 0, credit: 0 };
+        const balance = stats.debit - stats.credit;
+
+        subheadDebit += stats.debit;
+        subheadCredit += stats.credit;
+
+        return {
+          name: acc.account_nam,
+          contact: acc.account_contact,
+          total_debit: stats.debit,
+          total_credit: stats.credit,
+          balance: balance,
+        };
+      });
+
+      grandTotalDebit += subheadDebit;
+      grandTotalCredit += subheadCredit;
+
+      return {
+        subhead_nam: subhead.subhead_nam,
+        accounts: processedAccounts,
+        total_debit: subheadDebit,
+        total_credit: subheadCredit,
+        total_balance: subheadDebit - subheadCredit,
+      };
+    });
+
+    // Filter out subheads that have no accounts if desired?
+    // For now returning all as they might be relevant for structure.
+
+    return {
+      details: reportData,
+      conclusion: {
+        total_debit: grandTotalDebit,
+        total_credit: grandTotalCredit,
+        total_balance: grandTotalDebit - grandTotalCredit,
+      },
+    };
   }
 }
 

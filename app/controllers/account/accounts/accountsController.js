@@ -107,7 +107,7 @@ class AccountsController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all accounts in Method: AccountsController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }

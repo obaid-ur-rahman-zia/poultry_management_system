@@ -23,8 +23,8 @@ const selectStyles = {
     backgroundColor: state.isSelected
       ? "#6366F1"
       : state.isFocused
-      ? "#F0F9FF"
-      : "white",
+        ? "#F0F9FF"
+        : "white",
     color: state.isSelected ? "white" : "#374151",
   }),
   menu: (provided) => ({
@@ -92,14 +92,14 @@ export default function ProfitLossModal() {
   const flocOptions = floc.map((f) => ({
     value: f.floc_id.toString(),
     label: `Floc #${f.floc_id} - ${new Date(
-      f.starting_date
+      f.starting_date,
     ).toLocaleDateString()}`,
   }));
 
   const fetchFlocsByUnit = async (prounitId) => {
     try {
       const response = await fetch(
-        `/api/floc/readByFarmId?farm_id=${prounitId}`
+        `/api/floc/readByFarmId?farm_id=${prounitId}`,
       );
       const result = await response.json();
       if (result.response_status === "success") {
@@ -145,7 +145,23 @@ export default function ProfitLossModal() {
       return;
     }
 
-    if (new Date(startDate) > new Date(endDate)) {
+    let start_dat = startDate;
+    let end_dat = endDate;
+
+    if (groupBy === "month") {
+      // startDate is YYYY-MM
+      start_dat = `${startDate}-01`;
+      // Calculate last day of end month
+      const [year, month] = endDate.split("-");
+      const lastDay = new Date(year, month, 0).getDate();
+      end_dat = `${endDate}-${lastDay}`;
+    } else if (groupBy === "year") {
+      // startDate is YYYY
+      start_dat = `${startDate}-01-01`;
+      end_dat = `${endDate}-12-31`;
+    }
+
+    if (new Date(start_dat) > new Date(end_dat)) {
       toast.error("Start date must be before end date");
       return;
     }
@@ -153,17 +169,17 @@ export default function ProfitLossModal() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `/api/unitSale/read/readProfitReport?start_dat=${startDate}&end_dat=${endDate}&group_by=${groupBy}&floc_id=${selectedFloc}`
+        `/api/unitSale/read/readProfitReport?start_dat=${start_dat}&end_dat=${end_dat}&group_by=${groupBy}&floc_id=${selectedFloc}`,
       );
       const data = await res.json();
       console.log("Profit/Loss Data", data);
 
-      setReportData(data.response_result.results);
-      setGrandTotalPurchase(data.response_result.grandTotalPurchase);
-      setGrandTotalSale(data.response_result.grandTotalSale);
-      setNetProfit(data.response_result.netProfit);
-      setIsOpen(true);
-      setCurrentPage(1);
+        setReportData(data.response_result.results);
+        setGrandTotalPurchase(data.response_result.grandTotalPurchase);
+        setGrandTotalSale(data.response_result.grandTotalSale);
+        setNetProfit(data.response_result.netProfit);
+        setIsOpen(true);
+        setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching report:", error);
       toast.error("Failed to fetch report");
@@ -225,8 +241,51 @@ export default function ProfitLossModal() {
     exportToCSV(
       `Profit_Loss_Report_${groupBy}_${startDate}_to_${endDate}.csv`,
       headers,
-      rows
+      rows,
     );
+  };
+
+  // Helper to render date input based on groupBy
+  const renderDateInput = (value, onChange) => {
+    if (groupBy === "date") {
+      return (
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+        />
+      );
+    } else if (groupBy === "month") {
+      return (
+        <input
+          type="month"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+        />
+      );
+    } else if (groupBy === "year") {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let i = currentYear - 10; i <= currentYear + 5; i++) {
+        years.push(i);
+      }
+      return (
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+        >
+          <option value="">Select Year</option>
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      );
+    }
   };
 
   return (
@@ -310,7 +369,11 @@ export default function ProfitLossModal() {
               </label>
               <select
                 value={groupBy}
-                onChange={(e) => setGroupBy(e.target.value)}
+                onChange={(e) => {
+                  setGroupBy(e.target.value);
+                  setStartDate("");
+                  setEndDate("");
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
               >
                 <option value="date">Date</option>
@@ -323,24 +386,14 @@ export default function ProfitLossModal() {
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Start Date
               </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-              />
+              {renderDateInput(startDate, setStartDate)}
             </div>
 
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 End Date
               </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-              />
+              {renderDateInput(endDate, setEndDate)}
             </div>
           </div>
 

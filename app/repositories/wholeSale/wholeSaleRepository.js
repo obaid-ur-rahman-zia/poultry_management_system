@@ -250,6 +250,89 @@ class WholeSaleRepository {
       },
     });
   }
+
+  async readProfitLossReport(req_object) {
+    const { start_dat, end_dat, group_by } = req_object;
+
+    const whereClause = {
+      sale_date: {
+        gte: new Date(start_dat),
+        lte: new Date(end_dat),
+      },
+      status: 1,
+    };
+
+    const sales = await prisma.whole_sale.findMany({
+      where: whereClause,
+      select: {
+        sale_date: true,
+        former_amount: true,
+        purcher_amount: true,
+        profit: true,
+      },
+    });
+
+    const groupedData = new Map();
+
+    sales.forEach((sale) => {
+      const key = getGroupKey(sale.sale_date, group_by);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, {
+          purchase: 0,
+          sale: 0,
+          profit: 0,
+          date: sale.sale_date,
+        });
+      }
+      const group = groupedData.get(key);
+      group.purchase += sale.former_amount;
+      group.sale += sale.purcher_amount;
+      group.profit += sale.profit;
+    });
+
+    // Convert to array
+    const results = Array.from(groupedData.entries())
+      .map(([key, data]) => ({
+        period: key,
+        date: data.date,
+        purchase_amount: data.purchase,
+        sale_amount: data.sale,
+        profit_loss: data.profit,
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Calculate grand totals
+    const grandTotalPurchase = results.reduce(
+      (sum, row) => sum + row.purchase_amount,
+      0,
+    );
+    const grandTotalSale = results.reduce(
+      (sum, row) => sum + row.sale_amount,
+      0,
+    );
+    const netProfit = results.reduce((sum, row) => sum + row.profit_loss, 0);
+
+    return {
+      results,
+      grandTotalPurchase,
+      grandTotalSale,
+      netProfit,
+    };
+  }
+}
+
+function getGroupKey(date, groupBy) {
+  const d = new Date(date);
+
+  if (groupBy === "date") {
+    return d.toISOString().split("T")[0];
+  } else if (groupBy === "month") {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  } else if (groupBy === "year") {
+    return d.getFullYear().toString();
+  }
+
+  return d.toISOString().split("T")[0]; // Default to date
 }
 
 export default new WholeSaleRepository();
