@@ -68,7 +68,7 @@ class AccountsRepository {
     const where = {
       account_nam: {
         equals: account_nam.trim(),
-        mode: 'insensitive', // Case-insensitive comparison
+        mode: "insensitive", // Case-insensitive comparison
       },
       sub_id: Number(sub_id),
       status: 1, // Only check active accounts
@@ -116,7 +116,8 @@ class AccountsRepository {
           is_customer: data.is_customer !== undefined ? data.is_customer : 0,
           is_employee: data.is_employee !== undefined ? data.is_employee : 0,
           is_driver: data.is_driver !== undefined ? data.is_driver : 0,
-          is_delivery_man: data.is_delivery_man !== undefined ? data.is_delivery_man : 0,
+          is_delivery_man:
+            data.is_delivery_man !== undefined ? data.is_delivery_man : 0,
           is_salesman: data.is_salesman !== undefined ? data.is_salesman : 0,
           insert_by: data.insert_by || "user 1",
           update_by: data.update_by || "user 1",
@@ -142,20 +143,55 @@ class AccountsRepository {
       },
       data: {
         account_nam: req_object.account_nam,
-        account_contact: req_object.account_contact !== undefined ? req_object.account_contact : undefined,
-        account_address: req_object.account_address !== undefined ? req_object.account_address : undefined,
-        account_reference: req_object.account_reference !== undefined ? req_object.account_reference : undefined,
-        account_cnic: req_object.account_cnic !== undefined ? req_object.account_cnic : undefined,
-        account_alter_nam: req_object.account_alter_nam !== undefined ? req_object.account_alter_nam : undefined,
-        account_no: req_object.account_no !== undefined ? req_object.account_no : undefined,
-        head_id: req_object.head_id !== undefined ? req_object.head_id : undefined,
+        account_contact:
+          req_object.account_contact !== undefined
+            ? req_object.account_contact
+            : undefined,
+        account_address:
+          req_object.account_address !== undefined
+            ? req_object.account_address
+            : undefined,
+        account_reference:
+          req_object.account_reference !== undefined
+            ? req_object.account_reference
+            : undefined,
+        account_cnic:
+          req_object.account_cnic !== undefined
+            ? req_object.account_cnic
+            : undefined,
+        account_alter_nam:
+          req_object.account_alter_nam !== undefined
+            ? req_object.account_alter_nam
+            : undefined,
+        account_no:
+          req_object.account_no !== undefined
+            ? req_object.account_no
+            : undefined,
+        head_id:
+          req_object.head_id !== undefined ? req_object.head_id : undefined,
         sub_id: req_object.sub_id !== undefined ? req_object.sub_id : undefined,
-        is_supplier: req_object.is_supplier !== undefined ? req_object.is_supplier : undefined,
-        is_customer: req_object.is_customer !== undefined ? req_object.is_customer : undefined,
-        is_employee: req_object.is_employee !== undefined ? req_object.is_employee : undefined,
-        is_driver: req_object.is_driver !== undefined ? req_object.is_driver : undefined,
-        is_delivery_man: req_object.is_delivery_man !== undefined ? req_object.is_delivery_man : undefined,
-        is_salesman: req_object.is_salesman !== undefined ? req_object.is_salesman : undefined,
+        is_supplier:
+          req_object.is_supplier !== undefined
+            ? req_object.is_supplier
+            : undefined,
+        is_customer:
+          req_object.is_customer !== undefined
+            ? req_object.is_customer
+            : undefined,
+        is_employee:
+          req_object.is_employee !== undefined
+            ? req_object.is_employee
+            : undefined,
+        is_driver:
+          req_object.is_driver !== undefined ? req_object.is_driver : undefined,
+        is_delivery_man:
+          req_object.is_delivery_man !== undefined
+            ? req_object.is_delivery_man
+            : undefined,
+        is_salesman:
+          req_object.is_salesman !== undefined
+            ? req_object.is_salesman
+            : undefined,
         update_by: req_object.update_by || "user 1",
         status: req_object.status ?? 1,
       },
@@ -177,12 +213,12 @@ class AccountsRepository {
       where: {
         account_nam: {
           equals: accountName.trim(),
-          mode: 'insensitive',
+          mode: "insensitive",
         },
         subhead: {
           subhead_nam: {
             equals: subheadName.trim(),
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         },
         status: 1,
@@ -195,24 +231,37 @@ class AccountsRepository {
   }
 
   // Find or create account by name and subhead name
-  async findOrCreateByAccountNameAndSubheadName(accountName, subheadName, headId, subId, tx = null) {
+  async findOrCreateByAccountNameAndSubheadName(
+    accountName,
+    subheadName,
+    headId,
+    subId,
+    tx = null,
+  ) {
     const prismaClient = tx || prisma;
-    
+
     // First try to find existing account
-    const existing = await this.findByAccountNameAndSubheadName(accountName, subheadName, tx);
+    const existing = await this.findByAccountNameAndSubheadName(
+      accountName,
+      subheadName,
+      tx,
+    );
     if (existing) {
       return existing;
     }
-    
+
     // If not found, create it
-    return await this.create({
-      head_id: headId,
-      sub_id: subId,
-      account_nam: accountName.trim(),
-      insert_by: "system",
-      update_by: "system",
-      status: 1,
-    }, tx);
+    return await this.create(
+      {
+        head_id: headId,
+        sub_id: subId,
+        account_nam: accountName.trim(),
+        insert_by: "system",
+        update_by: "system",
+        status: 1,
+      },
+      tx,
+    );
   }
 }
 

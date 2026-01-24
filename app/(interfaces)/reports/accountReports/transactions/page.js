@@ -86,14 +86,14 @@ export default function AccountingReports() {
   const fetchAccounts = async () => {
     try {
       // Fetch all accounts without pagination using all=true parameter
-      const response = await fetch("/api/account/accounts/readAll?all=true");
+      const response = await fetch("/api/account/accounts/readAll");
       const data = await response.json();
 
       if (data.response_status === "success") {
         // Handle paginated response structure
         const responseData = data.response_result;
         const accountsData = responseData?.data || responseData;
-        
+
         if (Array.isArray(accountsData)) {
           const accountMap = {};
           accountsData.forEach((account) => {
@@ -131,7 +131,7 @@ export default function AccountingReports() {
       }
 
       const response = await fetch(
-        `/api/transaction/readAll?${queryParams.toString()}`
+        `/api/transaction/readAll?${queryParams.toString()}`,
       );
       const data = await response.json();
 
@@ -208,11 +208,11 @@ export default function AccountingReports() {
 
     const totalDebit = filteredTransactions.reduce(
       (sum, t) => sum + (Number(t.debit) || 0),
-      0
+      0,
     );
     const totalCredit = filteredTransactions.reduce(
       (sum, t) => sum + (Number(t.credit) || 0),
-      0
+      0,
     );
     const netBalance = totalDebit - totalCredit;
     const NetBalance = netBalance.toFixed(2);
@@ -343,7 +343,7 @@ export default function AccountingReports() {
         </mark>
       ) : (
         part
-      )
+      ),
     );
   };
 
@@ -719,13 +719,14 @@ export default function AccountingReports() {
                               </td>
                               <td className="px-4 py-3 font-medium text-sm">
                                 {highlightText(
-                                  getAccountDetails(transaction.acc_id).headName
+                                  getAccountDetails(transaction.acc_id)
+                                    .headName,
                                 )}
                               </td>
                               <td className="px-4 py-3 font-medium text-sm">
                                 {highlightText(
                                   getAccountName(transaction.acc_id),
-                                  filters.accountSearch
+                                  filters.accountSearch,
                                 )}
                               </td>
                               <td className="px-4 py-3 text-sm text-gray-600">
@@ -754,7 +755,7 @@ export default function AccountingReports() {
                               <td className="px-4 py-3 text-sm text-gray-600  truncate">
                                 {highlightText(
                                   transaction.remarks || "-",
-                                  filters.accountSearch
+                                  filters.accountSearch,
                                 )}
                               </td>
                               <td className="px-4 py-3 text-sm text-gray-600 truncate">
@@ -841,8 +842,8 @@ export default function AccountingReports() {
                       fetchTransactions(
                         Math.min(
                           pagination.totalPages,
-                          pagination.currentPage + 1
-                        )
+                          pagination.currentPage + 1,
+                        ),
                       )
                     }
                     className={
@@ -1055,7 +1056,7 @@ export default function AccountingReports() {
                         Rs.{" "}
                         {formatCurrency(
                           (selectedTransaction.debit || 0) -
-                            (selectedTransaction.credit || 0)
+                            (selectedTransaction.credit || 0),
                         )}
                       </span>
                     </div>
