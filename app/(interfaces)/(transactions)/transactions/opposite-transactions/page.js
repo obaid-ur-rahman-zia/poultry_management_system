@@ -123,7 +123,7 @@ export default function OppositeTransactionsPage() {
     const fetchAllAccounts = async () => {
         try {
             // Fetch all accounts without pagination using all=true parameter
-            const response = await fetch("/api/account/accounts/readAll?all=true");
+            const response = await fetch("/api/account/accounts/readAll");
             const result = await response.json();
             if (result.response_status === "success") {
                 const responseData = result.response_result;

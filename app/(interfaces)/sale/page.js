@@ -119,7 +119,8 @@ function WholeSaleTab() {
   const [previousFsRates, setPreviousFsRates] = useState([]);
   const [isFsRateHistoryOpen, setIsFsRateHistoryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
+  const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] =
+    useState(false);
   const [accountSearchType, setAccountSearchType] = useState("all"); // "all" or sub_id (e.g., "1", "2", "3")
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [allAccounts, setAllAccounts] = useState([]);
@@ -175,7 +176,7 @@ function WholeSaleTab() {
   const fetchAllAccounts = async () => {
     try {
       // Fetch all accounts without pagination using all=true parameter
-      const response = await fetch("/api/account/accounts/readAll?all=true");
+      const response = await fetch("/api/account/accounts/readAll");
       const result = await response.json();
       if (result.success || result.response_status === "success") {
         const responseData = result.response_result;
@@ -391,7 +392,7 @@ function WholeSaleTab() {
     setLoadingSupplierBalance(true);
     try {
       const response = await fetch(
-        `/api/transaction/read/balance?acc_id=${accId}`
+        `/api/transaction/read/balance?acc_id=${accId}`,
       );
       const result = await response.json();
       if (result.response_status === "success" && result.response_result) {
@@ -416,7 +417,7 @@ function WholeSaleTab() {
     setLoadingCustomerBalance(true);
     try {
       const response = await fetch(
-        `/api/transaction/read/balance?acc_id=${accId}`
+        `/api/transaction/read/balance?acc_id=${accId}`,
       );
       const result = await response.json();
       if (result.response_status === "success" && result.response_result) {
@@ -481,11 +482,13 @@ function WholeSaleTab() {
   const fetchWholeSales = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/wholeSale/readAll?page=${page}&limit=${limit}`);
+      const response = await fetch(
+        `/api/wholeSale/readAll?page=${page}&limit=${limit}`,
+      );
       const result = await response.json();
       if (result.response_status === "success") {
         const responseData = result.response_result;
-        
+
         // Handle paginated response
         if (responseData?.pagination) {
           const salesData = responseData.data || [];
@@ -524,8 +527,9 @@ function WholeSaleTab() {
     if (!saleDate) return;
     try {
       const response = await fetch(
-        `/api/wholeSale/checkFsRate?sale_date=${saleDate.toISOString().split("T")[0]
-        }`
+        `/api/wholeSale/checkFsRate?sale_date=${
+          saleDate.toISOString().split("T")[0]
+        }`,
       );
       const result = await response.json();
       if (result.response_status === "success") {
@@ -629,7 +633,7 @@ function WholeSaleTab() {
         toast.success(
           isEditMode
             ? "Whole sale updated successfully"
-            : "Whole sale created successfully"
+            : "Whole sale created successfully",
         );
 
         // If F.S Rate was set, update the state
@@ -771,7 +775,7 @@ function WholeSaleTab() {
                           setSaleDate(date);
                           setValue(
                             "sale_date",
-                            date.toISOString().split("T")[0]
+                            date.toISOString().split("T")[0],
                           );
                         }
                       }}
@@ -842,24 +846,28 @@ function WholeSaleTab() {
                     render={({ field }) => {
                       // Get selected account from allAccounts if it exists
                       const selectedAccount = allAccounts.find(
-                        (acc) => acc.acc_id?.toString() === field.value
+                        (acc) => acc.acc_id?.toString() === field.value,
                       );
-                      
+
                       // Combine supplierAccounts with selected account if it's not in supplierAccounts
                       const options = [
                         ...supplierAccounts.map((acc) => ({
                           value: acc.acc_id.toString(),
                           label: acc.account_nam,
                         })),
-                        ...(selectedAccount && 
-                          !supplierAccounts.find((acc) => acc.acc_id === selectedAccount.acc_id)
-                          ? [{
-                              value: selectedAccount.acc_id.toString(),
-                              label: selectedAccount.account_nam,
-                            }]
+                        ...(selectedAccount &&
+                        !supplierAccounts.find(
+                          (acc) => acc.acc_id === selectedAccount.acc_id,
+                        )
+                          ? [
+                              {
+                                value: selectedAccount.acc_id.toString(),
+                                label: selectedAccount.account_nam,
+                              },
+                            ]
                           : []),
                       ];
-                      
+
                       return (
                         <div className="w-60">
                           <Combobox
@@ -881,10 +889,12 @@ function WholeSaleTab() {
                     onClick={() => {
                       setAccountSearchField("former");
                       // Find "Former" subhead and set its sub_id as default
-                      const formerSubhead = accountSubHeads.find(
-                        (sh) => sh.subhead_nam?.toLowerCase().includes("former")
+                      const formerSubhead = accountSubHeads.find((sh) =>
+                        sh.subhead_nam?.toLowerCase().includes("former"),
                       );
-                      setAccountSearchType(formerSubhead ? formerSubhead.sub_id.toString() : "all");
+                      setAccountSearchType(
+                        formerSubhead ? formerSubhead.sub_id.toString() : "all",
+                      );
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
@@ -895,10 +905,15 @@ function WholeSaleTab() {
                   </Button>
                   <div className="flex items-center gap-1">
                     {loadingSupplierBalance ? (
-                      <span className="text-xs text-muted-foreground">Loading...</span>
+                      <span className="text-xs text-muted-foreground">
+                        Loading...
+                      </span>
                     ) : (
                       <span className="text-xs underline">
-                        Balance {supplierBalance !== null ? supplierBalance.toFixed(2) : "0"}
+                        Balance{" "}
+                        {supplierBalance !== null
+                          ? supplierBalance.toFixed(2)
+                          : "0"}
                       </span>
                     )}
                   </div>
@@ -906,9 +921,10 @@ function WholeSaleTab() {
               </div>
               <div className="flex flex-nowrap items-start   gap-2">
                 <div className="flex flex-col justify-center gap-2">
-
                   <div className="flex items-center gap-1">
-                    <Label className="whitespace-nowrap text-xs">Van Number</Label>
+                    <Label className="whitespace-nowrap text-xs">
+                      Van Number
+                    </Label>
                     <Input
                       {...register("van_number", {
                         required: "Van number is required",
@@ -966,24 +982,28 @@ function WholeSaleTab() {
                     render={({ field }) => {
                       // Get selected account from allAccounts if it exists
                       const selectedAccount = allAccounts.find(
-                        (acc) => acc.acc_id?.toString() === field.value
+                        (acc) => acc.acc_id?.toString() === field.value,
                       );
-                      
+
                       // Combine customerAccounts with selected account if it's not in customerAccounts
                       const options = [
                         ...customerAccounts.map((acc) => ({
                           value: acc.acc_id.toString(),
                           label: acc.account_nam,
                         })),
-                        ...(selectedAccount && 
-                          !customerAccounts.find((acc) => acc.acc_id === selectedAccount.acc_id)
-                          ? [{
-                              value: selectedAccount.acc_id.toString(),
-                              label: selectedAccount.account_nam,
-                            }]
+                        ...(selectedAccount &&
+                        !customerAccounts.find(
+                          (acc) => acc.acc_id === selectedAccount.acc_id,
+                        )
+                          ? [
+                              {
+                                value: selectedAccount.acc_id.toString(),
+                                label: selectedAccount.account_nam,
+                              },
+                            ]
                           : []),
                       ];
-                      
+
                       return (
                         <div className="w-60">
                           <Combobox
@@ -1005,10 +1025,14 @@ function WholeSaleTab() {
                     onClick={() => {
                       setAccountSearchField("purcher");
                       // Find "Purcher" subhead and set its sub_id as default
-                      const purcherSubhead = accountSubHeads.find(
-                        (sh) => sh.subhead_nam?.toLowerCase().includes("purcher")
+                      const purcherSubhead = accountSubHeads.find((sh) =>
+                        sh.subhead_nam?.toLowerCase().includes("purcher"),
                       );
-                      setAccountSearchType(purcherSubhead ? purcherSubhead.sub_id.toString() : "all");
+                      setAccountSearchType(
+                        purcherSubhead
+                          ? purcherSubhead.sub_id.toString()
+                          : "all",
+                      );
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
@@ -1019,10 +1043,15 @@ function WholeSaleTab() {
                   </Button>
                   <div className="flex items-center gap-1">
                     {loadingCustomerBalance ? (
-                      <span className="text-xs text-muted-foreground">Loading...</span>
+                      <span className="text-xs text-muted-foreground">
+                        Loading...
+                      </span>
                     ) : (
                       <span className="text-xs underline">
-                        Balance {customerBalance !== null ? customerBalance.toFixed(2) : "0"}
+                        Balance{" "}
+                        {customerBalance !== null
+                          ? customerBalance.toFixed(2)
+                          : "0"}
                       </span>
                     )}
                   </div>
@@ -1053,26 +1082,47 @@ function WholeSaleTab() {
             {/* Profit Display */}
             <div className="flex items-center gap-1">
               <Label className="whitespace-nowrap text-xs">Profit</Label>
-              <span className={`text-xs underline ${parseFloat(watch("profit") || 0) < 0
-                ? "text-red-600 font-semibold"
-                : ""
-                }`}>
+              <span
+                className={`text-xs underline ${
+                  parseFloat(watch("profit") || 0) < 0
+                    ? "text-red-600 font-semibold"
+                    : ""
+                }`}
+              >
                 {watch("profit") || "0"}
               </span>
             </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={handleCreateNew} className="h-8 px-3 text-xs">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCreateNew}
+                className="h-8 px-3 text-xs"
+              >
                 New
               </Button>
               {!isEditMode && (
-                <Button type="submit" disabled={isSubmitting} variant="outline" size="sm" className="h-8 px-3 text-xs">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-xs"
+                >
                   {isSubmitting ? "Saving..." : "Save"}
                 </Button>
               )}
               {isEditMode && (
-                <Button type="submit" disabled={isSubmitting} variant="outline" size="sm" className="h-8 px-3 text-xs">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-xs"
+                >
                   {isSubmitting ? "Updating..." : "Update"}
                 </Button>
               )}
@@ -1209,14 +1259,14 @@ function WholeSaleTab() {
                             <TableCell>{sale.weight || "N/A"}</TableCell>
                             <TableCell>
                               {supplierAccounts.find(
-                                (a) => a.acc_id === sale.former_account
+                                (a) => a.acc_id === sale.former_account,
                               )?.account_nam || "N/A"}
                             </TableCell>
                             <TableCell>{sale.former_rate || "N/A"}</TableCell>
                             <TableCell>{sale.former_amount || "N/A"}</TableCell>
                             <TableCell>
                               {customerAccounts.find(
-                                (a) => a.acc_id === sale.purcher_account
+                                (a) => a.acc_id === sale.purcher_account,
                               )?.account_nam || "N/A"}
                             </TableCell>
                             <TableCell>{sale.purcher_rate || "N/A"}</TableCell>
@@ -1244,58 +1294,60 @@ function WholeSaleTab() {
                                       "sale_date",
                                       sale.sale_date
                                         ? new Date(sale.sale_date)
-                                          .toISOString()
-                                          .split("T")[0]
-                                        : new Date().toISOString().split("T")[0]
+                                            .toISOString()
+                                            .split("T")[0]
+                                        : new Date()
+                                            .toISOString()
+                                            .split("T")[0],
                                     );
                                     setSaleDate(
                                       sale.sale_date
                                         ? new Date(sale.sale_date)
-                                        : new Date()
+                                        : new Date(),
                                     );
                                     setValue(
                                       "farm_rate",
-                                      sale.farm_rate?.toString() || ""
+                                      sale.farm_rate?.toString() || "",
                                     );
                                     setValue(
                                       "sale_rate",
-                                      sale.sale_rate?.toString() || ""
+                                      sale.sale_rate?.toString() || "",
                                     );
                                     setValue(
                                       "former_account",
-                                      sale.former_account?.toString() || ""
+                                      sale.former_account?.toString() || "",
                                     );
                                     setValue(
                                       "van_number",
-                                      sale.van_number || ""
+                                      sale.van_number || "",
                                     );
                                     setValue(
                                       "weight",
-                                      sale.weight?.toString() || ""
+                                      sale.weight?.toString() || "",
                                     );
                                     setValue(
                                       "former_rate",
-                                      sale.former_rate?.toString() || ""
+                                      sale.former_rate?.toString() || "",
                                     );
                                     setValue(
                                       "former_amount",
-                                      sale.former_amount?.toString() || ""
+                                      sale.former_amount?.toString() || "",
                                     );
                                     setValue(
                                       "purcher_account",
-                                      sale.purcher_account?.toString() || ""
+                                      sale.purcher_account?.toString() || "",
                                     );
                                     setValue(
                                       "purcher_rate",
-                                      sale.purcher_rate?.toString() || ""
+                                      sale.purcher_rate?.toString() || "",
                                     );
                                     setValue(
                                       "purcher_amount",
-                                      sale.purcher_amount?.toString() || ""
+                                      sale.purcher_amount?.toString() || "",
                                     );
                                     setValue(
                                       "profit",
-                                      sale.profit?.toString() || ""
+                                      sale.profit?.toString() || "",
                                     );
                                     document
                                       .getElementById("whole-sale-form")
@@ -1311,7 +1363,7 @@ function WholeSaleTab() {
                                   onClick={async () => {
                                     if (
                                       !confirm(
-                                        "Are you sure you want to delete this whole sale?"
+                                        "Are you sure you want to delete this whole sale?",
                                       )
                                     ) {
                                       return;
@@ -1321,29 +1373,32 @@ function WholeSaleTab() {
                                         `/api/wholeSale?sale_id=${sale.sale_id}`,
                                         {
                                           method: "DELETE",
-                                        }
+                                        },
                                       );
                                       const result = await response.json();
                                       if (
                                         result.response_status === "success"
                                       ) {
                                         toast.success(
-                                          "Whole sale deleted successfully"
+                                          "Whole sale deleted successfully",
                                         );
-                                        fetchWholeSales(currentPage, itemsPerPage);
+                                        fetchWholeSales(
+                                          currentPage,
+                                          itemsPerPage,
+                                        );
                                       } else {
                                         toast.error(
                                           result.response_message ||
-                                          "Failed to delete whole sale"
+                                            "Failed to delete whole sale",
                                         );
                                       }
                                     } catch (error) {
                                       console.error(
                                         "Error deleting whole sale:",
-                                        error
+                                        error,
                                       );
                                       toast.error(
-                                        "Failed to delete whole sale"
+                                        "Failed to delete whole sale",
                                       );
                                     }
                                   }}
@@ -1364,14 +1419,16 @@ function WholeSaleTab() {
                 {totalItems > 0 && totalPages > 1 && (
                   <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
-                      <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                      <Label className="text-sm text-muted-foreground">
+                        Items per page:
+                      </Label>
                       <Select
                         value={itemsPerPage.toString()}
-                      onValueChange={(value) => {
-                        setItemsPerPage(Number(value));
-                        setCurrentPage(1);
-                        fetchWholeSales(1, Number(value));
-                      }}
+                        onValueChange={(value) => {
+                          setItemsPerPage(Number(value));
+                          setCurrentPage(1);
+                          fetchWholeSales(1, Number(value));
+                        }}
                       >
                         <SelectTrigger className="w-20">
                           <SelectValue />
@@ -1393,49 +1450,65 @@ function WholeSaleTab() {
                               setCurrentPage(newPage);
                               fetchWholeSales(newPage, itemsPerPage);
                             }}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            className={
+                              currentPage === 1
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
                           />
                         </PaginationItem>
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (currentPage <= 3) {
-                            pageNum = i + 1;
-                          } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = currentPage - 2 + i;
-                          }
-                          return (
-                            <PaginationItem key={pageNum}>
-                              <PaginationLink
-                                onClick={() => {
-                                  setCurrentPage(pageNum);
-                                  fetchWholeSales(pageNum, itemsPerPage);
-                                }}
-                                isActive={currentPage === pageNum}
-                                className="cursor-pointer"
-                              >
-                                {pageNum}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        })}
+                        {Array.from(
+                          { length: Math.min(5, totalPages) },
+                          (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = currentPage - 2 + i;
+                            }
+                            return (
+                              <PaginationItem key={pageNum}>
+                                <PaginationLink
+                                  onClick={() => {
+                                    setCurrentPage(pageNum);
+                                    fetchWholeSales(pageNum, itemsPerPage);
+                                  }}
+                                  isActive={currentPage === pageNum}
+                                  className="cursor-pointer"
+                                >
+                                  {pageNum}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          },
+                        )}
                         <PaginationItem>
                           <PaginationNext
                             onClick={() => {
-                              const newPage = Math.min(totalPages, currentPage + 1);
+                              const newPage = Math.min(
+                                totalPages,
+                                currentPage + 1,
+                              );
                               setCurrentPage(newPage);
                               fetchWholeSales(newPage, itemsPerPage);
                             }}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            className={
+                              currentPage === totalPages
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
                           />
                         </PaginationItem>
                       </PaginationContent>
                     </Pagination>
                     <div className="text-sm text-muted-foreground">
-                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} sales
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                      {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
+                      {totalItems} sales
                     </div>
                   </div>
                 )}
@@ -1471,7 +1544,10 @@ function WholeSaleTab() {
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
                     {accountSubHeads.map((subhead) => (
-                      <SelectItem key={subhead.sub_id} value={subhead.sub_id.toString()}>
+                      <SelectItem
+                        key={subhead.sub_id}
+                        value={subhead.sub_id.toString()}
+                      >
                         {subhead.subhead_nam}
                       </SelectItem>
                     ))}
@@ -1510,7 +1586,7 @@ function WholeSaleTab() {
                         }
                       }
                       // If "all", show all accounts (no filter)
-                      
+
                       // Filter by search query
                       if (accountSearchQuery) {
                         const query = accountSearchQuery.toLowerCase();

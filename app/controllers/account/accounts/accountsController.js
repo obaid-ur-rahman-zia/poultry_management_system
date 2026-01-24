@@ -10,100 +10,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 class AccountsController {
-  async readAll(req) {
+  async readAll() {
     const cacheKey = "accounts:all";
     try {
-      // Extract pagination params
-      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
-      const getAll = searchParams.get("all") === "true";
-      const page = parseInt(searchParams.get("page") || "1");
-      const limit = parseInt(searchParams.get("limit") || "10");
-      const skip = (page - 1) * limit;
-
-      // Get logged-in user session
-      const session = await getServerSession(authOptions);
-      let userCashInHandAccountId = null;
-
-      if (session && session.user?.id) {
-        const userId = parseInt(session.user.id);
-        const user = await UserRepository.readById(userId);
-        if (user && user.cash_in_hand_account_id) {
-          userCashInHandAccountId = user.cash_in_hand_account_id;
-        }
-      }
-
-      // Find "Cash In Hand" subhead
-      const cashInHandSubhead = await AccountSubHeadRepository.findByName(
-        "Cash In Hand"
-      );
-      const cashInHandSubId = cashInHandSubhead?.sub_id || null;
-
-      // If getAll is true, fetch all accounts without pagination
-      let allAccounts, total;
-      if (getAll) {
-        allAccounts = await AccountsRepository.readAll();
-        total = allAccounts.length;
-      } else {
-        // Get total count and paginated accounts
-        const result = await AccountsRepository.readAllWithPagination(skip, limit);
-        allAccounts = result.data;
-        total = result.total;
-      }
-
-      // Filter accounts based on user's cash in hand account
-      let filteredAccounts = allAccounts;
-      let filteredTotal = total;
-
-      if (userCashInHandAccountId && cashInHandSubId) {
-        filteredAccounts = allAccounts;
-        filteredTotal = total;
-      }
-
-      // Use cache key with user ID and pagination to avoid cache conflicts
-      const userCacheKey = getAll
-        ? (userCashInHandAccountId
-            ? `accounts:all:user:${userCashInHandAccountId}:all`
-            : `${cacheKey}:all`)
-        : (userCashInHandAccountId
-            ? `accounts:all:user:${userCashInHandAccountId}:page:${page}:limit:${limit}`
-            : `${cacheKey}:page:${page}:limit:${limit}`);
-
-      const cachedData = await RedisService.get(userCacheKey);
+      const cachedData = await RedisService.get(cacheKey);
       if (cachedData) {
         console.log("Account Cache Hit");
         return successResponse(cachedData, "Success");
       }
       console.log("Account Cache Miss");
 
-      // If getAll, return all accounts without pagination structure
-      if (getAll) {
-        const response = {
-          data: filteredAccounts,
-        };
-        await RedisService.setex(
-          userCacheKey,
-          300,
-          JSON.stringify(response)
-        );
-        return successResponse(response, "Success");
-      }
+      const allAccounts = await AccountsRepository.readAll();
 
-      const paginatedResponse = {
-        data: filteredAccounts,
-        pagination: {
-          page,
-          limit,
-          total: filteredTotal,
-          totalPages: Math.ceil(filteredTotal / limit),
-        },
+      const response = {
+        data: allAccounts,
       };
 
-      await RedisService.setex(
-        userCacheKey,
-        300,
-        JSON.stringify(paginatedResponse)
-      );
-      return successResponse(paginatedResponse, "Success");
+      await RedisService.setex(cacheKey, 300, JSON.stringify(response));
+      return successResponse(response, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all accounts in Method: AccountsController.readAll",
@@ -122,7 +46,7 @@ class AccountsController {
         const error = new Error("Missing head_id");
         ErrorLogger.log(
           "Failed to get accounts by head in Method: AccountsController.readByHead",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -132,7 +56,7 @@ class AccountsController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get accounts by head in Method: AccountsController.readByHead",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -147,7 +71,7 @@ class AccountsController {
         const error = new Error("sub_id is required");
         ErrorLogger.log(
           "Failed to get accounts by subhead in Method: AccountsController.readBySubHead",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -165,9 +89,8 @@ class AccountsController {
       }
 
       // Find "Cash In Hand" subhead
-      const cashInHandSubhead = await AccountSubHeadRepository.findByName(
-        "Cash In Hand"
-      );
+      const cashInHandSubhead =
+        await AccountSubHeadRepository.findByName("Cash In Hand");
       const cashInHandSubId = cashInHandSubhead?.sub_id || null;
 
       // Get all accounts for this subhead
@@ -183,7 +106,7 @@ class AccountsController {
       ) {
         // Only show user's cash in hand account for "Cash In Hand" subhead
         filteredAccounts = allAccounts.filter(
-          (account) => account.acc_id === userCashInHandAccountId
+          (account) => account.acc_id === userCashInHandAccountId,
         );
       }
       // For all other subheads, show all accounts (no filtering needed)
@@ -192,7 +115,7 @@ class AccountsController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get accounts by subhead in Method: AccountsController.readBySubHead",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -207,7 +130,7 @@ class AccountsController {
         const error = new Error("acc_id is required");
         ErrorLogger.log(
           "Failed to get account by id in Method: AccountsController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -216,7 +139,7 @@ class AccountsController {
       if (!result) {
         ErrorLogger.log(
           "Failed to get account by id in Method: AccountsController.readById",
-          new Error("Account not found")
+          new Error("Account not found"),
         );
         return errorResponse(new Error("Account not found"), 404);
       }
@@ -225,7 +148,7 @@ class AccountsController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get account by id in Method: AccountsController.readById",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -238,7 +161,7 @@ class AccountsController {
 
       if (!head_id || !sub_id || !account_nam) {
         const error = new Error(
-          "head_id, sub_id, account_nam are required in Method: AccountsController.create"
+          "head_id, sub_id, account_nam are required in Method: AccountsController.create",
         );
         return errorResponse(error, 400);
       }
@@ -249,11 +172,11 @@ class AccountsController {
       });
       if (!head) {
         const error = new Error(
-          `Invalid head_id: ${head_id} - Account head does not exist`
+          `Invalid head_id: ${head_id} - Account head does not exist`,
         );
         ErrorLogger.log(
           "Failed to create account - invalid head_id in Method: AccountsController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -263,11 +186,11 @@ class AccountsController {
       });
       if (!subhead) {
         const error = new Error(
-          `Invalid sub_id: ${sub_id} - Account sub-head does not exist`
+          `Invalid sub_id: ${sub_id} - Account sub-head does not exist`,
         );
         ErrorLogger.log(
           "Failed to create account - invalid sub_id in Method: AccountsController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -275,11 +198,11 @@ class AccountsController {
       // Verify that subhead belongs to the specified head
       if (subhead.head_id !== Number(head_id)) {
         const error = new Error(
-          `Invalid combination: sub_id ${sub_id} does not belong to head_id ${head_id}`
+          `Invalid combination: sub_id ${sub_id} does not belong to head_id ${head_id}`,
         );
         ErrorLogger.log(
           "Failed to create account - head_id and sub_id mismatch in Method: AccountsController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -287,15 +210,15 @@ class AccountsController {
       // Check for duplicate account name with same account type (sub_id)
       const duplicate = await AccountsRepository.checkDuplicate(
         account_nam,
-        sub_id
+        sub_id,
       );
       if (duplicate) {
         const error = new Error(
-          "An account with this name already exists for this account type"
+          "An account with this name already exists for this account type",
         );
         ErrorLogger.log(
           "Failed to create account - duplicate name and type in Method: AccountsController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -317,31 +240,52 @@ class AccountsController {
 
         if (subheadInTx) {
           const subheadName = subheadInTx.subhead_nam.toLowerCase().trim();
-          console.log("Subhead name:", subheadName, "Original:", subheadInTx.subhead_nam);
-          
+          console.log(
+            "Subhead name:",
+            subheadName,
+            "Original:",
+            subheadInTx.subhead_nam,
+          );
+
           // Check for Former (Supplier)
           if (subheadName === "former" || subheadName.includes("former")) {
             is_supplier = 1;
             console.log("Setting is_supplier = 1 for Former subhead");
-          } 
+          }
           // Check for Purcher (Customer)
-          else if (subheadName === "purcher" || subheadName.includes("purcher")) {
+          else if (
+            subheadName === "purcher" ||
+            subheadName.includes("purcher")
+          ) {
             is_customer = 1;
             console.log("Setting is_customer = 1 for Purcher subhead");
-          } 
+          }
           // Check for Customer
-          else if (subheadName === "customer" || subheadName.includes("customer")) {
+          else if (
+            subheadName === "customer" ||
+            subheadName.includes("customer")
+          ) {
             is_customer = 1;
             console.log("Setting is_customer = 1 for Customer subhead");
-          } 
+          }
           // Check for Supplier
-          else if (subheadName === "supplier" || subheadName.includes("supplier")) {
+          else if (
+            subheadName === "supplier" ||
+            subheadName.includes("supplier")
+          ) {
             is_supplier = 1;
             console.log("Setting is_supplier = 1 for Supplier subhead");
           }
           // Note: Employee, Driver, Delivery Man, Salesman types are typically set via designation
-          
-          console.log("Account type flags:", { is_supplier, is_customer, is_employee, is_driver, is_delivery_man, is_salesman });
+
+          console.log("Account type flags:", {
+            is_supplier,
+            is_customer,
+            is_employee,
+            is_driver,
+            is_delivery_man,
+            is_salesman,
+          });
         }
 
         const createdAccount = await AccountsRepository.create(
@@ -365,7 +309,7 @@ class AccountsController {
             update_by: req_object.update_by,
             status: req_object.status,
           },
-          tx
+          tx,
         );
 
         // Create double-entry transactions if opening balance is provided and not zero
@@ -373,7 +317,11 @@ class AccountsController {
         // Determine balance type: if balance_type is provided, use it; otherwise infer from opening_balance sign
         // Negative opening_balance = credit scenario, Positive opening_balance = debit scenario
         let balanceType = req_object.balance_type;
-        if (!balanceType && openingBalance !== undefined && openingBalance !== null) {
+        if (
+          !balanceType &&
+          openingBalance !== undefined &&
+          openingBalance !== null
+        ) {
           // Infer from sign: negative = credit, positive = debit
           balanceType = openingBalance < 0 ? "credit" : "debit";
         }
@@ -391,18 +339,17 @@ class AccountsController {
         ) {
           const absoluteBalance = Math.abs(openingBalance);
           const isDebit = balanceType === "debit";
-          
+
           console.log("  isDebit:", isDebit);
           console.log("  absoluteBalance:", absoluteBalance);
-          
+
           console.log("  isDebit:", isDebit);
           console.log("  absoluteBalance:", absoluteBalance);
 
           // Find or create "Opening Balance" account
           // First, find the "Opening Balance" subhead (or create if needed)
-          let openingBalanceSubhead = await AccountSubHeadRepository.findByName(
-            "Opening Balance"
-          );
+          let openingBalanceSubhead =
+            await AccountSubHeadRepository.findByName("Opening Balance");
           let openingBalanceAccount = null;
 
           if (!openingBalanceSubhead) {
@@ -443,7 +390,7 @@ class AccountsController {
                 "Opening Balance",
                 openingBalanceSubhead.head_id,
                 openingBalanceSubhead.sub_id,
-                tx
+                tx,
               );
           }
 
@@ -451,9 +398,19 @@ class AccountsController {
             if (isDebit) {
               // Debit case: newAccount -> debit, openingBalance -> credit
               console.log("  Creating DEBIT transactions:");
-              console.log("    New Account:", createdAccount.acc_id, "- Debit:", absoluteBalance);
-              console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Credit:", absoluteBalance);
-              
+              console.log(
+                "    New Account:",
+                createdAccount.acc_id,
+                "- Debit:",
+                absoluteBalance,
+              );
+              console.log(
+                "    Opening Balance:",
+                openingBalanceAccount.acc_id,
+                "- Credit:",
+                absoluteBalance,
+              );
+
               // Transaction 1: New account (debit)
               await TransactionRepository.create(
                 {
@@ -468,7 +425,7 @@ class AccountsController {
                   insert_by: req_object.insert_by || "user 1",
                   update_by: req_object.update_by || "user 1",
                 },
-                tx
+                tx,
               );
 
               // Transaction 2: Opening Balance account (credit)
@@ -485,14 +442,24 @@ class AccountsController {
                   insert_by: req_object.insert_by || "user 1",
                   update_by: req_object.update_by || "user 1",
                 },
-                tx
+                tx,
               );
             } else {
               // Credit case: openingBalance -> debit, newAccount -> credit
               console.log("  Creating CREDIT transactions:");
-              console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Debit:", absoluteBalance);
-              console.log("    New Account:", createdAccount.acc_id, "- Credit:", absoluteBalance);
-              
+              console.log(
+                "    Opening Balance:",
+                openingBalanceAccount.acc_id,
+                "- Debit:",
+                absoluteBalance,
+              );
+              console.log(
+                "    New Account:",
+                createdAccount.acc_id,
+                "- Credit:",
+                absoluteBalance,
+              );
+
               // Transaction 1: Opening Balance account (debit)
               await TransactionRepository.create(
                 {
@@ -507,7 +474,7 @@ class AccountsController {
                   insert_by: req_object.insert_by || "user 1",
                   update_by: req_object.update_by || "user 1",
                 },
-                tx
+                tx,
               );
 
               // Transaction 2: New account (credit)
@@ -524,10 +491,10 @@ class AccountsController {
                   insert_by: req_object.insert_by || "user 1",
                   update_by: req_object.update_by || "user 1",
                 },
-                tx
+                tx,
               );
             }
-          } 
+          }
         }
 
         return createdAccount;
@@ -547,28 +514,28 @@ class AccountsController {
           acc_id: result.acc_id,
           account_id: result.account_id,
         },
-        "Account created successfully"
+        "Account created successfully",
       );
     } catch (err) {
       if (err.code === "P2002") {
         return errorResponse(
           new Error(
-            "Account with this combination already exists in Method: AccountsController.create"
+            "Account with this combination already exists in Method: AccountsController.create",
           ),
-          400
+          400,
         );
       }
       if (err.code === "P2003") {
         return errorResponse(
           new Error(
-            "Invalid head_id or sub_id - referenced records do not exist in Method: AccountsController.create"
+            "Invalid head_id or sub_id - referenced records do not exist in Method: AccountsController.create",
           ),
-          400
+          400,
         );
       }
       ErrorLogger.log(
         "Failed to create account in Method: AccountsController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -581,7 +548,7 @@ class AccountsController {
 
       if (!acc_id || !account_nam) {
         const error = new Error(
-          "acc_id, account_nam, and account_string are required in Method: AccountsController.update"
+          "acc_id, account_nam, and account_string are required in Method: AccountsController.update",
         );
         return errorResponse(error, 400);
       }
@@ -592,7 +559,7 @@ class AccountsController {
         const error = new Error("Account not found");
         ErrorLogger.log(
           "Failed to update account - account not found in Method: AccountsController.update",
-          error
+          error,
         );
         return errorResponse(error, 404);
       }
@@ -608,11 +575,11 @@ class AccountsController {
         });
         if (!head) {
           const error = new Error(
-            `Invalid head_id: ${head_id} - Account head does not exist`
+            `Invalid head_id: ${head_id} - Account head does not exist`,
           );
           ErrorLogger.log(
             "Failed to update account - invalid head_id in Method: AccountsController.update",
-            error
+            error,
           );
           return errorResponse(error, 400);
         }
@@ -624,11 +591,11 @@ class AccountsController {
         });
         if (!subhead) {
           const error = new Error(
-            `Invalid sub_id: ${sub_id} - Account sub-head does not exist`
+            `Invalid sub_id: ${sub_id} - Account sub-head does not exist`,
           );
           ErrorLogger.log(
             "Failed to update account - invalid sub_id in Method: AccountsController.update",
-            error
+            error,
           );
           return errorResponse(error, 400);
         }
@@ -636,11 +603,11 @@ class AccountsController {
         // Verify that subhead belongs to the specified head
         if (subhead.head_id !== Number(head_id)) {
           const error = new Error(
-            `Invalid combination: sub_id ${sub_id} does not belong to head_id ${head_id}`
+            `Invalid combination: sub_id ${sub_id} does not belong to head_id ${head_id}`,
           );
           ErrorLogger.log(
             "Failed to update account - head_id and sub_id mismatch in Method: AccountsController.update",
-            error
+            error,
           );
           return errorResponse(error, 400);
         }
@@ -650,15 +617,15 @@ class AccountsController {
       const duplicate = await AccountsRepository.checkDuplicate(
         account_nam,
         sub_id,
-        acc_id
+        acc_id,
       );
       if (duplicate) {
         const error = new Error(
-          "An account with this name already exists for this account type"
+          "An account with this name already exists for this account type",
         );
         ErrorLogger.log(
           "Failed to update account - duplicate name and type in Method: AccountsController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -681,8 +648,20 @@ class AccountsController {
 
           if (subhead) {
             const subheadName = subhead.subhead_nam.toLowerCase();
-            is_supplier = (subheadName === "former" || subheadName.includes("former") || subheadName === "supplier" || subheadName.includes("supplier")) ? 1 : 0;
-            is_customer = (subheadName === "purcher" || subheadName.includes("purcher") || subheadName === "customer" || subheadName.includes("customer")) ? 1 : 0;
+            is_supplier =
+              subheadName === "former" ||
+              subheadName.includes("former") ||
+              subheadName === "supplier" ||
+              subheadName.includes("supplier")
+                ? 1
+                : 0;
+            is_customer =
+              subheadName === "purcher" ||
+              subheadName.includes("purcher") ||
+              subheadName === "customer" ||
+              subheadName.includes("customer")
+                ? 1
+                : 0;
             is_employee = 0;
             is_driver = 0;
             is_delivery_man = 0;
@@ -708,7 +687,11 @@ class AccountsController {
         // Determine balance type: if balance_type is provided, use it; otherwise infer from opening_balance sign
         // Negative opening_balance = credit scenario, Positive opening_balance = debit scenario
         let balanceType = req_object.balance_type;
-        if (!balanceType && openingBalance !== undefined && openingBalance !== null) {
+        if (
+          !balanceType &&
+          openingBalance !== undefined &&
+          openingBalance !== null
+        ) {
           // Infer from sign: negative = credit, positive = debit
           balanceType = openingBalance < 0 ? "credit" : "debit";
         }
@@ -736,14 +719,13 @@ class AccountsController {
         ) {
           const absoluteBalance = Math.abs(openingBalance);
           const isDebit = balanceType === "debit";
-          
+
           console.log("  isDebit:", isDebit);
           console.log("  absoluteBalance:", absoluteBalance);
 
           // Find or create "Opening Balance" account
-          let openingBalanceSubhead = await AccountSubHeadRepository.findByName(
-            "Opening Balance"
-          );
+          let openingBalanceSubhead =
+            await AccountSubHeadRepository.findByName("Opening Balance");
           let openingBalanceAccount = null;
 
           if (!openingBalanceSubhead) {
@@ -781,7 +763,7 @@ class AccountsController {
                 "Opening Balance",
                 openingBalanceSubhead.head_id,
                 openingBalanceSubhead.sub_id,
-                tx
+                tx,
               );
           }
 
@@ -805,9 +787,23 @@ class AccountsController {
               // When debit: newAccount -> debit, openingBalance -> credit
               // When credit: newAccount -> credit, openingBalance -> debit
               console.log("  Updating existing transactions:");
-              console.log("    New Account:", acc_id, "- Debit:", isDebit ? absoluteBalance : 0, "- Credit:", isDebit ? 0 : absoluteBalance);
-              console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Debit:", isDebit ? 0 : absoluteBalance, "- Credit:", isDebit ? absoluteBalance : 0);
-              
+              console.log(
+                "    New Account:",
+                acc_id,
+                "- Debit:",
+                isDebit ? absoluteBalance : 0,
+                "- Credit:",
+                isDebit ? 0 : absoluteBalance,
+              );
+              console.log(
+                "    Opening Balance:",
+                openingBalanceAccount.acc_id,
+                "- Debit:",
+                isDebit ? 0 : absoluteBalance,
+                "- Credit:",
+                isDebit ? absoluteBalance : 0,
+              );
+
               await tx.transaction.update({
                 where: { t_id: existingAccountTransaction.t_id },
                 data: {
@@ -847,14 +843,34 @@ class AccountsController {
               // When credit: newAccount -> credit, openingBalance -> debit
               if (isDebit) {
                 console.log("  Creating new DEBIT transactions:");
-                console.log("    New Account:", acc_id, "- Debit:", absoluteBalance);
-                console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Credit:", absoluteBalance);
+                console.log(
+                  "    New Account:",
+                  acc_id,
+                  "- Debit:",
+                  absoluteBalance,
+                );
+                console.log(
+                  "    Opening Balance:",
+                  openingBalanceAccount.acc_id,
+                  "- Credit:",
+                  absoluteBalance,
+                );
               } else {
                 console.log("  Creating new CREDIT transactions:");
-                console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Debit:", absoluteBalance);
-                console.log("    New Account:", acc_id, "- Credit:", absoluteBalance);
+                console.log(
+                  "    Opening Balance:",
+                  openingBalanceAccount.acc_id,
+                  "- Debit:",
+                  absoluteBalance,
+                );
+                console.log(
+                  "    New Account:",
+                  acc_id,
+                  "- Credit:",
+                  absoluteBalance,
+                );
               }
-              
+
               // Transaction 1: Opening Balance account
               await TransactionRepository.create(
                 {
@@ -869,7 +885,7 @@ class AccountsController {
                   insert_by: req_object.update_by || "user 1",
                   update_by: req_object.update_by || "user 1",
                 },
-                tx
+                tx,
               );
 
               // Transaction 2: Account
@@ -886,7 +902,7 @@ class AccountsController {
                   insert_by: req_object.update_by || "user 1",
                   update_by: req_object.update_by || "user 1",
                 },
-                tx
+                tx,
               );
             }
           } else {
@@ -915,7 +931,7 @@ class AccountsController {
                   insert_by: req_object.update_by || "user 1",
                   update_by: req_object.update_by || "user 1",
                 },
-                tx
+                tx,
               );
             }
           }
@@ -937,7 +953,7 @@ class AccountsController {
               await AccountsRepository.findByAccountNameAndSubheadName(
                 "Opening Balance",
                 "Opening Balance",
-                tx
+                tx,
               );
 
             if (openingBalanceAccount) {
@@ -984,13 +1000,13 @@ class AccountsController {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update account in Method: AccountsController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Account not found"), 404);
       }
       ErrorLogger.log(
         "Failed to update account in Method: AccountsController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -1004,7 +1020,7 @@ class AccountsController {
       if (!acc_id) {
         ErrorLogger.log(
           "Failed to delete account in Method: AccountsController.delete",
-          new Error("acc_id is required")
+          new Error("acc_id is required"),
         );
         return errorResponse(new Error("acc_id is required"), 400);
       }
@@ -1015,19 +1031,17 @@ class AccountsController {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to delete account in Method: AccountsController.delete",
-          err
+          err,
         );
         return errorResponse(new Error("Account not found"), 404);
       }
       ErrorLogger.log(
         "Failed to delete account in Method: AccountsController.delete",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
   }
-
-  
 }
 
 export default new AccountsController();
