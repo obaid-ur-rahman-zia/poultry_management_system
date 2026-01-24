@@ -40,6 +40,14 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Combobox } from "@/components/ui/combobox";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function UnitExpensePage() {
     const {
@@ -96,6 +104,12 @@ export default function UnitExpensePage() {
     const [filterFloc, setFilterFloc] = useState("all");
     const [filterDate, setFilterDate] = useState("");
     const [isMobile, setIsMobile] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
 
     const selectedUnit = watch("prounit_id");
     const selectedSupplier = watch("supplier_id");
@@ -315,7 +329,7 @@ export default function UnitExpensePage() {
 
             const result = await response.json();
             if (result.response_status === "success") {
-                toast.success("Supplier created successfully");
+                toast.success("Former created successfully");
                 // Clear cache and refresh suppliers list
                 await fetchSuppliers();
                 // Get acc_id from response - could be in result.response_result or result.response_result.acc_id
@@ -332,22 +346,36 @@ export default function UnitExpensePage() {
                     supplier_company_id: "",
                 });
             } else {
-                toast.error(result.response_message || "Failed to create supplier");
+                toast.error(result.response_message || "Failed to create former");
             }
         } catch (error) {
-            console.error("Error creating supplier:", error);
-            toast.error("Failed to create supplier");
+            console.error("Error creating former:", error);
+            toast.error("Failed to create former");
         }
     };
 
-    const fetchExpenses = async () => {
+    const fetchExpenses = async (page = currentPage, limit = itemsPerPage) => {
         setLoading(true);
         try {
-            const response = await fetch("/api/unitExpense/readAll");
+            const response = await fetch(`/api/unitExpense/readAll?page=${page}&limit=${limit}`);
             const result = await response.json();
             if (result.response_status === "success") {
-                const expensesData = result.response_result?.data || result.response_result || [];
-                setExpenses(expensesData);
+                const responseData = result.response_result;
+                
+                // Handle paginated response
+                if (responseData?.pagination) {
+                    const expensesData = responseData.data || [];
+                    setExpenses(expensesData);
+                    setTotalPages(responseData.pagination.totalPages || 1);
+                    setTotalItems(responseData.pagination.total || 0);
+                    setCurrentPage(responseData.pagination.page || page);
+                } else {
+                    // Fallback for non-paginated response
+                    const expensesData = responseData?.data || responseData || [];
+                    setExpenses(expensesData);
+                    setTotalPages(1);
+                    setTotalItems(expensesData.length);
+                }
             } else {
                 toast.error(result.response_message || "Failed to fetch expenses");
             }
@@ -457,7 +485,7 @@ export default function UnitExpensePage() {
             const result = await response.json();
             if (result.response_status === "success") {
                 toast.success(isEditMode ? "Expense updated successfully" : "Expense created successfully");
-                fetchExpenses();
+                fetchExpenses(currentPage, itemsPerPage);
                 reset({
                     expense_date: new Date().toISOString().split('T')[0],
                     prounit_id: "",
@@ -521,7 +549,7 @@ export default function UnitExpensePage() {
             const result = await response.json();
             if (result.response_status === "success") {
                 toast.success("Expense deleted successfully");
-                fetchExpenses();
+                fetchExpenses(currentPage, itemsPerPage);
             } else {
                 toast.error(result.response_message || "Failed to delete expense");
             }
@@ -531,7 +559,7 @@ export default function UnitExpensePage() {
         }
     };
 
-    // Filter expenses
+    // Filter expenses (client-side filtering on paginated data)
     const filteredExpenses = expenses.filter((expense) => {
         const prounitId = expense.prounit_id || expense.farm_id || expense.unit?.prounit_id;
         const unitName = expense.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === prounitId)?.prounit_nam);
@@ -552,6 +580,21 @@ export default function UnitExpensePage() {
 
         return matchesSearch && matchesUnit && matchesFloc && matchesDate;
     });
+
+    // Reset to page 1 when filters change and refetch
+    useEffect(() => {
+        if (currentPage !== 1) {
+            setCurrentPage(1);
+        } else {
+            fetchExpenses(1, itemsPerPage);
+        }
+    }, [searchQuery, filterUnit, filterFloc, filterDate]);
+
+    // Fetch expenses when page or itemsPerPage changes
+    useEffect(() => {
+        fetchExpenses(currentPage, itemsPerPage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage]);
 
     const totalAmount = calculateTotal();
 
@@ -639,14 +682,14 @@ export default function UnitExpensePage() {
                                 )}
                             </div>
 
-                            {/* Supplier Selection */}
+                            {/* Former Selection */}
                             <div className="space-y-2">
-                                <Label htmlFor="supplier_id">Supplier *</Label>
+                                <Label htmlFor="supplier_id">Former *</Label>
                                 <div className="flex gap-2">
                                     <Controller
                                         name="supplier_id"
                                         control={control}
-                                        rules={{ required: "Supplier is required" }}
+                                        rules={{ required: "Former is required" }}
                                         render={({ field }) => (
                                             <div className="flex-1">
                                                 <Combobox
@@ -656,9 +699,9 @@ export default function UnitExpensePage() {
                                                     })) : []}
                                                     value={field.value}
                                                     onValueChange={field.onChange}
-                                                    placeholder="Select supplier"
-                                                    searchPlaceholder="Search suppliers..."
-                                                    emptyText="No supplier found."
+                                                    placeholder="Select former"
+                                                    searchPlaceholder="Search formers..."
+                                                    emptyText="No former found."
                                                 />
                                             </div>
                                         )}
@@ -677,7 +720,7 @@ export default function UnitExpensePage() {
                                         {errors.supplier_id.message}
                                     </p>
                                 )}
-                                {/* Supplier Balance Display */}
+                                {/* Former Balance Display */}
                                 <div className="flex gap-2 items-center">
                                     <Button
                                         type="button"
@@ -987,7 +1030,7 @@ export default function UnitExpensePage() {
                             </div>
                         ) : isMobile ? (
                             <div className="space-y-3">
-                                {filteredExpenses.map((expense) => (
+                                {paginatedExpenses.map((expense) => (
                                     <Card key={expense.expense_id} className="border">
                                         <CardContent className="p-4 space-y-2">
                                             <div className="flex items-center justify-between">
@@ -1072,7 +1115,7 @@ export default function UnitExpensePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredExpenses.map((expense) => (
+                                            {paginatedExpenses.map((expense) => (
                                                 <tr key={expense.expense_id} className="hover:bg-muted/50 border-b transition-colors">
                                                     <td className="p-2 align-middle whitespace-nowrap">
                                                         {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "N/A"}
@@ -1125,27 +1168,103 @@ export default function UnitExpensePage() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Pagination */}
+                        {totalItems > 0 && totalPages > 1 && (
+                            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                                    <Select
+                                        value={itemsPerPage.toString()}
+                                        onValueChange={(value) => {
+                                            setItemsPerPage(Number(value));
+                                            setCurrentPage(1);
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-20">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="5">5</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                onClick={() => {
+                                                    const newPage = Math.max(1, currentPage - 1);
+                                                    setCurrentPage(newPage);
+                                                    fetchExpenses(newPage, itemsPerPage);
+                                                }}
+                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+                                            return (
+                                                <PaginationItem key={pageNum}>
+                                                    <PaginationLink
+                                                        onClick={() => setCurrentPage(pageNum)}
+                                                        isActive={currentPage === pageNum}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        {pageNum}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            );
+                                        })}
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                onClick={() => {
+                                                    const newPage = Math.min(totalPages, currentPage + 1);
+                                                    setCurrentPage(newPage);
+                                                    fetchExpenses(newPage, itemsPerPage);
+                                                }}
+                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                                <div className="text-sm text-muted-foreground">
+                                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} expenses
+                                </div>
+                            </div>
+                        )}
                     </MobileListToggle>
                 </CardContent>
             </Card>
 
-            {/* Create Supplier Dialog */}
+            {/* Create Former Dialog */}
             <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
                 <DialogContent className="max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Create New Supplier</DialogTitle>
+                        <DialogTitle>Create New Former</DialogTitle>
                         <DialogDescription>
-                            Create a new supplier account. The supplier will be created with is_supplier flag set to true.
+                            Create a new former account. The former will be created with is_supplier flag set to true.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label htmlFor="supplier_name">Supplier Name *</Label>
+                            <Label htmlFor="supplier_name">Former Name *</Label>
                             <Input
                                 id="supplier_name"
                                 value={supplierFormData.supplier_name}
                                 onChange={(e) => setSupplierFormData({ ...supplierFormData, supplier_name: e.target.value })}
-                                placeholder="Enter supplier name"
+                                placeholder="Enter former name"
                             />
                         </div>
                         <div className="space-y-2">
@@ -1228,7 +1347,7 @@ export default function UnitExpensePage() {
                             Cancel
                         </Button>
                         <Button type="button" onClick={handleCreateSupplier}>
-                            Create Supplier
+                            Create Former
                         </Button>
                     </DialogFooter>
                 </DialogContent>

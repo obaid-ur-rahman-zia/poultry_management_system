@@ -10,60 +10,100 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 class AccountsController {
-   async readAll() {
+  async readAll(req) {
     const cacheKey = "accounts:all";
     try {
+      // Extract pagination params
+      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const getAll = searchParams.get("all") === "true";
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "10");
+      const skip = (page - 1) * limit;
+
       // Get logged-in user session
-      // const session = await getServerSession(authOptions);
-      // let userCashInHandAccountId = null;
+      const session = await getServerSession(authOptions);
+      let userCashInHandAccountId = null;
 
-      // if (session && session.user?.id) {
-      //   const userId = parseInt(session.user.id);
-      //   const user = await UserRepository.readById(userId);
-      //   if (user && user.cash_in_hand_account_id) {
-      //     userCashInHandAccountId = user.cash_in_hand_account_id;
-      //   }
-      // }
+      if (session && session.user?.id) {
+        const userId = parseInt(session.user.id);
+        const user = await UserRepository.readById(userId);
+        if (user && user.cash_in_hand_account_id) {
+          userCashInHandAccountId = user.cash_in_hand_account_id;
+        }
+      }
 
-      // // Find "Cash In Hand" subhead
-      // const cashInHandSubhead = await AccountSubHeadRepository.findByName(
-      //   "Cash In Hand"
-      // );
-      // const cashInHandSubId = cashInHandSubhead?.sub_id || null;
+      // Find "Cash In Hand" subhead
+      const cashInHandSubhead = await AccountSubHeadRepository.findByName(
+        "Cash In Hand"
+      );
+      const cashInHandSubId = cashInHandSubhead?.sub_id || null;
 
-      // // Get all accounts
-      // const allAccounts = await AccountsRepository.readAll();
+      // If getAll is true, fetch all accounts without pagination
+      let allAccounts, total;
+      if (getAll) {
+        allAccounts = await AccountsRepository.readAll();
+        total = allAccounts.length;
+      } else {
+        // Get total count and paginated accounts
+        const result = await AccountsRepository.readAllWithPagination(skip, limit);
+        allAccounts = result.data;
+        total = result.total;
+      }
 
-      // // Filter accounts based on user's cash in hand account
-      // let filteredAccounts = allAccounts;
+      // Filter accounts based on user's cash in hand account
+      let filteredAccounts = allAccounts;
+      let filteredTotal = total;
 
-      // if (userCashInHandAccountId && cashInHandSubId) {
-      //   // filteredAccounts = allAccounts.filter((account) => {
-      //   //   // If account is from "Cash In Hand" subhead, only show user's cash in hand account
-      //   //   if (account.sub_id === cashInHandSubId) {
-      //   //     return account.acc_id === userCashInHandAccountId;
-      //   //   }
-      //   //   // For all other subheads, show all accounts
-      //   //   return true;
-      //   // });
+      if (userCashInHandAccountId && cashInHandSubId) {
+        filteredAccounts = allAccounts;
+        filteredTotal = total;
+      }
 
-      //   filteredAccounts = allAccounts;
-      // }
+      // Use cache key with user ID and pagination to avoid cache conflicts
+      const userCacheKey = getAll
+        ? (userCashInHandAccountId
+            ? `accounts:all:user:${userCashInHandAccountId}:all`
+            : `${cacheKey}:all`)
+        : (userCashInHandAccountId
+            ? `accounts:all:user:${userCashInHandAccountId}:page:${page}:limit:${limit}`
+            : `${cacheKey}:page:${page}:limit:${limit}`);
 
-      // // Use cache key with user ID to avoid cache conflicts
-      // const userCacheKey = userCashInHandAccountId
-      //   ? `accounts:all:user:${userCashInHandAccountId}`
-      //   : cacheKey;
-
-      const cachedData = await RedisService.get(cacheKey);
+      const cachedData = await RedisService.get(userCacheKey);
       if (cachedData) {
         console.log("Account Cache Hit");
         return successResponse(cachedData, "Success");
       }
       console.log("Account Cache Miss");
-      const filteredAccounts = await AccountsRepository.readAll();
-      await RedisService.setex(cacheKey, 300, JSON.stringify(filteredAccounts));
-      return successResponse(filteredAccounts, "Success");
+
+      // If getAll, return all accounts without pagination structure
+      if (getAll) {
+        const response = {
+          data: filteredAccounts,
+        };
+        await RedisService.setex(
+          userCacheKey,
+          300,
+          JSON.stringify(response)
+        );
+        return successResponse(response, "Success");
+      }
+
+      const paginatedResponse = {
+        data: filteredAccounts,
+        pagination: {
+          page,
+          limit,
+          total: filteredTotal,
+          totalPages: Math.ceil(filteredTotal / limit),
+        },
+      };
+
+      await RedisService.setex(
+        userCacheKey,
+        300,
+        JSON.stringify(paginatedResponse)
+      );
+      return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all accounts in Method: AccountsController.readAll",
@@ -203,6 +243,47 @@ class AccountsController {
         return errorResponse(error, 400);
       }
 
+      // Validate that head_id and sub_id exist
+      const head = await prisma.account_head.findUnique({
+        where: { head_id: Number(head_id) },
+      });
+      if (!head) {
+        const error = new Error(
+          `Invalid head_id: ${head_id} - Account head does not exist`
+        );
+        ErrorLogger.log(
+          "Failed to create account - invalid head_id in Method: AccountsController.create",
+          error
+        );
+        return errorResponse(error, 400);
+      }
+
+      const subhead = await prisma.account_sub_head.findUnique({
+        where: { sub_id: Number(sub_id) },
+      });
+      if (!subhead) {
+        const error = new Error(
+          `Invalid sub_id: ${sub_id} - Account sub-head does not exist`
+        );
+        ErrorLogger.log(
+          "Failed to create account - invalid sub_id in Method: AccountsController.create",
+          error
+        );
+        return errorResponse(error, 400);
+      }
+
+      // Verify that subhead belongs to the specified head
+      if (subhead.head_id !== Number(head_id)) {
+        const error = new Error(
+          `Invalid combination: sub_id ${sub_id} does not belong to head_id ${head_id}`
+        );
+        ErrorLogger.log(
+          "Failed to create account - head_id and sub_id mismatch in Method: AccountsController.create",
+          error
+        );
+        return errorResponse(error, 400);
+      }
+
       // Check for duplicate account name with same account type (sub_id)
       const duplicate = await AccountsRepository.checkDuplicate(
         account_nam,
@@ -221,6 +302,48 @@ class AccountsController {
 
       // Use transaction to ensure both account and transaction are created together
       const result = await prisma.$transaction(async (tx) => {
+        // Get subhead to determine account type (already validated above, but fetch again in transaction)
+        const subheadInTx = await tx.account_sub_head.findUnique({
+          where: { sub_id: sub_id },
+        });
+
+        // Determine account type flags based on subhead name
+        let is_supplier = 0;
+        let is_customer = 0;
+        let is_employee = 0;
+        let is_driver = 0;
+        let is_delivery_man = 0;
+        let is_salesman = 0;
+
+        if (subheadInTx) {
+          const subheadName = subheadInTx.subhead_nam.toLowerCase().trim();
+          console.log("Subhead name:", subheadName, "Original:", subheadInTx.subhead_nam);
+          
+          // Check for Former (Supplier)
+          if (subheadName === "former" || subheadName.includes("former")) {
+            is_supplier = 1;
+            console.log("Setting is_supplier = 1 for Former subhead");
+          } 
+          // Check for Purcher (Customer)
+          else if (subheadName === "purcher" || subheadName.includes("purcher")) {
+            is_customer = 1;
+            console.log("Setting is_customer = 1 for Purcher subhead");
+          } 
+          // Check for Customer
+          else if (subheadName === "customer" || subheadName.includes("customer")) {
+            is_customer = 1;
+            console.log("Setting is_customer = 1 for Customer subhead");
+          } 
+          // Check for Supplier
+          else if (subheadName === "supplier" || subheadName.includes("supplier")) {
+            is_supplier = 1;
+            console.log("Setting is_supplier = 1 for Supplier subhead");
+          }
+          // Note: Employee, Driver, Delivery Man, Salesman types are typically set via designation
+          
+          console.log("Account type flags:", { is_supplier, is_customer, is_employee, is_driver, is_delivery_man, is_salesman });
+        }
+
         const createdAccount = await AccountsRepository.create(
           {
             head_id,
@@ -232,6 +355,12 @@ class AccountsController {
             account_cnic: req_object.account_cnic,
             account_alter_nam: req_object.account_alter_nam,
             account_no: req_object.account_no,
+            is_supplier,
+            is_customer,
+            is_employee,
+            is_driver,
+            is_delivery_man,
+            is_salesman,
             insert_by: req_object.insert_by,
             update_by: req_object.update_by,
             status: req_object.status,
@@ -241,7 +370,19 @@ class AccountsController {
 
         // Create double-entry transactions if opening balance is provided and not zero
         const openingBalance = req_object.opening_balance;
-        const balanceType = req_object.balance_type || "credit"; // "debit" or "credit"
+        // Determine balance type: if balance_type is provided, use it; otherwise infer from opening_balance sign
+        // Negative opening_balance = credit scenario, Positive opening_balance = debit scenario
+        let balanceType = req_object.balance_type;
+        if (!balanceType && openingBalance !== undefined && openingBalance !== null) {
+          // Infer from sign: negative = credit, positive = debit
+          balanceType = openingBalance < 0 ? "credit" : "debit";
+        }
+        balanceType = (balanceType || "credit").toLowerCase().trim(); // "debit" or "credit"
+
+        console.log("Opening Balance Transaction - CREATE:");
+        console.log("  openingBalance:", openingBalance);
+        console.log("  balanceType (raw):", req_object.balance_type);
+        console.log("  balanceType (inferred/used):", balanceType);
 
         if (
           openingBalance !== undefined &&
@@ -250,6 +391,12 @@ class AccountsController {
         ) {
           const absoluteBalance = Math.abs(openingBalance);
           const isDebit = balanceType === "debit";
+          
+          console.log("  isDebit:", isDebit);
+          console.log("  absoluteBalance:", absoluteBalance);
+          
+          console.log("  isDebit:", isDebit);
+          console.log("  absoluteBalance:", absoluteBalance);
 
           // Find or create "Opening Balance" account
           // First, find the "Opening Balance" subhead (or create if needed)
@@ -301,57 +448,86 @@ class AccountsController {
           }
 
           if (openingBalanceAccount) {
-            // Transaction 1: Opening Balance account
-            await TransactionRepository.create(
-              {
-                acc_id: openingBalanceAccount.acc_id,
-                reference_id: createdAccount.acc_id,
-                reference: "Opening Balance",
-                debit: isDebit ? absoluteBalance : 0,
-                credit: isDebit ? 0 : absoluteBalance,
-                remarks: `Opening balance for account: ${account_nam.trim()}`,
-                financial_year: new Date().getFullYear().toString(),
-                voucher_type: "OB",
-                insert_by: req_object.insert_by || "user 1",
-                update_by: req_object.update_by || "user 1",
-              },
-              tx
-            );
+            if (isDebit) {
+              // Debit case: newAccount -> debit, openingBalance -> credit
+              console.log("  Creating DEBIT transactions:");
+              console.log("    New Account:", createdAccount.acc_id, "- Debit:", absoluteBalance);
+              console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Credit:", absoluteBalance);
+              
+              // Transaction 1: New account (debit)
+              await TransactionRepository.create(
+                {
+                  acc_id: createdAccount.acc_id,
+                  reference_id: createdAccount.acc_id,
+                  reference: "Opening Balance",
+                  debit: absoluteBalance,
+                  credit: 0,
+                  remarks: `Opening balance for account: ${account_nam.trim()}`,
+                  financial_year: new Date().getFullYear().toString(),
+                  voucher_type: "OB",
+                  insert_by: req_object.insert_by || "user 1",
+                  update_by: req_object.update_by || "user 1",
+                },
+                tx
+              );
 
-            // Transaction 2: New account (inverse)
-            await TransactionRepository.create(
-              {
-                acc_id: createdAccount.acc_id,
-                reference_id: createdAccount.acc_id,
-                reference: "Opening Balance",
-                debit: isDebit ? 0 : absoluteBalance,
-                credit: isDebit ? absoluteBalance : 0,
-                remarks: `Opening balance for account: ${account_nam.trim()}`,
-                financial_year: new Date().getFullYear().toString(),
-                voucher_type: "OB",
-                insert_by: req_object.insert_by || "user 1",
-                update_by: req_object.update_by || "user 1",
-              },
-              tx
-            );
-          } else {
-            // Fallback: Create single transaction if Opening Balance account not found/created
-            await TransactionRepository.create(
-              {
-                acc_id: createdAccount.acc_id,
-                reference_id: createdAccount.acc_id,
-                reference: "Opening Balance",
-                debit: isDebit ? absoluteBalance : 0,
-                credit: isDebit ? 0 : absoluteBalance,
-                remarks: `Opening balance for account: ${account_nam.trim()}`,
-                financial_year: new Date().getFullYear().toString(),
-                voucher_type: "OB",
-                insert_by: req_object.insert_by || "user 1",
-                update_by: req_object.update_by || "user 1",
-              },
-              tx
-            );
-          }
+              // Transaction 2: Opening Balance account (credit)
+              await TransactionRepository.create(
+                {
+                  acc_id: openingBalanceAccount.acc_id,
+                  reference_id: createdAccount.acc_id,
+                  reference: "Opening Balance",
+                  debit: 0,
+                  credit: absoluteBalance,
+                  remarks: `Opening balance for account: ${account_nam.trim()}`,
+                  financial_year: new Date().getFullYear().toString(),
+                  voucher_type: "OB",
+                  insert_by: req_object.insert_by || "user 1",
+                  update_by: req_object.update_by || "user 1",
+                },
+                tx
+              );
+            } else {
+              // Credit case: openingBalance -> debit, newAccount -> credit
+              console.log("  Creating CREDIT transactions:");
+              console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Debit:", absoluteBalance);
+              console.log("    New Account:", createdAccount.acc_id, "- Credit:", absoluteBalance);
+              
+              // Transaction 1: Opening Balance account (debit)
+              await TransactionRepository.create(
+                {
+                  acc_id: openingBalanceAccount.acc_id,
+                  reference_id: createdAccount.acc_id,
+                  reference: "Opening Balance",
+                  debit: absoluteBalance,
+                  credit: 0,
+                  remarks: `Opening balance for account: ${account_nam.trim()}`,
+                  financial_year: new Date().getFullYear().toString(),
+                  voucher_type: "OB",
+                  insert_by: req_object.insert_by || "user 1",
+                  update_by: req_object.update_by || "user 1",
+                },
+                tx
+              );
+
+              // Transaction 2: New account (credit)
+              await TransactionRepository.create(
+                {
+                  acc_id: createdAccount.acc_id,
+                  reference_id: createdAccount.acc_id,
+                  reference: "Opening Balance",
+                  debit: 0,
+                  credit: absoluteBalance,
+                  remarks: `Opening balance for account: ${account_nam.trim()}`,
+                  financial_year: new Date().getFullYear().toString(),
+                  voucher_type: "OB",
+                  insert_by: req_object.insert_by || "user 1",
+                  update_by: req_object.update_by || "user 1",
+                },
+                tx
+              );
+            }
+          } 
         }
 
         return createdAccount;
@@ -359,6 +535,13 @@ class AccountsController {
 
       await RedisService.del("accounts:all");
       await RedisService.del("transactions:all");
+      // Clear supplier and customer caches if account type is set
+      if (result.is_supplier === 1) {
+        await RedisService.del("suppliers:all");
+      }
+      if (result.is_customer === 1) {
+        await RedisService.del("customers:all");
+      }
       return successResponse(
         {
           acc_id: result.acc_id,
@@ -414,8 +597,54 @@ class AccountsController {
         return errorResponse(error, 404);
       }
 
-      // Use sub_id from request or current account
+      // Use sub_id and head_id from request or current account
       const sub_id = req_object.sub_id || currentAccount.sub_id;
+      const head_id = req_object.head_id || currentAccount.head_id;
+
+      // Validate head_id and sub_id if they are being changed
+      if (req_object.head_id) {
+        const head = await prisma.account_head.findUnique({
+          where: { head_id: Number(head_id) },
+        });
+        if (!head) {
+          const error = new Error(
+            `Invalid head_id: ${head_id} - Account head does not exist`
+          );
+          ErrorLogger.log(
+            "Failed to update account - invalid head_id in Method: AccountsController.update",
+            error
+          );
+          return errorResponse(error, 400);
+        }
+      }
+
+      if (req_object.sub_id) {
+        const subhead = await prisma.account_sub_head.findUnique({
+          where: { sub_id: Number(sub_id) },
+        });
+        if (!subhead) {
+          const error = new Error(
+            `Invalid sub_id: ${sub_id} - Account sub-head does not exist`
+          );
+          ErrorLogger.log(
+            "Failed to update account - invalid sub_id in Method: AccountsController.update",
+            error
+          );
+          return errorResponse(error, 400);
+        }
+
+        // Verify that subhead belongs to the specified head
+        if (subhead.head_id !== Number(head_id)) {
+          const error = new Error(
+            `Invalid combination: sub_id ${sub_id} does not belong to head_id ${head_id}`
+          );
+          ErrorLogger.log(
+            "Failed to update account - head_id and sub_id mismatch in Method: AccountsController.update",
+            error
+          );
+          return errorResponse(error, 400);
+        }
+      }
 
       // Check for duplicate account name with same account type (sub_id), excluding current account
       const duplicate = await AccountsRepository.checkDuplicate(
@@ -436,11 +665,59 @@ class AccountsController {
 
       // Use transaction to ensure both account and transaction are updated together
       const result = await prisma.$transaction(async (tx) => {
-        const updated = await AccountsRepository.update(acc_id, req_object, tx);
+        // Get subhead to determine account type if sub_id is being updated
+        let is_supplier = currentAccount.is_supplier || 0;
+        let is_customer = currentAccount.is_customer || 0;
+        let is_employee = currentAccount.is_employee || 0;
+        let is_driver = currentAccount.is_driver || 0;
+        let is_delivery_man = currentAccount.is_delivery_man || 0;
+        let is_salesman = currentAccount.is_salesman || 0;
+
+        // If sub_id is being updated, recalculate account type flags
+        if (req_object.sub_id && req_object.sub_id !== currentAccount.sub_id) {
+          const subhead = await tx.account_sub_head.findUnique({
+            where: { sub_id: req_object.sub_id },
+          });
+
+          if (subhead) {
+            const subheadName = subhead.subhead_nam.toLowerCase();
+            is_supplier = (subheadName === "former" || subheadName.includes("former") || subheadName === "supplier" || subheadName.includes("supplier")) ? 1 : 0;
+            is_customer = (subheadName === "purcher" || subheadName.includes("purcher") || subheadName === "customer" || subheadName.includes("customer")) ? 1 : 0;
+            is_employee = 0;
+            is_driver = 0;
+            is_delivery_man = 0;
+            is_salesman = 0;
+          }
+        }
+
+        // Update account with account type flags
+        const updateData = {
+          ...req_object,
+          is_supplier,
+          is_customer,
+          is_employee,
+          is_driver,
+          is_delivery_man,
+          is_salesman,
+        };
+
+        const updated = await AccountsRepository.update(acc_id, updateData, tx);
 
         // Handle opening balance transaction (double-entry)
         const openingBalance = req_object.opening_balance;
-        const balanceType = req_object.balance_type || "credit";
+        // Determine balance type: if balance_type is provided, use it; otherwise infer from opening_balance sign
+        // Negative opening_balance = credit scenario, Positive opening_balance = debit scenario
+        let balanceType = req_object.balance_type;
+        if (!balanceType && openingBalance !== undefined && openingBalance !== null) {
+          // Infer from sign: negative = credit, positive = debit
+          balanceType = openingBalance < 0 ? "credit" : "debit";
+        }
+        balanceType = (balanceType || "credit").toLowerCase().trim(); // "debit" or "credit"
+
+        console.log("Opening Balance Transaction - UPDATE:");
+        console.log("  openingBalance:", openingBalance);
+        console.log("  balanceType (raw):", req_object.balance_type);
+        console.log("  balanceType (inferred/used):", balanceType);
 
         // Find existing opening balance transactions (both accounts)
         const existingAccountTransaction = await tx.transaction.findFirst({
@@ -459,6 +736,9 @@ class AccountsController {
         ) {
           const absoluteBalance = Math.abs(openingBalance);
           const isDebit = balanceType === "debit";
+          
+          console.log("  isDebit:", isDebit);
+          console.log("  absoluteBalance:", absoluteBalance);
 
           // Find or create "Opening Balance" account
           let openingBalanceSubhead = await AccountSubHeadRepository.findByName(
@@ -522,11 +802,17 @@ class AccountsController {
               existingOpeningBalanceTransaction
             ) {
               // Update both transactions
+              // When debit: newAccount -> debit, openingBalance -> credit
+              // When credit: newAccount -> credit, openingBalance -> debit
+              console.log("  Updating existing transactions:");
+              console.log("    New Account:", acc_id, "- Debit:", isDebit ? absoluteBalance : 0, "- Credit:", isDebit ? 0 : absoluteBalance);
+              console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Debit:", isDebit ? 0 : absoluteBalance, "- Credit:", isDebit ? absoluteBalance : 0);
+              
               await tx.transaction.update({
                 where: { t_id: existingAccountTransaction.t_id },
                 data: {
-                  debit: isDebit ? 0 : absoluteBalance,
-                  credit: isDebit ? absoluteBalance : 0,
+                  debit: isDebit ? absoluteBalance : 0,
+                  credit: isDebit ? 0 : absoluteBalance,
                   remarks: `Opening balance for account: ${account_nam.trim()}`,
                   update_by: req_object.update_by || "user 1",
                 },
@@ -535,8 +821,8 @@ class AccountsController {
               await tx.transaction.update({
                 where: { t_id: existingOpeningBalanceTransaction.t_id },
                 data: {
-                  debit: isDebit ? absoluteBalance : 0,
-                  credit: isDebit ? 0 : absoluteBalance,
+                  debit: isDebit ? 0 : absoluteBalance,
+                  credit: isDebit ? absoluteBalance : 0,
                   remarks: `Opening balance for account: ${account_nam.trim()}`,
                   update_by: req_object.update_by || "user 1",
                 },
@@ -557,14 +843,26 @@ class AccountsController {
               }
 
               // Create new double-entry transactions
+              // When debit: newAccount -> debit, openingBalance -> credit
+              // When credit: newAccount -> credit, openingBalance -> debit
+              if (isDebit) {
+                console.log("  Creating new DEBIT transactions:");
+                console.log("    New Account:", acc_id, "- Debit:", absoluteBalance);
+                console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Credit:", absoluteBalance);
+              } else {
+                console.log("  Creating new CREDIT transactions:");
+                console.log("    Opening Balance:", openingBalanceAccount.acc_id, "- Debit:", absoluteBalance);
+                console.log("    New Account:", acc_id, "- Credit:", absoluteBalance);
+              }
+              
               // Transaction 1: Opening Balance account
               await TransactionRepository.create(
                 {
                   acc_id: openingBalanceAccount.acc_id,
                   reference_id: Number(acc_id),
                   reference: "Opening Balance",
-                  debit: isDebit ? absoluteBalance : 0,
-                  credit: isDebit ? 0 : absoluteBalance,
+                  debit: isDebit ? 0 : absoluteBalance,
+                  credit: isDebit ? absoluteBalance : 0,
                   remarks: `Opening balance for account: ${account_nam.trim()}`,
                   financial_year: new Date().getFullYear().toString(),
                   voucher_type: "OB",
@@ -574,14 +872,14 @@ class AccountsController {
                 tx
               );
 
-              // Transaction 2: Account (inverse)
+              // Transaction 2: Account
               await TransactionRepository.create(
                 {
                   acc_id: Number(acc_id),
                   reference_id: Number(acc_id),
                   reference: "Opening Balance",
-                  debit: isDebit ? 0 : absoluteBalance,
-                  credit: isDebit ? absoluteBalance : 0,
+                  debit: isDebit ? absoluteBalance : 0,
+                  credit: isDebit ? 0 : absoluteBalance,
                   remarks: `Opening balance for account: ${account_nam.trim()}`,
                   financial_year: new Date().getFullYear().toString(),
                   voucher_type: "OB",
@@ -669,8 +967,18 @@ class AccountsController {
         return updated;
       });
 
+      // Fetch updated account to get account type flags
+      const updatedAccount = await AccountsRepository.readById(acc_id);
+
       await RedisService.del("accounts:all");
       await RedisService.del("transactions:all");
+      // Clear supplier and customer caches if account type is set
+      if (updatedAccount?.is_supplier === 1) {
+        await RedisService.del("suppliers:all");
+      }
+      if (updatedAccount?.is_customer === 1) {
+        await RedisService.del("customers:all");
+      }
       return successResponse(result, "Account updated successfully");
     } catch (err) {
       if (err.code === "P2025") {

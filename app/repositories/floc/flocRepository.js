@@ -18,6 +18,33 @@ class FlocRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.floc.findMany({
+        skip,
+        take,
+        orderBy: { floc_id: "desc" },
+        include: {
+          unit: true,
+          floc_stackholders: {
+            include: {
+              stackholder: true,
+            },
+          },
+        },
+        where: {
+          status: 1,
+        },
+      }),
+      prisma.floc.count({
+        where: {
+          status: 1,
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
   async readById(floc_id) {
     return prisma.floc.findUnique({
       where: {

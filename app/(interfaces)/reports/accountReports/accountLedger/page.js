@@ -60,13 +60,17 @@ export default function AccountLedgerModal() {
 
   const fetchAccounts = async () => {
     try {
-      const response = await fetch("/api/account/accounts/readAll");
+      // Fetch all accounts without pagination using all=true parameter
+      const response = await fetch("/api/account/accounts/readAll?all=true");
       const data = await response.json();
       if (data.response_result) {
-        setAccounts(data.response_result);
+        // Handle paginated response structure
+        const accountsData = data.response_result?.data || data.response_result;
+        setAccounts(Array.isArray(accountsData) ? accountsData : []);
       }
     } catch (error) {
       console.error("Error fetching accounts:", error);
+      setAccounts([]);
     }
   };
 

@@ -33,6 +33,24 @@ class ProductRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.product.findMany({
+        skip,
+        take,
+        orderBy: { product_id: "asc" },
+        include: {
+          companies: true,
+          types: true,
+          units: true,
+          productGroup: true,
+        },
+      }),
+      prisma.product.count(),
+    ]);
+    return { data, total };
+  }
+
   async readNextId() {
     const maxId = await prisma.product.aggregate({
       _max: { product_id: true },

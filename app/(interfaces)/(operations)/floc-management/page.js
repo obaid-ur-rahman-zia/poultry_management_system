@@ -41,6 +41,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function FlocManagementPage() {
   const {
@@ -88,6 +96,12 @@ export default function FlocManagementPage() {
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   const [showInactiveFlocs, setShowInactiveFlocs] = useState(false);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const formStackholders = watch("stackholders") || [{ stackholder_id: "", percentage: "" }];
   const selectedFarm = watch("farm_id");
@@ -161,18 +175,30 @@ export default function FlocManagementPage() {
     }
   };
 
-  const fetchFlocs = async () => {
+  const fetchFlocs = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      // Note: You'll need to create this API endpoint
-      const response = await fetch("/api/floc/readAll");
+      const response = await fetch(`/api/floc/readAll?page=${page}&limit=${limit}`);
       const result = await response.json();
       
       if (result.response_status === "success") {
-        const flocsData = result.response_result?.data || result.response_result || [];
-        setFlocs(flocsData);
+        const responseData = result.response_result;
+        
+        // Handle paginated response
+        if (responseData?.pagination) {
+          const flocsData = responseData.data || [];
+          setFlocs(flocsData);
+          setTotalPages(responseData.pagination.totalPages || 1);
+          setTotalItems(responseData.pagination.total || 0);
+          setCurrentPage(responseData.pagination.page || page);
+        } else {
+          // Fallback for non-paginated response
+          const flocsData = responseData?.data || responseData || [];
+          setFlocs(flocsData);
+          setTotalPages(1);
+          setTotalItems(flocsData.length);
+        }
       } else {
-        // If API doesn't exist yet, set empty array
         setFlocs([]);
       }
     } catch (error) {
@@ -330,7 +356,7 @@ export default function FlocManagementPage() {
         setIsClearDialogOpen(false);
         setClearDescription("");
         setFlocToClear(null);
-        fetchFlocs();
+        fetchFlocs(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to clear ending date");
       }
@@ -456,7 +482,7 @@ export default function FlocManagementPage() {
         setShouldClearEndingDate(false);
         setClearDescription("");
         setActiveFlocForSelectedFarm(null);
-        fetchFlocs();
+        fetchFlocs(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to save floc");
       }
@@ -526,7 +552,7 @@ export default function FlocManagementPage() {
 
       if (result.response_status === "success") {
         toast.success("Floc deleted successfully");
-        fetchFlocs();
+        fetchFlocs(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete floc");
       }
@@ -1033,7 +1059,7 @@ export default function FlocManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className={"max-h-[500px] overflow-y-auto"}>
-                  {filteredFlocs.map((floc) => {
+                  {paginatedFlocs.map((floc) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     const endDate = floc.ending_date ? new Date(floc.ending_date) : null;
@@ -1114,6 +1140,86 @@ export default function FlocManagementPage() {
                   })}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalItems > 0 && totalPages > 1 && (
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                <Select
+                  value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                        fetchFlocs(1, Number(value));
+                      }}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => {
+                              const newPage = Math.max(1, currentPage - 1);
+                              setCurrentPage(newPage);
+                              fetchFlocs(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                  </PaginationItem>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  fetchFlocs(pageNum, itemsPerPage);
+                                }}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  <PaginationItem>
+                          <PaginationNext
+                            onClick={() => {
+                              const newPage = Math.min(totalPages, currentPage + 1);
+                              setCurrentPage(newPage);
+                              fetchFlocs(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+              <div className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} flocs
+              </div>
             </div>
           )}
         </CardContent>

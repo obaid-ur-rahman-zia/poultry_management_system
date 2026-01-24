@@ -12,19 +12,59 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 class SelfTransactionController {
-  async readAll() {
+  async readAll(req) {
     const cacheKey = "selfTransactions:all";
     try {
-      const cachedData = await RedisService.get(cacheKey);
+      // Extract pagination params
+      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const getAll = searchParams.get("all") === "true";
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "10");
+      const skip = (page - 1) * limit;
+
+      // If getAll is true, fetch all self transactions without pagination
+      let data, total;
+      if (getAll) {
+        data = await SelfTransactionRepository.readAll();
+        total = data.length;
+      } else {
+        // Get total count and paginated self transactions
+        const result = await SelfTransactionRepository.readAllWithPagination(skip, limit);
+        data = result.data;
+        total = result.total;
+      }
+
+      // Use cache key with pagination to avoid cache conflicts
+      const userCacheKey = getAll
+        ? `${cacheKey}:all`
+        : `${cacheKey}:page:${page}:limit:${limit}`;
+
+      const cachedData = await RedisService.get(userCacheKey);
       if (cachedData) {
         console.log("Self Transaction Cache Hit");
-        // RedisService.get() already parses JSON, so no need to parse again
         return successResponse(cachedData, "Success");
       }
       console.log("Self Transaction Cache Miss");
-      const data = await SelfTransactionRepository.readAll();
-      await RedisService.setex(cacheKey, 300, JSON.stringify(data));
-      return successResponse(data, "Success");
+
+      // If getAll, return all self transactions without pagination structure
+      if (getAll) {
+        const response = { data };
+        await RedisService.setex(userCacheKey, 300, JSON.stringify(response));
+        return successResponse(response, "Success");
+      }
+
+      const paginatedResponse = {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+
+      await RedisService.setex(userCacheKey, 300, JSON.stringify(paginatedResponse));
+      return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all self transactions in Method: SelfTransactionController.readAll",

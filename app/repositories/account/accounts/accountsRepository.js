@@ -11,6 +11,22 @@ class AccountsRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.accounts.findMany({
+        skip,
+        take,
+        orderBy: [{ acc_id: "asc" }],
+        include: {
+          head: true,
+          subhead: true,
+        },
+      }),
+      prisma.accounts.count(),
+    ]);
+    return { data, total };
+  }
+
   async readByHead(head_id) {
     return prisma.accounts.findMany({
       where: { head_id: Number(head_id) },
@@ -96,6 +112,12 @@ class AccountsRepository {
           account_cnic: data.account_cnic || null,
           account_alter_nam: data.account_alter_nam || null,
           account_no: data.account_no || null,
+          is_supplier: data.is_supplier !== undefined ? data.is_supplier : 0,
+          is_customer: data.is_customer !== undefined ? data.is_customer : 0,
+          is_employee: data.is_employee !== undefined ? data.is_employee : 0,
+          is_driver: data.is_driver !== undefined ? data.is_driver : 0,
+          is_delivery_man: data.is_delivery_man !== undefined ? data.is_delivery_man : 0,
+          is_salesman: data.is_salesman !== undefined ? data.is_salesman : 0,
           insert_by: data.insert_by || "user 1",
           update_by: data.update_by || "user 1",
           status: data.status ?? 1,
@@ -128,6 +150,12 @@ class AccountsRepository {
         account_no: req_object.account_no !== undefined ? req_object.account_no : undefined,
         head_id: req_object.head_id !== undefined ? req_object.head_id : undefined,
         sub_id: req_object.sub_id !== undefined ? req_object.sub_id : undefined,
+        is_supplier: req_object.is_supplier !== undefined ? req_object.is_supplier : undefined,
+        is_customer: req_object.is_customer !== undefined ? req_object.is_customer : undefined,
+        is_employee: req_object.is_employee !== undefined ? req_object.is_employee : undefined,
+        is_driver: req_object.is_driver !== undefined ? req_object.is_driver : undefined,
+        is_delivery_man: req_object.is_delivery_man !== undefined ? req_object.is_delivery_man : undefined,
+        is_salesman: req_object.is_salesman !== undefined ? req_object.is_salesman : undefined,
         update_by: req_object.update_by || "user 1",
         status: req_object.status ?? 1,
       },

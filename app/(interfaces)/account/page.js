@@ -54,6 +54,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 export default function AccountPage() {
   const {
@@ -98,6 +107,12 @@ export default function AccountPage() {
   const [filterAccountType, setFilterAccountType] = useState("all");
   const [filterContact, setFilterContact] = useState("");
   const [filterName, setFilterName] = useState("");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const contactNumbers = watch("contact_numbers") || [""];
   const bankAccountNumbers = watch("bank_account_numbers") || [""];
@@ -150,25 +165,29 @@ export default function AccountPage() {
     }
   };
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/account/accounts/readAll");
+      const response = await fetch(`/api/account/accounts/readAll?page=${page}&limit=${limit}`);
       const result = await response.json();
 
       if (result.response_status === "success") {
-        const accountsData =
-          result.response_result?.data || result.response_result || [];
-        // Parse contact numbers if stored as JSON string
-        // const formattedAccounts = accountsData.map(account => ({
-        //     ...account,
-        //     contact_numbers: account.account_contact
-        //         ? (account.account_contact.includes('[')
-        //             ? JSON.parse(account.account_contact)
-        //             : account.account_contact.split(',').filter(c => c.trim()))
-        //         : [],
-        // }));
-        setAccounts(accountsData);
+        const responseData = result.response_result;
+        
+        // Handle paginated response
+        if (responseData?.pagination) {
+          const accountsData = responseData.data || [];
+          setAccounts(accountsData);
+          setTotalPages(responseData.pagination.totalPages || 1);
+          setTotalItems(responseData.pagination.total || 0);
+          setCurrentPage(responseData.pagination.page || page);
+        } else {
+          // Fallback for non-paginated response
+          const accountsData = responseData?.data || responseData || [];
+          setAccounts(accountsData);
+          setTotalPages(1);
+          setTotalItems(accountsData.length);
+        }
       } else {
         toast.error(result.response_message || "Failed to fetch accounts");
       }
@@ -283,7 +302,7 @@ export default function AccountPage() {
     const validContacts = (data.contact_numbers || [])
       .map((c) => c?.trim())
       .filter((c) => c && c.trim());
-    
+
     if (validContacts.length === 0) {
       toast.error("At least one contact number is required");
       return;
@@ -366,7 +385,7 @@ export default function AccountPage() {
         setAccountOpeningDate(new Date());
         setIsEditMode(false);
         setEditingAccountId(null);
-        fetchAccounts();
+        fetchAccounts(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to save account");
       }
@@ -406,10 +425,10 @@ export default function AccountPage() {
       account.contact_numbers && account.contact_numbers.length > 0
         ? account.contact_numbers
         : account.account_contact
-        ? account.account_contact.includes("[")
-          ? JSON.parse(account.account_contact)
-          : account.account_contact.split(",").map((c) => c.trim())
-        : [];
+          ? account.account_contact.includes("[")
+            ? JSON.parse(account.account_contact)
+            : account.account_contact.split(",").map((c) => c.trim())
+          : [];
 
     // Ensure at least one empty contact field
     const contactNumbers = contacts.length > 0 ? contacts : [""];
@@ -468,7 +487,7 @@ export default function AccountPage() {
 
       if (result.response_status === "success") {
         toast.success("Account deleted successfully");
-        fetchAccounts();
+        fetchAccounts(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete account");
       }
@@ -518,7 +537,7 @@ export default function AccountPage() {
     return parts.length > 0 ? parts : textStr;
   };
 
-  // Filter accounts
+  // Filter accounts (client-side filtering on paginated data)
   const filteredAccounts = accounts.filter((account) => {
     const matchesSearch =
       searchQuery === "" ||
@@ -547,20 +566,35 @@ export default function AccountPage() {
     return matchesSearch && matchesAccountType && matchesContact && matchesName;
   });
 
+  // Reset to page 1 when filters change and refetch
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchAccounts(1, itemsPerPage);
+    }
+  }, [searchQuery, filterAccountType, filterContact, filterName]);
+
+  // Fetch accounts when page or itemsPerPage changes
+  useEffect(() => {
+    fetchAccounts(currentPage, itemsPerPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, itemsPerPage]);
+
   return (
-    <div className="p-3 sm:p-4 md:p-2 space-y-2 md:space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4">
       {/* Form Section */}
-      <Card className={"max-w-4xl mx-auto"}>
-        <CardContent className="p-2 sm:p-4">
+      <Card className={"max-w-2xl p-0! mx-auto"}>
+        <CardContent className="p-4 sm:p-6">
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-2"
             id="account-form"
           >
             {/* Account Type with Get Data Button */}
-            <div className="space-y-1">
-              <Label htmlFor="sub_id">Account Type</Label>
-              <div className="flex gap-2 items-start">
+            <div className="space-y-2">
+              <div className="flex gap-2 items-center">
+                <Label htmlFor="sub_id">Account Type</Label>
                 <Controller
                   name="sub_id"
                   control={control}
@@ -570,12 +604,11 @@ export default function AccountPage() {
                       <Combobox
                         options={subHeads.map((subHead) => ({
                           value: subHead.sub_id.toString(),
-                          label: `${subHead.subhead_nam}${
-                            subHead.head?.head_nam &&
-                            subHead.head.head_nam !== "Main Head"
+                          label: `${subHead.subhead_nam}${subHead.head?.head_nam &&
+                              subHead.head.head_nam !== "Main Head"
                               ? ` (${subHead.head.head_nam})`
                               : ""
-                          }`,
+                            }`,
                         }))}
                         value={field.value}
                         onValueChange={(value) => {
@@ -631,7 +664,7 @@ export default function AccountPage() {
             </div>
 
             {/* Name - Full Width */}
-            <div className="space-y-1">
+            <div className="space-y-2 flex gap-2">
               <Label htmlFor="account_nam">Name</Label>
               <Input
                 id="account_nam"
@@ -720,7 +753,7 @@ export default function AccountPage() {
                   Add Bank Account
                 </Button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {bankAccountNumbers.map((bankAccount, index) => (
                   <div key={index} className="space-y-2">
                     {/* <Label htmlFor={`bank_account_numbers.${index}`}>
@@ -752,7 +785,7 @@ export default function AccountPage() {
             </div>
 
             {/* Address - Full Width */}
-            <div className="space-y-2">
+            <div className="space-y-2 flex gap-2">
               <Label htmlFor="address">Address</Label>
               <Input
                 id="address"
@@ -762,13 +795,13 @@ export default function AccountPage() {
             </div>
 
             {/* Account Opening Date */}
-            <div className="space-y-2">
+            <div className="space-y-2 flex gap-2">
               <Label>Account Opening Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w- justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {accountOpeningDate ? (
@@ -797,8 +830,8 @@ export default function AccountPage() {
             {/* Opening Balance with Radio Buttons */}
             {!isEditMode && (
               <div className="space-y-2">
-                <Label htmlFor="opening_balance">Opening Balance</Label>
                 <div className="flex gap-4 items-center">
+                <Label htmlFor="opening_balance">Opening Balance</Label>
                   <Input
                     id="opening_balance"
                     type="number"
@@ -886,7 +919,8 @@ export default function AccountPage() {
                     Filters & Search
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    {filteredAccounts.length} accounts
+                    {totalItems} accounts
+                    {totalPages > 1 && ` (Page ${currentPage}/${totalPages})`}
                   </p>
                 </div>
 
@@ -1014,7 +1048,7 @@ export default function AccountPage() {
                               >
                                 {subHead.subhead_nam}{" "}
                                 {subHead.head?.head_nam &&
-                                subHead.head.head_nam !== "Main Head"
+                                  subHead.head.head_nam !== "Main Head"
                                   ? `(${subHead.head.head_nam})`
                                   : ""}
                               </SelectItem>
@@ -1094,7 +1128,7 @@ export default function AccountPage() {
                             >
                               {subHead.subhead_nam}{" "}
                               {subHead.head?.head_nam &&
-                              subHead.head.head_nam !== "Main Head"
+                                subHead.head.head_nam !== "Main Head"
                                 ? `(${subHead.head.head_nam})`
                                 : ""}
                             </SelectItem>
@@ -1186,9 +1220,9 @@ export default function AccountPage() {
                                 <td className="p-2 align-middle whitespace-nowrap font-medium">
                                   {searchQuery || filterName
                                     ? highlightText(
-                                        account.account_nam || "N/A",
-                                        searchQuery || filterName
-                                      )
+                                      account.account_nam || "N/A",
+                                      searchQuery || filterName
+                                    )
                                     : account.account_nam || "N/A"}
                                 </td>
                                 <td className="p-2 align-middle hidden md:table-cell">
@@ -1202,9 +1236,9 @@ export default function AccountPage() {
                                         <Phone className="h-3 w-3 inline mr-1" />
                                         {filterContact
                                           ? highlightText(
-                                              contact,
-                                              filterContact
-                                            )
+                                            contact,
+                                            filterContact
+                                          )
                                           : contact}
                                       </Badge>
                                     ))}
@@ -1213,9 +1247,9 @@ export default function AccountPage() {
                                 <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
                                   {searchQuery
                                     ? highlightText(
-                                        account.account_no || "N/A",
-                                        searchQuery
-                                      )
+                                      account.account_no || "N/A",
+                                      searchQuery
+                                    )
                                     : account.account_no || "N/A"}
                                 </td>
                                 <td className="p-2 align-middle max-w-xs truncate hidden xl:table-cell">
@@ -1224,9 +1258,9 @@ export default function AccountPage() {
                                 <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
                                   {searchQuery
                                     ? highlightText(
-                                        account.account_reference || "N/A",
-                                        searchQuery
-                                      )
+                                      account.account_reference || "N/A",
+                                      searchQuery
+                                    )
                                     : account.account_reference || "N/A"}
                                 </td>
                                 <td className="p-2 align-middle whitespace-nowrap">
@@ -1246,6 +1280,86 @@ export default function AccountPage() {
                           })}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {totalItems > 0 && totalPages > 1 && (
+                  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                      <Select
+                        value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                        fetchAccounts(1, Number(value));
+                      }}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => {
+                              const newPage = Math.max(1, currentPage - 1);
+                              setCurrentPage(newPage);
+                              fetchAccounts(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  fetchAccounts(pageNum, itemsPerPage);
+                                }}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => {
+                              const newPage = Math.min(totalPages, currentPage + 1);
+                              setCurrentPage(newPage);
+                              fetchAccounts(newPage, itemsPerPage);
+                            }}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                    <div className="text-sm text-muted-foreground">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} accounts
                     </div>
                   </div>
                 )}

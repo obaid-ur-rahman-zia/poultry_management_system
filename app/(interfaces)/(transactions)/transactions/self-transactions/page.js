@@ -33,6 +33,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function SelfTransactionPage() {
     const { data: session } = useSession();
@@ -69,6 +77,12 @@ export default function SelfTransactionPage() {
     const [filterDate, setFilterDate] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [isMobile, setIsMobile] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
 
     const selectedAccount = watch("account_id");
     const isBank = watch("is_bank");
@@ -134,14 +148,28 @@ export default function SelfTransactionPage() {
         }
     };
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = async (page = currentPage, limit = itemsPerPage) => {
         setLoading(true);
         try {
-            const response = await fetch("/api/selfTransaction/readAll");
+            const response = await fetch(`/api/selfTransaction/readAll?page=${page}&limit=${limit}`);
             const result = await response.json();
             if (result.response_status === "success") {
-                const transactionsData = result.response_result?.data || result.response_result || [];
-                setTransactions(transactionsData);
+                const responseData = result.response_result;
+                
+                // Handle paginated response
+                if (responseData?.pagination) {
+                    const transactionsData = responseData.data || [];
+                    setTransactions(transactionsData);
+                    setTotalPages(responseData.pagination.totalPages || 1);
+                    setTotalItems(responseData.pagination.total || 0);
+                    setCurrentPage(responseData.pagination.page || page);
+                } else {
+                    // Fallback for non-paginated response
+                    const transactionsData = responseData?.data || responseData || [];
+                    setTransactions(transactionsData);
+                    setTotalPages(1);
+                    setTotalItems(transactionsData.length);
+                }
             } else {
                 toast.error(result.response_message || "Failed to fetch transactions");
             }
@@ -207,7 +235,7 @@ export default function SelfTransactionPage() {
                 setCurrentBalance(null);
                 setIsEditMode(false);
                 setEditingTransactionId(null);
-                fetchTransactions();
+                fetchTransactions(currentPage, itemsPerPage);
             } else {
                 // Show backend error message
                 toast.error(result.response_message || "Failed to save transaction");
@@ -243,7 +271,7 @@ export default function SelfTransactionPage() {
             const result = await response.json();
             if (result.response_status === "success") {
                 toast.success("Transaction deleted successfully");
-                fetchTransactions();
+                fetchTransactions(currentPage, itemsPerPage);
             } else {
                 toast.error(result.response_message || "Failed to delete transaction");
             }
@@ -253,7 +281,7 @@ export default function SelfTransactionPage() {
         }
     };
 
-    // Filter transactions
+    // Filter transactions (client-side filtering on paginated data)
     const filteredTransactions = transactions.filter((transaction) => {
         const matchesSearch = searchQuery === "" ||
             transaction.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -270,6 +298,21 @@ export default function SelfTransactionPage() {
 
         return matchesSearch && matchesAccount && matchesDate && matchesType;
     });
+
+    // Reset to page 1 when filters change and refetch
+    useEffect(() => {
+        if (currentPage !== 1) {
+            setCurrentPage(1);
+        } else {
+            fetchTransactions(1, itemsPerPage);
+        }
+    }, [searchQuery, filterAccount, filterDate, filterType]);
+
+    // Fetch transactions when page or itemsPerPage changes
+    useEffect(() => {
+        fetchTransactions(currentPage, itemsPerPage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage]);
 
     const netBalance = calculateNetBalance();
 
@@ -551,7 +594,7 @@ export default function SelfTransactionPage() {
                             </div>
                         ) : isMobile ? (
                             <div className="space-y-3">
-                                {filteredTransactions.map((transaction) => (
+                                {paginatedTransactions.map((transaction) => (
                                     <Card key={transaction.transaction_id} className="border">
                                         <CardContent className="p-4 space-y-2">
                                             <div className="flex items-center justify-between">
@@ -673,6 +716,82 @@ export default function SelfTransactionPage() {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {totalItems > 0 && totalPages > 1 && (
+                            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                                    <Select
+                                        value={itemsPerPage.toString()}
+                                        onValueChange={(value) => {
+                                            setItemsPerPage(Number(value));
+                                            setCurrentPage(1);
+                                            fetchTransactions(1, Number(value));
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-20">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="5">5</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+                                            return (
+                                                <PaginationItem key={pageNum}>
+                                                    <PaginationLink
+                                                        onClick={() => {
+                                                            setCurrentPage(pageNum);
+                                                            fetchTransactions(pageNum, itemsPerPage);
+                                                        }}
+                                                        isActive={currentPage === pageNum}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        {pageNum}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            );
+                                        })}
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                onClick={() => {
+                                                    const newPage = Math.min(totalPages, currentPage + 1);
+                                                    setCurrentPage(newPage);
+                                                    fetchTransactions(newPage, itemsPerPage);
+                                                }}
+                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                                <div className="text-sm text-muted-foreground">
+                                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} transactions
+                                </div>
                             </div>
                         )}
                     </MobileListToggle>

@@ -53,6 +53,6 @@ import UnitController from "@/app/controllers/unit/unitController";
  *       500:
  *         description: Internal server error
  */
-export async function GET() {
-  return UnitController.readAll();
+export async function GET(req) {
+  return UnitController.readAll(req);
 }

@@ -15,6 +15,30 @@ class TradingRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.trading.findMany({
+        skip,
+        take,
+        orderBy: { trading_id: "desc" },
+        include: {
+          buy_from_account_ref: true,
+          sale_to_account_ref: true,
+          product: true,
+        },
+        where: {
+          status: 1,
+        },
+      }),
+      prisma.trading.count({
+        where: {
+          status: 1,
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
   async readById(trading_id) {
     return prisma.trading.findUnique({
       where: {

@@ -85,23 +85,31 @@ export default function AccountingReports() {
 
   const fetchAccounts = async () => {
     try {
-      const response = await fetch("/api/account/accounts/readAll");
+      // Fetch all accounts without pagination using all=true parameter
+      const response = await fetch("/api/account/accounts/readAll?all=true");
       const data = await response.json();
 
-      if (data.response_code === 200 && Array.isArray(data.response_result)) {
-        const accountMap = {};
-        data.response_result.forEach((account) => {
-          accountMap[account.acc_id] = {
-            id: account.account_id,
-            name: account.account_nam,
-            headName: account.head?.head_nam || "",
-            subheadName: account.subhead?.subhead_nam || "",
-          };
-        });
-        setAccounts(accountMap);
+      if (data.response_status === "success") {
+        // Handle paginated response structure
+        const responseData = data.response_result;
+        const accountsData = responseData?.data || responseData;
+        
+        if (Array.isArray(accountsData)) {
+          const accountMap = {};
+          accountsData.forEach((account) => {
+            accountMap[account.acc_id] = {
+              id: account.account_id,
+              name: account.account_nam,
+              headName: account.head?.head_nam || "",
+              subheadName: account.subhead?.subhead_nam || "",
+            };
+          });
+          setAccounts(accountMap);
+        }
       }
     } catch (error) {
       console.error("Error fetching accounts:", error);
+      setAccounts({});
     }
   };
 

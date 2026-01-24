@@ -41,6 +41,14 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Combobox } from "@/components/ui/combobox";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function UnitSalePage() {
     const {
@@ -100,6 +108,12 @@ export default function UnitSalePage() {
     const [filterFloc, setFilterFloc] = useState("all");
     const [filterDate, setFilterDate] = useState("");
     const [isMobile, setIsMobile] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
 
     const selectedUnit = watch("prounit_id");
     const selectedFloc = watch("floc_id");
@@ -293,14 +307,28 @@ export default function UnitSalePage() {
         }
     };
 
-    const fetchSales = async () => {
+    const fetchSales = async (page = currentPage, limit = itemsPerPage) => {
         setLoading(true);
         try {
-            const response = await fetch("/api/unitSale/readAll");
+            const response = await fetch(`/api/unitSale/readAll?page=${page}&limit=${limit}`);
             const result = await response.json();
             if (result.response_status === "success") {
-                const salesData = result.response_result?.data || result.response_result || [];
-                setSales(salesData);
+                const responseData = result.response_result;
+                
+                // Handle paginated response
+                if (responseData?.pagination) {
+                    const salesData = responseData.data || [];
+                    setSales(salesData);
+                    setTotalPages(responseData.pagination.totalPages || 1);
+                    setTotalItems(responseData.pagination.total || 0);
+                    setCurrentPage(responseData.pagination.page || page);
+                } else {
+                    // Fallback for non-paginated response
+                    const salesData = responseData?.data || responseData || [];
+                    setSales(salesData);
+                    setTotalPages(1);
+                    setTotalItems(salesData.length);
+                }
             } else {
                 toast.error(result.response_message || "Failed to fetch sales");
             }
@@ -377,7 +405,7 @@ export default function UnitSalePage() {
 
             const result = await response.json();
             if (result.response_status === "success") {
-                toast.success("Customer created successfully");
+                toast.success("Purcher created successfully");
                 // Get acc_id and customer name from response
                 const accId = result.response_result?.acc_id;
                 const customerName = customerFormData.customer_name.trim();
@@ -410,11 +438,11 @@ export default function UnitSalePage() {
                     customer_contact: "",
                 });
             } else {
-                toast.error(result.response_message || "Failed to create customer");
+                toast.error(result.response_message || "Failed to create purcher");
             }
         } catch (error) {
-            console.error("Error creating customer:", error);
-            toast.error("Failed to create customer");
+            console.error("Error creating purcher:", error);
+            toast.error("Failed to create purcher");
         }
     };
 
@@ -633,7 +661,7 @@ export default function UnitSalePage() {
         }
     };
 
-    // Filter sales
+    // Filter sales (client-side filtering on paginated data)
     const filteredSales = sales.filter((sale) => {
         const prounitId = sale.prounit_id || sale.farm_id || sale.unit?.prounit_id;
         const unitName = sale.unit?.prounit_nam || (Array.isArray(units) && units.find(u => u.prounit_id === prounitId)?.prounit_nam);
@@ -654,6 +682,21 @@ export default function UnitSalePage() {
 
         return matchesSearch && matchesUnit && matchesFloc && matchesDate;
     });
+
+    // Reset to page 1 when filters change and refetch
+    useEffect(() => {
+        if (currentPage !== 1) {
+            setCurrentPage(1);
+        } else {
+            fetchSales(1, itemsPerPage);
+        }
+    }, [searchQuery, filterUnit, filterFloc, filterDate]);
+
+    // Fetch sales when page or itemsPerPage changes
+    useEffect(() => {
+        fetchSales(currentPage, itemsPerPage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage]);
 
     const totalAmount = calculateTotal();
 
@@ -803,14 +846,14 @@ export default function UnitSalePage() {
                                 )}
                             </div>
 
-                            {/* Customer Selection */}
+                            {/* Purcher Selection */}
                             <div className="space-y-2">
-                                <Label htmlFor="customer_id">Customer *</Label>
+                                <Label htmlFor="customer_id">Purcher *</Label>
                                 <div className="flex gap-2">
                                     <Controller
                                         name="customer_id"
                                         control={control}
-                                        rules={{ required: "Customer is required" }}
+                                        rules={{ required: "Purcher is required" }}
                                         render={({ field }) => (
                                             <div className="flex-1">
                                                 <Combobox
@@ -827,9 +870,9 @@ export default function UnitSalePage() {
                                                             setCustomerBalance(null);
                                                         }
                                                     }}
-                                                    placeholder={customers.length > 0 ? "Select customer" : "No customers"}
-                                                    searchPlaceholder="Search customers..."
-                                                    emptyText="No customer found."
+                                                    placeholder={customers.length > 0 ? "Select purcher" : "No purchers"}
+                                                    searchPlaceholder="Search purchers..."
+                                                    emptyText="No purcher found."
                                                 />
                                             </div>
                                         )}
@@ -1266,7 +1309,7 @@ export default function UnitSalePage() {
                             </div>
                         ) : isMobile ? (
                             <div className="space-y-3">
-                                {filteredSales.map((sale) => (
+                                {paginatedSales.map((sale) => (
                                     <Card key={sale.sale_id} className="border">
                                         <CardContent className="p-4 space-y-2">
                                             <div className="flex items-center justify-between">
@@ -1367,7 +1410,7 @@ export default function UnitSalePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredSales.map((sale) => (
+                                            {paginatedSales.map((sale) => (
                                                 <tr key={sale.sale_id} className="hover:bg-muted/50 border-b transition-colors">
                                                     <td className="p-2 align-middle whitespace-nowrap">
                                                         {sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : "N/A"}
@@ -1425,6 +1468,82 @@ export default function UnitSalePage() {
                                             ))}
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {totalItems > 0 && totalPages > 1 && (
+                            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                                    <Select
+                                        value={itemsPerPage.toString()}
+                                        onValueChange={(value) => {
+                                            setItemsPerPage(Number(value));
+                                            setCurrentPage(1);
+                                            fetchSales(1, Number(value));
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-20">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="5">5</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+                                            return (
+                                                <PaginationItem key={pageNum}>
+                                                    <PaginationLink
+                                                        onClick={() => {
+                                                            setCurrentPage(pageNum);
+                                                            fetchSales(pageNum, itemsPerPage);
+                                                        }}
+                                                        isActive={currentPage === pageNum}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        {pageNum}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            );
+                                        })}
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                onClick={() => {
+                                                    const newPage = Math.min(totalPages, currentPage + 1);
+                                                    setCurrentPage(newPage);
+                                                    fetchSales(newPage, itemsPerPage);
+                                                }}
+                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                                <div className="text-sm text-muted-foreground">
+                                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} sales
                                 </div>
                             </div>
                         )}
@@ -1497,23 +1616,23 @@ export default function UnitSalePage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Create Customer Dialog */}
+            {/* Create Purcher Dialog */}
             <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
                 <DialogContent className="max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Create New Customer</DialogTitle>
+                        <DialogTitle>Create New Purcher</DialogTitle>
                         <DialogDescription>
-                            Create a new customer account. The customer will be created with is_customer flag set to true.
+                            Create a new purcher account. The purcher will be created with is_customer flag set to true.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label htmlFor="customer_name">Customer Name *</Label>
+                            <Label htmlFor="customer_name">Purcher Name *</Label>
                             <Input
                                 id="customer_name"
                                 value={customerFormData.customer_name}
                                 onChange={(e) => setCustomerFormData({ ...customerFormData, customer_name: e.target.value })}
-                                placeholder="Enter customer name"
+                                placeholder="Enter purcher name"
                             />
                         </div>
                         <div className="space-y-2">
@@ -1561,7 +1680,7 @@ export default function UnitSalePage() {
                             Cancel
                         </Button>
                         <Button type="button" onClick={handleCreateCustomer}>
-                            Create Customer
+                            Create Purcher
                         </Button>
                     </DialogFooter>
                 </DialogContent>

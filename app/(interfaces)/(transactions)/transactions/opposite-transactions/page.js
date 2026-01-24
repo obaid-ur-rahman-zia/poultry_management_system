@@ -40,6 +40,14 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function OppositeTransactionsPage() {
     const {
@@ -78,12 +86,26 @@ export default function OppositeTransactionsPage() {
     const [loadingPaidByBalance, setLoadingPaidByBalance] = useState(false);
     const [loadingReceivedByBalance, setLoadingReceivedByBalance] = useState(false);
 
+    // Account search dialog states
+    const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
+    const [accountSearchField, setAccountSearchField] = useState("paid_by"); // Track which field opened the dialog: "paid_by" or "received_by"
+    const [accountSearchType, setAccountSearchType] = useState("all");
+    const [accountSearchQuery, setAccountSearchQuery] = useState("");
+    const [allAccounts, setAllAccounts] = useState([]);
+    const [accountSubHeads, setAccountSubHeads] = useState([]);
+
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
     const [filterPaidBy, setFilterPaidBy] = useState("all");
     const [filterReceivedBy, setFilterReceivedBy] = useState("all");
     const [filterDate, setFilterDate] = useState("");
     const [isMobile, setIsMobile] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
 
     const selectedPaidBy = watch("paid_by");
     const selectedReceivedBy = watch("received_by");
@@ -93,7 +115,48 @@ export default function OppositeTransactionsPage() {
         fetchSubHeads();
         fetchAccountHeads();
         fetchTransactions();
+        fetchAllAccounts();
+        fetchAccountSubHeads();
     }, []);
+
+    // Fetch all accounts for search dialog (fetch all without pagination for search)
+    const fetchAllAccounts = async () => {
+        try {
+            // Fetch all accounts without pagination using all=true parameter
+            const response = await fetch("/api/account/accounts/readAll?all=true");
+            const result = await response.json();
+            if (result.response_status === "success") {
+                const responseData = result.response_result;
+                // Handle response (with or without pagination)
+                if (responseData?.pagination) {
+                    const accountsData = responseData.data || [];
+                    setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+                } else {
+                    // Non-paginated response (all accounts)
+                    const accountsData = responseData?.data || responseData || [];
+                    setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching all accounts:", error);
+            setAllAccounts([]);
+        }
+    };
+
+    // Fetch account sub-heads for account type dropdown
+    const fetchAccountSubHeads = async () => {
+        try {
+            const response = await fetch("/api/account/accountSubHead/readAll");
+            const result = await response.json();
+            if (result.response_status === "success") {
+                const subHeadsData = result.response_result?.data || result.response_result || [];
+                setAccountSubHeads(Array.isArray(subHeadsData) ? subHeadsData : []);
+            }
+        } catch (error) {
+            console.error("Error fetching account sub-heads:", error);
+            setAccountSubHeads([]);
+        }
+    };
 
     useEffect(() => {
         const handleResize = () => {
@@ -222,14 +285,28 @@ export default function OppositeTransactionsPage() {
         }
     }, [selectedReceivedBy]);
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = async (page = currentPage, limit = itemsPerPage) => {
         setLoading(true);
         try {
-            const response = await fetch("/api/oppositeTransaction/readAll");
+            const response = await fetch(`/api/oppositeTransaction/readAll?page=${page}&limit=${limit}`);
             const result = await response.json();
             if (result.response_status === "success") {
-                const transactionsData = result.response_result?.data || result.response_result || [];
-                setTransactions(transactionsData);
+                const responseData = result.response_result;
+                
+                // Handle paginated response
+                if (responseData?.pagination) {
+                    const transactionsData = responseData.data || [];
+                    setTransactions(transactionsData);
+                    setTotalPages(responseData.pagination.totalPages || 1);
+                    setTotalItems(responseData.pagination.total || 0);
+                    setCurrentPage(responseData.pagination.page || page);
+                } else {
+                    // Fallback for non-paginated response
+                    const transactionsData = responseData?.data || responseData || [];
+                    setTransactions(transactionsData);
+                    setTotalPages(1);
+                    setTotalItems(transactionsData.length);
+                }
             } else {
                 toast.error(result.response_message || "Failed to fetch transactions");
             }
@@ -335,7 +412,7 @@ export default function OppositeTransactionsPage() {
                 });
                 setIsEditMode(false);
                 setEditingTransactionId(null);
-                fetchTransactions();
+                fetchTransactions(currentPage, itemsPerPage);
             } else {
                 toast.error(result.response_message || "Failed to save transaction");
             }
@@ -370,7 +447,7 @@ export default function OppositeTransactionsPage() {
             const result = await response.json();
             if (result.response_status === "success") {
                 toast.success("Transaction deleted successfully");
-                fetchTransactions();
+                fetchTransactions(currentPage, itemsPerPage);
             } else {
                 toast.error(result.response_message || "Failed to delete transaction");
             }
@@ -380,7 +457,7 @@ export default function OppositeTransactionsPage() {
         }
     };
 
-    // Filter transactions
+    // Filter transactions (client-side filtering on paginated data)
     const filteredTransactions = transactions.filter((transaction) => {
         const matchesSearch = searchQuery === "" ||
             transaction.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -398,6 +475,21 @@ export default function OppositeTransactionsPage() {
 
         return matchesSearch && matchesPaidBy && matchesReceivedBy && matchesDate;
     });
+
+    // Reset to page 1 when filters change and refetch
+    useEffect(() => {
+        if (currentPage !== 1) {
+            setCurrentPage(1);
+        } else {
+            fetchTransactions(1, itemsPerPage);
+        }
+    }, [searchQuery, filterPaidBy, filterReceivedBy, filterDate]);
+
+    // Fetch transactions when page or itemsPerPage changes
+    useEffect(() => {
+        fetchTransactions(currentPage, itemsPerPage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage]);
 
   return (
         <div className="p-6 space-y-6">
@@ -425,25 +517,63 @@ export default function OppositeTransactionsPage() {
 
                             {/* Paid By */}
                             <div className="space-y-2">
-                                <Label htmlFor="paid_by">Paid By *</Label>
-                                <Controller
-                                    name="paid_by"
-                                    control={control}
-                                    rules={{ required: "Paid by is required" }}
-                                    render={({ field }) => (
-                                        <Combobox
-                                            options={accounts.map((account) => ({
-                                                value: account.acc_id.toString(),
-                                                label: account.account_nam,
-                                            }))}
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                            placeholder="Select account"
-                                            searchPlaceholder="Search accounts..."
-                                            emptyText="No account found."
-                                        />
-                                    )}
-                                />
+                                <div className="flex items-center gap-1">
+                                    <Label htmlFor="paid_by">Paid By *</Label>
+                                    <Controller
+                                        name="paid_by"
+                                        control={control}
+                                        rules={{ required: "Paid by is required" }}
+                                        render={({ field }) => {
+                                            // Get selected account from allAccounts if it exists
+                                            const selectedAccount = allAccounts.find(
+                                                (acc) => acc.acc_id?.toString() === field.value
+                                            );
+                                            
+                                            // Combine accounts with selected account if it's not in accounts
+                                            const options = [
+                                                ...accounts.map((acc) => ({
+                                                    value: acc.acc_id.toString(),
+                                                    label: acc.account_nam,
+                                                })),
+                                                ...(selectedAccount && 
+                                                    !accounts.find((acc) => acc.acc_id === selectedAccount.acc_id)
+                                                    ? [{
+                                                        value: selectedAccount.acc_id.toString(),
+                                                        label: selectedAccount.account_nam,
+                                                    }]
+                                                    : []),
+                                            ];
+                                            
+                                            return (
+                                                <div className="flex-1">
+                                                    <Combobox
+                                                        options={options}
+                                                        value={field.value}
+                                                        onValueChange={field.onChange}
+                                                        placeholder="Select account"
+                                                        searchPlaceholder="Search accounts..."
+                                                        emptyText="No account found."
+                                                    />
+                                                </div>
+                                            );
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setAccountSearchField("paid_by");
+                                            setAccountSearchType("all");
+                                            setAccountSearchQuery("");
+                                            setIsAccountSearchDialogOpen(true);
+                                        }}
+                                        className="h-8 w-8 p-0 font-bold"
+                                        title="Search Accounts"
+                                    >
+                                        =
+                                    </Button>
+                                </div>
                                 {errors.paid_by && (
                                     <p className="text-sm text-destructive">
                                         {errors.paid_by.message}
@@ -451,14 +581,6 @@ export default function OppositeTransactionsPage() {
                                 )}
                                 {/* Paid By Balance Display */}
                                 <div className="flex gap-2 items-center">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        disabled
-                                    >
-                                        <Equal className="h-4 w-4" />
-                                    </Button>
                                     <div className="flex-1">
                                         {loadingPaidByBalance ? (
                                             <div className="text-sm text-muted-foreground">Loading...</div>
@@ -514,25 +636,63 @@ export default function OppositeTransactionsPage() {
 
                             {/* Received By */}
                             <div className="space-y-2">
-                                <Label htmlFor="received_by">Received By *</Label>
-                                <Controller
-                                    name="received_by"
-                                    control={control}
-                                    rules={{ required: "Received by is required" }}
-                                    render={({ field }) => (
-                                        <Combobox
-                                            options={accounts.map((account) => ({
-                                                value: account.acc_id.toString(),
-                                                label: account.account_nam,
-                                            }))}
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                            placeholder="Select account"
-                                            searchPlaceholder="Search accounts..."
-                                            emptyText="No account found."
-                                        />
-                                    )}
-                                />
+                                <div className="flex items-center gap-1">
+                                    <Label htmlFor="received_by">Received By *</Label>
+                                    <Controller
+                                        name="received_by"
+                                        control={control}
+                                        rules={{ required: "Received by is required" }}
+                                        render={({ field }) => {
+                                            // Get selected account from allAccounts if it exists
+                                            const selectedAccount = allAccounts.find(
+                                                (acc) => acc.acc_id?.toString() === field.value
+                                            );
+                                            
+                                            // Combine accounts with selected account if it's not in accounts
+                                            const options = [
+                                                ...accounts.map((acc) => ({
+                                                    value: acc.acc_id.toString(),
+                                                    label: acc.account_nam,
+                                                })),
+                                                ...(selectedAccount && 
+                                                    !accounts.find((acc) => acc.acc_id === selectedAccount.acc_id)
+                                                    ? [{
+                                                        value: selectedAccount.acc_id.toString(),
+                                                        label: selectedAccount.account_nam,
+                                                    }]
+                                                    : []),
+                                            ];
+                                            
+                                            return (
+                                                <div className="flex-1">
+                                                    <Combobox
+                                                        options={options}
+                                                        value={field.value}
+                                                        onValueChange={field.onChange}
+                                                        placeholder="Select account"
+                                                        searchPlaceholder="Search accounts..."
+                                                        emptyText="No account found."
+                                                    />
+                                                </div>
+                                            );
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setAccountSearchField("received_by");
+                                            setAccountSearchType("all");
+                                            setAccountSearchQuery("");
+                                            setIsAccountSearchDialogOpen(true);
+                                        }}
+                                        className="h-8 w-8 p-0 font-bold"
+                                        title="Search Accounts"
+                                    >
+                                        =
+                                    </Button>
+                                </div>
                                 {errors.received_by && (
                                     <p className="text-sm text-destructive">
                                         {errors.received_by.message}
@@ -540,14 +700,6 @@ export default function OppositeTransactionsPage() {
                                 )}
                                 {/* Received By Balance Display */}
                                 <div className="flex gap-2 items-center">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        disabled
-                                    >
-                                        <Equal className="h-4 w-4" />
-                                    </Button>
                                     <div className="flex-1">
                                         {loadingReceivedByBalance ? (
                                             <div className="text-sm text-muted-foreground">Loading...</div>
@@ -695,7 +847,7 @@ export default function OppositeTransactionsPage() {
                             </div>
                         ) : isMobile ? (
                             <div className="space-y-3">
-                                {filteredTransactions.map((transaction) => (
+                                {paginatedTransactions.map((transaction) => (
                                     <Card key={transaction.transaction_id} className="border">
                                         <CardContent className="p-4 space-y-2">
                                             <div className="flex items-center justify-between">
@@ -771,7 +923,7 @@ export default function OppositeTransactionsPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredTransactions.map((transaction) => (
+                                        {paginatedTransactions.map((transaction) => (
                                             <tr key={transaction.transaction_id} className="hover:bg-muted/50 border-b transition-colors">
                                                 <td className="p-2 align-middle whitespace-nowrap">
                                                     {transaction.transaction_date ? new Date(transaction.transaction_date).toLocaleDateString() : "N/A"}
@@ -818,6 +970,123 @@ export default function OppositeTransactionsPage() {
                     </MobileListToggle>
                 </CardContent>
             </Card>
+
+            {/* Account Search Dialog */}
+            <Dialog
+                open={isAccountSearchDialogOpen}
+                onOpenChange={setIsAccountSearchDialogOpen}
+            >
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Search Accounts</DialogTitle>
+                        <DialogDescription>
+                            Search and select an account from all available accounts
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="flex items-center gap-4">
+                            <div className="flex-1 space-y-2">
+                                <Label>Account Type</Label>
+                                <Select
+                                    value={accountSearchType}
+                                    onValueChange={setAccountSearchType}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select account type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All</SelectItem>
+                                        {accountSubHeads.map((subhead) => (
+                                            <SelectItem key={subhead.sub_id} value={subhead.sub_id.toString()}>
+                                                {subhead.subhead_nam}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex-1 space-y-2">
+                                <Label>Search</Label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search accounts..."
+                                        value={accountSearchQuery}
+                                        onChange={(e) => setAccountSearchQuery(e.target.value)}
+                                        className="pl-9"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="relative max-h-[400px] overflow-auto">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-background z-10">
+                                    <TableRow>
+                                        <TableHead>Sr. No</TableHead>
+                                        <TableHead>Account Name</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {allAccounts
+                                        .filter((acc) => {
+                                            // Filter by account sub-head (account type)
+                                            if (accountSearchType !== "all") {
+                                                // Filter by sub_id (account sub-head)
+                                                if (acc.sub_id?.toString() !== accountSearchType) {
+                                                    return false;
+                                                }
+                                            }
+                                            // If "all", show all accounts (no filter)
+                                            
+                                            // Filter by search query
+                                            if (accountSearchQuery) {
+                                                const query = accountSearchQuery.toLowerCase();
+                                                return (
+                                                    acc.account_nam?.toLowerCase().includes(query) ||
+                                                    acc.account_cnic?.toLowerCase().includes(query) ||
+                                                    acc.account_contact?.toLowerCase().includes(query)
+                                                );
+                                            }
+                                            return true;
+                                        })
+                                        .map((acc, index) => (
+                                            <TableRow
+                                                key={acc.acc_id}
+                                                className="cursor-pointer hover:bg-muted/50"
+                                                onClick={() => {
+                                                    // Update the field that opened the dialog
+                                                    if (accountSearchField === "paid_by") {
+                                                        setValue("paid_by", acc.acc_id.toString());
+                                                    } else if (accountSearchField === "received_by") {
+                                                        setValue("received_by", acc.acc_id.toString());
+                                                    }
+                                                    setIsAccountSearchDialogOpen(false);
+                                                    setAccountSearchQuery("");
+                                                }}
+                                            >
+                                                <TableCell>{index + 1}</TableCell>
+                                                <TableCell className="font-medium">
+                                                    {acc.account_nam}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                setIsAccountSearchDialogOpen(false);
+                                setAccountSearchQuery("");
+                            }}
+                        >
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Add Bank Account Dialog */}
             <Dialog open={isBankAccountDialogOpen} onOpenChange={setIsBankAccountDialogOpen}>

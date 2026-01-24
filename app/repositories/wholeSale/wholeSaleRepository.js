@@ -14,6 +14,29 @@ class WholeSaleRepository {
     });
   }
 
+  async readAllWithPagination(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      prisma.whole_sale.findMany({
+        skip,
+        take,
+        orderBy: { sale_id: "desc" },
+        include: {
+          former_account_ref: true,
+          purcher_account_ref: true,
+        },
+        where: {
+          status: 1,
+        },
+      }),
+      prisma.whole_sale.count({
+        where: {
+          status: 1,
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
   async readById(sale_id) {
     return prisma.whole_sale.findUnique({
       where: {
