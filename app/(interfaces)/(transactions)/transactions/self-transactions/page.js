@@ -720,7 +720,7 @@ export default function SelfTransactionPage() {
                         )}
 
                         {/* Pagination */}
-                        {totalItems > 0 && totalPages > 1 && (
+                        {totalPages >= 1 && (
                             <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <div className="flex items-center gap-2">
                                     <Label className="text-sm text-muted-foreground">Items per page:</Label>

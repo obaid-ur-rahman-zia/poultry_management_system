@@ -114,7 +114,7 @@ export default function OppositeTransactionsPage() {
         fetchAccounts();
         fetchSubHeads();
         fetchAccountHeads();
-        fetchTransactions();
+        fetchTransactions(1, 20);
         fetchAllAccounts();
         fetchAccountSubHeads();
     }, []);
@@ -847,7 +847,7 @@ export default function OppositeTransactionsPage() {
                             </div>
                         ) : isMobile ? (
                             <div className="space-y-3">
-                                {paginatedTransactions.map((transaction) => (
+                                {filteredTransactions.map((transaction) => (
                                     <Card key={transaction.transaction_id} className="border">
                                         <CardContent className="p-4 space-y-2">
                                             <div className="flex items-center justify-between">
@@ -923,7 +923,7 @@ export default function OppositeTransactionsPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {paginatedTransactions.map((transaction) => (
+                                        {filteredTransactions.map((transaction) => (
                                             <tr key={transaction.transaction_id} className="hover:bg-muted/50 border-b transition-colors">
                                                 <td className="p-2 align-middle whitespace-nowrap">
                                                     {transaction.transaction_date ? new Date(transaction.transaction_date).toLocaleDateString() : "N/A"}
@@ -965,6 +965,86 @@ export default function OppositeTransactionsPage() {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {totalPages >= 1 && (
+                            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                                    <Select
+                                        value={itemsPerPage.toString()}
+                                        onValueChange={(value) => {
+                                            setItemsPerPage(Number(value));
+                                            setCurrentPage(1);
+                                            fetchTransactions(1, Number(value));
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-20">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="5">5</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                onClick={() => {
+                                                    const newPage = Math.max(1, currentPage - 1);
+                                                    setCurrentPage(newPage);
+                                                    fetchTransactions(newPage, itemsPerPage);
+                                                }}
+                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+                                            return (
+                                                <PaginationItem key={pageNum}>
+                                                    <PaginationLink
+                                                        onClick={() => {
+                                                            setCurrentPage(pageNum);
+                                                            fetchTransactions(pageNum, itemsPerPage);
+                                                        }}
+                                                        isActive={currentPage === pageNum}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        {pageNum}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            );
+                                        })}
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                onClick={() => {
+                                                    const newPage = Math.min(totalPages, currentPage + 1);
+                                                    setCurrentPage(newPage);
+                                                    fetchTransactions(newPage, itemsPerPage);
+                                                }}
+                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                                <div className="text-sm text-muted-foreground">
+                                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} transactions
+                                </div>
                             </div>
                         )}
                     </MobileListToggle>
