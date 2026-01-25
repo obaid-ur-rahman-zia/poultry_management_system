@@ -57,6 +57,6 @@ import accountsController from "@/app/controllers/account/accounts/accountsContr
  *       500:
  *         description: Internal server error
  */
-export async function GET() {
-  return accountsController.readAll();
+export async function GET(req) {
+  return accountsController.readAll(req);
 }
