@@ -164,19 +164,31 @@ async function main() {
     where: { email: "admin@system.com" },
   });
 
+  // Generate password hash for "admin"
+  const hashedPassword = await Bcrypt.hash("Admin@123", 10);
+
   if (!superAdmin) {
     superAdmin = await prisma.user.create({
       data: {
         user_nam: "Super Admin",
         email: "admin@system.com",
-        password: "$2b$10$VHtLxoMZtiQPGwIqh2Z53eT09.W8X7aSwyucIj6FKS9IuJqg.gGhO",
+        // Unhashed password: admin
+        password: hashedPassword,
         role: "SUPER_ADMIN",
         status: 1,
       },
     });
     console.log("✅ Super Admin user created");
   } else {
-    console.log("✅ Super Admin user already exists, skipping creation");
+    // Update password if user already exists (to ensure correct password)
+    await prisma.user.update({
+      where: { email: "admin@system.com" },
+      data: {
+        // Unhashed password: admin
+        password: hashedPassword,
+      },
+    });
+    console.log("✅ Super Admin user already exists, password updated");
   }
 
   // Create Cash In Hand subhead if it doesn't exist

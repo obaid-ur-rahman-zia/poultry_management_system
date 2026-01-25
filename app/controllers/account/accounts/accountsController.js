@@ -10,24 +10,101 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 class AccountsController {
-  async readAll() {
+  async readAll(req) {
     const cacheKey = "accounts:all";
     try {
-      const cachedData = await RedisService.get(cacheKey);
+      // Extract pagination params
+      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const getAll = searchParams.get("all") === "true";
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "20");
+      const skip = (page - 1) * limit;
+
+      // Get logged-in user session for cash in hand filtering
+      const session = await getServerSession(authOptions);
+      let userCashInHandAccountId = null;
+      let cashInHandSubId = null;
+
+      if (session && session.user?.id) {
+        const userId = parseInt(session.user.id);
+        const user = await UserRepository.readById(userId);
+        if (user && user.cash_in_hand_account_id) {
+          userCashInHandAccountId = user.cash_in_hand_account_id;
+        }
+      }
+
+      // Find "Cash In Hand" subhead
+      const cashInHandSubhead = await AccountSubHeadRepository.findByName("Cash In Hand");
+      if (cashInHandSubhead) {
+        cashInHandSubId = cashInHandSubhead.sub_id;
+      }
+
+      // If getAll is true, fetch all accounts without pagination
+      let allAccounts, total;
+      if (getAll) {
+        allAccounts = await AccountsRepository.readAll();
+        total = allAccounts.length;
+      } else {
+        // Get total count and paginated accounts
+        const result = await AccountsRepository.readAllWithPagination(skip, limit);
+        allAccounts = result.data;
+        total = result.total;
+      }
+
+      // Filter accounts based on user's cash in hand account
+      let filteredAccounts = allAccounts;
+      let filteredTotal = total;
+
+      if (userCashInHandAccountId && cashInHandSubId) {
+        filteredAccounts = allAccounts;
+        filteredTotal = total;
+      }
+
+      // Use cache key with user ID and pagination to avoid cache conflicts
+      const userCacheKey = getAll
+        ? (userCashInHandAccountId
+            ? `accounts:all:user:${userCashInHandAccountId}:all`
+            : `${cacheKey}:all`)
+        : (userCashInHandAccountId
+            ? `accounts:all:user:${userCashInHandAccountId}:page:${page}:limit:${limit}`
+            : `${cacheKey}:page:${page}:limit:${limit}`);
+
+      const cachedData = await RedisService.get(userCacheKey);
       if (cachedData) {
         console.log("Account Cache Hit");
         return successResponse(cachedData, "Success");
       }
       console.log("Account Cache Miss");
 
-      const allAccounts = await AccountsRepository.readAll();
+      // If getAll, return all accounts without pagination structure
+      if (getAll) {
+        const response = {
+          data: filteredAccounts,
+        };
+        await RedisService.setex(
+          userCacheKey,
+          300,
+          JSON.stringify(response)
+        );
+        return successResponse(response, "Success");
+      }
 
-      const response = {
-        data: allAccounts,
+      const paginatedResponse = {
+        data: filteredAccounts,
+        pagination: {
+          page,
+          limit,
+          total: filteredTotal,
+          totalPages: Math.ceil(filteredTotal / limit),
+        },
       };
 
-      await RedisService.setex(cacheKey, 300, JSON.stringify(response));
-      return successResponse(response, "Success");
+      await RedisService.setex(
+        userCacheKey,
+        300,
+        JSON.stringify(paginatedResponse)
+      );
+      return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all accounts in Method: AccountsController.readAll",

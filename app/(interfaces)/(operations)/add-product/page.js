@@ -104,7 +104,7 @@ export default function ProductPage() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
@@ -766,7 +766,7 @@ export default function ProductPage() {
           )}
 
           {/* Pagination */}
-          {totalItems > 0 && totalPages > 1 && (
+          {totalPages >= 1 && (
             <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Label className="text-sm text-muted-foreground">Items per page:</Label>
