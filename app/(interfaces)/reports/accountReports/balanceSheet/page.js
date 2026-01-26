@@ -239,13 +239,7 @@ export default function BalanceSheetReport() {
                 >
                   Export
                 </button>
-                <button
-                  onClick={() => window.print()}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <Printer className="w-4 h-4" />
-                  Print
-                </button>
+
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
