@@ -4,13 +4,16 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Edit2, Trash2, PlusCircle, Check, ChevronsUpDown } from "lucide-react";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  PlusCircle,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,17 +88,17 @@ export default function ProductPage() {
   const [categories, setCategories] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [units, setUnits] = useState([]);
-  
+
   // Dialog states
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCompanyName, setNewCompanyName] = useState("");
-  
+
   // Searchable select states
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [companyOpen, setCompanyOpen] = useState(false);
-  
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -119,9 +122,10 @@ export default function ProductPage() {
     try {
       const response = await fetch("/api/category/readAll");
       const result = await response.json();
-      
+
       if (result.response_status === "success") {
-        const categoriesData = result.response_result?.data || result.response_result || [];
+        const categoriesData =
+          result.response_result?.data || result.response_result || [];
         setCategories(categoriesData);
       }
     } catch (error) {
@@ -133,9 +137,10 @@ export default function ProductPage() {
     try {
       const response = await fetch("/api/company/readAll");
       const result = await response.json();
-      
+
       if (result.response_status === "success") {
-        const companiesData = result.response_result?.data || result.response_result || [];
+        const companiesData =
+          result.response_result?.data || result.response_result || [];
         setCompanies(companiesData);
       }
     } catch (error) {
@@ -147,9 +152,10 @@ export default function ProductPage() {
     try {
       const response = await fetch("/api/unit/readAll");
       const result = await response.json();
-      
+
       if (result.response_status === "success") {
-        const unitsData = result.response_result?.data || result.response_result || [];
+        const unitsData =
+          result.response_result?.data || result.response_result || [];
         setUnits(unitsData);
       }
     } catch (error) {
@@ -157,16 +163,17 @@ export default function ProductPage() {
     }
   };
 
-
   const fetchProducts = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/product/readAll?page=${page}&limit=${limit}`);
+      const response = await fetch(
+        `/api/product/readAll?page=${page}&limit=${limit}`,
+      );
       const result = await response.json();
-      
+
       if (result.response_status === "success") {
         const responseData = result.response_result;
-        
+
         // Handle paginated response
         if (responseData?.pagination) {
           const productsData = responseData.products || [];
@@ -176,7 +183,8 @@ export default function ProductPage() {
           setCurrentPage(responseData.pagination.page || page);
         } else {
           // Fallback for non-paginated response
-          const productsData = responseData?.products || responseData?.data || responseData || [];
+          const productsData =
+            responseData?.products || responseData?.data || responseData || [];
           setProducts(Array.isArray(productsData) ? productsData : []);
           setTotalPages(1);
           setTotalItems(productsData.length);
@@ -313,7 +321,9 @@ export default function ProductPage() {
 
       if (result.response_status === "success") {
         toast.success(
-          isEditMode ? "Product updated successfully" : "Product created successfully"
+          isEditMode
+            ? "Product updated successfully"
+            : "Product created successfully",
         );
         reset({
           product_title: "",
@@ -343,13 +353,15 @@ export default function ProductPage() {
       sale_price: "",
     });
     // Scroll to form
-    document.getElementById("product-form")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("product-form")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleEdit = (product) => {
     setIsEditMode(true);
     setEditingProductId(product.product_id);
-    
+
     reset({
       product_title: product.product_title || "",
       procategory_id: product.procategory_id?.toString() || "",
@@ -357,7 +369,9 @@ export default function ProductPage() {
       sale_price: product.sale_price?.toString() || "",
     });
     // Scroll to form
-    document.getElementById("product-form")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("product-form")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleDelete = async (productId) => {
@@ -387,24 +401,38 @@ export default function ProductPage() {
 
   // Filter products - ensure products is an array
   // Filter products (client-side filtering on paginated data)
-  const filteredProducts = (Array.isArray(products) ? products : []).filter((product) => {
-    const matchesSearch = searchQuery === "" || 
-      product.product_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.types?.procategory_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.companies?.company_nam?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredProducts = (Array.isArray(products) ? products : []).filter(
+    (product) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        product.product_title
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        product.types?.procategory_nam
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        product.companies?.company_nam
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase());
 
-    const matchesCategory = filterCategory === "all" || 
-      product.procategory_id?.toString() === filterCategory;
+      const matchesCategory =
+        filterCategory === "all" ||
+        product.procategory_id?.toString() === filterCategory;
 
-    const matchesPrice = filterPrice === "" ||
-      product.sale_price?.toString().includes(filterPrice) ||
-      (filterPrice && product.sale_price && product.sale_price.toString().includes(filterPrice));
+      const matchesPrice =
+        filterPrice === "" ||
+        product.sale_price?.toString().includes(filterPrice) ||
+        (filterPrice &&
+          product.sale_price &&
+          product.sale_price.toString().includes(filterPrice));
 
-    const matchesName = filterName === "" ||
-      product.product_title?.toLowerCase().includes(filterName.toLowerCase());
+      const matchesName =
+        filterName === "" ||
+        product.product_title?.toLowerCase().includes(filterName.toLowerCase());
 
-    return matchesSearch && matchesCategory && matchesPrice && matchesName;
-  });
+      return matchesSearch && matchesCategory && matchesPrice && matchesName;
+    },
+  );
 
   // Reset to page 1 when filters change and refetch
   useEffect(() => {
@@ -423,11 +451,14 @@ export default function ProductPage() {
 
   return (
     <div className="p-6 space-y-6">
-
       {/* Form Section */}
       <Card className={"max-w-4xl mx-auto"}>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="product-form">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4"
+            id="product-form"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Name */}
               <div className="space-y-2">
@@ -455,7 +486,10 @@ export default function ProductPage() {
                     control={control}
                     rules={{ required: "Category is required" }}
                     render={({ field }) => (
-                      <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                      <Popover
+                        open={categoryOpen}
+                        onOpenChange={setCategoryOpen}
+                      >
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -465,13 +499,18 @@ export default function ProductPage() {
                           >
                             {field.value
                               ? categories.find(
-                                  (category) => category.procategory_id.toString() === field.value
+                                  (category) =>
+                                    category.procategory_id.toString() ===
+                                    field.value,
                                 )?.procategory_nam || "Select category"
                               : "Select category"}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <PopoverContent
+                          className="w-[var(--radix-popover-trigger-width)] p-0"
+                          align="start"
+                        >
                           <Command>
                             <CommandInput placeholder="Search category..." />
                             <CommandList>
@@ -482,16 +521,19 @@ export default function ProductPage() {
                                     key={category.procategory_id}
                                     value={`${category.procategory_id}-${category.procategory_nam}`}
                                     onSelect={() => {
-                                      field.onChange(category.procategory_id.toString());
+                                      field.onChange(
+                                        category.procategory_id.toString(),
+                                      );
                                       setCategoryOpen(false);
                                     }}
                                   >
                                     <Check
                                       className={cn(
                                         "mr-2 h-4 w-4",
-                                        field.value === category.procategory_id.toString()
+                                        field.value ===
+                                          category.procategory_id.toString()
                                           ? "opacity-100"
-                                          : "opacity-0"
+                                          : "opacity-0",
                                       )}
                                     />
                                     {category.procategory_nam}
@@ -541,13 +583,18 @@ export default function ProductPage() {
                           >
                             {field.value
                               ? companies.find(
-                                  (company) => company.company_id.toString() === field.value
+                                  (company) =>
+                                    company.company_id.toString() ===
+                                    field.value,
                                 )?.company_nam || "Select company"
                               : "Select company"}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <PopoverContent
+                          className="w-[var(--radix-popover-trigger-width)] p-0"
+                          align="start"
+                        >
                           <Command>
                             <CommandInput placeholder="Search company..." />
                             <CommandList>
@@ -558,16 +605,19 @@ export default function ProductPage() {
                                     key={company.company_id}
                                     value={`${company.company_id}-${company.company_nam}`}
                                     onSelect={() => {
-                                      field.onChange(company.company_id.toString());
+                                      field.onChange(
+                                        company.company_id.toString(),
+                                      );
                                       setCompanyOpen(false);
                                     }}
                                   >
                                     <Check
                                       className={cn(
                                         "mr-2 h-4 w-4",
-                                        field.value === company.company_id.toString()
+                                        field.value ===
+                                          company.company_id.toString()
                                           ? "opacity-100"
-                                          : "opacity-0"
+                                          : "opacity-0",
                                       )}
                                     />
                                     {company.company_nam}
@@ -632,7 +682,11 @@ export default function ProductPage() {
                 {isEditMode ? "Cancel Edit" : "Clear Form"}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : isEditMode ? "Update Product" : "Create Product"}
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Product"
+                    : "Create Product"}
               </Button>
             </div>
           </form>
@@ -660,14 +714,20 @@ export default function ProductPage() {
 
               <div className="space-y-2">
                 <Label>Category</Label>
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <Select
+                  value={filterCategory}
+                  onValueChange={setFilterCategory}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
-                      <SelectItem key={category.procategory_id} value={category.procategory_id.toString()}>
+                      <SelectItem
+                        key={category.procategory_id}
+                        value={category.procategory_id.toString()}
+                      >
                         {category.procategory_nam}
                       </SelectItem>
                     ))}
@@ -716,28 +776,36 @@ export default function ProductPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className={"max-h-[500px] overflow-y-auto"}>
-                  {paginatedProducts.map((product) => (
+                  {filteredProducts.map((product) => (
                     <TableRow key={product.product_id}>
                       <TableCell className="font-medium">
                         {product.product_title || "N/A"}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {product.types?.procategory_nam || 
-                           categories.find(c => c.procategory_id === product.procategory_id)?.procategory_nam || 
-                           "N/A"}
+                          {product.types?.procategory_nam ||
+                            categories.find(
+                              (c) =>
+                                c.procategory_id === product.procategory_id,
+                            )?.procategory_nam ||
+                            "N/A"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary">
-                          {product.companies?.company_nam || 
-                           companies.find(c => c.company_id === product.company_id)?.company_nam || 
-                           "N/A"}
+                          {product.companies?.company_nam ||
+                            companies.find(
+                              (c) => c.company_id === product.company_id,
+                            )?.company_nam ||
+                            "N/A"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {product.sale_price 
-                          ? product.sale_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        {product.sale_price
+                          ? product.sale_price.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
                           : "N/A"}
                       </TableCell>
                       <TableCell>
@@ -769,14 +837,16 @@ export default function ProductPage() {
           {totalPages >= 1 && (
             <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                <Label className="text-sm text-muted-foreground">
+                  Items per page:
+                </Label>
                 <Select
                   value={itemsPerPage.toString()}
-                      onValueChange={(value) => {
-                        setItemsPerPage(Number(value));
-                        setCurrentPage(1);
-                        fetchProducts(1, Number(value));
-                      }}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                    fetchProducts(1, Number(value));
+                  }}
                 >
                   <SelectTrigger className="w-20">
                     <SelectValue />
@@ -792,14 +862,18 @@ export default function ProductPage() {
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                          <PaginationPrevious
-                            onClick={() => {
-                              const newPage = Math.max(1, currentPage - 1);
-                              setCurrentPage(newPage);
-                              fetchProducts(newPage, itemsPerPage);
-                            }}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
+                    <PaginationPrevious
+                      onClick={() => {
+                        const newPage = Math.max(1, currentPage - 1);
+                        setCurrentPage(newPage);
+                        fetchProducts(newPage, itemsPerPage);
+                      }}
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
                   </PaginationItem>
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
@@ -814,33 +888,39 @@ export default function ProductPage() {
                     }
                     return (
                       <PaginationItem key={pageNum}>
-                              <PaginationLink
-                                onClick={() => {
-                                  setCurrentPage(pageNum);
-                                  fetchProducts(pageNum, itemsPerPage);
-                                }}
-                                isActive={currentPage === pageNum}
-                                className="cursor-pointer"
-                              >
+                        <PaginationLink
+                          onClick={() => {
+                            setCurrentPage(pageNum);
+                            fetchProducts(pageNum, itemsPerPage);
+                          }}
+                          isActive={currentPage === pageNum}
+                          className="cursor-pointer"
+                        >
                           {pageNum}
                         </PaginationLink>
                       </PaginationItem>
                     );
                   })}
                   <PaginationItem>
-                          <PaginationNext
-                            onClick={() => {
-                              const newPage = Math.min(totalPages, currentPage + 1);
-                              setCurrentPage(newPage);
-                              fetchProducts(newPage, itemsPerPage);
-                            }}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
+                    <PaginationNext
+                      onClick={() => {
+                        const newPage = Math.min(totalPages, currentPage + 1);
+                        setCurrentPage(newPage);
+                        fetchProducts(newPage, itemsPerPage);
+                      }}
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
               <div className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} products
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
+                {totalItems} products
               </div>
             </div>
           )}
@@ -848,7 +928,10 @@ export default function ProductPage() {
       </Card>
 
       {/* Add Category Dialog */}
-      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+      <Dialog
+        open={isCategoryDialogOpen}
+        onOpenChange={setIsCategoryDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Category</DialogTitle>
@@ -900,9 +983,7 @@ export default function ProductPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Company</DialogTitle>
-            <DialogDescription>
-              Create a new company.
-            </DialogDescription>
+            <DialogDescription>Create a new company.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

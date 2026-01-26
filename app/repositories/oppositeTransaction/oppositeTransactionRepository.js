@@ -81,12 +81,27 @@ class OppositeTransactionRepository {
         transaction_id: Number(transaction_id),
       },
       data: {
-        transaction_date: req_object.transaction_date ? new Date(req_object.transaction_date) : undefined,
-        paid_by: req_object.paid_by !== undefined ? req_object.paid_by : undefined,
-        bank_account: req_object.bank_account !== undefined ? req_object.bank_account : undefined,
-        received_by: req_object.received_by !== undefined ? req_object.received_by : undefined,
-        amount: req_object.amount !== undefined ? Number(req_object.amount) : undefined,
-        description: req_object.description !== undefined ? req_object.description : undefined,
+        transaction_date: req_object.transaction_date
+          ? new Date(req_object.transaction_date)
+          : undefined,
+        paid_by:
+          req_object.paid_by !== undefined ? req_object.paid_by : undefined,
+        bank_account:
+          req_object.bank_account !== undefined
+            ? req_object.bank_account
+            : undefined,
+        received_by:
+          req_object.received_by !== undefined
+            ? req_object.received_by
+            : undefined,
+        amount:
+          req_object.amount !== undefined
+            ? Number(req_object.amount)
+            : undefined,
+        description:
+          req_object.description !== undefined
+            ? req_object.description
+            : undefined,
         update_by: req_object.update_by || "user 1",
         status: req_object.status ?? 1,
       },
@@ -96,6 +111,71 @@ class OppositeTransactionRepository {
         received_by_account: true,
       },
     });
+  }
+
+  async readBalanceSheet(start_date, end_date) {
+    // Fetch opposite transactions within date range
+    const oppositeTransactions = await prisma.opposite_transaction.findMany({
+      where: {
+        transaction_date: {
+          gte: new Date(start_date),
+          lte: new Date(end_date),
+        },
+        status: 1,
+      },
+      include: {
+        paid_by_account: {
+          select: {
+            account_nam: true,
+          },
+        },
+        received_by_account: {
+          select: {
+            account_nam: true,
+          },
+        },
+      },
+      orderBy: {
+        transaction_date: "asc",
+      },
+    });
+
+    // Fetch self transactions within date range
+    const selfTransactions = await prisma.self_transaction.findMany({
+      where: {
+        transaction_date: {
+          gte: new Date(start_date),
+          lte: new Date(end_date),
+        },
+        status: 1,
+      },
+      include: {
+        account: {
+          select: {
+            account_nam: true,
+          },
+        },
+      },
+      orderBy: {
+        transaction_date: "asc",
+      },
+    });
+
+    // Combine and sort by date
+    const combinedTransactions = [
+      ...oppositeTransactions.map((t) => ({
+        ...t,
+        type: "opposite",
+      })),
+      ...selfTransactions.map((t) => ({
+        ...t,
+        type: "self",
+      })),
+    ].sort(
+      (a, b) => new Date(a.transaction_date) - new Date(b.transaction_date),
+    );
+
+    return combinedTransactions;
   }
 
   async delete(transaction_id) {
@@ -111,4 +191,3 @@ class OppositeTransactionRepository {
 }
 
 export default new OppositeTransactionRepository();
-
