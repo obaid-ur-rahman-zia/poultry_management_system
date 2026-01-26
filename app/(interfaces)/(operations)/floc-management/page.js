@@ -5,12 +5,7 @@ import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Plus, Search, Edit2, Trash2, X, AlertCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,7 +74,8 @@ export default function FlocManagementPage() {
   const [clearDescription, setClearDescription] = useState("");
   const [flocToClear, setFlocToClear] = useState(null);
   const [shouldClearEndingDate, setShouldClearEndingDate] = useState(false);
-  const [activeFlocForSelectedFarm, setActiveFlocForSelectedFarm] = useState(null);
+  const [activeFlocForSelectedFarm, setActiveFlocForSelectedFarm] =
+    useState(null);
   const [isCreateStackholderOpen, setIsCreateStackholderOpen] = useState(false);
   const [creatingIndex, setCreatingIndex] = useState(null);
   const [isCreatingStackholder, setIsCreatingStackholder] = useState(false);
@@ -89,7 +85,7 @@ export default function FlocManagementPage() {
     stackholder_contact: "",
     stackholder_address: "",
   });
-  
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [filterUnit, setFilterUnit] = useState("all");
@@ -103,7 +99,9 @@ export default function FlocManagementPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  const formStackholders = watch("stackholders") || [{ stackholder_id: "", percentage: "" }];
+  const formStackholders = watch("stackholders") || [
+    { stackholder_id: "", percentage: "" },
+  ];
   const selectedFarm = watch("farm_id");
 
   useEffect(() => {
@@ -122,11 +120,11 @@ export default function FlocManagementPage() {
       const farmId = parseInt(selectedFarm);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const activeFloc = flocs.find(floc => {
+
+      const activeFloc = flocs.find((floc) => {
         const flocProunitId = floc.prounit_id || floc.farm_id;
         if (flocProunitId !== farmId) return false;
-        
+
         // Check if floc is active (no ending_date or ending_date is in the future, not today or past)
         if (!floc.ending_date) return true;
         const endDate = new Date(floc.ending_date);
@@ -134,7 +132,7 @@ export default function FlocManagementPage() {
         // Floc is active if ending_date is in the future (after today)
         return endDate > today;
       });
-      
+
       setActiveFlocForSelectedFarm(activeFloc || null);
       if (!activeFloc) {
         setShouldClearEndingDate(false);
@@ -151,9 +149,10 @@ export default function FlocManagementPage() {
     try {
       const response = await fetch("/api/unit/readAll");
       const result = await response.json();
-      
+
       if (result.response_status === "success") {
-        const farmsData = result.response_result?.data || result.response_result || [];
+        const farmsData =
+          result.response_result?.data || result.response_result || [];
         setFarms(farmsData);
       }
     } catch (error) {
@@ -165,9 +164,10 @@ export default function FlocManagementPage() {
     try {
       const response = await fetch("/api/stackholder");
       const result = await response.json();
-      
+
       if (result.response_status === "success") {
-        const stackholdersData = result.response_result?.data || result.response_result || [];
+        const stackholdersData =
+          result.response_result?.data || result.response_result || [];
         setStackholders(stackholdersData);
       }
     } catch (error) {
@@ -178,12 +178,14 @@ export default function FlocManagementPage() {
   const fetchFlocs = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/floc/readAll?page=${page}&limit=${limit}`);
+      const response = await fetch(
+        `/api/floc/readAll?page=${page}&limit=${limit}`,
+      );
       const result = await response.json();
-      
+
       if (result.response_status === "success") {
         const responseData = result.response_result;
-        
+
         // Handle paginated response
         if (responseData?.pagination) {
           const flocsData = responseData.data || [];
@@ -214,7 +216,7 @@ export default function FlocManagementPage() {
     today.setHours(0, 0, 0, 0);
 
     const unavailableFarmIds = flocs
-      .filter(floc => {
+      .filter((floc) => {
         // Farm is unavailable if it has an ending_date that is in the future (after today)
         // If ending_date is today or in the past, the farm is available
         if (floc.ending_date) {
@@ -226,12 +228,17 @@ export default function FlocManagementPage() {
         // If no ending_date, farm is unavailable (active floc)
         return true;
       })
-      .map(floc => floc.prounit_id || floc.farm_id);
+      .map((floc) => floc.prounit_id || floc.farm_id);
 
-    const available = farms.filter(farm => {
+    const available = farms.filter((farm) => {
       const farmId = farm.prounit_id || farm.farm_id;
       // If editing, allow the currently selected farm
-      if (isEditMode && editingFlocId && (flocs.find(f => f.floc_id === editingFlocId)?.prounit_id || flocs.find(f => f.floc_id === editingFlocId)?.farm_id) === farmId) {
+      if (
+        isEditMode &&
+        editingFlocId &&
+        (flocs.find((f) => f.floc_id === editingFlocId)?.prounit_id ||
+          flocs.find((f) => f.floc_id === editingFlocId)?.farm_id) === farmId
+      ) {
         return true;
       }
       return !unavailableFarmIds.includes(farmId);
@@ -242,7 +249,10 @@ export default function FlocManagementPage() {
 
   const handleAddStackholder = () => {
     const currentStackholders = watch("stackholders") || [];
-    setValue("stackholders", [...currentStackholders, { stackholder_id: "", percentage: "" }]);
+    setValue("stackholders", [
+      ...currentStackholders,
+      { stackholder_id: "", percentage: "" },
+    ]);
   };
 
   const handleRemoveStackholder = (index) => {
@@ -263,7 +273,11 @@ export default function FlocManagementPage() {
     setValue("stackholders", currentStackholders);
 
     // If only one stackholder, set to 100%
-    if (currentStackholders.length === 1 && field === "stackholder_id" && value) {
+    if (
+      currentStackholders.length === 1 &&
+      field === "stackholder_id" &&
+      value
+    ) {
       setValue("stackholders.0.percentage", "100");
     }
   };
@@ -318,8 +332,8 @@ export default function FlocManagementPage() {
 
   const calculateTotalPercentage = () => {
     const percentages = formStackholders
-      .map(sh => parseFloat(sh.percentage) || 0)
-      .filter(p => !isNaN(p));
+      .map((sh) => parseFloat(sh.percentage) || 0)
+      .filter((p) => !isNaN(p));
     return percentages.reduce((sum, p) => sum + p, 0);
   };
 
@@ -394,7 +408,9 @@ export default function FlocManagementPage() {
       const result = await response.json();
 
       if (result.response_status === "success") {
-        toast.success("Ending date cleared successfully. Farm is now available for a new floc.");
+        toast.success(
+          "Ending date cleared successfully. Farm is now available for a new floc.",
+        );
         await fetchFlocs();
         setClearDescription("");
         setShouldClearEndingDate(false);
@@ -422,19 +438,26 @@ export default function FlocManagementPage() {
     // Validate stackholders total percentage
     const totalPercentage = calculateTotalPercentage();
     if (totalPercentage !== 100) {
-      toast.error(`Stackholders percentage must total 100%. Current total: ${totalPercentage}%`);
+      toast.error(
+        `Stackholders percentage must total 100%. Current total: ${totalPercentage}%`,
+      );
       return;
     }
 
     // Validate at least one stackholder
-    const validStackholders = data.stackholders.filter(sh => sh.stackholder_id);
+    const validStackholders = data.stackholders.filter(
+      (sh) => sh.stackholder_id,
+    );
     if (validStackholders.length === 0) {
       toast.error("At least one stackholder is required");
       return;
     }
 
     // Validate dates
-    if (data.ending_date && new Date(data.starting_date) > new Date(data.ending_date)) {
+    if (
+      data.ending_date &&
+      new Date(data.starting_date) > new Date(data.ending_date)
+    ) {
       toast.error("Ending date must be after starting date");
       return;
     }
@@ -444,7 +467,7 @@ export default function FlocManagementPage() {
         prounit_id: parseInt(data.farm_id), // farm_id from form maps to prounit_id
         starting_date: data.starting_date,
         ending_date: data.ending_date || null,
-        stackholders: validStackholders.map(sh => ({
+        stackholders: validStackholders.map((sh) => ({
           stackholder_id: parseInt(sh.stackholder_id),
           percentage: parseFloat(sh.percentage),
         })),
@@ -469,7 +492,9 @@ export default function FlocManagementPage() {
 
       if (result.response_status === "success") {
         toast.success(
-          isEditMode ? "Floc updated successfully" : "Floc created successfully"
+          isEditMode
+            ? "Floc updated successfully"
+            : "Floc created successfully",
         );
         reset({
           farm_id: "",
@@ -504,38 +529,48 @@ export default function FlocManagementPage() {
       ending_date: "",
       stackholders: [{ stackholder_id: "", percentage: "" }],
     });
-    document.getElementById("floc-form")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("floc-form")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleEdit = (floc) => {
     setIsEditMode(true);
     setEditingFlocId(floc.floc_id);
-    
+
     // Get stackholders from floc_stackholders relation
-    const stackholdersData = floc.floc_stackholders && Array.isArray(floc.floc_stackholders)
-      ? floc.floc_stackholders.map(fs => ({
-          stackholder_id: fs.stackholder?.stackholder_id?.toString() || "",
-          percentage: fs.percentage?.toString() || ""
-        }))
-      : [{ stackholder_id: "", percentage: "" }];
+    const stackholdersData =
+      floc.floc_stackholders && Array.isArray(floc.floc_stackholders)
+        ? floc.floc_stackholders.map((fs) => ({
+            stackholder_id: fs.stackholder?.stackholder_id?.toString() || "",
+            percentage: fs.percentage?.toString() || "",
+          }))
+        : [{ stackholder_id: "", percentage: "" }];
 
     const prounitId = (floc.prounit_id || floc.farm_id)?.toString() || "";
 
     reset({
       farm_id: prounitId,
-      starting_date: floc.starting_date ? new Date(floc.starting_date).toISOString().split('T')[0] : "",
-      ending_date: floc.ending_date ? new Date(floc.ending_date).toISOString().split('T')[0] : "",
-      stackholders: stackholdersData.length > 0 
-        ? stackholdersData
-        : [{ stackholder_id: "", percentage: "" }],
+      starting_date: floc.starting_date
+        ? new Date(floc.starting_date).toISOString().split("T")[0]
+        : "",
+      ending_date: floc.ending_date
+        ? new Date(floc.ending_date).toISOString().split("T")[0]
+        : "",
+      stackholders:
+        stackholdersData.length > 0
+          ? stackholdersData
+          : [{ stackholder_id: "", percentage: "" }],
     });
-    
+
     // Update available farms after setting edit mode to ensure current unit is included
     setTimeout(() => {
       updateAvailableFarms();
     }, 0);
-    
-    document.getElementById("floc-form")?.scrollIntoView({ behavior: "smooth" });
+
+    document
+      .getElementById("floc-form")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleDelete = async (flocId) => {
@@ -567,13 +602,13 @@ export default function FlocManagementPage() {
     // Exclude ended flocs only if showInactiveFlocs is false
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     if (!showInactiveFlocs) {
       // Only exclude ended flocs when switch is off (default behavior)
       if (floc.ending_date) {
         const endDate = new Date(floc.ending_date);
         endDate.setHours(0, 0, 0, 0);
-        
+
         // If ending_date is today or in the past, exclude this floc
         if (endDate <= today) {
           return false;
@@ -581,21 +616,37 @@ export default function FlocManagementPage() {
       }
     }
     // If showInactiveFlocs is true, show all flocs (both active and inactive)
-    
-    const flocProunitId = floc.prounit_id || floc.farm_id;
-    const matchesSearch = searchQuery === "" || 
-      floc.unit?.prounit_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      farms.find(f => (f.prounit_id || f.farm_id) === flocProunitId)?.prounit_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      farms.find(f => (f.prounit_id || f.farm_id) === flocProunitId)?.farm_nam?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesUnit = filterUnit === "all" || 
+    const flocProunitId = floc.prounit_id || floc.farm_id;
+    const matchesSearch =
+      searchQuery === "" ||
+      floc.unit?.prounit_nam
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      farms
+        .find((f) => (f.prounit_id || f.farm_id) === flocProunitId)
+        ?.prounit_nam?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      farms
+        .find((f) => (f.prounit_id || f.farm_id) === flocProunitId)
+        ?.farm_nam?.toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+    const matchesUnit =
+      filterUnit === "all" ||
       (floc.prounit_id || floc.farm_id)?.toString() === filterUnit;
 
-    const matchesStartDate = filterStartDate === "" ||
-      (floc.starting_date && new Date(floc.starting_date).toISOString().split('T')[0] === filterStartDate);
+    const matchesStartDate =
+      filterStartDate === "" ||
+      (floc.starting_date &&
+        new Date(floc.starting_date).toISOString().split("T")[0] ===
+          filterStartDate);
 
-    const matchesEndDate = filterEndDate === "" ||
-      (floc.ending_date && new Date(floc.ending_date).toISOString().split('T')[0] === filterEndDate);
+    const matchesEndDate =
+      filterEndDate === "" ||
+      (floc.ending_date &&
+        new Date(floc.ending_date).toISOString().split("T")[0] ===
+          filterEndDate);
 
     return matchesSearch && matchesUnit && matchesStartDate && matchesEndDate;
   });
@@ -605,11 +656,14 @@ export default function FlocManagementPage() {
 
   return (
     <div className="p-6 space-y-6">
-
       {/* Form Section */}
       <Card className={"max-w-4xl mx-auto"}>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="floc-form">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4"
+            id="floc-form"
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Farm Selection */}
               <div className="space-y-2">
@@ -625,26 +679,33 @@ export default function FlocManagementPage() {
                         label: farm.prounit_nam || farm.farm_nam,
                       })),
                       // Show unavailable farms (with active flocs) when no available farms
-                      ...(availableFarms.length === 0 && !isEditMode && farms.length > 0 ? farms.map((farm) => {
-                        const farmId = farm.prounit_id || farm.farm_id;
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const activeFloc = flocs.find(floc => {
-                          const flocProunitId = floc.prounit_id || floc.farm_id;
-                          if (flocProunitId !== farmId) return false;
-                          if (!floc.ending_date) return true;
-                          const endDate = new Date(floc.ending_date);
-                          endDate.setHours(0, 0, 0, 0);
-                          return endDate > today;
-                        });
-                        if (activeFloc) {
-                          return {
-                            value: farmId.toString(),
-                            label: `${farm.prounit_nam || farm.farm_nam} (Active - can clear)`,
-                          };
-                        }
-                        return null;
-                      }).filter(Boolean) : [])
+                      ...(availableFarms.length === 0 &&
+                      !isEditMode &&
+                      farms.length > 0
+                        ? farms
+                            .map((farm) => {
+                              const farmId = farm.prounit_id || farm.farm_id;
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              const activeFloc = flocs.find((floc) => {
+                                const flocProunitId =
+                                  floc.prounit_id || floc.farm_id;
+                                if (flocProunitId !== farmId) return false;
+                                if (!floc.ending_date) return true;
+                                const endDate = new Date(floc.ending_date);
+                                endDate.setHours(0, 0, 0, 0);
+                                return endDate > today;
+                              });
+                              if (activeFloc) {
+                                return {
+                                  value: farmId.toString(),
+                                  label: `${farm.prounit_nam || farm.farm_nam} (Active - can clear)`,
+                                };
+                              }
+                              return null;
+                            })
+                            .filter(Boolean)
+                        : []),
                     ];
                     return (
                       <Combobox
@@ -656,8 +717,9 @@ export default function FlocManagementPage() {
                           const farmId = parseInt(value);
                           const today = new Date();
                           today.setHours(0, 0, 0, 0);
-                          const activeFloc = flocs.find(floc => {
-                            const flocProunitId = floc.prounit_id || floc.farm_id;
+                          const activeFloc = flocs.find((floc) => {
+                            const flocProunitId =
+                              floc.prounit_id || floc.farm_id;
                             if (flocProunitId !== farmId) return false;
                             if (!floc.ending_date) return true;
                             const endDate = new Date(floc.ending_date);
@@ -675,7 +737,11 @@ export default function FlocManagementPage() {
                         placeholder="Select farm"
                         searchPlaceholder="Search farms..."
                         emptyText="No farm found."
-                        disabled={availableFarms.length === 0 && !isEditMode && farms.length === 0}
+                        disabled={
+                          availableFarms.length === 0 &&
+                          !isEditMode &&
+                          farms.length === 0
+                        }
                       />
                     );
                   }}
@@ -685,43 +751,48 @@ export default function FlocManagementPage() {
                     {errors.farm_id.message}
                   </p>
                 )}
-                {availableFarms.length === 0 && !isEditMode && farms.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      No available farms. All farms are currently in active flocs.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Select a farm from the list below to clear its ending date and make it available.
-                    </p>
-                    <Combobox
-                      options={farms.map((farm) => ({
-                        value: (farm.prounit_id || farm.farm_id).toString(),
-                        label: farm.prounit_nam || farm.farm_nam,
-                      }))}
-                      value={selectedFarm}
-                      onValueChange={(value) => {
-                        setValue("farm_id", value);
-                        const farmId = parseInt(value);
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const activeFloc = flocs.find(floc => {
-                          const flocProunitId = floc.prounit_id || floc.farm_id;
-                          if (flocProunitId !== farmId) return false;
-                          if (!floc.ending_date) return true;
-                          const endDate = new Date(floc.ending_date);
-                          endDate.setHours(0, 0, 0, 0);
-                          return endDate >= today;
-                        });
-                        if (activeFloc) {
-                          setActiveFlocForSelectedFarm(activeFloc);
-                        }
-                      }}
-                      placeholder="Select farm to clear ending date"
-                      searchPlaceholder="Search farms..."
-                      emptyText="No farm found."
-                    />
-                  </div>
-                )}
+                {availableFarms.length === 0 &&
+                  !isEditMode &&
+                  farms.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        No available farms. All farms are currently in active
+                        flocs.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Select a farm from the list below to clear its ending
+                        date and make it available.
+                      </p>
+                      <Combobox
+                        options={farms.map((farm) => ({
+                          value: (farm.prounit_id || farm.farm_id).toString(),
+                          label: farm.prounit_nam || farm.farm_nam,
+                        }))}
+                        value={selectedFarm}
+                        onValueChange={(value) => {
+                          setValue("farm_id", value);
+                          const farmId = parseInt(value);
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const activeFloc = flocs.find((floc) => {
+                            const flocProunitId =
+                              floc.prounit_id || floc.farm_id;
+                            if (flocProunitId !== farmId) return false;
+                            if (!floc.ending_date) return true;
+                            const endDate = new Date(floc.ending_date);
+                            endDate.setHours(0, 0, 0, 0);
+                            return endDate >= today;
+                          });
+                          if (activeFloc) {
+                            setActiveFlocForSelectedFarm(activeFloc);
+                          }
+                        }}
+                        placeholder="Select farm to clear ending date"
+                        searchPlaceholder="Search farms..."
+                        emptyText="No farm found."
+                      />
+                    </div>
+                  )}
               </div>
 
               {/* Starting Date */}
@@ -757,14 +828,19 @@ export default function FlocManagementPage() {
                       checked={shouldClearEndingDate}
                       onCheckedChange={setShouldClearEndingDate}
                     />
-                    <Label htmlFor="clear-ending-date" className="text-sm cursor-pointer">
+                    <Label
+                      htmlFor="clear-ending-date"
+                      className="text-sm cursor-pointer"
+                    >
                       Clear ending date of active floc (will set to today)
                     </Label>
                   </div>
                 )}
                 {shouldClearEndingDate && (
                   <div className="space-y-2 mt-2">
-                    <Label htmlFor="clear_description">Clear Description *</Label>
+                    <Label htmlFor="clear_description">
+                      Clear Description *
+                    </Label>
                     <Textarea
                       id="clear_description"
                       placeholder="Enter reason for clearing ending date"
@@ -800,7 +876,7 @@ export default function FlocManagementPage() {
             {/* Stackholders */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-              <Label>Stackholders *</Label>
+                <Label>Stackholders *</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -825,10 +901,13 @@ export default function FlocManagementPage() {
                               options={stackholders
                                 .filter((holder) => {
                                   // Filter out already selected stackholders (except current one)
-                                  return !(formStackholders || []).some((sh, i) => 
-                                    i !== index && 
-                                    sh.stackholder_id === holder.stackholder_id?.toString() &&
-                                    field.value !== holder.stackholder_id?.toString()
+                                  return !(formStackholders || []).some(
+                                    (sh, i) =>
+                                      i !== index &&
+                                      sh.stackholder_id ===
+                                        holder.stackholder_id?.toString() &&
+                                      field.value !==
+                                        holder.stackholder_id?.toString(),
                                   );
                                 })
                                 .map((holder) => ({
@@ -837,12 +916,24 @@ export default function FlocManagementPage() {
                                 }))}
                               value={field.value}
                               onValueChange={(value) => {
-                                if ((formStackholders || []).some((sh, i) => i !== index && sh.stackholder_id === value)) {
-                                  toast.error("This stackholder is already selected");
+                                if (
+                                  (formStackholders || []).some(
+                                    (sh, i) =>
+                                      i !== index &&
+                                      sh.stackholder_id === value,
+                                  )
+                                ) {
+                                  toast.error(
+                                    "This stackholder is already selected",
+                                  );
                                   return;
                                 }
                                 field.onChange(value);
-                                handleStackholderChange(index, "stackholder_id", value);
+                                handleStackholderChange(
+                                  index,
+                                  "stackholder_id",
+                                  value,
+                                );
                                 if (formStackholders.length === 1) {
                                   setValue("stackholders.0.percentage", "100");
                                 }
@@ -869,10 +960,13 @@ export default function FlocManagementPage() {
                     <Controller
                       name={`stackholders.${index}.percentage`}
                       control={control}
-                      rules={{ 
+                      rules={{
                         required: "Percentage is required",
                         min: { value: 0, message: "Percentage must be >= 0" },
-                        max: { value: 100, message: "Percentage must be <= 100" },
+                        max: {
+                          value: 100,
+                          message: "Percentage must be <= 100",
+                        },
                       }}
                       render={({ field }) => (
                         <Input
@@ -883,7 +977,11 @@ export default function FlocManagementPage() {
                           disabled={formStackholders.length === 1}
                           onChange={(e) => {
                             field.onChange(e);
-                            handleStackholderChange(index, "percentage", e.target.value);
+                            handleStackholderChange(
+                              index,
+                              "percentage",
+                              e.target.value,
+                            );
                           }}
                         />
                       )}
@@ -901,7 +999,7 @@ export default function FlocManagementPage() {
                   )}
                 </div>
               ))}
-              
+
               {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Button
                   type="button"
@@ -912,7 +1010,7 @@ export default function FlocManagementPage() {
                   <Plus className="h-4 w-4 mr-2" />
                   Add Stackholder
                 </Button> */}
-                {/* <Button
+              {/* <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
@@ -930,7 +1028,13 @@ export default function FlocManagementPage() {
               <div className="mt-2">
                 <div className="flex justify-between items-center text-sm">
                   <span>Total Percentage:</span>
-                  <span className={isPercentageValid ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                  <span
+                    className={
+                      isPercentageValid
+                        ? "text-green-600 font-semibold"
+                        : "text-red-600 font-semibold"
+                    }
+                  >
                     {totalPercentage.toFixed(2)}%
                   </span>
                 </div>
@@ -960,8 +1064,15 @@ export default function FlocManagementPage() {
               >
                 {isEditMode ? "Cancel Edit" : "Clear Form"}
               </Button>
-              <Button type="submit" disabled={isSubmitting || !isPercentageValid}>
-                {isSubmitting ? "Saving..." : isEditMode ? "Update Floc" : "Create Floc"}
+              <Button
+                type="submit"
+                disabled={isSubmitting || !isPercentageValid}
+              >
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Floc"
+                    : "Create Floc"}
               </Button>
             </div>
           </form>
@@ -995,7 +1106,7 @@ export default function FlocManagementPage() {
                     ...farms.map((farm) => ({
                       value: (farm.prounit_id || farm.farm_id).toString(),
                       label: farm.prounit_nam || farm.farm_nam,
-                    }))
+                    })),
                   ]}
                   value={filterUnit}
                   onValueChange={setFilterUnit}
@@ -1059,42 +1170,59 @@ export default function FlocManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className={"max-h-[500px] overflow-y-auto"}>
-                  {paginatedFlocs.map((floc) => {
+                  {filteredFlocs.map((floc) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    const endDate = floc.ending_date ? new Date(floc.ending_date) : null;
+                    const endDate = floc.ending_date
+                      ? new Date(floc.ending_date)
+                      : null;
                     const isActive = !endDate || (endDate && endDate >= today);
-                    
-                    const stackholdersData = floc.floc_stackholders && Array.isArray(floc.floc_stackholders)
-                      ? floc.floc_stackholders
-                      : [];
+
+                    const stackholdersData =
+                      floc.floc_stackholders &&
+                      Array.isArray(floc.floc_stackholders)
+                        ? floc.floc_stackholders
+                        : [];
 
                     return (
                       <TableRow key={floc.floc_id}>
                         <TableCell className="font-medium">
-                          {floc.unit?.prounit_nam || farms.find(f => (f.prounit_id || f.farm_id) === floc.prounit_id)?.prounit_nam || farms.find(f => (f.prounit_id || f.farm_id) === floc.prounit_id)?.farm_nam || "N/A"}
+                          {floc.unit?.prounit_nam ||
+                            farms.find(
+                              (f) =>
+                                (f.prounit_id || f.farm_id) === floc.prounit_id,
+                            )?.prounit_nam ||
+                            farms.find(
+                              (f) =>
+                                (f.prounit_id || f.farm_id) === floc.prounit_id,
+                            )?.farm_nam ||
+                            "N/A"}
                         </TableCell>
                         <TableCell>
-                          {floc.starting_date 
+                          {floc.starting_date
                             ? new Date(floc.starting_date).toLocaleDateString()
                             : "N/A"}
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              {floc.ending_date 
-                                ? new Date(floc.ending_date).toLocaleDateString()
+                              {floc.ending_date
+                                ? new Date(
+                                    floc.ending_date,
+                                  ).toLocaleDateString()
                                 : "Not set"}
-                              {floc.ending_date && !floc.clear_description && isActive && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleClearEndingDate(floc)}
-                                  className="h-6 px-2 text-xs"
-                                >
-                                  Clear
-                                </Button>
-                              )}
+                              {floc.ending_date &&
+                                !floc.clear_description &&
+                                isActive && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleClearEndingDate(floc)}
+                                    className="h-6 px-2 text-xs"
+                                  >
+                                    Clear
+                                  </Button>
+                                )}
                             </div>
                             {floc.clear_description && (
                               <p className="text-xs text-muted-foreground italic">
@@ -1106,8 +1234,13 @@ export default function FlocManagementPage() {
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {stackholdersData.map((fs, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {fs.stackholder?.stackholder_nam || "N/A"} ({fs.percentage}%)
+                              <Badge
+                                key={idx}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {fs.stackholder?.stackholder_nam || "N/A"} (
+                                {fs.percentage}%)
                               </Badge>
                             ))}
                           </div>
@@ -1147,14 +1280,16 @@ export default function FlocManagementPage() {
           {totalPages >= 1 && (
             <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                <Label className="text-sm text-muted-foreground">
+                  Items per page:
+                </Label>
                 <Select
                   value={itemsPerPage.toString()}
-                      onValueChange={(value) => {
-                        setItemsPerPage(Number(value));
-                        setCurrentPage(1);
-                        fetchFlocs(1, Number(value));
-                      }}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                    fetchFlocs(1, Number(value));
+                  }}
                 >
                   <SelectTrigger className="w-20">
                     <SelectValue />
@@ -1170,14 +1305,18 @@ export default function FlocManagementPage() {
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                          <PaginationPrevious
-                            onClick={() => {
-                              const newPage = Math.max(1, currentPage - 1);
-                              setCurrentPage(newPage);
-                              fetchFlocs(newPage, itemsPerPage);
-                            }}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
+                    <PaginationPrevious
+                      onClick={() => {
+                        const newPage = Math.max(1, currentPage - 1);
+                        setCurrentPage(newPage);
+                        fetchFlocs(newPage, itemsPerPage);
+                      }}
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
                   </PaginationItem>
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
@@ -1192,33 +1331,39 @@ export default function FlocManagementPage() {
                     }
                     return (
                       <PaginationItem key={pageNum}>
-                              <PaginationLink
-                                onClick={() => {
-                                  setCurrentPage(pageNum);
-                                  fetchFlocs(pageNum, itemsPerPage);
-                                }}
-                                isActive={currentPage === pageNum}
-                                className="cursor-pointer"
-                              >
+                        <PaginationLink
+                          onClick={() => {
+                            setCurrentPage(pageNum);
+                            fetchFlocs(pageNum, itemsPerPage);
+                          }}
+                          isActive={currentPage === pageNum}
+                          className="cursor-pointer"
+                        >
                           {pageNum}
                         </PaginationLink>
                       </PaginationItem>
                     );
                   })}
                   <PaginationItem>
-                          <PaginationNext
-                            onClick={() => {
-                              const newPage = Math.min(totalPages, currentPage + 1);
-                              setCurrentPage(newPage);
-                              fetchFlocs(newPage, itemsPerPage);
-                            }}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
+                    <PaginationNext
+                      onClick={() => {
+                        const newPage = Math.min(totalPages, currentPage + 1);
+                        setCurrentPage(newPage);
+                        fetchFlocs(newPage, itemsPerPage);
+                      }}
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
               <div className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} flocs
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
+                {totalItems} flocs
               </div>
             </div>
           )}
@@ -1231,7 +1376,8 @@ export default function FlocManagementPage() {
           <DialogHeader>
             <DialogTitle>Clear Ending Date</DialogTitle>
             <DialogDescription>
-              Please provide a description for clearing the ending date of this floc.
+              Please provide a description for clearing the ending date of this
+              floc.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -1266,41 +1412,62 @@ export default function FlocManagementPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isCreateStackholderOpen} onOpenChange={setIsCreateStackholderOpen}>
+      <Dialog
+        open={isCreateStackholderOpen}
+        onOpenChange={setIsCreateStackholderOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Stackholder</DialogTitle>
-            <DialogDescription>
-              Enter stackholder details.
-            </DialogDescription>
+            <DialogDescription>Enter stackholder details.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Name *</Label>
               <Input
                 value={newStackholder.stackholder_nam}
-                onChange={(e) => setNewStackholder({ ...newStackholder, stackholder_nam: e.target.value })}
+                onChange={(e) =>
+                  setNewStackholder({
+                    ...newStackholder,
+                    stackholder_nam: e.target.value,
+                  })
+                }
               />
             </div>
             <div className="space-y-2">
               <Label>CNIC</Label>
               <Input
                 value={newStackholder.stackholder_cnic}
-                onChange={(e) => setNewStackholder({ ...newStackholder, stackholder_cnic: e.target.value })}
+                onChange={(e) =>
+                  setNewStackholder({
+                    ...newStackholder,
+                    stackholder_cnic: e.target.value,
+                  })
+                }
               />
             </div>
             <div className="space-y-2">
               <Label>Contact</Label>
               <Input
                 value={newStackholder.stackholder_contact}
-                onChange={(e) => setNewStackholder({ ...newStackholder, stackholder_contact: e.target.value })}
+                onChange={(e) =>
+                  setNewStackholder({
+                    ...newStackholder,
+                    stackholder_contact: e.target.value,
+                  })
+                }
               />
             </div>
             <div className="space-y-2">
               <Label>Address</Label>
               <Textarea
                 value={newStackholder.stackholder_address}
-                onChange={(e) => setNewStackholder({ ...newStackholder, stackholder_address: e.target.value })}
+                onChange={(e) =>
+                  setNewStackholder({
+                    ...newStackholder,
+                    stackholder_address: e.target.value,
+                  })
+                }
                 rows={3}
               />
             </div>
@@ -1321,7 +1488,12 @@ export default function FlocManagementPage() {
             >
               Cancel
             </Button>
-            <Button onClick={submitCreateStackholder} disabled={isCreatingStackholder || !newStackholder.stackholder_nam.trim()}>
+            <Button
+              onClick={submitCreateStackholder}
+              disabled={
+                isCreatingStackholder || !newStackholder.stackholder_nam.trim()
+              }
+            >
               {isCreatingStackholder ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>

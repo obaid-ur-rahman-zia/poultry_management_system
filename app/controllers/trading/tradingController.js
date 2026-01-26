@@ -1,16 +1,15 @@
 import TradingRepository from "@/app/repositories/trading/tradingRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
-import RedisService from "@/app/utils/redis";
 import { createTransactions } from "./tradingTransactions";
 import prisma from "@/lib/prisma";
 
 class TradingController {
   async readAll(req) {
-    const cacheKey = "trading:all";
     try {
       // Extract pagination params
-      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const searchParams =
+        req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "20");
@@ -23,27 +22,17 @@ class TradingController {
         total = data.length;
       } else {
         // Get total count and paginated trades
-        const result = await TradingRepository.readAllWithPagination(skip, limit);
+        const result = await TradingRepository.readAllWithPagination(
+          skip,
+          limit,
+        );
         data = result.data;
         total = result.total;
       }
 
-      // Use cache key with pagination to avoid cache conflicts
-      const userCacheKey = getAll
-        ? `${cacheKey}:all`
-        : `${cacheKey}:page:${page}:limit:${limit}`;
-
-      const cachedData = await RedisService.get(userCacheKey);
-      if (cachedData) {
-        console.log("Trading Cache Hit");
-        return successResponse(cachedData, "Success");
-      }
-      console.log("Trading Cache Miss");
-
       // If getAll, return all trades without pagination structure
       if (getAll) {
         const response = { data };
-        await RedisService.setex(userCacheKey, 300, JSON.stringify(response));
         return successResponse(response, "Success");
       }
 
@@ -57,12 +46,11 @@ class TradingController {
         },
       };
 
-      await RedisService.setex(userCacheKey, 300, JSON.stringify(paginatedResponse));
       return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all trades in Method: TradingController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -77,7 +65,7 @@ class TradingController {
         const error = new Error("trading_id is required");
         ErrorLogger.log(
           "Failed to get trade by id in Method: TradingController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -86,7 +74,7 @@ class TradingController {
       if (!result) {
         ErrorLogger.log(
           "Failed to get trade by id in Method: TradingController.readById",
-          new Error("Trade not found")
+          new Error("Trade not found"),
         );
         return errorResponse(new Error("Trade not found"), 404);
       }
@@ -95,7 +83,7 @@ class TradingController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get trade by id in Method: TradingController.readById",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -128,11 +116,11 @@ class TradingController {
         !sale_quantity
       ) {
         const error = new Error(
-          "trading_date, buy_from_account, product_id, buy_price, buy_quantity, sale_to_account, sale_price, and sale_quantity are required in Method: TradingController.create"
+          "trading_date, buy_from_account, product_id, buy_price, buy_quantity, sale_to_account, sale_price, and sale_quantity are required in Method: TradingController.create",
         );
         ErrorLogger.log(
           "Failed to create trade in Method: TradingController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -170,7 +158,7 @@ class TradingController {
                 update_by: req_object.update_by || "user 1",
                 status: req_object.status ?? 1,
               },
-              tx
+              tx,
             );
 
             // CRITICAL: Validate trading was created successfully
@@ -186,7 +174,7 @@ class TradingController {
             // Log the specific error that occurred within the transaction
             ErrorLogger.log(
               "Transaction failed in TradingController.create",
-              transactionError
+              transactionError,
             );
             // Re-throw to trigger rollback
             throw transactionError;
@@ -196,18 +184,17 @@ class TradingController {
           maxWait: 10000, // 10s to get connection from pool
           timeout: 30000, // 30s for entire transaction
           isolationLevel: "Serializable", // Prevents partial commits
-        }
+        },
       );
 
-      await RedisService.del("trading:all");
       return successResponse(
         { trading_id: trading.trading_id },
-        "Trade created successfully"
+        "Trade created successfully",
       );
     } catch (err) {
       ErrorLogger.log(
         "Failed to create trade in Method: TradingController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -220,11 +207,11 @@ class TradingController {
 
       if (!trading_id) {
         const error = new Error(
-          "trading_id is required in Method: TradingController.update"
+          "trading_id is required in Method: TradingController.update",
         );
         ErrorLogger.log(
           "Failed to update trade in Method: TradingController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -276,19 +263,18 @@ class TradingController {
           : undefined,
       });
 
-      await RedisService.del("trading:all");
       return successResponse(result, "Trade updated successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update trade in Method: TradingController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Trade not found"), 404);
       }
       ErrorLogger.log(
         "Failed to update trade in Method: TradingController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -302,26 +288,24 @@ class TradingController {
       if (!trading_id) {
         ErrorLogger.log(
           "Failed to delete trade in Method: TradingController.delete",
-          new Error("trading_id is required")
+          new Error("trading_id is required"),
         );
         return errorResponse(new Error("trading_id is required"), 400);
       }
 
-      await TradingRepository.delete(trading_id);
-
-      await RedisService.del("trading:all");
+      const result = await TradingRepository.delete(trading_id);
       return successResponse({}, "Trade deleted successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to delete trade in Method: TradingController.delete",
-          err
+          err,
         );
         return errorResponse(new Error("Trade not found"), 404);
       }
       ErrorLogger.log(
         "Failed to delete trade in Method: TradingController.delete",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -337,7 +321,7 @@ class TradingController {
         const error = new Error("start_dat and end_dat are required");
         ErrorLogger.log(
           "Failed to read report detail in Method: TradingController.readReportDetail",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -350,7 +334,7 @@ class TradingController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to read report detail in Method: TradingController.readReportDetail",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }

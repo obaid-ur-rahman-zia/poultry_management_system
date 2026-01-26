@@ -1,17 +1,16 @@
 import WholeSaleRepository from "@/app/repositories/wholeSale/wholeSaleRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
-import RedisService from "@/app/utils/redis";
 import { createTransactions } from "./wholeSaleTransactions";
 import transactionRepository from "@/app/repositories/transaction/transactionRepository";
 import prisma from "@/lib/prisma";
 
 class WholeSaleController {
   async readAll(req) {
-    const cacheKey = "wholeSale:all";
     try {
       // Extract pagination params
-      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const searchParams =
+        req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "20");
@@ -24,27 +23,17 @@ class WholeSaleController {
         total = data.length;
       } else {
         // Get total count and paginated whole sales
-        const result = await WholeSaleRepository.readAllWithPagination(skip, limit);
+        const result = await WholeSaleRepository.readAllWithPagination(
+          skip,
+          limit,
+        );
         data = result.data;
         total = result.total;
       }
 
-      // Use cache key with pagination to avoid cache conflicts
-      const userCacheKey = getAll
-        ? `${cacheKey}:all`
-        : `${cacheKey}:page:${page}:limit:${limit}`;
-
-      const cachedData = await RedisService.get(userCacheKey);
-      if (cachedData) {
-        console.log("Whole Sale Cache Hit");
-        return successResponse(cachedData, "Success");
-      }
-      console.log("Whole Sale Cache Miss");
-
       // If getAll, return all whole sales without pagination structure
       if (getAll) {
         const response = { data };
-        await RedisService.setex(userCacheKey, 300, JSON.stringify(response));
         return successResponse(response, "Success");
       }
 
@@ -58,7 +47,6 @@ class WholeSaleController {
         },
       };
 
-      await RedisService.setex(userCacheKey, 300, JSON.stringify(paginatedResponse));
       return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
@@ -208,10 +196,6 @@ class WholeSaleController {
 
       // Clear cache AFTER transaction commits successfully
       // If transaction failed, this won't execute
-      await RedisService.del("wholeSale:all");
-      await RedisService.del("transactions:all");
-      await RedisService.del("accountSubHeads:all");
-      await RedisService.del("accounts:all");
 
       return successResponse(wholeSale, "Whole sale created successfully");
     } catch (err) {
@@ -242,7 +226,7 @@ class WholeSaleController {
       if (!existingWholeSale || existingWholeSale.status === 0) {
         ErrorLogger.log(
           "Failed to update whole sale in Method: WholeSaleController.update",
-          new Error("Whole sale not found")
+          new Error("Whole sale not found"),
         );
         return errorResponse(new Error("Whole sale not found"), 404);
       }
@@ -327,10 +311,6 @@ class WholeSaleController {
 
       // Clear cache AFTER transaction commits successfully
       // If transaction failed, this won't execute
-      await RedisService.del("wholeSale:all");
-      await RedisService.del("transactions:all");
-      await RedisService.del("accountSubHeads:all");
-      await RedisService.del("accounts:all");
 
       return successResponse(wholeSale, "Whole sale updated successfully");
     } catch (err) {
@@ -396,8 +376,6 @@ class WholeSaleController {
       );
 
       // Clear cache after successful deletion
-      await RedisService.del("wholeSale:all");
-      await RedisService.del("transactions:all");
 
       return successResponse(null, "Whole sale deleted successfully");
     } catch (err) {

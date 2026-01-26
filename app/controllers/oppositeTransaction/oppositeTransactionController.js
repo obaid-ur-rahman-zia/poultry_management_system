@@ -2,13 +2,11 @@ import OppositeTransactionRepository from "@/app/repositories/oppositeTransactio
 import TransactionRepository from "@/app/repositories/transaction/transactionRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
-import RedisService from "@/app/utils/redis";
 import prisma from "@/lib/prisma";
 import { calculateFinancialYear } from "@/app/components/calculateFinYear/financialYear";
 
 class OppositeTransactionController {
   async readAll(req) {
-    const cacheKey = "oppositeTransactions:all";
     try {
       // Extract pagination params
       const searchParams =
@@ -34,22 +32,9 @@ class OppositeTransactionController {
         total = result.total;
       }
 
-      // Use cache key with pagination to avoid cache conflicts
-      const userCacheKey = getAll
-        ? `${cacheKey}:all`
-        : `${cacheKey}:page:${page}:limit:${limit}`;
-
-      const cachedData = await RedisService.get(userCacheKey);
-      if (cachedData) {
-        console.log("Opposite Transaction Cache Hit");
-        return successResponse(cachedData, "Success");
-      }
-      console.log("Opposite Transaction Cache Miss");
-
       // If getAll, return all opposite transactions without pagination structure
       if (getAll) {
         const response = { data };
-        await RedisService.setex(userCacheKey, 300, JSON.stringify(response));
         return successResponse(response, "Success");
       }
 
@@ -63,11 +48,6 @@ class OppositeTransactionController {
         },
       };
 
-      await RedisService.setex(
-        userCacheKey,
-        300,
-        JSON.stringify(paginatedResponse),
-      );
       return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
@@ -229,8 +209,6 @@ class OppositeTransactionController {
         return createdTransaction;
       });
 
-      await RedisService.del("oppositeTransactions:all");
-      await RedisService.del("transactions:all");
       return successResponse(
         { transaction_id: result.transaction_id },
         "Opposite transaction created successfully",
@@ -372,8 +350,6 @@ class OppositeTransactionController {
         return updatedTransaction;
       });
 
-      await RedisService.del("oppositeTransactions:all");
-      await RedisService.del("transactions:all");
       return successResponse(
         result,
         "Opposite transaction updated successfully",
@@ -420,8 +396,6 @@ class OppositeTransactionController {
         );
       });
 
-      await RedisService.del("oppositeTransactions:all");
-      await RedisService.del("transactions:all");
       return successResponse({}, "Opposite transaction deleted successfully");
     } catch (err) {
       if (err.code === "P2025") {

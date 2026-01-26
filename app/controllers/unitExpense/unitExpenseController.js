@@ -1,16 +1,15 @@
 import UnitExpenseRepository from "@/app/repositories/unitExpense/unitExpenseRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
-import RedisService from "@/app/utils/redis";
 import { createTransactions } from "./unitExpenseTransactions";
 import prisma from "@/lib/prisma";
 
 class UnitExpenseController {
   async readAll(req) {
-    const cacheKey = "unitExpenses:all";
     try {
       // Extract pagination params
-      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const searchParams =
+        req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "20");
@@ -23,27 +22,17 @@ class UnitExpenseController {
         total = data.length;
       } else {
         // Get total count and paginated unit expenses
-        const result = await UnitExpenseRepository.readAllWithPagination(skip, limit);
+        const result = await UnitExpenseRepository.readAllWithPagination(
+          skip,
+          limit,
+        );
         data = result.data;
         total = result.total;
       }
 
-      // Use cache key with pagination to avoid cache conflicts
-      const userCacheKey = getAll
-        ? `${cacheKey}:all`
-        : `${cacheKey}:page:${page}:limit:${limit}`;
-
-      const cachedData = await RedisService.get(userCacheKey);
-      if (cachedData) {
-        console.log("Unit Expense Cache Hit");
-        return successResponse(cachedData, "Success");
-      }
-      console.log("Unit Expense Cache Miss");
-
       // If getAll, return all unit expenses without pagination structure
       if (getAll) {
         const response = { data };
-        await RedisService.setex(userCacheKey, 300, JSON.stringify(response));
         return successResponse(response, "Success");
       }
 
@@ -57,12 +46,11 @@ class UnitExpenseController {
         },
       };
 
-      await RedisService.setex(userCacheKey, 300, JSON.stringify(paginatedResponse));
       return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all unit expenses in Method: UnitExpenseController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -77,7 +65,7 @@ class UnitExpenseController {
         const error = new Error("expense_id is required");
         ErrorLogger.log(
           "Failed to get unit expense by id in Method: UnitExpenseController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -86,7 +74,7 @@ class UnitExpenseController {
       if (!result) {
         ErrorLogger.log(
           "Failed to get unit expense by id in Method: UnitExpenseController.readById",
-          new Error("Expense not found")
+          new Error("Expense not found"),
         );
         return errorResponse(new Error("Expense not found"), 404);
       }
@@ -95,7 +83,7 @@ class UnitExpenseController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get unit expense by id in Method: UnitExpenseController.readById",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -126,11 +114,11 @@ class UnitExpenseController {
         !quantity
       ) {
         const error = new Error(
-          "expense_date, prounit_id (or farm_id), floc_id, supplier_id, product_id, price, and quantity are required in Method: UnitExpenseController.create"
+          "expense_date, prounit_id (or farm_id), floc_id, supplier_id, product_id, price, and quantity are required in Method: UnitExpenseController.create",
         );
         ErrorLogger.log(
           "Failed to create unit expense in Method: UnitExpenseController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -159,7 +147,7 @@ class UnitExpenseController {
                 update_by: req_object.update_by || "user 1",
                 status: req_object.status ?? 1,
               },
-              tx
+              tx,
             );
 
             // CRITICAL: Validate expense was created successfully
@@ -171,7 +159,7 @@ class UnitExpenseController {
             await createTransactions(
               createdExpense,
               req_object.supplier_id,
-              tx
+              tx,
             );
 
             return createdExpense;
@@ -179,7 +167,7 @@ class UnitExpenseController {
             // Log the specific error that occurred within the transaction
             ErrorLogger.log(
               "Transaction failed in UnitExpenseController.create",
-              transactionError
+              transactionError,
             );
             // Re-throw to trigger rollback
             throw transactionError;
@@ -189,18 +177,17 @@ class UnitExpenseController {
           maxWait: 10000, // 10s to get connection from pool
           timeout: 30000, // 30s for entire transaction
           isolationLevel: "Serializable", // Prevents partial commits
-        }
+        },
       );
 
-      await RedisService.del("unitExpenses:all");
       return successResponse(
         { expense_id: expense.expense_id },
-        "Unit expense created successfully"
+        "Unit expense created successfully",
       );
     } catch (err) {
       ErrorLogger.log(
         "Failed to create unit expense in Method: UnitExpenseController.create",
-        err
+        err,
       );
       // Return more detailed error message
       const errorMessage = err.message || "Failed to create unit expense";
@@ -215,11 +202,11 @@ class UnitExpenseController {
 
       if (!expense_id) {
         const error = new Error(
-          "expense_id is required in Method: UnitExpenseController.update"
+          "expense_id is required in Method: UnitExpenseController.update",
         );
         ErrorLogger.log(
           "Failed to update unit expense in Method: UnitExpenseController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -247,19 +234,18 @@ class UnitExpenseController {
         total: req_object.total ? Number(req_object.total) : undefined,
       });
 
-      await RedisService.del("unitExpenses:all");
       return successResponse(result, "Unit expense updated successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update unit expense in Method: UnitExpenseController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Expense not found"), 404);
       }
       ErrorLogger.log(
         "Failed to update unit expense in Method: UnitExpenseController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -273,26 +259,24 @@ class UnitExpenseController {
       if (!expense_id) {
         ErrorLogger.log(
           "Failed to delete unit expense in Method: UnitExpenseController.delete",
-          new Error("expense_id is required")
+          new Error("expense_id is required"),
         );
         return errorResponse(new Error("expense_id is required"), 400);
       }
 
       await UnitExpenseRepository.delete(expense_id);
-
-      await RedisService.del("unitExpenses:all");
       return successResponse({}, "Unit expense deleted successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to delete unit expense in Method: UnitExpenseController.delete",
-          err
+          err,
         );
         return errorResponse(new Error("Expense not found"), 404);
       }
       ErrorLogger.log(
         "Failed to delete unit expense in Method: UnitExpenseController.delete",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -311,7 +295,7 @@ class UnitExpenseController {
         const error = new Error("start_dat and end_dat are required");
         ErrorLogger.log(
           "Failed to read report detail in Method: UnitExpenseController.readReportDetail",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -327,7 +311,7 @@ class UnitExpenseController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to read report detail in Method: UnitExpenseController.readReportDetail",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }

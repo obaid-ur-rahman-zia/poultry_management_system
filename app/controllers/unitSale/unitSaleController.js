@@ -1,16 +1,15 @@
 import UnitSaleRepository from "@/app/repositories/unitSale/unitSaleRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
-import RedisService from "@/app/utils/redis";
 import prisma from "@/lib/prisma";
 import { createTransactions } from "./unitSaleTransactions";
 
 class UnitSaleController {
   async readAll(req) {
-    const cacheKey = "unitSales:all";
     try {
       // Extract pagination params
-      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const searchParams =
+        req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "20");
@@ -23,27 +22,17 @@ class UnitSaleController {
         total = data.length;
       } else {
         // Get total count and paginated unit sales
-        const result = await UnitSaleRepository.readAllWithPagination(skip, limit);
+        const result = await UnitSaleRepository.readAllWithPagination(
+          skip,
+          limit,
+        );
         data = result.data;
         total = result.total;
       }
 
-      // Use cache key with pagination to avoid cache conflicts
-      const userCacheKey = getAll
-        ? `${cacheKey}:all`
-        : `${cacheKey}:page:${page}:limit:${limit}`;
-
-      const cachedData = await RedisService.get(userCacheKey);
-      if (cachedData) {
-        console.log("Unit Sale Cache Hit");
-        return successResponse(cachedData, "Success");
-      }
-      console.log("Unit Sale Cache Miss");
-
       // If getAll, return all unit sales without pagination structure
       if (getAll) {
         const response = { data };
-        await RedisService.setex(userCacheKey, 300, JSON.stringify(response));
         return successResponse(response, "Success");
       }
 
@@ -57,12 +46,11 @@ class UnitSaleController {
         },
       };
 
-      await RedisService.setex(userCacheKey, 300, JSON.stringify(paginatedResponse));
       return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all unit sales in Method: UnitSaleController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -77,7 +65,7 @@ class UnitSaleController {
         const error = new Error("sale_id is required");
         ErrorLogger.log(
           "Failed to get unit sale by id in Method: UnitSaleController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -86,7 +74,7 @@ class UnitSaleController {
       if (!result) {
         ErrorLogger.log(
           "Failed to get unit sale by id in Method: UnitSaleController.readById",
-          new Error("Sale not found")
+          new Error("Sale not found"),
         );
         return errorResponse(new Error("Sale not found"), 404);
       }
@@ -95,7 +83,7 @@ class UnitSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get unit sale by id in Method: UnitSaleController.readById",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -111,11 +99,11 @@ class UnitSaleController {
 
       if (!prounit_id || !floc_id || !sale_date) {
         const error = new Error(
-          "prounit_id (or farm_id), floc_id, and sale_date are required"
+          "prounit_id (or farm_id), floc_id, and sale_date are required",
         );
         ErrorLogger.log(
           "Failed to check F.S Rate in Method: UnitSaleController.checkFsRate",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -123,7 +111,7 @@ class UnitSaleController {
       const fsRate = await UnitSaleRepository.checkFsRateForToday(
         prounit_id,
         floc_id,
-        sale_date
+        sale_date,
       );
 
       if (fsRate) {
@@ -133,7 +121,7 @@ class UnitSaleController {
             farm_rate: fsRate.farm_rate,
             sale_rate: fsRate.sale_rate,
           },
-          "F.S Rate found"
+          "F.S Rate found",
         );
       } else {
         return successResponse(
@@ -142,13 +130,13 @@ class UnitSaleController {
             farm_rate: null,
             sale_rate: null,
           },
-          "F.S Rate not found"
+          "F.S Rate not found",
         );
       }
     } catch (err) {
       ErrorLogger.log(
         "Failed to check F.S Rate in Method: UnitSaleController.checkFsRate",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -163,18 +151,18 @@ class UnitSaleController {
 
       if (!prounit_id || !floc_id) {
         const error = new Error(
-          "prounit_id (or farm_id) and floc_id are required"
+          "prounit_id (or farm_id) and floc_id are required",
         );
         ErrorLogger.log(
           "Failed to get previous F.S Rates in Method: UnitSaleController.getPreviousFsRates",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
 
       const rates = await UnitSaleRepository.getPreviousFsRates(
         prounit_id,
-        floc_id
+        floc_id,
       );
       const formattedRates = rates.map((rate) => ({
         date: rate.rate_date,
@@ -186,7 +174,7 @@ class UnitSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get previous F.S Rates in Method: UnitSaleController.getPreviousFsRates",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -219,11 +207,11 @@ class UnitSaleController {
         !quantity
       ) {
         const error = new Error(
-          "sale_date, prounit_id (or farm_id), floc_id, customer_id, product_id, price, and quantity are required in Method: UnitSaleController.create"
+          "sale_date, prounit_id (or farm_id), floc_id, customer_id, product_id, price, and quantity are required in Method: UnitSaleController.create",
         );
         ErrorLogger.log(
           "Failed to create unit sale in Method: UnitSaleController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -263,7 +251,7 @@ class UnitSaleController {
                     update_by: req_object.update_by || "user 1",
                     status: 1,
                   },
-                  tx
+                  tx,
                 );
               }
             }
@@ -291,7 +279,7 @@ class UnitSaleController {
                 update_by: req_object.update_by || "user 1",
                 status: req_object.status ?? 1,
               },
-              tx
+              tx,
             );
 
             // CRITICAL: Validate sale was created successfully
@@ -307,7 +295,7 @@ class UnitSaleController {
             // Log the specific error that occurred within the transaction
             ErrorLogger.log(
               "Transaction failed in UnitSaleController.create",
-              transactionError
+              transactionError,
             );
             // Re-throw to trigger rollback
             throw transactionError;
@@ -317,18 +305,17 @@ class UnitSaleController {
           maxWait: 10000, // 10s to get connection from pool
           timeout: 30000, // 30s for entire transaction
           isolationLevel: "Serializable", // Prevents partial commits
-        }
+        },
       );
 
-      await RedisService.del("unitSales:all");
       return successResponse(
         { sale_id: sale.sale_id },
-        "Unit sale created successfully"
+        "Unit sale created successfully",
       );
     } catch (err) {
       ErrorLogger.log(
         "Failed to create unit sale in Method: UnitSaleController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -341,11 +328,11 @@ class UnitSaleController {
 
       if (!sale_id) {
         const error = new Error(
-          "sale_id is required in Method: UnitSaleController.update"
+          "sale_id is required in Method: UnitSaleController.update",
         );
         ErrorLogger.log(
           "Failed to update unit sale in Method: UnitSaleController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -385,19 +372,18 @@ class UnitSaleController {
         total: req_object.total ? Number(req_object.total) : undefined,
       });
 
-      await RedisService.del("unitSales:all");
       return successResponse(result, "Unit sale updated successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update unit sale in Method: UnitSaleController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Sale not found"), 404);
       }
       ErrorLogger.log(
         "Failed to update unit sale in Method: UnitSaleController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -411,26 +397,24 @@ class UnitSaleController {
       if (!sale_id) {
         ErrorLogger.log(
           "Failed to delete unit sale in Method: UnitSaleController.delete",
-          new Error("sale_id is required")
+          new Error("sale_id is required"),
         );
         return errorResponse(new Error("sale_id is required"), 400);
       }
 
       await UnitSaleRepository.delete(sale_id);
-
-      await RedisService.del("unitSales:all");
       return successResponse({}, "Unit sale deleted successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to delete unit sale in Method: UnitSaleController.delete",
-          err
+          err,
         );
         return errorResponse(new Error("Sale not found"), 404);
       }
       ErrorLogger.log(
         "Failed to delete unit sale in Method: UnitSaleController.delete",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -449,7 +433,7 @@ class UnitSaleController {
         const error = new Error("start_dat and end_dat are required");
         ErrorLogger.log(
           "Failed to read report detail in Method: UnitSaleController.readReportDetail",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -465,7 +449,7 @@ class UnitSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to read report detail in Method: UnitSaleController.readReportDetail",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -483,7 +467,7 @@ class UnitSaleController {
         const error = new Error("start_dat and end_dat are required");
         ErrorLogger.log(
           "Failed to read profit/loss report in Method: unitSaleController.readProfitLossReport",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -499,7 +483,7 @@ class UnitSaleController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to read profit/loss report in Method: UnitSaleController.readProfitLossReport",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }

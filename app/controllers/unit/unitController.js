@@ -3,7 +3,6 @@ import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/
 import AccountsRepository from "@/app/repositories/account/accounts/accountsRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
-import RedisService from "@/app/utils/redis";
 import prisma from "@/lib/prisma";
 
 class UnitController {
@@ -16,7 +15,7 @@ class UnitController {
         const error = new Error("Unit Name is required");
         ErrorLogger.log(
           "Error creating unit in Method: UnitController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -27,7 +26,7 @@ class UnitController {
         const error = new Error("Unit already exists");
         ErrorLogger.log(
           "Failed to create unit in Method: UnitController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -37,15 +36,21 @@ class UnitController {
         async (tx) => {
           try {
             // Create unit
-            const unit = await UnitRepository.create({
-              prounit_nam: prounit_nam.trim(),
-              capacity: capacity,
-              address: address,
-            }, tx);
+            const unit = await UnitRepository.create(
+              {
+                prounit_nam: prounit_nam.trim(),
+                capacity: capacity,
+                address: address,
+              },
+              tx,
+            );
 
             // Find or create "Unit" subhead
-            let unitSubhead = await AccountSubHeadRepository.findByName("Unit", tx);
-            
+            let unitSubhead = await AccountSubHeadRepository.findByName(
+              "Unit",
+              tx,
+            );
+
             if (!unitSubhead) {
               // Get first account head to use for the subhead
               const firstHead = await tx.account_head.findFirst({
@@ -53,7 +58,9 @@ class UnitController {
               });
 
               if (!firstHead) {
-                throw new Error("No account head found. Please create an account head first.");
+                throw new Error(
+                  "No account head found. Please create an account head first.",
+                );
               }
 
               // Get the max subhead_id for this head_id
@@ -105,7 +112,7 @@ class UnitController {
           } catch (transactionError) {
             ErrorLogger.log(
               "Transaction failed in UnitController.create",
-              transactionError
+              transactionError,
             );
             throw transactionError;
           }
@@ -114,34 +121,34 @@ class UnitController {
           maxWait: 10000,
           timeout: 30000,
           isolationLevel: "Serializable",
-        }
+        },
       );
 
-      await RedisService.del("units:all");
-      await RedisService.del("accountSubHeads:all");
-      await RedisService.del("accounts:all");
-      return successResponse({ prounit_id: result.prounit_id }, "Unit and account created successfully");
+      return successResponse(
+        { prounit_id: result.prounit_id },
+        "Unit and account created successfully",
+      );
     } catch (err) {
       if (err.code === "P2002") {
         ErrorLogger.log(
           "Unit already exists in Method: UnitController.create",
-          err
+          err,
         );
         return errorResponse(new Error("Unit already exists"), 400);
       }
       ErrorLogger.log(
         "Failed to create unit in Method: UnitController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
   }
 
   async readAll(req) {
-    const cacheKey = "units:all";
     try {
       // Extract pagination params
-      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const searchParams =
+        req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "20");
@@ -159,22 +166,9 @@ class UnitController {
         total = result.total;
       }
 
-      // Use cache key with pagination to avoid cache conflicts
-      const userCacheKey = getAll
-        ? `${cacheKey}:all`
-        : `${cacheKey}:page:${page}:limit:${limit}`;
-
-      const cachedData = await RedisService.get(userCacheKey);
-      if (cachedData) {
-        console.log("Unit Cache Hit");
-        return successResponse(cachedData, "Success");
-      }
-      console.log("Unit Cache Miss");
-
       // If getAll, return all units without pagination structure
       if (getAll) {
         const response = { data };
-        await RedisService.setex(userCacheKey, 300, JSON.stringify(response));
         return successResponse(response, "Success");
       }
 
@@ -188,12 +182,11 @@ class UnitController {
         },
       };
 
-      await RedisService.setex(userCacheKey, 300, JSON.stringify(paginatedResponse));
       return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to fetch units in Method: UnitController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -205,11 +198,11 @@ class UnitController {
       const { prounit_id, prounit_nam, capacity, address } = req_object;
       if (!prounit_id || !prounit_nam) {
         const error = new Error(
-          "prounit_id and prounit_nam are required in Method: UnitController.update"
+          "prounit_id and prounit_nam are required in Method: UnitController.update",
         );
         ErrorLogger.log(
           "Failed to update unit in Method: UnitController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -219,19 +212,18 @@ class UnitController {
         capacity: capacity,
         address: address,
       });
-      await RedisService.del("units:all");
       return successResponse(updated, "Unit updated successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update unit in Method: UnitController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Unit not found"), 404);
       }
       ErrorLogger.log(
         "Failed to update unit in Method: UnitController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
