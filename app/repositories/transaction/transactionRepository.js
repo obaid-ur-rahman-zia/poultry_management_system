@@ -201,6 +201,31 @@ class TransactionRepository {
     return openingBalance;
   }
 
+  // Get closing balance (transactions up to and including end date)
+  async readClosingBalance(req_object) {
+    const { acc_id, end_dat } = req_object;
+
+    const result = await prisma.transaction.aggregate({
+      where: {
+        acc_id: parseInt(acc_id),
+        transaction_dat: {
+          lte: new Date(end_dat),
+        },
+        isDeleted: false,
+      },
+      _sum: {
+        debit: true,
+        credit: true,
+      },
+    });
+
+    const totalDebit = Number(result._sum.debit) || 0;
+    const totalCredit = Number(result._sum.credit) || 0;
+    const closingBalance = totalDebit - totalCredit;
+
+    return closingBalance;
+  }
+
   async readLastTransaction(req_object) {
     const { acc_id } = req_object;
 

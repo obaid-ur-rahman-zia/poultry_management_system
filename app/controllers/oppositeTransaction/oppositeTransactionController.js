@@ -11,7 +11,8 @@ class OppositeTransactionController {
     const cacheKey = "oppositeTransactions:all";
     try {
       // Extract pagination params
-      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const searchParams =
+        req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "10");
@@ -24,7 +25,11 @@ class OppositeTransactionController {
         total = data.length;
       } else {
         // Get total count and paginated opposite transactions
-        const result = await OppositeTransactionRepository.readAllWithPagination(skip, limit);
+        const result =
+          await OppositeTransactionRepository.readAllWithPagination(
+            skip,
+            limit,
+          );
         data = result.data;
         total = result.total;
       }
@@ -58,12 +63,16 @@ class OppositeTransactionController {
         },
       };
 
-      await RedisService.setex(userCacheKey, 300, JSON.stringify(paginatedResponse));
+      await RedisService.setex(
+        userCacheKey,
+        300,
+        JSON.stringify(paginatedResponse),
+      );
       return successResponse(paginatedResponse, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get all opposite transactions in Method: OppositeTransactionController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -78,16 +87,17 @@ class OppositeTransactionController {
         const error = new Error("transaction_id is required");
         ErrorLogger.log(
           "Failed to get opposite transaction by id in Method: OppositeTransactionController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
 
-      const result = await OppositeTransactionRepository.readById(transaction_id);
+      const result =
+        await OppositeTransactionRepository.readById(transaction_id);
       if (!result) {
         ErrorLogger.log(
           "Failed to get opposite transaction by id in Method: OppositeTransactionController.readById",
-          new Error("Transaction not found")
+          new Error("Transaction not found"),
         );
         return errorResponse(new Error("Transaction not found"), 404);
       }
@@ -96,7 +106,7 @@ class OppositeTransactionController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get opposite transaction by id in Method: OppositeTransactionController.readById",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -105,24 +115,27 @@ class OppositeTransactionController {
   async create(req) {
     try {
       const { req_object } = await req.json();
-      const { transaction_date, paid_by, received_by, amount, bank_account } = req_object;
+      const { transaction_date, paid_by, received_by, amount, bank_account } =
+        req_object;
 
       if (!transaction_date || !paid_by || !received_by || !amount) {
         const error = new Error(
-          "transaction_date, paid_by, received_by, and amount are required in Method: OppositeTransactionController.create"
+          "transaction_date, paid_by, received_by, and amount are required in Method: OppositeTransactionController.create",
         );
         ErrorLogger.log(
           "Failed to create opposite transaction in Method: OppositeTransactionController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
 
       if (paid_by === received_by) {
-        const error = new Error("Paid by and received by cannot be the same account");
+        const error = new Error(
+          "Paid by and received by cannot be the same account",
+        );
         ErrorLogger.log(
           "Failed to create opposite transaction in Method: OppositeTransactionController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -132,11 +145,10 @@ class OppositeTransactionController {
         const error = new Error("Amount must be greater than 0");
         ErrorLogger.log(
           "Failed to create opposite transaction in Method: OppositeTransactionController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
-
 
       // Get bank account name if provided
       let bankAccountName = "";
@@ -153,7 +165,7 @@ class OppositeTransactionController {
       // Create description with bank name prefix if bank account is selected
       const description = bankAccountName
         ? `${bankAccountName} - ${req_object.description || ""}`.trim()
-        : (req_object.description || "");
+        : req_object.description || "";
 
       const financialYear = calculateFinancialYear(transaction_date);
 
@@ -172,7 +184,7 @@ class OppositeTransactionController {
             update_by: req_object.update_by || "user 1",
             status: req_object.status ?? 1,
           },
-          tx
+          tx,
         );
 
         // Create two transactions: debit for paid_by, credit for received_by
@@ -193,7 +205,7 @@ class OppositeTransactionController {
             insert_by: req_object.insert_by || "user 1",
             update_by: req_object.update_by || "user 1",
           },
-          tx
+          tx,
         );
 
         // Credit transaction for received_by account
@@ -211,7 +223,7 @@ class OppositeTransactionController {
             insert_by: req_object.insert_by || "user 1",
             update_by: req_object.update_by || "user 1",
           },
-          tx
+          tx,
         );
 
         return createdTransaction;
@@ -221,12 +233,12 @@ class OppositeTransactionController {
       await RedisService.del("transactions:all");
       return successResponse(
         { transaction_id: result.transaction_id },
-        "Opposite transaction created successfully"
+        "Opposite transaction created successfully",
       );
     } catch (err) {
       ErrorLogger.log(
         "Failed to create opposite transaction in Method: OppositeTransactionController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -239,17 +251,18 @@ class OppositeTransactionController {
 
       if (!transaction_id) {
         const error = new Error(
-          "transaction_id is required in Method: OppositeTransactionController.update"
+          "transaction_id is required in Method: OppositeTransactionController.update",
         );
         ErrorLogger.log(
           "Failed to update opposite transaction in Method: OppositeTransactionController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
 
       // Get existing transaction
-      const existingTransaction = await OppositeTransactionRepository.readById(transaction_id);
+      const existingTransaction =
+        await OppositeTransactionRepository.readById(transaction_id);
       if (!existingTransaction) {
         return errorResponse(new Error("Transaction not found"), 404);
       }
@@ -269,7 +282,7 @@ class OppositeTransactionController {
       // Create description with bank name prefix if bank account is selected
       const description = bankAccountName
         ? `${bankAccountName} - ${req_object.description || ""}`.trim()
-        : (req_object.description || "");
+        : req_object.description || "";
 
       const financialYear = req_object.transaction_date
         ? calculateFinancialYear(req_object.transaction_date)
@@ -283,26 +296,42 @@ class OppositeTransactionController {
           {
             ...req_object,
             description,
-            paid_by: req_object.paid_by ? Number(req_object.paid_by) : undefined,
-            received_by: req_object.received_by ? Number(req_object.received_by) : undefined,
-            bank_account: req_object.bank_account !== undefined ? (req_object.bank_account ? Number(req_object.bank_account) : null) : undefined,
+            paid_by: req_object.paid_by
+              ? Number(req_object.paid_by)
+              : undefined,
+            received_by: req_object.received_by
+              ? Number(req_object.received_by)
+              : undefined,
+            bank_account:
+              req_object.bank_account !== undefined
+                ? req_object.bank_account
+                  ? Number(req_object.bank_account)
+                  : null
+                : undefined,
             amount: req_object.amount ? Number(req_object.amount) : undefined,
           },
-          tx
+          tx,
         );
 
         // Delete old transactions
         await TransactionRepository.softDeleteByReferenceId(
           existingTransaction.transaction_id,
           "Opposite Transaction",
-          tx
+          tx,
         );
 
         // Create new transactions
-        const paidBy = req_object.paid_by ? Number(req_object.paid_by) : existingTransaction.paid_by;
-        const receivedBy = req_object.received_by ? Number(req_object.received_by) : existingTransaction.received_by;
-        const amount = req_object.amount ? Number(req_object.amount) : existingTransaction.amount;
-        const transactionDate = req_object.transaction_date || existingTransaction.transaction_date;
+        const paidBy = req_object.paid_by
+          ? Number(req_object.paid_by)
+          : existingTransaction.paid_by;
+        const receivedBy = req_object.received_by
+          ? Number(req_object.received_by)
+          : existingTransaction.received_by;
+        const amount = req_object.amount
+          ? Number(req_object.amount)
+          : existingTransaction.amount;
+        const transactionDate =
+          req_object.transaction_date || existingTransaction.transaction_date;
 
         // Debit transaction for paid_by account
         await TransactionRepository.create(
@@ -319,7 +348,7 @@ class OppositeTransactionController {
             insert_by: req_object.update_by || "user 1",
             update_by: req_object.update_by || "user 1",
           },
-          tx
+          tx,
         );
 
         // Credit transaction for received_by account
@@ -337,7 +366,7 @@ class OppositeTransactionController {
             insert_by: req_object.update_by || "user 1",
             update_by: req_object.update_by || "user 1",
           },
-          tx
+          tx,
         );
 
         return updatedTransaction;
@@ -345,18 +374,21 @@ class OppositeTransactionController {
 
       await RedisService.del("oppositeTransactions:all");
       await RedisService.del("transactions:all");
-      return successResponse(result, "Opposite transaction updated successfully");
+      return successResponse(
+        result,
+        "Opposite transaction updated successfully",
+      );
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update opposite transaction in Method: OppositeTransactionController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Transaction not found"), 404);
       }
       ErrorLogger.log(
         "Failed to update opposite transaction in Method: OppositeTransactionController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -370,7 +402,7 @@ class OppositeTransactionController {
       if (!transaction_id) {
         ErrorLogger.log(
           "Failed to delete opposite transaction in Method: OppositeTransactionController.delete",
-          new Error("transaction_id is required")
+          new Error("transaction_id is required"),
         );
         return errorResponse(new Error("transaction_id is required"), 400);
       }
@@ -384,7 +416,7 @@ class OppositeTransactionController {
         await TransactionRepository.softDeleteByReferenceId(
           Number(transaction_id),
           "Opposite Transaction",
-          tx
+          tx,
         );
       });
 
@@ -395,13 +427,64 @@ class OppositeTransactionController {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to delete opposite transaction in Method: OppositeTransactionController.delete",
-          err
+          err,
         );
         return errorResponse(new Error("Transaction not found"), 404);
       }
       ErrorLogger.log(
         "Failed to delete opposite transaction in Method: OppositeTransactionController.delete",
-        err
+        err,
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  async readBalanceSheet(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_date = searchParams.get("start_date");
+      const end_date = searchParams.get("end_date");
+      const acc_id = 1; // Default to cash in hand account
+
+      if (!start_date || !end_date) {
+        const error = new Error("start_date and end_date are required");
+        ErrorLogger.log(
+          "Failed to get balance sheet in Method: OppositeTransactionController.readBalanceSheet",
+          error,
+        );
+        return errorResponse(error, 400);
+      }
+
+      // Get opening balance (before start date)
+      const openingBalance = await TransactionRepository.readOpeningBalance({
+        acc_id: parseInt(acc_id),
+        start_dat: start_date,
+      });
+
+      // Get closing balance (up to and including end date)
+      const closingBalance = await TransactionRepository.readClosingBalance({
+        acc_id: parseInt(acc_id),
+        end_dat: end_date,
+      });
+
+      // Get all transactions within the date range
+      const transactions = await OppositeTransactionRepository.readBalanceSheet(
+        start_date,
+        end_date,
+      );
+
+      return successResponse(
+        {
+          openingBalance,
+          closingBalance,
+          transactions,
+        },
+        "Balance sheet retrieved successfully",
+      );
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to get balance sheet in Method: OppositeTransactionController.readBalanceSheet",
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -409,4 +492,3 @@ class OppositeTransactionController {
 }
 
 export default new OppositeTransactionController();
-
