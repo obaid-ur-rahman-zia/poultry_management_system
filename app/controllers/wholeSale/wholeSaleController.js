@@ -14,7 +14,7 @@ class WholeSaleController {
       const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
       const page = parseInt(searchParams.get("page") || "1");
-      const limit = parseInt(searchParams.get("limit") || "10");
+      const limit = parseInt(searchParams.get("limit") || "20");
       const skip = (page - 1) * limit;
 
       // If getAll is true, fetch all whole sales without pagination
