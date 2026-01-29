@@ -4,12 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Plus, Search, Edit2, Trash2 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,7 +56,7 @@ export default function TradingPage() {
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
-      trading_date: new Date().toISOString().split('T')[0],
+      trading_date: new Date().toISOString().split("T")[0],
       // Buy From section
       buy_from_account: "",
       do_number: "",
@@ -198,7 +193,10 @@ export default function TradingPage() {
   }, [buyFurtherTaxValue, setValue]);
 
   useEffect(() => {
-    if (buyFurtherTaxPercentage !== undefined && buyFurtherTaxPercentage !== null) {
+    if (
+      buyFurtherTaxPercentage !== undefined &&
+      buyFurtherTaxPercentage !== null
+    ) {
       setValue("sale_further_tax_percentage", buyFurtherTaxPercentage);
     }
   }, [buyFurtherTaxPercentage, setValue]);
@@ -208,7 +206,8 @@ export default function TradingPage() {
       const response = await fetch("/api/account/accounts/readAll");
       const result = await response.json();
       if (result.response_status === "success") {
-        const accountsData = result.response_result?.data || result.response_result || [];
+        const accountsData =
+          result.response_result?.data || result.response_result || [];
         setAccounts(Array.isArray(accountsData) ? accountsData : []);
       }
     } catch (error) {
@@ -223,13 +222,23 @@ export default function TradingPage() {
       const result = await response.json();
       if (result.response_status === "success") {
         // API returns { products, nextId }, so we need to extract products
-        const productsData = result.response_result?.products || result.response_result?.data || result.response_result || [];
+        const productsData =
+          result.response_result?.products ||
+          result.response_result?.data ||
+          result.response_result ||
+          [];
         // Ensure productsData is an array
         if (Array.isArray(productsData)) {
           setProducts(productsData);
-        } else if (productsData && typeof productsData === 'object' && productsData.products) {
+        } else if (
+          productsData &&
+          typeof productsData === "object" &&
+          productsData.products
+        ) {
           // Handle case where response_result is the cached object directly
-          setProducts(Array.isArray(productsData.products) ? productsData.products : []);
+          setProducts(
+            Array.isArray(productsData.products) ? productsData.products : [],
+          );
         } else {
           setProducts([]);
         }
@@ -245,11 +254,13 @@ export default function TradingPage() {
   const fetchTrades = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/trading/readAll?page=${page}&limit=${limit}`);
+      const response = await fetch(
+        `/api/trading/readAll?page=${page}&limit=${limit}`,
+      );
       const result = await response.json();
       if (result.response_status === "success") {
         const responseData = result.response_result;
-        
+
         // Handle paginated response
         if (responseData?.pagination) {
           const tradesData = responseData.data || [];
@@ -278,17 +289,17 @@ export default function TradingPage() {
   const calculateBuyDiscountAmount = () => {
     const priceValue = parseFloat(buyPrice) || 0;
     let totalDiscount = 0;
-    
+
     // Percentage discount
     if (buyDiscountValue) {
       totalDiscount += (priceValue * parseFloat(buyDiscountValue)) / 100;
     }
-    
+
     // Flat discount
     if (buyOtherDiscountValue) {
       totalDiscount += parseFloat(buyOtherDiscountValue);
     }
-    
+
     return totalDiscount;
   };
 
@@ -296,23 +307,23 @@ export default function TradingPage() {
     const priceValue = parseFloat(buyPrice) || 0;
     const discountAmount = calculateBuyDiscountAmount();
     const priceAfterDiscount = Math.max(0, priceValue - discountAmount);
-    
+
     let totalTax = 0;
-    
+
     // Calculate main tax
     if (buyTaxValue) {
       totalTax += buyTaxPercentage
         ? (priceAfterDiscount * parseFloat(buyTaxValue)) / 100
         : parseFloat(buyTaxValue);
     }
-    
+
     // Calculate further tax (applied on price after discount)
     if (buyFurtherTaxValue) {
       totalTax += buyFurtherTaxPercentage
         ? (priceAfterDiscount * parseFloat(buyFurtherTaxValue)) / 100
         : parseFloat(buyFurtherTaxValue);
     }
-    
+
     return totalTax;
   };
 
@@ -321,7 +332,7 @@ export default function TradingPage() {
     const quantityValue = parseFloat(buyQuantity) || 0;
 
     let discountedPrice = priceValue;
-    
+
     // Calculate total discount (percentage + flat)
     let totalDiscount = 0;
     if (buyDiscountValue) {
@@ -345,17 +356,17 @@ export default function TradingPage() {
   const calculateSaleDiscountAmount = () => {
     const priceValue = parseFloat(salePrice) || 0;
     let totalDiscount = 0;
-    
+
     // Percentage discount
     if (saleDiscountValue) {
       totalDiscount += (priceValue * parseFloat(saleDiscountValue)) / 100;
     }
-    
+
     // Flat discount
     if (saleOtherDiscountValue) {
       totalDiscount += parseFloat(saleOtherDiscountValue);
     }
-    
+
     return totalDiscount;
   };
 
@@ -363,23 +374,23 @@ export default function TradingPage() {
     const priceValue = parseFloat(salePrice) || 0;
     const discountAmount = calculateSaleDiscountAmount();
     const priceAfterDiscount = Math.max(0, priceValue - discountAmount);
-    
+
     let totalTax = 0;
-    
+
     // Calculate main tax
     if (saleTaxValue) {
       totalTax += saleTaxPercentage
         ? (priceAfterDiscount * parseFloat(saleTaxValue)) / 100
         : parseFloat(saleTaxValue);
     }
-    
+
     // Calculate further tax (applied on price after discount)
     if (saleFurtherTaxValue) {
       totalTax += saleFurtherTaxPercentage
         ? (priceAfterDiscount * parseFloat(saleFurtherTaxValue)) / 100
         : parseFloat(saleFurtherTaxValue);
     }
-    
+
     return totalTax;
   };
 
@@ -388,7 +399,7 @@ export default function TradingPage() {
     const quantityValue = parseFloat(saleQuantity) || 0;
 
     let discountedPrice = priceValue;
-    
+
     // Calculate total discount (percentage + flat)
     let totalDiscount = 0;
     if (saleDiscountValue) {
@@ -410,7 +421,13 @@ export default function TradingPage() {
   };
 
   const onSubmit = async (data) => {
-    if (!data.buy_from_account || !data.product_id || !data.buy_price || !data.buy_quantity || !data.sale_to_account) {
+    if (
+      !data.buy_from_account ||
+      !data.product_id ||
+      !data.buy_price ||
+      !data.buy_quantity ||
+      !data.sale_to_account
+    ) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -424,21 +441,30 @@ export default function TradingPage() {
         buy_from_account: parseInt(data.buy_from_account),
         do_number: data.do_number?.trim() || null,
         product_id: parseInt(data.product_id),
+        product_nam: products.find(
+          (product) => product.product_id === parseInt(data.product_id),
+        )?.product_title,
         buy_quantity: parseFloat(data.buy_quantity),
         buy_price: parseFloat(data.buy_price),
         buy_tax_type: data.buy_tax_type,
         buy_tax_value: data.buy_tax_value ? parseFloat(data.buy_tax_value) : 0,
         buy_discount_type: "percentage", // Always percentage for buy_discount_value
-        buy_discount_value: data.buy_discount_value ? parseFloat(data.buy_discount_value) : 0,
+        buy_discount_value: data.buy_discount_value
+          ? parseFloat(data.buy_discount_value)
+          : 0,
         buy_total: buyTotal,
         buy_detail: data.buy_detail?.trim() || "",
         sale_to_account: parseInt(data.sale_to_account),
         sale_price: parseFloat(data.sale_price),
         sale_quantity: parseFloat(data.sale_quantity),
         sale_tax_type: data.sale_tax_type,
-        sale_tax_value: data.sale_tax_value ? parseFloat(data.sale_tax_value) : 0,
+        sale_tax_value: data.sale_tax_value
+          ? parseFloat(data.sale_tax_value)
+          : 0,
         sale_discount_type: "percentage", // Always percentage for sale_discount_value
-        sale_discount_value: data.sale_discount_value ? parseFloat(data.sale_discount_value) : 0,
+        sale_discount_value: data.sale_discount_value
+          ? parseFloat(data.sale_discount_value)
+          : 0,
         sale_total: saleTotal,
         sale_detail: data.sale_detail?.trim() || "",
         ...(isEditMode && { trading_id: editingTradeId }),
@@ -457,9 +483,13 @@ export default function TradingPage() {
 
       const result = await response.json();
       if (result.response_status === "success") {
-        toast.success(isEditMode ? "Trade updated successfully" : "Trade created successfully");
+        toast.success(
+          isEditMode
+            ? "Trade updated successfully"
+            : "Trade created successfully",
+        );
         reset({
-          trading_date: new Date().toISOString().split('T')[0],
+          trading_date: new Date().toISOString().split("T")[0],
           buy_from_account: "",
           do_number: "",
           product_id: "",
@@ -500,17 +530,31 @@ export default function TradingPage() {
   const handleEdit = (trade) => {
     setIsEditMode(true);
     setEditingTradeId(trade.trading_id);
-    
+
     // If discount_type was "flat", move the value to other_discount_value
     // If discount_type was "percentage", keep it in discount_value
-    const buyDiscountValue = trade.buy_discount_type === "flat" ? "" : (trade.buy_discount_value?.toString() || "");
-    const buyOtherDiscountValue = trade.buy_discount_type === "flat" ? (trade.buy_discount_value?.toString() || "") : "";
-    
-    const saleDiscountValue = trade.sale_discount_type === "flat" ? "" : (trade.sale_discount_value?.toString() || "");
-    const saleOtherDiscountValue = trade.sale_discount_type === "flat" ? (trade.sale_discount_value?.toString() || "") : "";
-    
+    const buyDiscountValue =
+      trade.buy_discount_type === "flat"
+        ? ""
+        : trade.buy_discount_value?.toString() || "";
+    const buyOtherDiscountValue =
+      trade.buy_discount_type === "flat"
+        ? trade.buy_discount_value?.toString() || ""
+        : "";
+
+    const saleDiscountValue =
+      trade.sale_discount_type === "flat"
+        ? ""
+        : trade.sale_discount_value?.toString() || "";
+    const saleOtherDiscountValue =
+      trade.sale_discount_type === "flat"
+        ? trade.sale_discount_value?.toString() || ""
+        : "";
+
     reset({
-      trading_date: trade.trading_date ? new Date(trade.trading_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      trading_date: trade.trading_date
+        ? new Date(trade.trading_date).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
       buy_from_account: trade.buy_from_account?.toString() || "",
       do_number: trade.do_number || "",
       product_id: trade.product_id?.toString() || "",
@@ -520,7 +564,8 @@ export default function TradingPage() {
       buy_tax_value: trade.buy_tax_value?.toString() || "",
       buy_tax_percentage: trade.buy_tax_type === "percentage" || false,
       buy_further_tax_value: trade.buy_further_tax_value?.toString() || "",
-      buy_further_tax_percentage: (trade.buy_further_tax_type === "percentage") || false,
+      buy_further_tax_percentage:
+        trade.buy_further_tax_type === "percentage" || false,
       buy_discount_value: buyDiscountValue,
       buy_other_discount_value: buyOtherDiscountValue,
       buy_detail: trade.buy_detail || "",
@@ -531,7 +576,8 @@ export default function TradingPage() {
       sale_tax_value: trade.sale_tax_value?.toString() || "",
       sale_tax_percentage: trade.sale_tax_type === "percentage" || false,
       sale_further_tax_value: trade.sale_further_tax_value?.toString() || "",
-      sale_further_tax_percentage: (trade.sale_further_tax_type === "percentage") || false,
+      sale_further_tax_percentage:
+        trade.sale_further_tax_type === "percentage" || false,
       sale_discount_value: saleDiscountValue,
       sale_other_discount_value: saleOtherDiscountValue,
       sale_detail: trade.sale_detail || "",
@@ -562,7 +608,7 @@ export default function TradingPage() {
 
   const handleClear = () => {
     reset({
-      trading_date: new Date().toISOString().split('T')[0],
+      trading_date: new Date().toISOString().split("T")[0],
       buy_from_account: "",
       do_number: "",
       product_id: "",
@@ -594,24 +640,44 @@ export default function TradingPage() {
 
   // Filter trades (client-side filtering on paginated data)
   const filteredTrades = trades.filter((trade) => {
-    const matchesSearch = searchQuery === "" ||
+    const matchesSearch =
+      searchQuery === "" ||
       trade.do_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       trade.buy_detail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       trade.sale_detail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.buy_from_account)?.account_nam?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.sale_to_account)?.account_nam?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (Array.isArray(products) && products.find(p => p.product_id === trade.product_id)?.product_title?.toLowerCase().includes(searchQuery.toLowerCase()));
+      (Array.isArray(accounts) &&
+        accounts
+          .find((a) => a.acc_id === trade.buy_from_account)
+          ?.account_nam?.toLowerCase()
+          .includes(searchQuery.toLowerCase())) ||
+      (Array.isArray(accounts) &&
+        accounts
+          .find((a) => a.acc_id === trade.sale_to_account)
+          ?.account_nam?.toLowerCase()
+          .includes(searchQuery.toLowerCase())) ||
+      (Array.isArray(products) &&
+        products
+          .find((p) => p.product_id === trade.product_id)
+          ?.product_title?.toLowerCase()
+          .includes(searchQuery.toLowerCase()));
 
-    const matchesBuyAccount = filterBuyAccount === "all" ||
+    const matchesBuyAccount =
+      filterBuyAccount === "all" ||
       trade.buy_from_account?.toString() === filterBuyAccount;
 
-    const matchesSaleAccount = filterSaleAccount === "all" ||
+    const matchesSaleAccount =
+      filterSaleAccount === "all" ||
       trade.sale_to_account?.toString() === filterSaleAccount;
 
-    const matchesDate = filterDate === "" ||
-      (trade.trading_date && new Date(trade.trading_date).toISOString().split('T')[0] === filterDate);
+    const matchesDate =
+      filterDate === "" ||
+      (trade.trading_date &&
+        new Date(trade.trading_date).toISOString().split("T")[0] ===
+          filterDate);
 
-    return matchesSearch && matchesBuyAccount && matchesSaleAccount && matchesDate;
+    return (
+      matchesSearch && matchesBuyAccount && matchesSaleAccount && matchesDate
+    );
   });
 
   // Reset to page 1 when filters change and refetch
@@ -638,104 +704,124 @@ export default function TradingPage() {
         </CardHeader> */}
         <CardContent className="p-4 pt-0 sm:p-0">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Buy From Section */}
               <Card className="space-y-4">
-                <CardTitle className="text-base sm:text-lg  sm:pl-4 font-semibold">Buy From</CardTitle>
+                <CardTitle className="text-base sm:text-lg  sm:pl-4 font-semibold">
+                  Buy From
+                </CardTitle>
                 <CardContent className="p-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
-                  {/* Date */}
-                  <div className="space-y-2">
-                    <Label htmlFor="trading_date">Date *</Label>
-                    <Input
-                      id="trading_date"
-                      type="date"
-                      {...register("trading_date", { required: "Date is required" })}
-                    />
-                    {errors.trading_date && (
-                      <p className="text-sm text-destructive">{errors.trading_date.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_from_account">Account *</Label>
-                    <Controller
-                      name="buy_from_account"
-                      control={control}
-                      rules={{ required: "Buy from account is required" }}
-                      render={({ field }) => (
-                        <Combobox
-                          options={Array.isArray(accounts) ? accounts.map((account) => ({
-                            value: account.acc_id.toString(),
-                            label: account.account_nam,
-                          })) : []}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder="Select account"
-                          searchPlaceholder="Search accounts..."
-                          emptyText="No account found."
-                        />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
+                    {/* Date */}
+                    <div className="space-y-2">
+                      <Label htmlFor="trading_date">Date *</Label>
+                      <Input
+                        id="trading_date"
+                        type="date"
+                        {...register("trading_date", {
+                          required: "Date is required",
+                        })}
+                      />
+                      {errors.trading_date && (
+                        <p className="text-sm text-destructive">
+                          {errors.trading_date.message}
+                        </p>
                       )}
-                    />
-                    {errors.buy_from_account && (
-                      <p className="text-sm text-destructive">{errors.buy_from_account.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="do_number">D.O Number</Label>
-                    <Input
-                      id="do_number"
-                      {...register("do_number")}
-                      placeholder="Enter D.O number"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="product_id">Product *</Label>
-                    <Controller
-                      name="product_id"
-                      control={control}
-                      rules={{ required: "Product is required" }}
-                      render={({ field }) => (
-                        <Combobox
-                          options={Array.isArray(products) ? products.map((product) => ({
-                            value: product.product_id.toString(),
-                            label: product.product_title,
-                          })) : []}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder="Select product"
-                          searchPlaceholder="Search products..."
-                          emptyText="No product found."
-                        />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="buy_from_account">Account *</Label>
+                      <Controller
+                        name="buy_from_account"
+                        control={control}
+                        rules={{ required: "Buy from account is required" }}
+                        render={({ field }) => (
+                          <Combobox
+                            options={
+                              Array.isArray(accounts)
+                                ? accounts.map((account) => ({
+                                    value: account.acc_id.toString(),
+                                    label: account.account_nam,
+                                  }))
+                                : []
+                            }
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select account"
+                            searchPlaceholder="Search accounts..."
+                            emptyText="No account found."
+                          />
+                        )}
+                      />
+                      {errors.buy_from_account && (
+                        <p className="text-sm text-destructive">
+                          {errors.buy_from_account.message}
+                        </p>
                       )}
-                    />
-                    {errors.product_id && (
-                      <p className="text-sm text-destructive">{errors.product_id.message}</p>
-                    )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="do_number">D.O Number</Label>
+                      <Input
+                        id="do_number"
+                        {...register("do_number")}
+                        placeholder="Enter D.O number"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="product_id">Product *</Label>
+                      <Controller
+                        name="product_id"
+                        control={control}
+                        rules={{ required: "Product is required" }}
+                        render={({ field }) => (
+                          <Combobox
+                            options={
+                              Array.isArray(products)
+                                ? products.map((product) => ({
+                                    value: product.product_id.toString(),
+                                    label: product.product_title,
+                                  }))
+                                : []
+                            }
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select product"
+                            searchPlaceholder="Search products..."
+                            emptyText="No product found."
+                          />
+                        )}
+                      />
+                      {errors.product_id && (
+                        <p className="text-sm text-destructive">
+                          {errors.product_id.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                </div>
+                  {/* First Row: Price, Discount Type, Discount Value, Discounted Amount */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="buy_price">Price *</Label>
+                      <Input
+                        id="buy_price"
+                        type="number"
+                        step="0.01"
+                        {...register("buy_price", {
+                          required: "Price is required",
+                          min: 0,
+                        })}
+                        placeholder="0.00"
+                      />
+                      {errors.buy_price && (
+                        <p className="text-sm text-destructive">
+                          {errors.buy_price.message}
+                        </p>
+                      )}
+                    </div>
 
-                {/* First Row: Price, Discount Type, Discount Value, Discounted Amount */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_price">Price *</Label>
-                    <Input
-                      id="buy_price"
-                      type="number"
-                      step="0.01"
-                      {...register("buy_price", { required: "Price is required", min: 0 })}
-                      placeholder="0.00"
-                    />
-                    {errors.buy_price && (
-                      <p className="text-sm text-destructive">{errors.buy_price.message}</p>
-                    )}
-                  </div>
-
-                  {/* <div className="space-y-2">
+                    {/* <div className="space-y-2">
                     <Label>Discount Type</Label>
                     <Controller
                       name="buy_discount_type"
@@ -759,132 +845,178 @@ export default function TradingPage() {
                     />
                   </div> */}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_discount_value">Discount Value ( % )</Label>
-                    <Input
-                      id="buy_discount_value"
-                      type="number"
-                      step="0.01"
-                      {...register("buy_discount_value", { min: 0 })}
-                      placeholder="0.00"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_other_discount_value">Other Discount Value ( flat )</Label>
-                    <Input
-                      id="buy_other_discount_value"
-                      type="number"
-                      step="0.01"
-                      {...register("buy_other_discount_value", { min: 0 })}
-                      placeholder="0.00"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Discounted Amount</Label>
-                    <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
-                      <p className="text-sm font-semibold">
-                        {(buyDiscountValue || buyOtherDiscountValue) ? calculateBuyDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
-                      </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="buy_discount_value">
+                        Discount Value ( % )
+                      </Label>
+                      <Input
+                        id="buy_discount_value"
+                        type="number"
+                        step="0.01"
+                        {...register("buy_discount_value", { min: 0 })}
+                        placeholder="0.00"
+                      />
                     </div>
-                  </div>
-                {/* </div> */}
 
-                {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
-                {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4"> */}
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_quantity">Quantity *</Label>
-                    <Input
-                      id="buy_quantity"
-                      type="number"
-                      step="0.01"
-                      {...register("buy_quantity", { required: "Quantity is required", min: 0 })}
-                      placeholder="0.00"
-                    />
-                    {errors.buy_quantity && (
-                      <p className="text-sm text-destructive">{errors.buy_quantity.message}</p>
-                    )}
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="buy_other_discount_value">
+                        Other Discount Value ( flat )
+                      </Label>
+                      <Input
+                        id="buy_other_discount_value"
+                        type="number"
+                        step="0.01"
+                        {...register("buy_other_discount_value", { min: 0 })}
+                        placeholder="0.00"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="buy_tax_value">Tax Value</Label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Flat</span>
-                        <Switch
-                          id="buy_tax_percentage"
-                          checked={buyTaxPercentage}
-                          onCheckedChange={(checked) => {
-                            setValue("buy_tax_percentage", checked);
-                            setValue("buy_tax_type", checked ? "percentage" : "flat");
-                          }}
-                        />
-                        <span className="text-xs text-muted-foreground">%</span>
+                    <div className="space-y-2">
+                      <Label>Discounted Amount</Label>
+                      <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
+                        <p className="text-sm font-semibold">
+                          {buyDiscountValue || buyOtherDiscountValue
+                            ? calculateBuyDiscountAmount().toLocaleString(
+                                undefined,
+                                {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                },
+                              )
+                            : "0.00"}
+                        </p>
                       </div>
                     </div>
-                    <Input
-                      id="buy_tax_value"
-                      type="number"
-                      step="0.01"
-                      {...register("buy_tax_value", { min: 0 })}
-                      placeholder="0.00"
-                    />
-                  </div>
+                    {/* </div> */}
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="buy_further_tax_value">Further Tax Value</Label>
+                    {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
+                    {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4"> */}
+                    <div className="space-y-2">
+                      <Label htmlFor="buy_quantity">Quantity *</Label>
+                      <Input
+                        id="buy_quantity"
+                        type="number"
+                        step="0.01"
+                        {...register("buy_quantity", {
+                          required: "Quantity is required",
+                          min: 0,
+                        })}
+                        placeholder="0.00"
+                      />
+                      {errors.buy_quantity && (
+                        <p className="text-sm text-destructive">
+                          {errors.buy_quantity.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Flat</span>
-                        <Switch
-                          id="buy_further_tax_percentage"
-                          checked={buyFurtherTaxPercentage}
-                          onCheckedChange={(checked) => setValue("buy_further_tax_percentage", checked)}
-                        />
-                        <span className="text-xs text-muted-foreground">%</span>
+                        <Label htmlFor="buy_tax_value">Tax Value</Label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            Flat
+                          </span>
+                          <Switch
+                            id="buy_tax_percentage"
+                            checked={buyTaxPercentage}
+                            onCheckedChange={(checked) => {
+                              setValue("buy_tax_percentage", checked);
+                              setValue(
+                                "buy_tax_type",
+                                checked ? "percentage" : "flat",
+                              );
+                            }}
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            %
+                          </span>
+                        </div>
+                      </div>
+                      <Input
+                        id="buy_tax_value"
+                        type="number"
+                        step="0.01"
+                        {...register("buy_tax_value", { min: 0 })}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="buy_further_tax_value">
+                          Further Tax Value
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            Flat
+                          </span>
+                          <Switch
+                            id="buy_further_tax_percentage"
+                            checked={buyFurtherTaxPercentage}
+                            onCheckedChange={(checked) =>
+                              setValue("buy_further_tax_percentage", checked)
+                            }
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            %
+                          </span>
+                        </div>
+                      </div>
+                      <Input
+                        id="buy_further_tax_value"
+                        type="number"
+                        step="0.01"
+                        {...register("buy_further_tax_value", { min: 0 })}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>
+                        Tax Applied Amount{" "}
+                        {buyTaxValue || buyFurtherTaxValue ? `(Total)` : ""}
+                      </Label>
+                      <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
+                        <p className="text-sm font-semibold">
+                          {buyTaxValue || buyFurtherTaxValue
+                            ? calculateBuyTaxAmount().toLocaleString(
+                                undefined,
+                                {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                },
+                              )
+                            : "0.00"}
+                        </p>
                       </div>
                     </div>
-                    <Input
-                      id="buy_further_tax_value"
-                      type="number"
-                      step="0.01"
-                      {...register("buy_further_tax_value", { min: 0 })}
-                      placeholder="0.00"
-                    />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Tax Applied Amount {(buyTaxValue || buyFurtherTaxValue) ? `(Total)` : ""}</Label>
-                    <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
-                      <p className="text-sm font-semibold">
-                        {(buyTaxValue || buyFurtherTaxValue) ? calculateBuyTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
-                      </p>
+                  {/* Third Row: Total, Description */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Buy Total</Label>
+                      <div className="p-2 bg-muted rounded-md">
+                        <p className="text-lg font-semibold">
+                          {calculateBuyTotal().toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="buy_detail">Detail</Label>
+                      <Textarea
+                        id="buy_detail"
+                        {...register("buy_detail")}
+                        placeholder="Enter buy details"
+                        rows={3}
+                      />
                     </div>
                   </div>
-                </div>
-
-                {/* Third Row: Total, Description */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Buy Total</Label>
-                    <div className="p-2 bg-muted rounded-md">
-                      <p className="text-lg font-semibold">
-                        {calculateBuyTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_detail">Detail</Label>
-                    <Textarea
-                      id="buy_detail"
-                      {...register("buy_detail")}
-                      placeholder="Enter buy details"
-                      rows={3}
-                    />
-                  </div>
-                </div>
                 </CardContent>
               </Card>
 
@@ -901,10 +1033,14 @@ export default function TradingPage() {
                       rules={{ required: "Sale to account is required" }}
                       render={({ field }) => (
                         <Combobox
-                          options={Array.isArray(accounts) ? accounts.map((account) => ({
-                            value: account.acc_id.toString(),
-                            label: account.account_nam,
-                          })) : []}
+                          options={
+                            Array.isArray(accounts)
+                              ? accounts.map((account) => ({
+                                  value: account.acc_id.toString(),
+                                  label: account.account_nam,
+                                }))
+                              : []
+                          }
                           value={field.value}
                           onValueChange={field.onChange}
                           placeholder="Select account"
@@ -914,7 +1050,9 @@ export default function TradingPage() {
                       )}
                     />
                     {errors.sale_to_account && (
-                      <p className="text-sm text-destructive">{errors.sale_to_account.message}</p>
+                      <p className="text-sm text-destructive">
+                        {errors.sale_to_account.message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -927,16 +1065,23 @@ export default function TradingPage() {
                       id="sale_price"
                       type="number"
                       step="0.01"
-                      {...register("sale_price", { required: "Price is required", min: 0 })}
+                      {...register("sale_price", {
+                        required: "Price is required",
+                        min: 0,
+                      })}
                       placeholder="0.00"
                     />
                     {errors.sale_price && (
-                      <p className="text-sm text-destructive">{errors.sale_price.message}</p>
+                      <p className="text-sm text-destructive">
+                        {errors.sale_price.message}
+                      </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sale_discount_value">Discount Value ( % )</Label>
+                    <Label htmlFor="sale_discount_value">
+                      Discount Value ( % )
+                    </Label>
                     <Input
                       id="sale_discount_value"
                       type="number"
@@ -947,7 +1092,9 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sale_other_discount_value">Other Discount Value ( flat )</Label>
+                    <Label htmlFor="sale_other_discount_value">
+                      Other Discount Value ( flat )
+                    </Label>
                     <Input
                       id="sale_other_discount_value"
                       type="number"
@@ -961,25 +1108,38 @@ export default function TradingPage() {
                     <Label>Discounted Amount</Label>
                     <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
                       <p className="text-sm font-semibold">
-                        {(saleDiscountValue || saleOtherDiscountValue) ? calculateSaleDiscountAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                        {saleDiscountValue || saleOtherDiscountValue
+                          ? calculateSaleDiscountAmount().toLocaleString(
+                              undefined,
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              },
+                            )
+                          : "0.00"}
                       </p>
                     </div>
                   </div>
-                {/* </div> */}
+                  {/* </div> */}
 
-                {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
-                {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4"> */}
+                  {/* Second Row: Quantity, Tax Type, Tax Value, Tax Applied Amount */}
+                  {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mb-4 gap-4"> */}
                   <div className="space-y-2">
                     <Label htmlFor="sale_quantity">Quantity *</Label>
                     <Input
                       id="sale_quantity"
                       type="number"
                       step="0.01"
-                      {...register("sale_quantity", { required: "Quantity is required", min: 0 })}
+                      {...register("sale_quantity", {
+                        required: "Quantity is required",
+                        min: 0,
+                      })}
                       placeholder="0.00"
                     />
                     {errors.sale_quantity && (
-                      <p className="text-sm text-destructive">{errors.sale_quantity.message}</p>
+                      <p className="text-sm text-destructive">
+                        {errors.sale_quantity.message}
+                      </p>
                     )}
                   </div>
 
@@ -987,13 +1147,18 @@ export default function TradingPage() {
                     <div className="flex items-center gap-2">
                       <Label htmlFor="sale_tax_value">Tax Value</Label>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Flat</span>
+                        <span className="text-xs text-muted-foreground">
+                          Flat
+                        </span>
                         <Switch
                           id="sale_tax_percentage"
                           checked={saleTaxPercentage}
                           onCheckedChange={(checked) => {
                             setValue("sale_tax_percentage", checked);
-                            setValue("sale_tax_type", checked ? "percentage" : "flat");
+                            setValue(
+                              "sale_tax_type",
+                              checked ? "percentage" : "flat",
+                            );
                           }}
                         />
                         <span className="text-xs text-muted-foreground">%</span>
@@ -1010,13 +1175,19 @@ export default function TradingPage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="sale_further_tax_value">Further Tax Value</Label>
+                      <Label htmlFor="sale_further_tax_value">
+                        Further Tax Value
+                      </Label>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Flat</span>
+                        <span className="text-xs text-muted-foreground">
+                          Flat
+                        </span>
                         <Switch
                           id="sale_further_tax_percentage"
                           checked={saleFurtherTaxPercentage}
-                          onCheckedChange={(checked) => setValue("sale_further_tax_percentage", checked)}
+                          onCheckedChange={(checked) =>
+                            setValue("sale_further_tax_percentage", checked)
+                          }
                         />
                         <span className="text-xs text-muted-foreground">%</span>
                       </div>
@@ -1031,10 +1202,18 @@ export default function TradingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Tax Applied Amount {(saleTaxValue || saleFurtherTaxValue) ? `(Total)` : ""}</Label>
+                    <Label>
+                      Tax Applied Amount{" "}
+                      {saleTaxValue || saleFurtherTaxValue ? `(Total)` : ""}
+                    </Label>
                     <div className="p-2 bg-muted/50 rounded-md border border-muted min-h-[2.5rem] flex items-center">
                       <p className="text-sm font-semibold">
-                        {(saleTaxValue || saleFurtherTaxValue) ? calculateSaleTaxAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                        {saleTaxValue || saleFurtherTaxValue
+                          ? calculateSaleTaxAmount().toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : "0.00"}
                       </p>
                     </div>
                   </div>
@@ -1046,7 +1225,10 @@ export default function TradingPage() {
                     <Label>Sale Total</Label>
                     <div className="p-2 bg-muted rounded-md">
                       <p className="text-lg font-semibold">
-                        {calculateSaleTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {calculateSaleTotal().toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -1067,15 +1249,15 @@ export default function TradingPage() {
 
             {/* Form Actions */}
             <div className="flex gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClear}
-              >
+              <Button type="button" variant="outline" onClick={handleClear}>
                 {isEditMode ? "Cancel Edit" : "Clear Form"}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : isEditMode ? "Update Trade" : "Create Trade"}
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Trade"
+                    : "Create Trade"}
               </Button>
             </div>
           </form>
@@ -1119,10 +1301,12 @@ export default function TradingPage() {
                     <Combobox
                       options={[
                         { value: "all", label: "All Accounts" },
-                        ...(Array.isArray(accounts) ? accounts.map((account) => ({
-                          value: account.acc_id.toString(),
-                          label: account.account_nam,
-                        })) : [])
+                        ...(Array.isArray(accounts)
+                          ? accounts.map((account) => ({
+                              value: account.acc_id.toString(),
+                              label: account.account_nam,
+                            }))
+                          : []),
                       ]}
                       value={filterBuyAccount}
                       onValueChange={setFilterBuyAccount}
@@ -1136,10 +1320,12 @@ export default function TradingPage() {
                     <Combobox
                       options={[
                         { value: "all", label: "All Accounts" },
-                        ...(Array.isArray(accounts) ? accounts.map((account) => ({
-                          value: account.acc_id.toString(),
-                          label: account.account_nam,
-                        })) : [])
+                        ...(Array.isArray(accounts)
+                          ? accounts.map((account) => ({
+                              value: account.acc_id.toString(),
+                              label: account.account_nam,
+                            }))
+                          : []),
                       ]}
                       value={filterSaleAccount}
                       onValueChange={setFilterSaleAccount}
@@ -1179,10 +1365,12 @@ export default function TradingPage() {
                   <Combobox
                     options={[
                       { value: "all", label: "All Accounts" },
-                      ...(Array.isArray(accounts) ? accounts.map((account) => ({
-                        value: account.acc_id.toString(),
-                        label: account.account_nam,
-                      })) : [])
+                      ...(Array.isArray(accounts)
+                        ? accounts.map((account) => ({
+                            value: account.acc_id.toString(),
+                            label: account.account_nam,
+                          }))
+                        : []),
                     ]}
                     value={filterBuyAccount}
                     onValueChange={setFilterBuyAccount}
@@ -1196,10 +1384,12 @@ export default function TradingPage() {
                   <Combobox
                     options={[
                       { value: "all", label: "All Accounts" },
-                      ...(Array.isArray(accounts) ? accounts.map((account) => ({
-                        value: account.acc_id.toString(),
-                        label: account.account_nam,
-                      })) : [])
+                      ...(Array.isArray(accounts)
+                        ? accounts.map((account) => ({
+                            value: account.acc_id.toString(),
+                            label: account.account_nam,
+                          }))
+                        : []),
                     ]}
                     value={filterSaleAccount}
                     onValueChange={setFilterSaleAccount}
@@ -1225,7 +1415,9 @@ export default function TradingPage() {
             {loading ? (
               <div className="text-center py-8">Loading...</div>
             ) : filteredTrades.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No trades found</div>
+              <div className="text-center py-8 text-muted-foreground">
+                No trades found
+              </div>
             ) : isMobile ? (
               <div className="space-y-3">
                 {filteredTrades.map((trade) => (
@@ -1234,54 +1426,106 @@ export default function TradingPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Date</span>
                         <span className="text-sm font-medium">
-                          {trade.trading_date ? new Date(trade.trading_date).toLocaleDateString() : "N/A"}
+                          {trade.trading_date
+                            ? new Date(trade.trading_date).toLocaleDateString()
+                            : "N/A"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">D.O Number</span>
-                        <span className="text-sm">{trade.do_number || "N/A"}</span>
+                        <span className="text-xs text-gray-500">
+                          D.O Number
+                        </span>
+                        <span className="text-sm">
+                          {trade.do_number || "N/A"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Product</span>
                         <span className="text-sm font-medium">
-                          {Array.isArray(products) && products.find(p => p.product_id === trade.product_id)?.product_title || "N/A"}
+                          {(Array.isArray(products) &&
+                            products.find(
+                              (p) => p.product_id === trade.product_id,
+                            )?.product_title) ||
+                            "N/A"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Buy From</span>
                         <span className="text-sm font-medium">
-                          {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.buy_from_account)?.account_nam || "N/A"}
+                          {(Array.isArray(accounts) &&
+                            accounts.find(
+                              (a) => a.acc_id === trade.buy_from_account,
+                            )?.account_nam) ||
+                            "N/A"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Buy Qty</span>
-                        <span className="text-sm">{trade.buy_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                        <span className="text-sm">
+                          {trade.buy_quantity?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Buy Price</span>
-                        <span className="text-sm">{trade.buy_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                        <span className="text-sm">
+                          {trade.buy_price?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Buy Total</span>
-                        <span className="text-sm font-medium">{trade.buy_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                        <span className="text-sm font-medium">
+                          {trade.buy_total?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Sale To</span>
                         <span className="text-sm font-medium">
-                          {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.sale_to_account)?.account_nam || "N/A"}
+                          {(Array.isArray(accounts) &&
+                            accounts.find(
+                              (a) => a.acc_id === trade.sale_to_account,
+                            )?.account_nam) ||
+                            "N/A"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Sale Qty</span>
-                        <span className="text-sm">{trade.sale_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                        <span className="text-sm">
+                          {trade.sale_quantity?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Sale Price</span>
-                        <span className="text-sm">{trade.sale_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                        <span className="text-xs text-gray-500">
+                          Sale Price
+                        </span>
+                        <span className="text-sm">
+                          {trade.sale_price?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Sale Total</span>
-                        <span className="text-sm font-medium">{trade.sale_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
+                        <span className="text-xs text-gray-500">
+                          Sale Total
+                        </span>
+                        <span className="text-sm font-medium">
+                          {trade.sale_total?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00"}
+                        </span>
                       </div>
                       <div className="flex justify-end gap-2 pt-2">
                         <Button
@@ -1292,14 +1536,14 @@ export default function TradingPage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(trade.trading_id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1 text-destructive" />
                           Delete
-                        </Button>
+                        </Button> */}
                       </div>
                     </CardContent>
                   </Card>
@@ -1312,16 +1556,34 @@ export default function TradingPage() {
                     <TableHeader className="sticky top-0 bg-background z-20">
                       <TableRow>
                         <TableHead className="bg-background">Date</TableHead>
-                        <TableHead className="bg-background hidden md:table-cell">D.O Number</TableHead>
+                        <TableHead className="bg-background hidden md:table-cell">
+                          D.O Number
+                        </TableHead>
                         <TableHead className="bg-background">Product</TableHead>
-                        <TableHead className="bg-background hidden lg:table-cell">Buy From</TableHead>
-                        <TableHead className="bg-background hidden lg:table-cell">Buy Qty</TableHead>
-                        <TableHead className="bg-background hidden xl:table-cell">Buy Price</TableHead>
-                        <TableHead className="bg-background hidden xl:table-cell">Buy Total</TableHead>
-                        <TableHead className="bg-background hidden lg:table-cell">Sale To</TableHead>
-                        <TableHead className="bg-background hidden lg:table-cell">Sale Qty</TableHead>
-                        <TableHead className="bg-background hidden xl:table-cell">Sale Price</TableHead>
-                        <TableHead className="bg-background hidden xl:table-cell">Sale Total</TableHead>
+                        <TableHead className="bg-background hidden lg:table-cell">
+                          Buy From
+                        </TableHead>
+                        <TableHead className="bg-background hidden lg:table-cell">
+                          Buy Qty
+                        </TableHead>
+                        <TableHead className="bg-background hidden xl:table-cell">
+                          Buy Price
+                        </TableHead>
+                        <TableHead className="bg-background hidden xl:table-cell">
+                          Buy Total
+                        </TableHead>
+                        <TableHead className="bg-background hidden lg:table-cell">
+                          Sale To
+                        </TableHead>
+                        <TableHead className="bg-background hidden lg:table-cell">
+                          Sale Qty
+                        </TableHead>
+                        <TableHead className="bg-background hidden xl:table-cell">
+                          Sale Price
+                        </TableHead>
+                        <TableHead className="bg-background hidden xl:table-cell">
+                          Sale Total
+                        </TableHead>
                         <TableHead className="bg-background">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1329,37 +1591,71 @@ export default function TradingPage() {
                       {filteredTrades.map((trade) => (
                         <TableRow key={trade.trading_id}>
                           <TableCell>
-                            {trade.trading_date ? new Date(trade.trading_date).toLocaleDateString() : "N/A"}
+                            {trade.trading_date
+                              ? new Date(
+                                  trade.trading_date,
+                                ).toLocaleDateString()
+                              : "N/A"}
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
                             {trade.do_number || "N/A"}
                           </TableCell>
                           <TableCell>
-                            {Array.isArray(products) && products.find(p => p.product_id === trade.product_id)?.product_title || "N/A"}
+                            {(Array.isArray(products) &&
+                              products.find(
+                                (p) => p.product_id === trade.product_id,
+                              )?.product_title) ||
+                              "N/A"}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
-                            {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.buy_from_account)?.account_nam || "N/A"}
+                            {(Array.isArray(accounts) &&
+                              accounts.find(
+                                (a) => a.acc_id === trade.buy_from_account,
+                              )?.account_nam) ||
+                              "N/A"}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
-                            {trade.buy_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                            {trade.buy_quantity?.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }) || "0.00"}
                           </TableCell>
                           <TableCell className="hidden xl:table-cell">
-                            {trade.buy_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                            {trade.buy_price?.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }) || "0.00"}
                           </TableCell>
                           <TableCell className="hidden xl:table-cell">
-                            {trade.buy_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                            {trade.buy_total?.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }) || "0.00"}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
-                            {Array.isArray(accounts) && accounts.find(a => a.acc_id === trade.sale_to_account)?.account_nam || "N/A"}
+                            {(Array.isArray(accounts) &&
+                              accounts.find(
+                                (a) => a.acc_id === trade.sale_to_account,
+                              )?.account_nam) ||
+                              "N/A"}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
-                            {trade.sale_quantity?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                            {trade.sale_quantity?.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }) || "0.00"}
                           </TableCell>
                           <TableCell className="hidden xl:table-cell">
-                            {trade.sale_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                            {trade.sale_price?.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }) || "0.00"}
                           </TableCell>
                           <TableCell className="hidden xl:table-cell">
-                            {trade.sale_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                            {trade.sale_total?.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }) || "0.00"}
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
@@ -1371,14 +1667,14 @@ export default function TradingPage() {
                               >
                                 <Edit2 className="h-4 w-4" />
                               </Button>
-                              <Button
+                              {/* <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDelete(trade.trading_id)}
                                 className="h-8 w-8 p-0"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              </Button> */}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1391,82 +1687,94 @@ export default function TradingPage() {
 
             {/* Pagination */}
             {totalPages >= 1 && (
-                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm text-muted-foreground">Items per page:</Label>
-                    <Select
-                      value={itemsPerPage.toString()}
-                      onValueChange={(value) => {
-                        setItemsPerPage(Number(value));
-                        setCurrentPage(1);
-                        fetchTrades(1, Number(value));
-                      }}
-                    >
-                      <SelectTrigger className="w-20">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5">5</SelectItem>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="20">20</SelectItem>
-                        <SelectItem value="50">50</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                          <PaginationPrevious
-                            onClick={() => {
-                              const newPage = Math.max(1, currentPage - 1);
-                              setCurrentPage(newPage);
-                              fetchTrades(newPage, itemsPerPage);
-                            }}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
-                      </PaginationItem>
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
-                        return (
-                          <PaginationItem key={pageNum}>
-                              <PaginationLink
-                                onClick={() => {
-                                  setCurrentPage(pageNum);
-                                  fetchTrades(pageNum, itemsPerPage);
-                                }}
-                                isActive={currentPage === pageNum}
-                                className="cursor-pointer"
-                              >
-                              {pageNum}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      })}
-                      <PaginationItem>
-                          <PaginationNext
-                            onClick={() => {
-                              const newPage = Math.min(totalPages, currentPage + 1);
-                              setCurrentPage(newPage);
-                              fetchTrades(newPage, itemsPerPage);
-                            }}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                  <div className="text-sm text-muted-foreground">
-                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} trades
-                  </div>
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground">
+                    Items per page:
+                  </Label>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                      fetchTrades(1, Number(value));
+                    }}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => {
+                          const newPage = Math.max(1, currentPage - 1);
+                          setCurrentPage(newPage);
+                          fetchTrades(newPage, itemsPerPage);
+                        }}
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            onClick={() => {
+                              setCurrentPage(pageNum);
+                              fetchTrades(pageNum, itemsPerPage);
+                            }}
+                            isActive={currentPage === pageNum}
+                            className="cursor-pointer"
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => {
+                          const newPage = Math.min(totalPages, currentPage + 1);
+                          setCurrentPage(newPage);
+                          fetchTrades(newPage, itemsPerPage);
+                        }}
+                        className={
+                          currentPage === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+                <div className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                  {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
+                  {totalItems} trades
+                </div>
+              </div>
             )}
           </MobileListToggle>
         </CardContent>

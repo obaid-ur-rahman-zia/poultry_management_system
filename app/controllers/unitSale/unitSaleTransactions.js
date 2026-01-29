@@ -5,7 +5,12 @@ import RedisService from "@/app/utils/redis";
 import { calculateFinancialYear } from "@/app/components/calculateFinYear/financialYear";
 import prisma from "@/lib/prisma";
 
-export async function createTransactions(unitSale, customerId, tx) {
+export async function createTransactions(
+  unitSale,
+  product_nam,
+  customerId,
+  tx,
+) {
   // Validate unit sale object
   if (!unitSale || !unitSale.sale_id) {
     throw new Error("Invalid unit sale object provided to createTransactions");
@@ -22,15 +27,16 @@ export async function createTransactions(unitSale, customerId, tx) {
     const financialYear = calculateFinancialYear(
       unitSale.sale_date instanceof Date
         ? unitSale.sale_date.toISOString().split("T")[0]
-        : new Date(unitSale.sale_date).toISOString().split("T")[0]
+        : new Date(unitSale.sale_date).toISOString().split("T")[0],
     );
 
-    const saleDate = unitSale.sale_date instanceof Date
-      ? unitSale.sale_date
-      : new Date(unitSale.sale_date);
+    const saleDate =
+      unitSale.sale_date instanceof Date
+        ? unitSale.sale_date
+        : new Date(unitSale.sale_date);
 
     // Build remarks with van_number if available
-    let remarks = `Unit Sale#${unitSale.sale_id}`;
+    let remarks = `${product_nam} Bags ${unitSale.quantity} @ ${unitSale.price} Unit Sale#${unitSale.sale_id}`;
     if (unitSale.van_number) {
       remarks += ` - Van: ${unitSale.van_number}`;
     }
@@ -76,7 +82,7 @@ export async function createTransactions(unitSale, customerId, tx) {
         sub_id: flocSubhead.sub_id,
         account_nam: {
           equals: flocAccountName,
-          mode: 'insensitive',
+          mode: "insensitive",
         },
         status: 1,
       },
@@ -134,4 +140,3 @@ export async function createTransactions(unitSale, customerId, tx) {
     throw new Error(`Failed to create transactions: ${error.message}`);
   }
 }
-

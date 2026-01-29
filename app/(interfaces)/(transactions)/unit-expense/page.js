@@ -499,6 +499,9 @@ export default function UnitExpensePage() {
         floc_id: parseInt(data.floc_id),
         supplier_id: parseInt(data.supplier_id),
         product_id: parseInt(data.product_id),
+        product_nam: products.find(
+          (product) => product.product_id === parseInt(data.product_id),
+        )?.product_title,
         price: parseFloat(data.price),
         quantity: parseFloat(data.quantity),
         tax_type: data.tax_type,
@@ -1259,14 +1262,14 @@ export default function UnitExpensePage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(expense.expense_id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1 text-destructive" />
                           Delete
-                        </Button>
+                        </Button> */}
                       </div>
                     </CardContent>
                   </Card>
@@ -1376,14 +1379,14 @@ export default function UnitExpensePage() {
                               >
                                 <Edit2 className="h-4 w-4" />
                               </Button>
-                              <Button
+                              {/* <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDelete(expense.expense_id)}
                                 className="h-8 w-8 p-0"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              </Button> */}
                             </div>
                           </td>
                         </tr>

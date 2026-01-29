@@ -1,5 +1,6 @@
 import TradingRepository from "@/app/repositories/trading/tradingRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
+import TransactionRepository from "@/app/repositories/transaction/transactionRepository";
 import ErrorLogger from "@/app/utils/errorLogger";
 import { createTransactions } from "./tradingTransactions";
 import prisma from "@/lib/prisma";
@@ -96,6 +97,7 @@ class TradingController {
         trading_date,
         buy_from_account,
         product_id,
+        product_nam,
         buy_price,
         buy_quantity,
         buy_total,
@@ -167,7 +169,7 @@ class TradingController {
             }
 
             // Create all related transactions - this will throw if any transaction fails
-            await createTransactions(createdTrading, tx);
+            await createTransactions(createdTrading, product_nam, tx);
 
             return createdTrading;
           } catch (transactionError) {
@@ -216,54 +218,89 @@ class TradingController {
         return errorResponse(error, 400);
       }
 
-      const result = await TradingRepository.update(trading_id, {
-        ...req_object,
-        buy_from_account: req_object.buy_from_account
-          ? Number(req_object.buy_from_account)
-          : undefined,
-        product_id: req_object.product_id
-          ? Number(req_object.product_id)
-          : undefined,
-        buy_quantity: req_object.buy_quantity
-          ? Number(req_object.buy_quantity)
-          : undefined,
-        buy_price: req_object.buy_price
-          ? Number(req_object.buy_price)
-          : undefined,
-        buy_tax_value:
-          req_object.buy_tax_value !== undefined
-            ? Number(req_object.buy_tax_value)
-            : undefined,
-        buy_discount_value:
-          req_object.buy_discount_value !== undefined
-            ? Number(req_object.buy_discount_value)
-            : undefined,
-        buy_total: req_object.buy_total
-          ? Number(req_object.buy_total)
-          : undefined,
-        sale_to_account: req_object.sale_to_account
-          ? Number(req_object.sale_to_account)
-          : undefined,
-        sale_price: req_object.sale_price
-          ? Number(req_object.sale_price)
-          : undefined,
-        sale_quantity: req_object.sale_quantity
-          ? Number(req_object.sale_quantity)
-          : undefined,
-        sale_tax_value:
-          req_object.sale_tax_value !== undefined
-            ? Number(req_object.sale_tax_value)
-            : undefined,
-        sale_discount_value:
-          req_object.sale_discount_value !== undefined
-            ? Number(req_object.sale_discount_value)
-            : undefined,
-        sale_total: req_object.sale_total
-          ? Number(req_object.sale_total)
-          : undefined,
-      });
+      // Wrap everything in try-catch to ensure transaction rollback
+      const updatedTrading = await prisma.$transaction(
+        async (tx) => {
+          try {
+            const result = await TradingRepository.update(
+              trading_id,
+              {
+                ...req_object,
+                buy_from_account: req_object.buy_from_account
+                  ? Number(req_object.buy_from_account)
+                  : undefined,
+                product_id: req_object.product_id
+                  ? Number(req_object.product_id)
+                  : undefined,
+                buy_quantity: req_object.buy_quantity
+                  ? Number(req_object.buy_quantity)
+                  : undefined,
+                buy_price: req_object.buy_price
+                  ? Number(req_object.buy_price)
+                  : undefined,
+                buy_tax_value:
+                  req_object.buy_tax_value !== undefined
+                    ? Number(req_object.buy_tax_value)
+                    : undefined,
+                buy_discount_value:
+                  req_object.buy_discount_value !== undefined
+                    ? Number(req_object.buy_discount_value)
+                    : undefined,
+                buy_total: req_object.buy_total
+                  ? Number(req_object.buy_total)
+                  : undefined,
+                sale_to_account: req_object.sale_to_account
+                  ? Number(req_object.sale_to_account)
+                  : undefined,
+                sale_price: req_object.sale_price
+                  ? Number(req_object.sale_price)
+                  : undefined,
+                sale_quantity: req_object.sale_quantity
+                  ? Number(req_object.sale_quantity)
+                  : undefined,
+                sale_tax_value:
+                  req_object.sale_tax_value !== undefined
+                    ? Number(req_object.sale_tax_value)
+                    : undefined,
+                sale_discount_value:
+                  req_object.sale_discount_value !== undefined
+                    ? Number(req_object.sale_discount_value)
+                    : undefined,
+                sale_total: req_object.sale_total
+                  ? Number(req_object.sale_total)
+                  : undefined,
+              },
+              tx,
+            );
 
-      return successResponse(result, "Trade updated successfully");
+            // Soft delete previous transactions
+            await TransactionRepository.softDeleteByReferenceId(
+              trading_id,
+              "Trading",
+              tx,
+            );
+
+            // Create new transactions
+            await createTransactions(result, req_object.product_nam, tx);
+
+            return result;
+          } catch (transactionError) {
+            ErrorLogger.log(
+              "Transaction failed in TradingController.update",
+              transactionError,
+            );
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 10000,
+          timeout: 30000,
+          isolationLevel: "Serializable",
+        },
+      );
+
+      await RedisService.del("trading:all");
+      return successResponse(updatedTrading, "Trade updated successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
@@ -276,7 +313,10 @@ class TradingController {
         "Failed to update trade in Method: TradingController.update",
         err,
       );
-      return errorResponse(err, 500);
+      // Return a comprehensive error message
+      const errorMessage =
+        err.message || "Failed to update trade and its transactions";
+      return errorResponse(new Error(errorMessage), 500);
     }
   }
 

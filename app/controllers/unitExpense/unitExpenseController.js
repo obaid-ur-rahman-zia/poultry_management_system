@@ -1,6 +1,7 @@
 import UnitExpenseRepository from "@/app/repositories/unitExpense/unitExpenseRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
+import TransactionRepository from "@/app/repositories/transaction/transactionRepository";
 import { createTransactions } from "./unitExpenseTransactions";
 import prisma from "@/lib/prisma";
 
@@ -99,6 +100,7 @@ class UnitExpenseController {
         floc_id,
         supplier_id,
         product_id,
+        product_nam,
         price,
         quantity,
         total,
@@ -158,6 +160,7 @@ class UnitExpenseController {
             // Create all related transactions - this will throw if any transaction fails
             await createTransactions(
               createdExpense,
+              product_nam,
               req_object.supplier_id,
               tx,
             );
@@ -214,27 +217,75 @@ class UnitExpenseController {
       // Support both prounit_id and farm_id for backward compatibility
       const prounit_id = req_object.prounit_id || req_object.farm_id;
 
-      const result = await UnitExpenseRepository.update(expense_id, {
-        ...req_object,
-        prounit_id: prounit_id !== undefined ? Number(prounit_id) : undefined,
-        floc_id: req_object.floc_id ? Number(req_object.floc_id) : undefined,
-        product_id: req_object.product_id
-          ? Number(req_object.product_id)
-          : undefined,
-        price: req_object.price ? Number(req_object.price) : undefined,
-        quantity: req_object.quantity ? Number(req_object.quantity) : undefined,
-        tax_value:
-          req_object.tax_value !== undefined
-            ? Number(req_object.tax_value)
-            : undefined,
-        discount_value:
-          req_object.discount_value !== undefined
-            ? Number(req_object.discount_value)
-            : undefined,
-        total: req_object.total ? Number(req_object.total) : undefined,
-      });
+      // Wrap everything in try-catch to ensure transaction rollback
+      const updatedExpense = await prisma.$transaction(
+        async (tx) => {
+          try {
+            const result = await UnitExpenseRepository.update(
+              expense_id,
+              {
+                ...req_object,
+                prounit_id:
+                  prounit_id !== undefined ? Number(prounit_id) : undefined,
+                floc_id: req_object.floc_id
+                  ? Number(req_object.floc_id)
+                  : undefined,
+                product_id: req_object.product_id
+                  ? Number(req_object.product_id)
+                  : undefined,
+                price: req_object.price ? Number(req_object.price) : undefined,
+                quantity: req_object.quantity
+                  ? Number(req_object.quantity)
+                  : undefined,
+                tax_value:
+                  req_object.tax_value !== undefined
+                    ? Number(req_object.tax_value)
+                    : undefined,
+                discount_value:
+                  req_object.discount_value !== undefined
+                    ? Number(req_object.discount_value)
+                    : undefined,
+                total: req_object.total ? Number(req_object.total) : undefined,
+              },
+              tx,
+            );
 
-      return successResponse(result, "Unit expense updated successfully");
+            // Soft delete previous transactions
+            await TransactionRepository.softDeleteByReferenceId(
+              expense_id,
+              "Unit Expense",
+              tx,
+            );
+
+            // Create new transactions
+            await createTransactions(
+              result,
+              req_object.product_nam,
+              result.supplier_id,
+              tx,
+            );
+
+            return result;
+          } catch (transactionError) {
+            ErrorLogger.log(
+              "Transaction failed in UnitExpenseController.update",
+              transactionError,
+            );
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 10000,
+          timeout: 30000,
+          isolationLevel: "Serializable",
+        },
+      );
+
+      await RedisService.del("unitExpenses:all");
+      return successResponse(
+        updatedExpense,
+        "Unit expense updated successfully",
+      );
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
@@ -247,7 +298,10 @@ class UnitExpenseController {
         "Failed to update unit expense in Method: UnitExpenseController.update",
         err,
       );
-      return errorResponse(err, 500);
+      // Return a comprehensive error message
+      const errorMessage =
+        err.message || "Failed to update unit expense and its transactions";
+      return errorResponse(new Error(errorMessage), 500);
     }
   }
 

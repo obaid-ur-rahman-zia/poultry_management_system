@@ -1,5 +1,6 @@
 import UnitSaleRepository from "@/app/repositories/unitSale/unitSaleRepository";
 import { successResponse, errorResponse } from "@/app/utils/response";
+import TransactionRepository from "@/app/repositories/transaction/transactionRepository";
 import ErrorLogger from "@/app/utils/errorLogger";
 import prisma from "@/lib/prisma";
 import { createTransactions } from "./unitSaleTransactions";
@@ -190,6 +191,7 @@ class UnitSaleController {
         floc_id,
         customer_id,
         product_id,
+        product_nam,
         price,
         quantity,
         set_fs_rate,
@@ -288,7 +290,12 @@ class UnitSaleController {
             }
 
             // Create all related transactions - this will throw if any transaction fails
-            await createTransactions(createdSale, req_object.customer_id, tx);
+            await createTransactions(
+              createdSale,
+              product_nam,
+              req_object.customer_id,
+              tx,
+            );
 
             return createdSale;
           } catch (transactionError) {
@@ -340,39 +347,84 @@ class UnitSaleController {
       // Support both prounit_id and farm_id for backward compatibility
       const prounit_id = req_object.prounit_id || req_object.farm_id;
 
-      const result = await UnitSaleRepository.update(sale_id, {
-        ...req_object,
-        prounit_id: prounit_id !== undefined ? Number(prounit_id) : undefined,
-        floc_id: req_object.floc_id ? Number(req_object.floc_id) : undefined,
-        farm_rate:
-          req_object.farm_rate !== undefined
-            ? req_object.farm_rate
-              ? Number(req_object.farm_rate)
-              : null
-            : undefined,
-        sale_rate:
-          req_object.sale_rate !== undefined
-            ? req_object.sale_rate
-              ? Number(req_object.sale_rate)
-              : null
-            : undefined,
-        product_id: req_object.product_id
-          ? Number(req_object.product_id)
-          : undefined,
-        price: req_object.price ? Number(req_object.price) : undefined,
-        quantity: req_object.quantity ? Number(req_object.quantity) : undefined,
-        tax_value:
-          req_object.tax_value !== undefined
-            ? Number(req_object.tax_value)
-            : undefined,
-        discount_value:
-          req_object.discount_value !== undefined
-            ? Number(req_object.discount_value)
-            : undefined,
-        total: req_object.total ? Number(req_object.total) : undefined,
-      });
+      // Wrap everything in try-catch to ensure transaction rollback
+      const updatedSale = await prisma.$transaction(
+        async (tx) => {
+          try {
+            const result = await UnitSaleRepository.update(
+              sale_id,
+              {
+                ...req_object,
+                prounit_id:
+                  prounit_id !== undefined ? Number(prounit_id) : undefined,
+                floc_id: req_object.floc_id
+                  ? Number(req_object.floc_id)
+                  : undefined,
+                farm_rate:
+                  req_object.farm_rate !== undefined
+                    ? req_object.farm_rate
+                      ? Number(req_object.farm_rate)
+                      : null
+                    : undefined,
+                sale_rate:
+                  req_object.sale_rate !== undefined
+                    ? req_object.sale_rate
+                      ? Number(req_object.sale_rate)
+                      : null
+                    : undefined,
+                product_id: req_object.product_id
+                  ? Number(req_object.product_id)
+                  : undefined,
+                price: req_object.price ? Number(req_object.price) : undefined,
+                quantity: req_object.quantity
+                  ? Number(req_object.quantity)
+                  : undefined,
+                tax_value:
+                  req_object.tax_value !== undefined
+                    ? Number(req_object.tax_value)
+                    : undefined,
+                discount_value:
+                  req_object.discount_value !== undefined
+                    ? Number(req_object.discount_value)
+                    : undefined,
+                total: req_object.total ? Number(req_object.total) : undefined,
+              },
+              tx,
+            );
 
-      return successResponse(result, "Unit sale updated successfully");
+            // Soft delete previous transactions
+            await TransactionRepository.softDeleteByReferenceId(
+              sale_id,
+              "Unit Sale",
+              tx,
+            );
+
+            // Create new transactions
+            await createTransactions(
+              result,
+              req_object.product_nam,
+              result.customer_id,
+              tx,
+            );
+
+            return result;
+          } catch (transactionError) {
+            ErrorLogger.log(
+              "Transaction failed in UnitSaleController.update",
+              transactionError,
+            );
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 10000,
+          timeout: 30000,
+          isolationLevel: "Serializable",
+        },
+      );
+
+      await RedisService.del("unitSales:all");
+      return successResponse(updatedSale, "Unit sale updated successfully");
     } catch (err) {
       if (err.code === "P2025") {
         ErrorLogger.log(
@@ -385,7 +437,10 @@ class UnitSaleController {
         "Failed to update unit sale in Method: UnitSaleController.update",
         err,
       );
-      return errorResponse(err, 500);
+      // Return a comprehensive error message
+      const errorMessage =
+        err.message || "Failed to update unit sale and its transactions";
+      return errorResponse(new Error(errorMessage), 500);
     }
   }
 

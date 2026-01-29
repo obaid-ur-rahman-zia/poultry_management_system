@@ -8,9 +8,7 @@ import prisma from "@/lib/prisma";
 export async function createTransactions(wholeSale, tx) {
   // Validate wholeSale object
   if (!wholeSale || !wholeSale.sale_id) {
-    throw new Error(
-      "Invalid wholeSale object provided to createTransactions"
-    );
+    throw new Error("Invalid wholeSale object provided to createTransactions");
   }
 
   try {
@@ -20,12 +18,12 @@ export async function createTransactions(wholeSale, tx) {
     const financialYear = calculateFinancialYear(
       wholeSale.sale_date instanceof Date
         ? wholeSale.sale_date.toISOString().split("T")[0]
-        : new Date(wholeSale.sale_date).toISOString().split("T")[0]
+        : new Date(wholeSale.sale_date).toISOString().split("T")[0],
     );
 
     const wholeSaleConstants = {
       reference_id: wholeSale.sale_id,
-      remarks: `Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`,
+
       financial_year: financialYear,
       reference: "Whole Sale",
       voucher_type: "WS",
@@ -38,6 +36,7 @@ export async function createTransactions(wholeSale, tx) {
         acc_id: wholeSale.former_account,
         credit: wholeSale.former_amount,
         debit: 0,
+        remarks: `Weight${wholeSale.weight} Former Rate@${wholeSale.former_rate}  Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`,
         ...wholeSaleConstants,
       });
     }
@@ -49,6 +48,7 @@ export async function createTransactions(wholeSale, tx) {
         acc_id: wholeSale.purcher_account,
         credit: 0,
         debit: wholeSale.purcher_amount,
+        remarks: `Weight${wholeSale.weight} Purcher Rate@${wholeSale.purcher_rate}  Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`,
         ...wholeSaleConstants,
       });
     }
@@ -57,16 +57,17 @@ export async function createTransactions(wholeSale, tx) {
     // Based on requirement: "jo minus ho ga wo profit"
     // Profit calculation: If (Purcher - Former) < 0, then profit exists (Former > Purcher)
     // OR if profit field is negative, use that
-    const difference = Number(wholeSale.purcher_amount) - Number(wholeSale.former_amount);
+    const difference =
+      Number(wholeSale.purcher_amount) - Number(wholeSale.former_amount);
     const profitValue = Number(wholeSale.profit) || 0;
-    
+
     console.log("=== PROFIT CALCULATION DEBUG ===");
     console.log("Whole Sale ID:", wholeSale.sale_id);
     console.log("Former Amount:", wholeSale.former_amount);
     console.log("Purcher Amount:", wholeSale.purcher_amount);
     console.log("Profit Value (from DB):", profitValue);
     console.log("Difference (Purcher - Former):", difference);
-    
+
     // Determine profit amount to credit to Sale account
     // Based on requirement: "jo minus ho ga wo profit"
     // AND also handle standard case: if difference > 0 (Purcher > Former), that's profit
@@ -75,31 +76,56 @@ export async function createTransactions(wholeSale, tx) {
     // 2. If difference < 0 (Former > Purcher): profit = abs(difference) - per requirement
     // 3. If difference > 0 (Purcher > Former): profit = difference - standard profit case (like trading)
     let profitAmount = 0;
-    
+
     // Priority 1: Use profit field if it's negative (profit exists per requirement)
     if (profitValue < 0) {
       profitAmount = Math.abs(profitValue);
-      console.log("✓ Using profit field value (negative):", profitValue, "→ Amount:", profitAmount);
+      console.log(
+        "✓ Using profit field value (negative):",
+        profitValue,
+        "→ Amount:",
+        profitAmount,
+      );
     }
     // Priority 2: Use profit field if it's positive (fallback case)
     else if (profitValue > 0) {
       profitAmount = profitValue;
-      console.log("✓ Using profit field value (positive):", profitValue, "→ Amount:", profitAmount);
+      console.log(
+        "✓ Using profit field value (positive):",
+        profitValue,
+        "→ Amount:",
+        profitAmount,
+      );
     }
     // Priority 3: If profit field is 0, check calculated difference
     else {
       // If difference is negative (Former > Purcher), that's profit per requirement
       if (difference < 0) {
         profitAmount = Math.abs(difference);
-        console.log("✓ Using calculated difference (negative, Former > Purcher):", difference, "→ Amount:", profitAmount);
+        console.log(
+          "✓ Using calculated difference (negative, Former > Purcher):",
+          difference,
+          "→ Amount:",
+          profitAmount,
+        );
       }
       // If difference is positive (Purcher > Former), that's also profit (standard case)
       else if (difference > 0) {
         profitAmount = difference;
-        console.log("✓ Using calculated difference (positive, Purcher > Former):", difference, "→ Amount:", profitAmount);
-      }
-      else {
-        console.log("✗ No profit found. profitValue:", profitValue, "difference:", difference, "(both are 0)");
+        console.log(
+          "✓ Using calculated difference (positive, Purcher > Former):",
+          difference,
+          "→ Amount:",
+          profitAmount,
+        );
+      } else {
+        console.log(
+          "✗ No profit found. profitValue:",
+          profitValue,
+          "difference:",
+          difference,
+          "(both are 0)",
+        );
       }
     }
 
@@ -108,7 +134,10 @@ export async function createTransactions(wholeSale, tx) {
       console.log("Creating profit transaction for amount:", profitAmount);
       // Find or create "Income" subhead (same as trading)
       console.log("Looking for 'Income' subhead...");
-      let incomeSubhead = await AccountSubHeadRepository.findByName("Income", tx);
+      let incomeSubhead = await AccountSubHeadRepository.findByName(
+        "Income",
+        tx,
+      );
 
       if (!incomeSubhead) {
         console.log("Income subhead not found, creating new one...");
@@ -119,7 +148,7 @@ export async function createTransactions(wholeSale, tx) {
 
         if (!firstHead) {
           throw new Error(
-            "No account head found. Please create an account head first."
+            "No account head found. Please create an account head first.",
           );
         }
 
@@ -145,9 +174,15 @@ export async function createTransactions(wholeSale, tx) {
             status: 1,
           },
         });
-        console.log("Created Income subhead with sub_id:", incomeSubhead.sub_id);
+        console.log(
+          "Created Income subhead with sub_id:",
+          incomeSubhead.sub_id,
+        );
       } else {
-        console.log("Found existing Income subhead with sub_id:", incomeSubhead.sub_id);
+        console.log(
+          "Found existing Income subhead with sub_id:",
+          incomeSubhead.sub_id,
+        );
       }
 
       // Find or create "Income Acc" account in the Income subhead (same as trading)
@@ -156,7 +191,7 @@ export async function createTransactions(wholeSale, tx) {
         await AccountsRepository.findByAccountNameAndSubheadName(
           "Income Acc",
           "Income",
-          tx
+          tx,
         );
 
       if (!incomeAccount) {
@@ -182,9 +217,15 @@ export async function createTransactions(wholeSale, tx) {
             status: 1,
           },
         });
-        console.log("Created Income Acc account with acc_id:", incomeAccount.acc_id);
+        console.log(
+          "Created Income Acc account with acc_id:",
+          incomeAccount.acc_id,
+        );
       } else {
-        console.log("Found existing Income Acc account with acc_id:", incomeAccount.acc_id);
+        console.log(
+          "Found existing Income Acc account with acc_id:",
+          incomeAccount.acc_id,
+        );
       }
 
       // Add transaction to credit Income account with the profit (same as trading)
@@ -196,7 +237,10 @@ export async function createTransactions(wholeSale, tx) {
         remarks: `${wholeSaleConstants.remarks} - Profit`,
       };
       transactionData.push(profitTransaction);
-      console.log("Profit transaction added to transactionData array:", profitTransaction);
+      console.log(
+        "Profit transaction added to transactionData array:",
+        profitTransaction,
+      );
       console.log("Total transactions to create:", transactionData.length);
     } else {
       console.log("No profit to credit. profitAmount is 0 or negative.");
@@ -224,19 +268,27 @@ export async function createTransactions(wholeSale, tx) {
       try {
         const result = await transactionRepository.create(data, tx);
         if (!result || !result.t_id) {
-          throw new Error(`Failed to create transaction ${i + 1}/${transactionData.length} for account ${data.acc_id}`);
+          throw new Error(
+            `Failed to create transaction ${i + 1}/${transactionData.length} for account ${data.acc_id}`,
+          );
         }
-        console.log(`Transaction ${i + 1} created successfully with t_id:`, result.t_id);
+        console.log(
+          `Transaction ${i + 1} created successfully with t_id:`,
+          result.t_id,
+        );
       } catch (error) {
         // Log detailed error information
-        console.error(`Error creating transaction ${i + 1}/${transactionData.length}:`, {
-          account: data.acc_id,
-          debit: data.debit,
-          credit: data.credit,
-          reference: data.reference,
-          reference_id: data.reference_id,
-          error: error.message,
-        });
+        console.error(
+          `Error creating transaction ${i + 1}/${transactionData.length}:`,
+          {
+            account: data.acc_id,
+            debit: data.debit,
+            credit: data.credit,
+            reference: data.reference,
+            reference_id: data.reference_id,
+            error: error.message,
+          },
+        );
         throw new Error(`Failed to create transaction: ${error.message}`);
       }
     }

@@ -1357,7 +1357,7 @@ function WholeSaleTab() {
                                 >
                                   <Edit2 className="h-4 w-4" />
                                 </Button>
-                                <Button
+                                {/* <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={async () => {
@@ -1405,7 +1405,7 @@ function WholeSaleTab() {
                                   className="h-8 w-8 p-0"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </Button> */}
                               </div>
                             </TableCell>
                           </TableRow>

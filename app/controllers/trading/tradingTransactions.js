@@ -5,7 +5,7 @@ import RedisService from "@/app/utils/redis";
 import { calculateFinancialYear } from "@/app/components/calculateFinYear/financialYear";
 import prisma from "@/lib/prisma";
 
-export async function createTransactions(trading, tx) {
+export async function createTransactions(trading, product_nam, tx) {
   // Validate trading object
   if (!trading || !trading.trading_id) {
     throw new Error("Invalid trading object provided to createTransactions");
@@ -18,12 +18,11 @@ export async function createTransactions(trading, tx) {
     const financialYear = calculateFinancialYear(
       trading.trading_date instanceof Date
         ? trading.trading_date.toISOString().split("T")[0]
-        : new Date(trading.trading_date).toISOString().split("T")[0]
+        : new Date(trading.trading_date).toISOString().split("T")[0],
     );
 
     const tradingConstants = {
       reference_id: trading.trading_id,
-      remarks: `Trading#${trading.trading_id}${trading.do_number ? ` DO#${trading.do_number}` : ""}`,
       financial_year: financialYear,
       reference: "Trading",
       voucher_type: "TR",
@@ -34,6 +33,8 @@ export async function createTransactions(trading, tx) {
     if (trading.buy_total > 0) {
       transactionData.push({
         acc_id: trading.buy_from_account,
+        remarks: `${product_nam} Bags ${trading.buy_quantity} @ ${trading.buy_price} Bag Tax ${trading.buy_tax_value} Discount ${trading.buy_discount_value} Trading#${trading.trading_id}${trading.do_number ? ` DO#${trading.do_number}` : ""}`,
+
         credit: trading.buy_total,
         debit: 0,
         ...tradingConstants,
@@ -47,18 +48,23 @@ export async function createTransactions(trading, tx) {
         acc_id: trading.sale_to_account,
         credit: 0,
         debit: trading.sale_total,
+        remarks: `${product_nam} Bags ${trading.sale_quantity} @ ${trading.sale_price} Bag Tax ${trading.sale_tax_value} Discount ${trading.sale_discount_value} Trading#${trading.trading_id}${trading.do_number ? ` DO#${trading.do_number}` : ""}`,
+
         ...tradingConstants,
       });
     }
 
     // Calculate the difference (profit) between sale_total and buy_total
     const difference = Number(trading.sale_total) - Number(trading.buy_total);
-    
+
     // If there's a profit (positive difference), add it to income account
     if (difference > 0) {
       // Find or create "Income" subhead
-      let incomeSubhead = await AccountSubHeadRepository.findByName("Income", tx);
-      
+      let incomeSubhead = await AccountSubHeadRepository.findByName(
+        "Income",
+        tx,
+      );
+
       if (!incomeSubhead) {
         // Get first account head to use for the subhead
         const firstHead = await prismaClient.account_head.findFirst({
@@ -66,7 +72,9 @@ export async function createTransactions(trading, tx) {
         });
 
         if (!firstHead) {
-          throw new Error("No account head found. Please create an account head first.");
+          throw new Error(
+            "No account head found. Please create an account head first.",
+          );
         }
 
         // Get the max subhead_id for this head_id
@@ -94,8 +102,13 @@ export async function createTransactions(trading, tx) {
       }
 
       // Find or create "Income Acc" account in the Income subhead
-      let incomeAccount = await AccountsRepository.findByAccountNameAndSubheadName("Income Acc", "Income", tx);
-      
+      let incomeAccount =
+        await AccountsRepository.findByAccountNameAndSubheadName(
+          "Income Acc",
+          "Income",
+          tx,
+        );
+
       if (!incomeAccount) {
         // Get the max account_id for this sub_id
         const maxAccount = await prismaClient.accounts.findFirst({
@@ -151,4 +164,3 @@ export async function createTransactions(trading, tx) {
     throw new Error(`Failed to create transactions: ${error.message}`);
   }
 }
-
