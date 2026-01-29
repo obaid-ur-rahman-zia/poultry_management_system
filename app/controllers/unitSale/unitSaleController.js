@@ -423,7 +423,6 @@ class UnitSaleController {
         },
       );
 
-      await RedisService.del("unitSales:all");
       return successResponse(updatedSale, "Unit sale updated successfully");
     } catch (err) {
       if (err.code === "P2025") {

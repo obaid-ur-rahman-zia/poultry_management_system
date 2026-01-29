@@ -281,7 +281,6 @@ class UnitExpenseController {
         },
       );
 
-      await RedisService.del("unitExpenses:all");
       return successResponse(
         updatedExpense,
         "Unit expense updated successfully",

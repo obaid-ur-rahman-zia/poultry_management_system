@@ -299,7 +299,6 @@ class TradingController {
         },
       );
 
-      await RedisService.del("trading:all");
       return successResponse(updatedTrading, "Trade updated successfully");
     } catch (err) {
       if (err.code === "P2025") {
