@@ -179,3 +179,8 @@ custom-exception:  [Failed to get all flocs in Method: FlocController.readAll] |
 system-exception:  [TypeError: Invalid URL]
 
 
+exception-time:       [2026-01-29T15:39:24.933Z]  
+custom-exception:  [Failed to update unit expense in Method: UnitExpenseController.update] | 
+system-exception:  [ReferenceError: RedisService is not defined]
+
+

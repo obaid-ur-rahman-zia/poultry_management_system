@@ -728,7 +728,7 @@ export default function SelfTransactionPage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={() =>
@@ -737,7 +737,7 @@ export default function SelfTransactionPage() {
                         >
                           <Trash2 className="h-4 w-4 mr-1 text-destructive" />
                           Delete
-                        </Button>
+                        </Button> */}
                       </div>
                     </CardContent>
                   </Card>
@@ -831,7 +831,7 @@ export default function SelfTransactionPage() {
                             >
                               <Edit2 className="h-4 w-4" />
                             </Button>
-                            <Button
+                            {/* <Button
                               variant="ghost"
                               size="sm"
                               onClick={() =>
@@ -839,7 +839,7 @@ export default function SelfTransactionPage() {
                               }
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            </Button> */}
                           </div>
                         </td>
                       </tr>

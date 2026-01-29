@@ -583,6 +583,9 @@ export default function UnitSalePage() {
         farm_rate: data.farm_rate ? parseFloat(data.farm_rate) : null,
         sale_rate: data.sale_rate ? parseFloat(data.sale_rate) : null,
         product_id: parseInt(data.product_id),
+        product_nam: products.find(
+          (product) => product.product_id === parseInt(data.product_id),
+        )?.product_title,
         price: parseFloat(data.price),
         quantity: parseFloat(data.quantity),
         van_number: data.van_number?.trim() || null,
@@ -1520,14 +1523,14 @@ export default function UnitSalePage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(sale.sale_id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1 text-destructive" />
                           Delete
-                        </Button>
+                        </Button> */}
                       </div>
                     </CardContent>
                   </Card>
@@ -1649,14 +1652,14 @@ export default function UnitSalePage() {
                               >
                                 <Edit2 className="h-4 w-4" />
                               </Button>
-                              <Button
+                              {/* <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDelete(sale.sale_id)}
                                 className="h-8 w-8 p-0"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              </Button> */}
                             </div>
                           </td>
                         </tr>

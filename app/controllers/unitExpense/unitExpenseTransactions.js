@@ -5,10 +5,17 @@ import RedisService from "@/app/utils/redis";
 import { calculateFinancialYear } from "@/app/components/calculateFinYear/financialYear";
 import prisma from "@/lib/prisma";
 
-export async function createTransactions(unitExpense, supplierId, tx) {
+export async function createTransactions(
+  unitExpense,
+  product_nam,
+  supplierId,
+  tx,
+) {
   // Validate unit expense object
   if (!unitExpense || !unitExpense.expense_id) {
-    throw new Error("Invalid unit expense object provided to createTransactions");
+    throw new Error(
+      "Invalid unit expense object provided to createTransactions",
+    );
   }
 
   if (!supplierId) {
@@ -22,16 +29,17 @@ export async function createTransactions(unitExpense, supplierId, tx) {
     const financialYear = calculateFinancialYear(
       unitExpense.expense_date instanceof Date
         ? unitExpense.expense_date.toISOString().split("T")[0]
-        : new Date(unitExpense.expense_date).toISOString().split("T")[0]
+        : new Date(unitExpense.expense_date).toISOString().split("T")[0],
     );
 
-    const expenseDate = unitExpense.expense_date instanceof Date
-      ? unitExpense.expense_date
-      : new Date(unitExpense.expense_date);
+    const expenseDate =
+      unitExpense.expense_date instanceof Date
+        ? unitExpense.expense_date
+        : new Date(unitExpense.expense_date);
 
     const expenseConstants = {
       reference_id: unitExpense.expense_id,
-      remarks: `Unit Expense#${unitExpense.expense_id}${unitExpense.description ? ` - ${unitExpense.description}` : ""}`,
+      remarks: `${product_nam} Bags ${unitExpense.quantity} @ ${unitExpense.price} Bag Tax ${unitExpense.tax_value} Discount ${unitExpense.discount_value} Unit Expense#${unitExpense.expense_id}${unitExpense.description ? ` - ${unitExpense.description}` : ""}`,
       financial_year: financialYear,
       reference: "Unit Expense",
       transaction_dat: expenseDate,
@@ -67,7 +75,7 @@ export async function createTransactions(unitExpense, supplierId, tx) {
         sub_id: flocSubhead.sub_id,
         account_nam: {
           equals: flocAccountName,
-          mode: 'insensitive',
+          mode: "insensitive",
         },
         status: 1,
       },
@@ -125,4 +133,3 @@ export async function createTransactions(unitExpense, supplierId, tx) {
     throw new Error(`Failed to create transactions: ${error.message}`);
   }
 }
-
