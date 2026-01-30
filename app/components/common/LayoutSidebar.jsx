@@ -107,8 +107,8 @@ const Sidebar = ({
           rounded-md transition-all duration-200
           ${
             active
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              ? "bg-white/20 text-white"
+              : "text-white/80 hover:bg-white/10 hover:text-white"
           }
           group-hover:translate-x-0.5
         `}
@@ -173,7 +173,7 @@ const Sidebar = ({
             expanded ? "px-2 py-2" : "px-2 py-2 justify-center"
           }
           rounded-md transition-all duration-200
-          text-muted-foreground hover:bg-accent hover:text-accent-foreground
+          text-white/80 hover:bg-white/10 hover:text-white
           group-hover:translate-x-0.5
         `}
       >
@@ -278,15 +278,15 @@ const Sidebar = ({
         className={`
           hidden lg:flex
           ${isPinned ? "lg:absolute" : "fixed"} top-0 left-0 h-screen 
-          bg-primary border-r border-border shadow-lg
+          bg-green-900 border-r border-border shadow-lg
           transition-all duration-300 ease-in-out
           ${isExpanded ? "w-64" : "w-16"}
           ${
             !isPinned && isExpanded
               ? "z-50 shadow-2xl"
               : isPinned
-              ? "z-10"
-              : "z-50"
+                ? "z-10"
+                : "z-50"
           }
           flex-col shrink-0
         `}
@@ -310,9 +310,7 @@ const Sidebar = ({
                   alt="Logo"
                 />
               </div>
-              <h2 className="text-base font-bold text-background">
-                Switch2itech
-              </h2>
+              <h2 className="text-base font-bold text-white">Switch2itech</h2>
             </div>
           )}
 
