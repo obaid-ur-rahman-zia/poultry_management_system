@@ -222,6 +222,7 @@ class OppositeTransactionController {
     }
   }
 
+  
   async update(req) {
     try {
       const { req_object } = await req.json();
@@ -311,17 +312,17 @@ class OppositeTransactionController {
         const transactionDate =
           req_object.transaction_date || existingTransaction.transaction_date;
 
-        // Debit transaction for paid_by account
+        // Transaction for paid_by account (Credit)
         await TransactionRepository.create(
           {
             acc_id: paidBy,
             reference_id: updatedTransaction.transaction_id,
             reference: "Opposite Transaction",
-            debit: amount,
-            credit: 0,
+            credit: amount,
+            debit: 0,
             remarks: description,
             financial_year: financialYear,
-            voucher_type: "Opposite Transaction",
+            voucher_type: "OT",
             transaction_dat: new Date(transactionDate),
             insert_by: req_object.update_by || "user 1",
             update_by: req_object.update_by || "user 1",
@@ -329,17 +330,17 @@ class OppositeTransactionController {
           tx,
         );
 
-        // Credit transaction for received_by account
+        // Transaction for received_by account (Debit)
         await TransactionRepository.create(
           {
             acc_id: receivedBy,
             reference_id: updatedTransaction.transaction_id,
             reference: "Opposite Transaction",
-            debit: 0,
-            credit: amount,
+            credit: 0,
+            debit: amount,
             remarks: description,
             financial_year: financialYear,
-            voucher_type: "Opposite Transaction",
+            voucher_type: "OT",
             transaction_dat: new Date(transactionDate),
             insert_by: req_object.update_by || "user 1",
             update_by: req_object.update_by || "user 1",
@@ -350,6 +351,8 @@ class OppositeTransactionController {
         return updatedTransaction;
       });
 
+      await RedisService.del("oppositeTransactions:all");
+      await RedisService.del("transactions:all");
       return successResponse(
         result,
         "Opposite transaction updated successfully",
