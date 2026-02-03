@@ -329,6 +329,17 @@ const options = {
             },
           },
         },
+        /** Standard request body wrapper used by most POST/PUT APIs. Send payload as { req_object: { ...fields } } */
+        ReqObjectBody: {
+          type: 'object',
+          required: ['req_object'],
+          properties: {
+            req_object: {
+              type: 'object',
+              description: 'Request payload containing entity fields',
+            },
+          },
+        },
       },
     },
     tags: [
@@ -365,8 +376,16 @@ const options = {
         description: 'Floc management endpoints',
       },
       {
+        name: 'Units',
+        description: 'Unit (farm/operations) management endpoints',
+      },
+      {
+        name: 'Trading',
+        description: 'Trading (buy/sell) transaction endpoints',
+      },
+      {
         name: 'Sales',
-        description: 'Sales management endpoints',
+        description: 'Sales management endpoints (whole sale, etc.)',
       },
       {
         name: 'Purchases',

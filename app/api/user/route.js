@@ -8,7 +8,7 @@ import { errorResponse } from "@/app/utils/response";
  * /api/user:
  *   post:
  *     summary: Create a new user
- *     description: Create a new user in the system. Only accessible by SUPER_ADMIN.
+ *     description: Create a new user in the system. Only accessible by SUPER_ADMIN. Request body must be wrapped in req_object.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -18,32 +18,39 @@ import { errorResponse } from "@/app/utils/response";
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - email
- *               - password
- *               - name
- *               - role
+ *             required: [req_object]
  *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 description: User email address
- *               password:
- *                 type: string
- *                 format: password
- *                 description: User password
- *               name:
- *                 type: string
- *                 description: User full name
- *               role:
- *                 type: string
- *                 enum: [SUPER_ADMIN, ADMIN, USER]
- *                 description: User role
- *               status:
- *                 type: integer
- *                 enum: [0, 1]
- *                 default: 1
- *                 description: User status (1 = active, 0 = inactive)
+ *               req_object:
+ *                 type: object
+ *                 required: [email, password, role, user_nam]
+ *                 properties:
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     description: User email address
+ *                   password:
+ *                     type: string
+ *                     format: password
+ *                     description: User password
+ *                   user_nam:
+ *                     type: string
+ *                     description: User full name
+ *                   role:
+ *                     type: string
+ *                     enum: [SUPER_ADMIN, ADMIN, USER]
+ *                     description: User role
+ *                   status:
+ *                     type: integer
+ *                     enum: [0, 1]
+ *                     default: 1
+ *                     description: User status (1 = active, 0 = inactive)
+ *           example:
+ *             req_object:
+ *               email: "admin@example.com"
+ *               password: "securePassword"
+ *               user_nam: "Admin User"
+ *               role: "ADMIN"
+ *               status: 1
  *     responses:
  *       201:
  *         description: User created successfully
@@ -83,7 +90,7 @@ export async function POST(req) {
  * /api/user:
  *   put:
  *     summary: Update a user
- *     description: Update an existing user in the system. Only accessible by SUPER_ADMIN.
+ *     description: Update an existing user in the system. Only accessible by SUPER_ADMIN. Request body must be wrapped in req_object.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -93,27 +100,37 @@ export async function POST(req) {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - id
+ *             required: [req_object]
  *             properties:
- *               id:
- *                 type: string
- *                 description: User ID
- *               email:
- *                 type: string
- *                 format: email
- *                 description: User email address
- *               name:
- *                 type: string
- *                 description: User full name
- *               role:
- *                 type: string
- *                 enum: [SUPER_ADMIN, ADMIN, USER]
- *                 description: User role
- *               status:
- *                 type: integer
- *                 enum: [0, 1]
- *                 description: User status (1 = active, 0 = inactive)
+ *               req_object:
+ *                 type: object
+ *                 required: [user_id]
+ *                 properties:
+ *                   user_id:
+ *                     type: string
+ *                     description: User ID to update
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     description: User email address
+ *                   user_nam:
+ *                     type: string
+ *                     description: User full name
+ *                   role:
+ *                     type: string
+ *                     enum: [SUPER_ADMIN, ADMIN, USER]
+ *                     description: User role
+ *                   status:
+ *                     type: integer
+ *                     enum: [0, 1]
+ *                     description: User status (1 = active, 0 = inactive)
+ *           example:
+ *             req_object:
+ *               user_id: "1"
+ *               user_nam: "Updated Name"
+ *               email: "updated@example.com"
+ *               role: "ADMIN"
+ *               status: 1
  *     responses:
  *       200:
  *         description: User updated successfully

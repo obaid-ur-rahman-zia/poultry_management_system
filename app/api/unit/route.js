@@ -5,7 +5,7 @@ import UnitController from "@/app/controllers/unit/unitController";
  * /api/unit:
  *   post:
  *     summary: Create a new unit
- *     description: Create a new unit in the system. Units are used for measurement (e.g., kg, pieces, boxes).
+ *     description: Create a new unit in the system. Request body must be wrapped in req_object. Units are used for farms/operations (e.g., capacity, address).
  *     tags: [Units]
  *     security:
  *       - bearerAuth: []
@@ -15,27 +15,29 @@ import UnitController from "@/app/controllers/unit/unitController";
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - unit_name
+ *             required: [req_object]
  *             properties:
- *               unit_name:
- *                 type: string
- *                 description: Unit name
- *                 example: "Kilogram"
- *               unit_short_name:
- *                 type: string
- *                 description: Unit short name or abbreviation
- *                 example: "kg"
- *               status:
- *                 type: number
- *                 enum: [0, 1]
- *                 default: 1
- *                 description: Unit status
- *                 example: 1
+ *               req_object:
+ *                 type: object
+ *                 required: [prounit_nam]
+ *                 properties:
+ *                   prounit_nam:
+ *                     type: string
+ *                     description: Unit name
+ *                     example: "Farm Unit A"
+ *                   capacity:
+ *                     type: string
+ *                     description: Unit capacity (optional)
+ *                     example: "10000"
+ *                   address:
+ *                     type: string
+ *                     description: Unit address (optional)
+ *                     example: "123 Farm Road"
  *           example:
- *             unit_name: "Kilogram"
- *             unit_short_name: "kg"
- *             status: 1
+ *             req_object:
+ *               prounit_nam: "Farm Unit A"
+ *               capacity: "10000"
+ *               address: "123 Farm Road"
  *     responses:
  *       201:
  *         description: Unit created successfully
@@ -46,8 +48,8 @@ import UnitController from "@/app/controllers/unit/unitController";
  *             example:
  *               success: true
  *               data:
- *                 unit_id: "1"
- *               message: "Unit created successfully"
+ *                 prounit_id: 1
+ *               message: "Unit and account created successfully"
  *       400:
  *         description: Bad request
  *       500:
@@ -62,7 +64,7 @@ export async function POST(req) {
  * /api/unit:
  *   put:
  *     summary: Update an existing unit
- *     description: Update unit information in the system.
+ *     description: Update unit information in the system. Request body must be wrapped in req_object.
  *     tags: [Units]
  *     security:
  *       - bearerAuth: []
@@ -72,31 +74,32 @@ export async function POST(req) {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - unit_id
+ *             required: [req_object]
  *             properties:
- *               unit_id:
- *                 type: string
- *                 description: Unit ID
- *                 example: "1"
- *               unit_name:
- *                 type: string
- *                 description: Unit name
- *                 example: "Kilogram Updated"
- *               unit_short_name:
- *                 type: string
- *                 description: Unit short name
- *                 example: "kg"
- *               status:
- *                 type: number
- *                 enum: [0, 1]
- *                 description: Unit status
- *                 example: 1
+ *               req_object:
+ *                 type: object
+ *                 required: [prounit_id, prounit_nam]
+ *                 properties:
+ *                   prounit_id:
+ *                     type: integer
+ *                     description: Unit ID to update
+ *                     example: 1
+ *                   prounit_nam:
+ *                     type: string
+ *                     description: Unit name
+ *                     example: "Farm Unit A Updated"
+ *                   capacity:
+ *                     type: string
+ *                     description: Unit capacity
+ *                   address:
+ *                     type: string
+ *                     description: Unit address
  *           example:
- *             unit_id: "1"
- *             unit_name: "Kilogram Updated"
- *             unit_short_name: "kg"
- *             status: 1
+ *             req_object:
+ *               prounit_id: 1
+ *               prounit_nam: "Farm Unit A Updated"
+ *               capacity: "12000"
+ *               address: "456 New Road"
  *     responses:
  *       200:
  *         description: Unit updated successfully

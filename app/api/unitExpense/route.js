@@ -15,38 +15,40 @@ import UnitExpenseController from "@/app/controllers/unitExpense/unitExpenseCont
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - unit_id
- *               - expense_date
- *               - amount
+ *             required: [req_object]
  *             properties:
- *               unit_id:
- *                 type: string
- *                 description: Unit ID
- *                 example: "1"
- *               expense_date:
- *                 type: string
- *                 format: date
- *                 description: Expense date
- *                 example: "2024-01-15"
- *               amount:
- *                 type: number
- *                 description: Expense amount
- *                 example: 30000
- *               expense_type:
- *                 type: string
- *                 description: Type of expense
- *                 example: "Feed"
- *               description:
- *                 type: string
- *                 description: Expense description
- *                 example: "Monthly feed expense"
+ *               req_object:
+ *                 type: object
+ *                 required: [unit_id, expense_date, amount]
+ *                 properties:
+ *                   unit_id:
+ *                     type: string
+ *                     description: Unit ID
+ *                     example: "1"
+ *                   expense_date:
+ *                     type: string
+ *                     format: date
+ *                     description: Expense date
+ *                     example: "2024-01-15"
+ *                   amount:
+ *                     type: number
+ *                     description: Expense amount
+ *                     example: 30000
+ *                   expense_type:
+ *                     type: string
+ *                     description: Type of expense
+ *                     example: "Feed"
+ *                   description:
+ *                     type: string
+ *                     description: Expense description
+ *                     example: "Monthly feed expense"
  *           example:
- *             unit_id: "1"
- *             expense_date: "2024-01-15"
- *             amount: 30000
- *             expense_type: "Feed"
- *             description: "Monthly feed expense"
+ *             req_object:
+ *               unit_id: "1"
+ *               expense_date: "2024-01-15"
+ *               amount: 30000
+ *               expense_type: "Feed"
+ *               description: "Monthly feed expense"
  *     responses:
  *       201:
  *         description: Unit expense created successfully
@@ -83,41 +85,45 @@ export async function POST(req) {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - unit_expense_id
+ *             required: [req_object]
  *             properties:
- *               unit_expense_id:
- *                 type: string
- *                 description: Unit expense ID
- *                 example: "1"
- *               unit_id:
- *                 type: string
- *                 description: Unit ID
- *                 example: "1"
- *               expense_date:
- *                 type: string
- *                 format: date
- *                 description: Expense date
- *                 example: "2024-01-15"
- *               amount:
- *                 type: number
- *                 description: Expense amount
- *                 example: 35000
- *               expense_type:
- *                 type: string
- *                 description: Type of expense
- *                 example: "Feed"
- *               description:
- *                 type: string
- *                 description: Expense description
- *                 example: "Updated monthly feed expense"
+ *               req_object:
+ *                 type: object
+ *                 required: [unit_expense_id]
+ *                 properties:
+ *                   unit_expense_id:
+ *                     type: string
+ *                     description: Unit expense ID to update
+ *                     example: "1"
+ *                   unit_id:
+ *                     type: string
+ *                     description: Unit ID
+ *                     example: "1"
+ *                   expense_date:
+ *                     type: string
+ *                     format: date
+ *                     description: Expense date
+ *                     example: "2024-01-15"
+ *                   amount:
+ *                     type: number
+ *                     description: Expense amount
+ *                     example: 35000
+ *                   expense_type:
+ *                     type: string
+ *                     description: Type of expense
+ *                     example: "Feed"
+ *                   description:
+ *                     type: string
+ *                     description: Expense description
+ *                     example: "Updated monthly feed expense"
  *           example:
- *             unit_expense_id: "1"
- *             unit_id: "1"
- *             expense_date: "2024-01-15"
- *             amount: 35000
- *             expense_type: "Feed"
- *             description: "Updated monthly feed expense"
+ *             req_object:
+ *               unit_expense_id: "1"
+ *               unit_id: "1"
+ *               expense_date: "2024-01-15"
+ *               amount: 35000
+ *               expense_type: "Feed"
+ *               description: "Updated monthly feed expense"
  *     responses:
  *       200:
  *         description: Unit expense updated successfully

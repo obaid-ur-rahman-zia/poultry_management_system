@@ -184,3 +184,93 @@ custom-exception:  [Failed to update unit expense in Method: UnitExpenseControll
 system-exception:  [ReferenceError: RedisService is not defined]
 
 
+exception-time:       [2026-02-03T13:39:32.641Z]  
+custom-exception:  [Failed to create account subhead in Method: AccountSubHeadController.create] | 
+system-exception:  [TypeError: Cannot destructure property 'head_id' of 'req_object' as it is undefined.]
+
+
+exception-time:       [2026-02-03T13:41:18.071Z]  
+custom-exception:  [Failed to create account subhead in Method: AccountSubHeadController.create] | 
+system-exception:  [PrismaClientValidationError:  Invalid `prisma.account_sub_head.findFirst()` invocation:  {   where: {     head_id: "1"              ~~~   },   orderBy: {     subhead_id: "desc"   },   select: {     subhead_id: true   } }  Argument `head_id`: Invalid value provided. Expected IntFilter or Int, provided String.]
+
+
+exception-time:       [2026-02-03T13:50:50.931Z]  
+custom-exception:  [Failed to create account in Method: AccountsController.create] | 
+system-exception:  [PrismaClientValidationError:  Invalid `tx.account_sub_head.findUnique()` invocation in H:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__1f407225._.js:1818:63    1815 // Use transaction to ensure both account and transaction are created together   1816 const result = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].$transaction(async (tx)=>{   1817     // Get subhead to determine account type (already validated above, but fetch again in transaction) → 1818     const subheadInTx = await tx.account_sub_head.findUnique({              where: {                sub_id: "1"                        ~~~              }            })  Argument `sub_id`: Invalid value provided. Expected Int, provided String.]
+
+
+exception-time:       [2026-02-03T13:51:20.307Z]  
+custom-exception:  [Failed to create account in Method: AccountsController.create] | 
+system-exception:  [PrismaClientValidationError:  Invalid `client.accounts.create()` invocation in H:\Company Website\Switch2itech\switch2itech\poultry_management_system\.next\server\chunks\[root-of-the-server]__1f407225._.js:198:42    195 });   196 const nextAccountId = maxAccount ? maxAccount.account_id + 1 : 1;   197 // Create the account with calculated account_id → 198 return await client.accounts.create({         data: {           head_id: "1",                    ~~~           sub_id: 1,           account_id: 1,           account_nam: "Cash Account 32323232",           account_contact: null,           account_address: null,           account_reference: null,           account_cnic: null,           account_alter_nam: null,           account_no: null,           is_supplier: 0,           is_customer: 0,           is_employee: 0,           is_driver: 0,           is_delivery_man: 0,           is_salesman: 0,           insert_by: "user 1",           update_by: "user 1",           status: 1         }       })  Argument `head_id`: Invalid value provided. Expected Int, provided String.]
+
+
+exception-time:       [2026-02-03T14:01:45.457Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:04:19.627Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:17:18.482Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:18:06.914Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:18:43.370Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:19:17.679Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:20:27.749Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:20:44.788Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:24:29.620Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:28:17.320Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:36:56.218Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:38:14.645Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:38:17.258Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-02-03T14:40:36.827Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+

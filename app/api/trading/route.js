@@ -5,7 +5,7 @@ import TradingController from "@/app/controllers/trading/tradingController";
  * /api/trading:
  *   post:
  *     summary: Create a new trading entry
- *     description: Create a new trading transaction in the system for buy/sell operations.
+ *     description: Create a new trading transaction (buy/sell). Request body must be wrapped in req_object. Required fields include trading_date, buy_from_account, product_id, buy_price, buy_quantity, sale_to_account, sale_price, sale_quantity.
  *     tags: [Trading]
  *     security:
  *       - bearerAuth: []
@@ -15,34 +15,79 @@ import TradingController from "@/app/controllers/trading/tradingController";
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - trading_type
- *               - trading_date
- *               - amount
+ *             required: [req_object]
  *             properties:
- *               trading_type:
- *                 type: string
- *                 enum: [Buy, Sell]
- *                 description: Type of trading (Buy or Sell)
- *                 example: "Buy"
- *               trading_date:
- *                 type: string
- *                 format: date
- *                 description: Trading date
- *                 example: "2024-01-15"
- *               amount:
- *                 type: number
- *                 description: Trading amount
- *                 example: 10000
- *               description:
- *                 type: string
- *                 description: Trading description
- *                 example: "Purchase of poultry feed"
+ *               req_object:
+ *                 type: object
+ *                 required: [trading_date, buy_from_account, product_id, buy_price, buy_quantity, sale_to_account, sale_price, sale_quantity]
+ *                 properties:
+ *                   trading_date:
+ *                     type: string
+ *                     format: date
+ *                     description: Trading date
+ *                   buy_from_account:
+ *                     type: integer
+ *                     description: Account ID (Former) for buy side
+ *                   product_id:
+ *                     type: integer
+ *                     description: Product ID
+ *                   product_nam:
+ *                     type: string
+ *                     description: Product name (for transaction detail)
+ *                   buy_price:
+ *                     type: number
+ *                   buy_quantity:
+ *                     type: number
+ *                   buy_total:
+ *                     type: number
+ *                   sale_to_account:
+ *                     type: integer
+ *                     description: Account ID (Purcher) for sale side
+ *                   sale_price:
+ *                     type: number
+ *                   sale_quantity:
+ *                     type: number
+ *                   sale_total:
+ *                     type: number
+ *                   buy_tax_type:
+ *                     type: string
+ *                     enum: [flat, percentage]
+ *                   buy_tax_value:
+ *                     type: number
+ *                   buy_discount_type:
+ *                     type: string
+ *                     enum: [flat, percentage]
+ *                   buy_discount_value:
+ *                     type: number
+ *                   sale_tax_type:
+ *                     type: string
+ *                     enum: [flat, percentage]
+ *                   sale_tax_value:
+ *                     type: number
+ *                   sale_discount_type:
+ *                     type: string
+ *                     enum: [flat, percentage]
+ *                   sale_discount_value:
+ *                     type: number
+ *                   do_number:
+ *                     type: string
+ *                   buy_detail:
+ *                     type: string
+ *                   sale_detail:
+ *                     type: string
  *           example:
- *             trading_type: "Buy"
- *             trading_date: "2024-01-15"
- *             amount: 10000
- *             description: "Purchase of poultry feed"
+ *             req_object:
+ *               trading_date: "2024-01-15"
+ *               buy_from_account: 1
+ *               product_id: 1
+ *               product_nam: "Product A"
+ *               buy_price: 100
+ *               buy_quantity: 10
+ *               buy_total: 1000
+ *               sale_to_account: 2
+ *               sale_price: 120
+ *               sale_quantity: 10
+ *               sale_total: 1200
  *     responses:
  *       201:
  *         description: Trading entry created successfully
@@ -50,11 +95,6 @@ import TradingController from "@/app/controllers/trading/tradingController";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/SuccessResponse'
- *             example:
- *               success: true
- *               data:
- *                 trading_id: "1"
- *               message: "Trading entry created successfully"
  *       400:
  *         description: Bad request
  *       500:
@@ -69,7 +109,7 @@ export async function POST(req) {
  * /api/trading:
  *   put:
  *     summary: Update an existing trading entry
- *     description: Update trading transaction information in the system.
+ *     description: Update trading transaction. Request body must be wrapped in req_object. trading_id is required; other fields same as POST.
  *     tags: [Trading]
  *     security:
  *       - bearerAuth: []
@@ -79,37 +119,58 @@ export async function POST(req) {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - trading_id
+ *             required: [req_object]
  *             properties:
- *               trading_id:
- *                 type: string
- *                 description: Trading ID
- *                 example: "1"
- *               trading_type:
- *                 type: string
- *                 enum: [Buy, Sell]
- *                 description: Type of trading
- *                 example: "Sell"
- *               trading_date:
- *                 type: string
- *                 format: date
- *                 description: Trading date
- *                 example: "2024-01-15"
- *               amount:
- *                 type: number
- *                 description: Trading amount
- *                 example: 12000
- *               description:
- *                 type: string
- *                 description: Trading description
- *                 example: "Updated purchase of poultry feed"
+ *               req_object:
+ *                 type: object
+ *                 required: [trading_id]
+ *                 properties:
+ *                   trading_id:
+ *                     type: integer
+ *                     description: Trading ID to update
+ *                   trading_date:
+ *                     type: string
+ *                     format: date
+ *                   buy_from_account:
+ *                     type: integer
+ *                   product_id:
+ *                     type: integer
+ *                   product_nam:
+ *                     type: string
+ *                   buy_price:
+ *                     type: number
+ *                   buy_quantity:
+ *                     type: number
+ *                   buy_total:
+ *                     type: number
+ *                   sale_to_account:
+ *                     type: integer
+ *                   sale_price:
+ *                     type: number
+ *                   sale_quantity:
+ *                     type: number
+ *                   sale_total:
+ *                     type: number
+ *                   buy_tax_value:
+ *                     type: number
+ *                   buy_discount_value:
+ *                     type: number
+ *                   sale_tax_value:
+ *                     type: number
+ *                   sale_discount_value:
+ *                     type: number
  *           example:
- *             trading_id: "1"
- *             trading_type: "Sell"
- *             trading_date: "2024-01-15"
- *             amount: 12000
- *             description: "Updated purchase of poultry feed"
+ *             req_object:
+ *               trading_id: 1
+ *               trading_date: "2024-01-15"
+ *               buy_from_account: 1
+ *               product_id: 1
+ *               product_nam: "Product A"
+ *               buy_price: 105
+ *               buy_quantity: 10
+ *               sale_to_account: 2
+ *               sale_price: 125
+ *               sale_quantity: 10
  *     responses:
  *       200:
  *         description: Trading entry updated successfully
