@@ -203,7 +203,7 @@ export default function TradingPage() {
 
   const fetchAccounts = async () => {
     try {
-      const response = await fetch("/api/account/accounts/readAll");
+      const response = await fetch("/api/account/accounts/readAll?all=true");
       const result = await response.json();
       if (result.response_status === "success") {
         const accountsData =
