@@ -95,7 +95,7 @@
     "@eslint/eslintrc": "^3",
     "@types/bcrypt": "^6.0.0",
     "eslint": "^9",
-    "eslint-config-next": "15.5.2",
+    "eslint-config-next": "15.5.7",
     "prisma": "^6.17.0",
     "prisma-erd-generator": "^2.1.0",
     "tailwindcss": "^4",
