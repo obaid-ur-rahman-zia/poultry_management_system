@@ -25,7 +25,7 @@ async function main() {
 
   // ---- Account Sub Heads ----
   console.log("Creating Account Sub Heads...");
-  
+
   // Get first account head
   const firstHead = await prisma.account_head.findFirst({
     orderBy: { head_id: "asc" },
@@ -63,6 +63,14 @@ async function main() {
         subhead_id: 4,
         subhead_nam: "Opening Balance",
         is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 5,
+        subhead_nam: "Expense Head",
+        is_parent: 1,
         parent_sub_id: null,
         status: 1,
       },
@@ -234,7 +242,7 @@ async function main() {
   if (cashInHandSubhead) {
     console.log("Creating Cash In Hand account for Super Admin...");
     const accountName = `Cash Account (${superAdmin.user_nam})`;
-    
+
     // Check if account already exists
     let cashInHandAccount = await prisma.accounts.findFirst({
       where: {

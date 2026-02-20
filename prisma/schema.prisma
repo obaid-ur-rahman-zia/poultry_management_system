@@ -78,10 +78,10 @@ model pro_unit {
   status      Int      @default(1)
 
   // relations
-  product      product[]
-  flocs        floc[]
-  unit_expenses unit_expense[]
-  unit_sales    unit_sale[]
+  product        product[]
+  flocs          floc[]
+  unit_expenses  unit_expense[]
+  unit_sales     unit_sale[]
   daily_fs_rates daily_fs_rate[]
 }
 
@@ -132,8 +132,8 @@ model product_group {
 }
 
 model product {
-  product_id     Int      @id @default(autoincrement())
-  product_title  String   @unique(map: "uq_product_title") @db.VarChar(255)
+  product_id     Int    @id @default(autoincrement())
+  product_title  String @unique(map: "uq_product_title") @db.VarChar(255)
   procategory_id Int
   company_id     Int
   prounit_id     Int?
@@ -144,9 +144,9 @@ model product {
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
 
-  companies    pro_company   @relation(fields: [company_id], references: [company_id], map: "fk_materials_company_relation")
-  types        pro_category  @relation(fields: [procategory_id], references: [procategory_id], map: "fk_materials_type_relation")
-  units        pro_unit?     @relation(fields: [prounit_id], references: [prounit_id], map: "fk_materials_unit_relation")
+  companies    pro_company    @relation(fields: [company_id], references: [company_id], map: "fk_materials_company_relation")
+  types        pro_category   @relation(fields: [procategory_id], references: [procategory_id], map: "fk_materials_type_relation")
+  units        pro_unit?      @relation(fields: [prounit_id], references: [prounit_id], map: "fk_materials_unit_relation")
   productGroup product_group? @relation(fields: [pgroup_id], references: [pgroup_id], map: "fk_materials_product_group_relation")
 
   // sales_products sales_products[]
@@ -568,8 +568,8 @@ model accounts {
   is_salesman Int @default(0)
 
   // Customer-specific fields (only used when is_customer = 1)
-  cgroup_id    Int?
-  subarea_id   Int?
+  cgroup_id  Int?
+  subarea_id Int?
 
   // Supplier-specific fields (only used when is_supplier = 1)
   company_id Int?
@@ -615,6 +615,7 @@ model accounts {
   user_cash_in_hand     user?                  @relation("UserCashInHand")
   unit_expenses         unit_expense[]         @relation("UnitExpenseSupplier")
   unit_sales            unit_sale[]            @relation("UnitSaleCustomer")
+  expenseTransactions   expense_transaction[]  @relation("ExpenseTransactionAccount")
 
   // Unique constraint to ensure account_id is unique within each sub_id
   @@unique([sub_id, account_id], name: "uq_sub_account")
@@ -746,20 +747,19 @@ model farm {
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
   status     Int      @default(1)
-
 }
 
 model stackholder {
-  stackholder_id   Int      @id @default(autoincrement())
-  stackholder_nam  String   @unique @db.VarChar(100)
-  stackholder_cnic  String?  @unique @db.VarChar(100)
-  stackholder_contact String? @db.VarChar(50)
-  stackholder_address String? @db.VarChar(255)
-  insert_dat       DateTime @default(now()) @db.Timestamp(0)
-  update_dat       DateTime @default(now()) @db.Timestamp(0)
-  insert_by        String   @default("user 1") @db.VarChar(50)
-  update_by        String   @default("user 1") @db.VarChar(50)
-  status           Int      @default(1)
+  stackholder_id      Int      @id @default(autoincrement())
+  stackholder_nam     String   @unique @db.VarChar(100)
+  stackholder_cnic    String?  @unique @db.VarChar(100)
+  stackholder_contact String?  @db.VarChar(50)
+  stackholder_address String?  @db.VarChar(255)
+  insert_dat          DateTime @default(now()) @db.Timestamp(0)
+  update_dat          DateTime @default(now()) @db.Timestamp(0)
+  insert_by           String   @default("user 1") @db.VarChar(50)
+  update_by           String   @default("user 1") @db.VarChar(50)
+  status              Int      @default(1)
 
   floc_stackholders floc_stackholder[]
 
@@ -797,7 +797,7 @@ model floc {
   update_by         String    @default("user 1") @db.VarChar(50)
   status            Int       @default(1)
 
-  unit              pro_unit        @relation(fields: [prounit_id], references: [prounit_id])
+  unit              pro_unit           @relation(fields: [prounit_id], references: [prounit_id])
   unit_expenses     unit_expense[]
   unit_sales        unit_sale[]
   daily_fs_rates    daily_fs_rate[]
@@ -829,6 +829,24 @@ model opposite_transaction {
   @@index([paid_by])
   @@index([received_by])
   @@index([transaction_date])
+}
+
+model expense_transaction {
+  expense_t_id   Int      @id @default(autoincrement())
+  expense_t_date DateTime
+  account_id     Int
+  amount         Float
+  description    String?  @db.VarChar(500)
+  insert_dat     DateTime @default(now()) @db.Timestamp(0)
+  update_dat     DateTime @default(now()) @db.Timestamp(0)
+  insert_by      String   @default("user 1") @db.VarChar(50)
+  update_by      String   @default("user 1") @db.VarChar(50)
+  status         Int      @default(1)
+
+  account accounts @relation("ExpenseTransactionAccount", fields: [account_id], references: [acc_id])
+
+  @@index([account_id])
+  @@index([expense_t_date])
 }
 
 model self_transaction {
@@ -873,9 +891,9 @@ model unit_expense {
   update_by      String   @default("user 1") @db.VarChar(50)
   status         Int      @default(1)
 
-  unit     pro_unit @relation(fields: [prounit_id], references: [prounit_id])
-  floc     floc     @relation(fields: [floc_id], references: [floc_id])
-  product  product  @relation(fields: [product_id], references: [product_id])
+  unit     pro_unit  @relation(fields: [prounit_id], references: [prounit_id])
+  floc     floc      @relation(fields: [floc_id], references: [floc_id])
+  product  product   @relation(fields: [product_id], references: [product_id])
   supplier accounts? @relation("UnitExpenseSupplier", fields: [supplier_id], references: [acc_id])
 
   @@index([prounit_id])
@@ -909,9 +927,9 @@ model unit_sale {
   update_by      String   @default("user 1") @db.VarChar(50)
   status         Int      @default(1)
 
-  unit     pro_unit @relation(fields: [prounit_id], references: [prounit_id])
-  floc     floc     @relation(fields: [floc_id], references: [floc_id])
-  product  product  @relation(fields: [product_id], references: [product_id])
+  unit     pro_unit  @relation(fields: [prounit_id], references: [prounit_id])
+  floc     floc      @relation(fields: [floc_id], references: [floc_id])
+  product  product   @relation(fields: [product_id], references: [product_id])
   customer accounts? @relation("UnitSaleCustomer", fields: [customer_id], references: [acc_id])
 
   @@index([prounit_id])
@@ -983,24 +1001,24 @@ model trading {
 }
 
 model whole_sale {
-  sale_id          Int      @id @default(autoincrement())
-  sale_date        DateTime
-  farm_rate        Float?
-  sale_rate        Float?
-  former_account   Int
-  van_number       String   @db.VarChar(100)
-  weight           Float
-  former_rate      Float
-  former_amount    Float
-  purcher_account  Int
-  purcher_rate     Float?
-  purcher_amount   Float
-  profit           Float    @default(0)
-  insert_dat       DateTime @default(now()) @db.Timestamp(0)
-  update_dat       DateTime @default(now()) @db.Timestamp(0)
-  insert_by        String   @default("user 1") @db.VarChar(50)
-  update_by        String   @default("user 1") @db.VarChar(50)
-  status           Int      @default(1)
+  sale_id         Int      @id @default(autoincrement())
+  sale_date       DateTime
+  farm_rate       Float?
+  sale_rate       Float?
+  former_account  Int
+  van_number      String   @db.VarChar(100)
+  weight          Float
+  former_rate     Float
+  former_amount   Float
+  purcher_account Int
+  purcher_rate    Float?
+  purcher_amount  Float
+  profit          Float    @default(0)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
 
   former_account_ref  accounts @relation("WholeSaleFormer", fields: [former_account], references: [acc_id])
   purcher_account_ref accounts @relation("WholeSalePurcher", fields: [purcher_account], references: [acc_id])

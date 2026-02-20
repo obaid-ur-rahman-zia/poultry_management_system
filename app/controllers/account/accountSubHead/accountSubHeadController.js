@@ -262,6 +262,19 @@ class AccountSubHeadController {
       return errorResponse(err, 500);
     }
   }
+
+  async readExpenseHeads() {
+    try {
+      const data = await AccountSubHeadRepository.readExpenseHeads();
+      return successResponse(data, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to get expense account heads in Method: AccountSubHeadController.readExpenseHeads",
+        err
+      );
+      return errorResponse(err, 500);
+    }
+  }
 }
 
 export default new AccountSubHeadController();

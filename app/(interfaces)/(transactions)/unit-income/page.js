@@ -624,13 +624,14 @@ export default function UnitSalePage() {
           setFsRateSet(true);
           setFsRateEditable(false);
         }
+        // Preserve date, unit, floc and F.S Rate — only reset sale-specific fields
         reset({
-          sale_date: new Date().toISOString().split("T")[0],
-          prounit_id: "",
-          floc_id: "",
+          sale_date: data.sale_date,
+          prounit_id: data.prounit_id,
+          floc_id: data.floc_id,
           customer_id: "",
-          farm_rate: "",
-          sale_rate: "",
+          farm_rate: data.farm_rate,
+          sale_rate: data.sale_rate,
           product_id: "",
           price: "",
           quantity: "",
@@ -642,8 +643,6 @@ export default function UnitSalePage() {
           description: "",
         });
         setCustomerBalance(null);
-        setFsRateSet(false);
-        setFsRateEditable(true);
         setIsEditMode(false);
         setEditingSaleId(null);
         fetchSales();
@@ -867,9 +866,9 @@ export default function UnitSalePage() {
                       options={
                         Array.isArray(units)
                           ? units.map((unit) => ({
-                              value: unit.prounit_id.toString(),
-                              label: unit.prounit_nam,
-                            }))
+                            value: unit.prounit_id.toString(),
+                            label: unit.prounit_nam,
+                          }))
                           : []
                       }
                       value={field.value}
@@ -935,9 +934,9 @@ export default function UnitSalePage() {
                           options={
                             Array.isArray(customers) && customers.length > 0
                               ? customers.map((customer) => ({
-                                  value: customer.acc_id.toString(),
-                                  label: customer.account_nam,
-                                }))
+                                value: customer.acc_id.toString(),
+                                label: customer.account_nam,
+                              }))
                               : []
                           }
                           value={field.value}
@@ -1006,9 +1005,9 @@ export default function UnitSalePage() {
                       options={
                         Array.isArray(products)
                           ? products.map((product) => ({
-                              value: product.product_id.toString(),
-                              label: product.product_title,
-                            }))
+                            value: product.product_id.toString(),
+                            label: product.product_title,
+                          }))
                           : []
                       }
                       value={field.value}
@@ -1304,9 +1303,9 @@ export default function UnitSalePage() {
                           { value: "all", label: "All Units" },
                           ...(Array.isArray(units)
                             ? units.map((unit) => ({
-                                value: unit.prounit_id.toString(),
-                                label: unit.prounit_nam,
-                              }))
+                              value: unit.prounit_id.toString(),
+                              label: unit.prounit_nam,
+                            }))
                             : []),
                         ]}
                         value={filterUnit}
@@ -1323,9 +1322,9 @@ export default function UnitSalePage() {
                           { value: "all", label: "All Flocs" },
                           ...(Array.isArray(flocs)
                             ? flocs.map((floc) => ({
-                                value: floc.floc_id.toString(),
-                                label: `Floc #${floc.floc_id}`,
-                              }))
+                              value: floc.floc_id.toString(),
+                              label: `Floc #${floc.floc_id}`,
+                            }))
                             : []),
                         ]}
                         value={filterFloc}
@@ -1369,9 +1368,9 @@ export default function UnitSalePage() {
                         { value: "all", label: "All Units" },
                         ...(Array.isArray(units)
                           ? units.map((unit) => ({
-                              value: unit.prounit_id.toString(),
-                              label: unit.prounit_nam,
-                            }))
+                            value: unit.prounit_id.toString(),
+                            label: unit.prounit_nam,
+                          }))
                           : []),
                       ]}
                       value={filterUnit}
@@ -1389,9 +1388,9 @@ export default function UnitSalePage() {
                         { value: "all", label: "All Flocs" },
                         ...(Array.isArray(flocs)
                           ? flocs.map((floc) => ({
-                              value: floc.floc_id.toString(),
-                              label: `Floc #${floc.floc_id}`,
-                            }))
+                            value: floc.floc_id.toString(),
+                            label: `Floc #${floc.floc_id}`,
+                          }))
                           : []),
                       ]}
                       value={filterFloc}

@@ -274,3 +274,18 @@ custom-exception:  [Failed to create subhead - duplicate name in Method: Account
 system-exception:  [Error: A subhead with this name already exists]
 
 
+exception-time:       [2026-02-20T19:13:20.328Z]  
+custom-exception:  [Failed to delete account in Method: AccountsController.delete] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete()` invocation in E:\Switch2iTech\Poultry Tanvir\poultry_management_system\.next\server\chunks\[root-of-the-server]__938cbf70._.js:605:154    602     });   603 }   604 async delete(acc_id) { → 605     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete( Foreign key constraint violated on the constraint: `transaction_acc_id_fkey`]
+
+
+exception-time:       [2026-02-20T19:13:54.098Z]  
+custom-exception:  [Failed to delete account in Method: AccountsController.delete] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete()` invocation in E:\Switch2iTech\Poultry Tanvir\poultry_management_system\.next\server\chunks\[root-of-the-server]__938cbf70._.js:605:154    602     });   603 }   604 async delete(acc_id) { → 605     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete( Foreign key constraint violated on the constraint: `transaction_acc_id_fkey`]
+
+
+exception-time:       [2026-02-20T19:13:57.966Z]  
+custom-exception:  [Failed to delete account in Method: AccountsController.delete] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete()` invocation in E:\Switch2iTech\Poultry Tanvir\poultry_management_system\.next\server\chunks\[root-of-the-server]__938cbf70._.js:605:154    602     });   603 }   604 async delete(acc_id) { → 605     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete( Foreign key constraint violated on the constraint: `transaction_acc_id_fkey`]
+
+

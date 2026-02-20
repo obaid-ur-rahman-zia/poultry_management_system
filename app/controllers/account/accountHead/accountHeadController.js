@@ -78,6 +78,7 @@ class AccountHeadController {
       return errorResponse(err, 500);
     }
   }
+
 }
 
 export default new AccountHeadController();

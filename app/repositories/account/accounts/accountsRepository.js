@@ -263,6 +263,30 @@ class AccountsRepository {
       tx,
     );
   }
+
+  async readExpenseAccounts() {
+    return prisma.accounts.findMany({
+      where: {
+        subhead: {
+          parent: {
+            subhead_nam: {
+              equals: "Expense Head",
+              mode: "insensitive",
+            },
+          },
+        },
+      },
+      orderBy: [{ sub_id: "asc" }, { account_id: "asc" }],
+      include: {
+        head: true,
+        subhead: {
+          include: {
+            parent: true,
+          },
+        },
+      },
+    });
+  }
 }
 
 export default new AccountsRepository();

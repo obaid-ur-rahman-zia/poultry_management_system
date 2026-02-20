@@ -534,10 +534,11 @@ export default function UnitExpensePage() {
             : "Expense created successfully",
         );
         fetchExpenses(currentPage, itemsPerPage);
+        // Preserve date, unit, and floc — only reset transaction-specific fields
         reset({
-          expense_date: new Date().toISOString().split("T")[0],
-          prounit_id: "",
-          floc_id: "",
+          expense_date: data.expense_date,
+          prounit_id: data.prounit_id,
+          floc_id: data.floc_id,
           supplier_id: "",
           product_id: "",
           price: "",
@@ -646,7 +647,7 @@ export default function UnitExpensePage() {
       filterDate === "" ||
       (expense.expense_date &&
         new Date(expense.expense_date).toISOString().split("T")[0] ===
-          filterDate);
+        filterDate);
 
     return matchesSearch && matchesUnit && matchesFloc && matchesDate;
   });
@@ -708,9 +709,9 @@ export default function UnitExpensePage() {
                       options={
                         Array.isArray(units)
                           ? units.map((unit) => ({
-                              value: unit.prounit_id.toString(),
-                              label: unit.prounit_nam,
-                            }))
+                            value: unit.prounit_id.toString(),
+                            label: unit.prounit_nam,
+                          }))
                           : []
                       }
                       value={field.value}
@@ -776,9 +777,9 @@ export default function UnitExpensePage() {
                           options={
                             Array.isArray(suppliers)
                               ? suppliers.map((supplier) => ({
-                                  value: supplier.acc_id.toString(),
-                                  label: supplier.account_nam,
-                                }))
+                                value: supplier.acc_id.toString(),
+                                label: supplier.account_nam,
+                              }))
                               : []
                           }
                           value={field.value}
@@ -838,9 +839,9 @@ export default function UnitExpensePage() {
                       options={
                         Array.isArray(products)
                           ? products.map((product) => ({
-                              value: product.product_id.toString(),
-                              label: product.product_title,
-                            }))
+                            value: product.product_id.toString(),
+                            label: product.product_title,
+                          }))
                           : []
                       }
                       value={field.value}
@@ -947,9 +948,9 @@ export default function UnitExpensePage() {
                   <p className="text-sm font-semibold">
                     {discountValue
                       ? calculateDiscountAmount().toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
                       : "0.00"}
                   </p>
                 </div>
@@ -1043,9 +1044,9 @@ export default function UnitExpensePage() {
                   <p className="text-sm font-semibold">
                     {taxValue
                       ? calculateTaxAmount().toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
                       : "0.00"}
                   </p>
                 </div>
@@ -1142,9 +1143,9 @@ export default function UnitExpensePage() {
                       { value: "all", label: "All Units" },
                       ...(Array.isArray(units)
                         ? units.map((unit) => ({
-                            value: unit.prounit_id.toString(),
-                            label: unit.prounit_nam,
-                          }))
+                          value: unit.prounit_id.toString(),
+                          label: unit.prounit_nam,
+                        }))
                         : []),
                     ]}
                     value={filterUnit}
@@ -1183,8 +1184,8 @@ export default function UnitExpensePage() {
                         <span className="text-sm font-medium">
                           {expense.expense_date
                             ? new Date(
-                                expense.expense_date,
-                              ).toLocaleDateString()
+                              expense.expense_date,
+                            ).toLocaleDateString()
                             : "N/A"}
                         </span>
                       </div>
@@ -1319,8 +1320,8 @@ export default function UnitExpensePage() {
                           <td className="p-2 align-middle whitespace-nowrap">
                             {expense.expense_date
                               ? new Date(
-                                  expense.expense_date,
-                                ).toLocaleDateString()
+                                expense.expense_date,
+                              ).toLocaleDateString()
                               : "N/A"}
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap">

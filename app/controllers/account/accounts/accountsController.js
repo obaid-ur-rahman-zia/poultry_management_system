@@ -708,16 +708,16 @@ class AccountsController {
             const subheadName = subhead.subhead_nam.toLowerCase();
             is_supplier =
               subheadName === "former" ||
-              subheadName.includes("former") ||
-              subheadName === "supplier" ||
-              subheadName.includes("supplier")
+                subheadName.includes("former") ||
+                subheadName === "supplier" ||
+                subheadName.includes("supplier")
                 ? 1
                 : 0;
             is_customer =
               subheadName === "purcher" ||
-              subheadName.includes("purcher") ||
-              subheadName === "customer" ||
-              subheadName.includes("customer")
+                subheadName.includes("purcher") ||
+                subheadName === "customer" ||
+                subheadName.includes("customer")
                 ? 1
                 : 0;
             is_employee = 0;
@@ -1095,6 +1095,19 @@ class AccountsController {
       }
       ErrorLogger.log(
         "Failed to delete account in Method: AccountsController.delete",
+        err,
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  async readExpenseAccounts() {
+    try {
+      const data = await AccountsRepository.readExpenseAccounts();
+      return successResponse(data, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to get expense accounts in Method: AccountsController.readExpenseAccounts",
         err,
       );
       return errorResponse(err, 500);

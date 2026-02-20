@@ -241,6 +241,20 @@ class AccountSubHeadRepository {
       },
     };
   }
+
+  async readExpenseHeads() {
+    return prisma.account_sub_head.findMany({
+      where: {
+        parent: {
+          subhead_nam: {
+            equals: "Expense Head",
+            mode: "insensitive",
+          },
+        },
+      },
+      orderBy: { subhead_id: "asc" },
+    });
+  }
 }
 
 export default new AccountSubHeadRepository();

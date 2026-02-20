@@ -34,6 +34,8 @@ class AccountHeadRepository {
       },
     });
   }
+
+
 }
 
 export default new AccountHeadRepository();
