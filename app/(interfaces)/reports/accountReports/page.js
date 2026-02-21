@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import AccountLedger from "./accountLedger/page";
 import TrialBalance from "./trialBalance/page";
 import SubheadTrialBalance from "./subheadTrialBalance/page";
+import ExpenseHeadTrialBalance from "./expenseHeadTrialBalance/page";
 import BalanceSheet from "./balanceSheet/page";
 
 export default function ReportPage() {
@@ -49,6 +50,7 @@ export default function ReportPage() {
           <AccountLedger />
           <TrialBalance />
           <SubheadTrialBalance />
+          <ExpenseHeadTrialBalance />
           <BalanceSheet />
         </div>
       </div>

@@ -513,7 +513,7 @@ export default function OppositeTransactionsPage() {
       filterDate === "" ||
       (transaction.transaction_date &&
         new Date(transaction.transaction_date).toISOString().split("T")[0] ===
-          filterDate);
+        filterDate);
 
     return matchesSearch && matchesPaidBy && matchesReceivedBy && matchesDate;
   });
@@ -582,15 +582,15 @@ export default function OppositeTransactionsPage() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !accounts.find(
-                          (acc) => acc.acc_id === selectedAccount.acc_id,
-                        )
+                          !accounts.find(
+                            (acc) => acc.acc_id === selectedAccount.acc_id,
+                          )
                           ? [
-                              {
-                                value: selectedAccount.acc_id.toString(),
-                                label: selectedAccount.account_nam,
-                              },
-                            ]
+                            {
+                              value: selectedAccount.acc_id.toString(),
+                              label: selectedAccount.account_nam,
+                            },
+                          ]
                           : []),
                       ];
 
@@ -614,7 +614,12 @@ export default function OppositeTransactionsPage() {
                     size="sm"
                     onClick={() => {
                       setAccountSearchField("paid_by");
-                      setAccountSearchType("all");
+                      const purcherSubHead = accountSubHeads.find(
+                        (sh) => sh.subhead_nam?.toLowerCase() === "purcher"
+                      );
+                      setAccountSearchType(
+                        purcherSubHead ? purcherSubHead.sub_id.toString() : "all"
+                      );
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
@@ -712,15 +717,15 @@ export default function OppositeTransactionsPage() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !accounts.find(
-                          (acc) => acc.acc_id === selectedAccount.acc_id,
-                        )
+                          !accounts.find(
+                            (acc) => acc.acc_id === selectedAccount.acc_id,
+                          )
                           ? [
-                              {
-                                value: selectedAccount.acc_id.toString(),
-                                label: selectedAccount.account_nam,
-                              },
-                            ]
+                            {
+                              value: selectedAccount.acc_id.toString(),
+                              label: selectedAccount.account_nam,
+                            },
+                          ]
                           : []),
                       ];
 
@@ -744,7 +749,12 @@ export default function OppositeTransactionsPage() {
                     size="sm"
                     onClick={() => {
                       setAccountSearchField("received_by");
-                      setAccountSearchType("all");
+                      const formerSubHead = accountSubHeads.find(
+                        (sh) => sh.subhead_nam?.toLowerCase() === "former"
+                      );
+                      setAccountSearchType(
+                        formerSubHead ? formerSubHead.sub_id.toString() : "all"
+                      );
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
@@ -864,7 +874,7 @@ export default function OppositeTransactionsPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Paid By</Label>
                   <Combobox
                     options={[
@@ -898,7 +908,7 @@ export default function OppositeTransactionsPage() {
                     searchPlaceholder="Search accounts..."
                     emptyText="No account found."
                   />
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <Label>Date</Label>
@@ -928,8 +938,8 @@ export default function OppositeTransactionsPage() {
                         <span className="text-sm font-medium">
                           {transaction.transaction_date
                             ? new Date(
-                                transaction.transaction_date,
-                              ).toLocaleDateString()
+                              transaction.transaction_date,
+                            ).toLocaleDateString()
                             : "N/A"}
                         </span>
                       </div>
@@ -948,8 +958,8 @@ export default function OppositeTransactionsPage() {
                         <span className="text-sm font-medium">
                           {transaction.bank_account
                             ? accounts.find(
-                                (a) => a.acc_id === transaction.bank_account,
-                              )?.account_nam || "N/A"
+                              (a) => a.acc_id === transaction.bank_account,
+                            )?.account_nam || "N/A"
                             : "N/A"}
                         </span>
                       </div>
@@ -989,7 +999,7 @@ export default function OppositeTransactionsPage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        {/* <Button
+                        <Button
                           variant="ghost"
                           size="sm"
                           onClick={() =>
@@ -998,7 +1008,7 @@ export default function OppositeTransactionsPage() {
                         >
                           <Trash2 className="h-4 w-4 mr-1 text-destructive" />
                           Delete
-                        </Button> */}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1041,8 +1051,8 @@ export default function OppositeTransactionsPage() {
                         <td className="p-2 align-middle whitespace-nowrap">
                           {transaction.transaction_date
                             ? new Date(
-                                transaction.transaction_date,
-                              ).toLocaleDateString()
+                              transaction.transaction_date,
+                            ).toLocaleDateString()
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
@@ -1053,8 +1063,8 @@ export default function OppositeTransactionsPage() {
                         <td className="p-2 align-middle whitespace-nowrap">
                           {transaction.bank_account
                             ? accounts.find(
-                                (a) => a.acc_id === transaction.bank_account,
-                              )?.account_nam || "N/A"
+                              (a) => a.acc_id === transaction.bank_account,
+                            )?.account_nam || "N/A"
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
@@ -1080,7 +1090,7 @@ export default function OppositeTransactionsPage() {
                             >
                               <Edit2 className="h-4 w-4" />
                             </Button>
-                            {/* <Button
+                            <Button
                               variant="ghost"
                               size="sm"
                               onClick={() =>
@@ -1088,7 +1098,7 @@ export default function OppositeTransactionsPage() {
                               }
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button> */}
+                            </Button>
                           </div>
                         </td>
                       </tr>

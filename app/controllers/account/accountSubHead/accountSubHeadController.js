@@ -270,7 +270,28 @@ class AccountSubHeadController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get expense account heads in Method: AccountSubHeadController.readExpenseHeads",
-        err
+        err,
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  // 📊 Get Expense Head Trial Balance (only expense-head subheads)
+  async readExpenseHeadTrialBalance(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const startDate = searchParams.get("startDate");
+      const endDate = searchParams.get("endDate");
+
+      const data = await AccountSubHeadRepository.readExpenseHeadTrialBalance(
+        startDate,
+        endDate,
+      );
+      return successResponse(data, "Success");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to get expense head trial balance in Method: AccountSubHeadController.readExpenseHeadTrialBalance",
+        err,
       );
       return errorResponse(err, 500);
     }

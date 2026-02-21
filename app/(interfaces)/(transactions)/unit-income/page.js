@@ -866,9 +866,9 @@ export default function UnitSalePage() {
                       options={
                         Array.isArray(units)
                           ? units.map((unit) => ({
-                            value: unit.prounit_id.toString(),
-                            label: unit.prounit_nam,
-                          }))
+                              value: unit.prounit_id.toString(),
+                              label: unit.prounit_nam,
+                            }))
                           : []
                       }
                       value={field.value}
@@ -934,9 +934,9 @@ export default function UnitSalePage() {
                           options={
                             Array.isArray(customers) && customers.length > 0
                               ? customers.map((customer) => ({
-                                value: customer.acc_id.toString(),
-                                label: customer.account_nam,
-                              }))
+                                  value: customer.acc_id.toString(),
+                                  label: customer.account_nam,
+                                }))
                               : []
                           }
                           value={field.value}
@@ -1005,9 +1005,9 @@ export default function UnitSalePage() {
                       options={
                         Array.isArray(products)
                           ? products.map((product) => ({
-                            value: product.product_id.toString(),
-                            label: product.product_title,
-                          }))
+                              value: product.product_id.toString(),
+                              label: product.product_title,
+                            }))
                           : []
                       }
                       value={field.value}
@@ -1303,9 +1303,9 @@ export default function UnitSalePage() {
                           { value: "all", label: "All Units" },
                           ...(Array.isArray(units)
                             ? units.map((unit) => ({
-                              value: unit.prounit_id.toString(),
-                              label: unit.prounit_nam,
-                            }))
+                                value: unit.prounit_id.toString(),
+                                label: unit.prounit_nam,
+                              }))
                             : []),
                         ]}
                         value={filterUnit}
@@ -1322,9 +1322,9 @@ export default function UnitSalePage() {
                           { value: "all", label: "All Flocs" },
                           ...(Array.isArray(flocs)
                             ? flocs.map((floc) => ({
-                              value: floc.floc_id.toString(),
-                              label: `Floc #${floc.floc_id}`,
-                            }))
+                                value: floc.floc_id.toString(),
+                                label: `Floc #${floc.floc_id}`,
+                              }))
                             : []),
                         ]}
                         value={filterFloc}
@@ -1368,9 +1368,9 @@ export default function UnitSalePage() {
                         { value: "all", label: "All Units" },
                         ...(Array.isArray(units)
                           ? units.map((unit) => ({
-                            value: unit.prounit_id.toString(),
-                            label: unit.prounit_nam,
-                          }))
+                              value: unit.prounit_id.toString(),
+                              label: unit.prounit_nam,
+                            }))
                           : []),
                       ]}
                       value={filterUnit}
@@ -1388,9 +1388,9 @@ export default function UnitSalePage() {
                         { value: "all", label: "All Flocs" },
                         ...(Array.isArray(flocs)
                           ? flocs.map((floc) => ({
-                            value: floc.floc_id.toString(),
-                            label: `Floc #${floc.floc_id}`,
-                          }))
+                              value: floc.floc_id.toString(),
+                              label: `Floc #${floc.floc_id}`,
+                            }))
                           : []),
                       ]}
                       value={filterFloc}
@@ -1522,14 +1522,14 @@ export default function UnitSalePage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        {/* <Button
+                        <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(sale.sale_id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1 text-destructive" />
                           Delete
-                        </Button> */}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1651,14 +1651,14 @@ export default function UnitSalePage() {
                               >
                                 <Edit2 className="h-4 w-4" />
                               </Button>
-                              {/* <Button
+                              <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDelete(sale.sale_id)}
                                 className="h-8 w-8 p-0"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button> */}
+                              </Button>
                             </div>
                           </td>
                         </tr>

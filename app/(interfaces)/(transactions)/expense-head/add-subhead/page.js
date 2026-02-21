@@ -932,13 +932,13 @@ export default function ExpensePage() {
                                                             >
                                                                 <Edit2 className="h-4 w-4" />
                                                             </Button>
-                                                            <Button
+                                                            {/* <Button
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 onClick={() => handleDelete(account.account_id)}
                                                             >
                                                                 <Trash2 className="h-4 w-4 text-destructive" />
-                                                            </Button>
+                                                            </Button> */}
                                                         </div>
 
                                                         {contacts.length > 0 && (
@@ -1247,14 +1247,14 @@ export default function ExpensePage() {
                                                                         >
                                                                             <Edit2 className="h-4 w-4" />
                                                                         </Button>
-                                                                        <Button
+                                                                        {/* <Button
                                                                             variant="ghost"
                                                                             size="sm"
                                                                             onClick={() => handleDelete(account.account_id)}
                                                                             className="h-8 w-8 p-0"
                                                                         >
                                                                             <Trash2 className="h-4 w-4 text-destructive" />
-                                                                        </Button>
+                                                                        </Button> */}
                                                                     </div>
                                                                 </td>
                                                             </tr>

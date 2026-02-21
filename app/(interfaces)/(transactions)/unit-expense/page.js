@@ -647,7 +647,7 @@ export default function UnitExpensePage() {
       filterDate === "" ||
       (expense.expense_date &&
         new Date(expense.expense_date).toISOString().split("T")[0] ===
-        filterDate);
+          filterDate);
 
     return matchesSearch && matchesUnit && matchesFloc && matchesDate;
   });
@@ -709,9 +709,9 @@ export default function UnitExpensePage() {
                       options={
                         Array.isArray(units)
                           ? units.map((unit) => ({
-                            value: unit.prounit_id.toString(),
-                            label: unit.prounit_nam,
-                          }))
+                              value: unit.prounit_id.toString(),
+                              label: unit.prounit_nam,
+                            }))
                           : []
                       }
                       value={field.value}
@@ -777,9 +777,9 @@ export default function UnitExpensePage() {
                           options={
                             Array.isArray(suppliers)
                               ? suppliers.map((supplier) => ({
-                                value: supplier.acc_id.toString(),
-                                label: supplier.account_nam,
-                              }))
+                                  value: supplier.acc_id.toString(),
+                                  label: supplier.account_nam,
+                                }))
                               : []
                           }
                           value={field.value}
@@ -839,9 +839,9 @@ export default function UnitExpensePage() {
                       options={
                         Array.isArray(products)
                           ? products.map((product) => ({
-                            value: product.product_id.toString(),
-                            label: product.product_title,
-                          }))
+                              value: product.product_id.toString(),
+                              label: product.product_title,
+                            }))
                           : []
                       }
                       value={field.value}
@@ -948,9 +948,9 @@ export default function UnitExpensePage() {
                   <p className="text-sm font-semibold">
                     {discountValue
                       ? calculateDiscountAmount().toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
                       : "0.00"}
                   </p>
                 </div>
@@ -1044,9 +1044,9 @@ export default function UnitExpensePage() {
                   <p className="text-sm font-semibold">
                     {taxValue
                       ? calculateTaxAmount().toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
                       : "0.00"}
                   </p>
                 </div>
@@ -1143,9 +1143,9 @@ export default function UnitExpensePage() {
                       { value: "all", label: "All Units" },
                       ...(Array.isArray(units)
                         ? units.map((unit) => ({
-                          value: unit.prounit_id.toString(),
-                          label: unit.prounit_nam,
-                        }))
+                            value: unit.prounit_id.toString(),
+                            label: unit.prounit_nam,
+                          }))
                         : []),
                     ]}
                     value={filterUnit}
@@ -1184,8 +1184,8 @@ export default function UnitExpensePage() {
                         <span className="text-sm font-medium">
                           {expense.expense_date
                             ? new Date(
-                              expense.expense_date,
-                            ).toLocaleDateString()
+                                expense.expense_date,
+                              ).toLocaleDateString()
                             : "N/A"}
                         </span>
                       </div>
@@ -1263,14 +1263,14 @@ export default function UnitExpensePage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        {/* <Button
+                        <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(expense.expense_id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1 text-destructive" />
                           Delete
-                        </Button> */}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1320,8 +1320,8 @@ export default function UnitExpensePage() {
                           <td className="p-2 align-middle whitespace-nowrap">
                             {expense.expense_date
                               ? new Date(
-                                expense.expense_date,
-                              ).toLocaleDateString()
+                                  expense.expense_date,
+                                ).toLocaleDateString()
                               : "N/A"}
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap">
@@ -1380,14 +1380,14 @@ export default function UnitExpensePage() {
                               >
                                 <Edit2 className="h-4 w-4" />
                               </Button>
-                              {/* <Button
+                              <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDelete(expense.expense_id)}
                                 className="h-8 w-8 p-0"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button> */}
+                              </Button>
                             </div>
                           </td>
                         </tr>

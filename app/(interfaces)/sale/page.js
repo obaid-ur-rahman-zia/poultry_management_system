@@ -527,8 +527,7 @@ function WholeSaleTab() {
     if (!saleDate) return;
     try {
       const response = await fetch(
-        `/api/wholeSale/checkFsRate?sale_date=${
-          saleDate.toISOString().split("T")[0]
+        `/api/wholeSale/checkFsRate?sale_date=${saleDate.toISOString().split("T")[0]
         }`,
       );
       const result = await response.json();
@@ -856,15 +855,15 @@ function WholeSaleTab() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !supplierAccounts.find(
-                          (acc) => acc.acc_id === selectedAccount.acc_id,
-                        )
+                          !supplierAccounts.find(
+                            (acc) => acc.acc_id === selectedAccount.acc_id,
+                          )
                           ? [
-                              {
-                                value: selectedAccount.acc_id.toString(),
-                                label: selectedAccount.account_nam,
-                              },
-                            ]
+                            {
+                              value: selectedAccount.acc_id.toString(),
+                              label: selectedAccount.account_nam,
+                            },
+                          ]
                           : []),
                       ];
 
@@ -992,15 +991,15 @@ function WholeSaleTab() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !customerAccounts.find(
-                          (acc) => acc.acc_id === selectedAccount.acc_id,
-                        )
+                          !customerAccounts.find(
+                            (acc) => acc.acc_id === selectedAccount.acc_id,
+                          )
                           ? [
-                              {
-                                value: selectedAccount.acc_id.toString(),
-                                label: selectedAccount.account_nam,
-                              },
-                            ]
+                            {
+                              value: selectedAccount.acc_id.toString(),
+                              label: selectedAccount.account_nam,
+                            },
+                          ]
                           : []),
                       ];
 
@@ -1083,11 +1082,10 @@ function WholeSaleTab() {
             <div className="flex items-center gap-1">
               <Label className="whitespace-nowrap text-xs">Profit</Label>
               <span
-                className={`text-xs underline ${
-                  parseFloat(watch("profit") || 0) < 0
-                    ? "text-red-600 font-semibold"
-                    : ""
-                }`}
+                className={`text-xs underline ${parseFloat(watch("profit") || 0) < 0
+                  ? "text-red-600 font-semibold"
+                  : ""
+                  }`}
               >
                 {watch("profit") || "0"}
               </span>
@@ -1095,6 +1093,7 @@ function WholeSaleTab() {
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-2">
+
               <Button
                 type="button"
                 variant="outline"
@@ -1171,7 +1170,7 @@ function WholeSaleTab() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-4">
+                    {/* <div className="space-y-4">
                       <Label>Former</Label>
                       <Select
                         value={filterSupplier}
@@ -1214,7 +1213,7 @@ function WholeSaleTab() {
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
+                    </div> */}
                     <div className="space-y-4">
                       <Label>Date</Label>
                       <Input
@@ -1294,11 +1293,11 @@ function WholeSaleTab() {
                                       "sale_date",
                                       sale.sale_date
                                         ? new Date(sale.sale_date)
-                                            .toISOString()
-                                            .split("T")[0]
+                                          .toISOString()
+                                          .split("T")[0]
                                         : new Date()
-                                            .toISOString()
-                                            .split("T")[0],
+                                          .toISOString()
+                                          .split("T")[0],
                                     );
                                     setSaleDate(
                                       sale.sale_date

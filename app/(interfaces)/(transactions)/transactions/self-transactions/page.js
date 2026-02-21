@@ -5,6 +5,14 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Plus, Search, Edit2, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +74,13 @@ export default function SelfTransactionPage() {
   const [currentBalance, setCurrentBalance] = useState(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
+  // Account search dialog states
+  const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
+  const [accountSearchType, setAccountSearchType] = useState("all");
+  const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const [allAccounts, setAllAccounts] = useState([]);
+  const [accountSubHeads, setAccountSubHeads] = useState([]);
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAccount, setFilterAccount] = useState("all");
@@ -87,13 +102,15 @@ export default function SelfTransactionPage() {
     session?.user?.cashInHandAccountId?.toString();
   const selectableAccounts = userCashInHandAccountId
     ? accounts.filter(
-        (account) => account.acc_id?.toString() !== userCashInHandAccountId,
-      )
+      (account) => account.acc_id?.toString() !== userCashInHandAccountId,
+    )
     : accounts;
 
   useEffect(() => {
     fetchAccounts();
     fetchTransactions();
+    fetchAllAccounts();
+    fetchAccountSubHeads();
   }, []);
 
   useEffect(() => {
@@ -124,6 +141,43 @@ export default function SelfTransactionPage() {
       }
     } catch (error) {
       console.error("Error fetching accounts:", error);
+    }
+  };
+
+  // Fetch all accounts for search dialog
+  const fetchAllAccounts = async () => {
+    try {
+      const response = await fetch("/api/account/accounts/readAll?all=true");
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const responseData = result.response_result;
+        if (responseData?.pagination) {
+          const accountsData = responseData.data || [];
+          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+        } else {
+          const accountsData = responseData?.data || responseData || [];
+          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching all accounts:", error);
+      setAllAccounts([]);
+    }
+  };
+
+  // Fetch account sub-heads for the account type dropdown
+  const fetchAccountSubHeads = async () => {
+    try {
+      const response = await fetch("/api/account/accountSubHead/readAll");
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const subHeadsData =
+          result.response_result?.data || result.response_result || [];
+        setAccountSubHeads(Array.isArray(subHeadsData) ? subHeadsData : []);
+      }
+    } catch (error) {
+      console.error("Error fetching account sub-heads:", error);
+      setAccountSubHeads([]);
     }
   };
 
@@ -316,7 +370,7 @@ export default function SelfTransactionPage() {
       filterDate === "" ||
       (transaction.transaction_date &&
         new Date(transaction.transaction_date).toISOString().split("T")[0] ===
-          filterDate);
+        filterDate);
 
     const matchesType =
       filterType === "all" || transaction.transaction_type === filterType;
@@ -402,27 +456,52 @@ export default function SelfTransactionPage() {
 
             {/* Account Selection with Balance */}
             <div className="space-y-2 w-full">
-              <Label htmlFor="account_id">Account *</Label>
-              <div className="flex items-start gap-4 w-full">
+              <div className="flex items-center gap-1">
+                <Label htmlFor="account_id">Account *</Label>
+              </div>
+              <div className="flex items-start gap-2 w-full">
                 <div className="flex-1 space-y-2">
-                  <Controller
-                    name="account_id"
-                    control={control}
-                    rules={{ required: "Account is required" }}
-                    render={({ field }) => (
-                      <Combobox
-                        options={selectableAccounts.map((account) => ({
-                          value: account.acc_id.toString(),
-                          label: account.account_nam,
-                        }))}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Select account"
-                        searchPlaceholder="Search accounts..."
-                        emptyText="No account found."
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1">
+                      <Controller
+                        name="account_id"
+                        control={control}
+                        rules={{ required: "Account is required" }}
+                        render={({ field }) => (
+                          <Combobox
+                            options={selectableAccounts.map((account) => ({
+                              value: account.acc_id.toString(),
+                              label: account.account_nam,
+                            }))}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select account"
+                            searchPlaceholder="Search accounts..."
+                            emptyText="No account found."
+                          />
+                        )}
                       />
-                    )}
-                  />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const purcherSubHead = accountSubHeads.find(
+                          (sh) => sh.subhead_nam?.toLowerCase() === "purcher"
+                        );
+                        setAccountSearchType(
+                          purcherSubHead ? purcherSubHead.sub_id.toString() : "all"
+                        );
+                        setAccountSearchQuery("");
+                        setIsAccountSearchDialogOpen(true);
+                      }}
+                      className="h-8 w-8 p-0 font-bold"
+                      title="Search Accounts"
+                    >
+                      =
+                    </Button>
+                  </div>
                   {errors.account_id && (
                     <p className="text-sm text-destructive">
                       {errors.account_id.message}
@@ -585,6 +664,116 @@ export default function SelfTransactionPage() {
         </CardContent>
       </Card>
 
+      {/* Account Search Dialog */}
+      <Dialog
+        open={isAccountSearchDialogOpen}
+        onOpenChange={setIsAccountSearchDialogOpen}
+      >
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Search Accounts</DialogTitle>
+            <DialogDescription>
+              Search and select an account from all available accounts
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 space-y-2">
+                <Label>Account Type</Label>
+                <Select
+                  value={accountSearchType}
+                  onValueChange={setAccountSearchType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {accountSubHeads.map((subhead) => (
+                      <SelectItem
+                        key={subhead.sub_id}
+                        value={subhead.sub_id.toString()}
+                      >
+                        {subhead.subhead_nam}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label>Search</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search accounts..."
+                    value={accountSearchQuery}
+                    onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="relative max-h-[400px] overflow-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead>Sr. No</TableHead>
+                    <TableHead>Account Name</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allAccounts
+                    .filter((acc) => {
+                      if (accountSearchType !== "all") {
+                        if (acc.sub_id?.toString() !== accountSearchType) {
+                          return false;
+                        }
+                      }
+                      if (accountSearchQuery) {
+                        const query = accountSearchQuery.toLowerCase();
+                        return (
+                          acc.account_nam?.toLowerCase().includes(query) ||
+                          acc.account_cnic?.toLowerCase().includes(query) ||
+                          acc.account_contact?.toLowerCase().includes(query)
+                        );
+                      }
+                      return true;
+                    })
+                    .map((acc, index) => (
+                      <TableRow
+                        key={acc.acc_id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => {
+                          setValue("account_id", acc.acc_id.toString());
+                          setIsAccountSearchDialogOpen(false);
+                          setAccountSearchQuery("");
+                        }}
+                      >
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell className="font-medium">
+                          {acc.account_nam}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsAccountSearchDialogOpen(false);
+                setAccountSearchQuery("");
+              }}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Transactions List */}
       <Card>
         <CardContent>
@@ -605,7 +794,7 @@ export default function SelfTransactionPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Account</Label>
                   <Combobox
                     options={[
@@ -621,7 +810,7 @@ export default function SelfTransactionPage() {
                     searchPlaceholder="Search accounts..."
                     emptyText="No account found."
                   />
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <Label>Date</Label>
@@ -632,7 +821,7 @@ export default function SelfTransactionPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Type</Label>
                   <Select value={filterType} onValueChange={setFilterType}>
                     <SelectTrigger>
@@ -644,7 +833,7 @@ export default function SelfTransactionPage() {
                       <SelectItem value="pay">Pay</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -665,8 +854,8 @@ export default function SelfTransactionPage() {
                         <span className="text-sm font-medium">
                           {transaction.transaction_date
                             ? new Date(
-                                transaction.transaction_date,
-                              ).toLocaleDateString()
+                              transaction.transaction_date,
+                            ).toLocaleDateString()
                             : "N/A"}
                         </span>
                       </div>
@@ -728,7 +917,7 @@ export default function SelfTransactionPage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        {/* <Button
+                        <Button
                           variant="ghost"
                           size="sm"
                           onClick={() =>
@@ -737,7 +926,7 @@ export default function SelfTransactionPage() {
                         >
                           <Trash2 className="h-4 w-4 mr-1 text-destructive" />
                           Delete
-                        </Button> */}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -780,8 +969,8 @@ export default function SelfTransactionPage() {
                         <td className="p-2 align-middle whitespace-nowrap">
                           {transaction.transaction_date
                             ? new Date(
-                                transaction.transaction_date,
-                              ).toLocaleDateString()
+                              transaction.transaction_date,
+                            ).toLocaleDateString()
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
@@ -831,7 +1020,7 @@ export default function SelfTransactionPage() {
                             >
                               <Edit2 className="h-4 w-4" />
                             </Button>
-                            {/* <Button
+                            <Button
                               variant="ghost"
                               size="sm"
                               onClick={() =>
@@ -839,7 +1028,7 @@ export default function SelfTransactionPage() {
                               }
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button> */}
+                            </Button>
                           </div>
                         </td>
                       </tr>
