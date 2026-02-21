@@ -152,8 +152,9 @@ class UnitExpenseRepository {
     });
   }
 
-  async delete(expense_id) {
-    return prisma.unit_expense.update({
+  async delete(expense_id, tx) {
+    const prismaClient = tx || prisma;
+    return prismaClient.unit_expense.update({
       where: {
         expense_id: Number(expense_id),
       },

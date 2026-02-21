@@ -103,6 +103,9 @@ export default function UnitSalePage() {
   const [filterFloc, setFilterFloc] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingSaleId, setDeletingSaleId] = useState(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -692,25 +695,57 @@ export default function UnitSalePage() {
     }
   };
 
-  const handleDelete = async (saleId) => {
-    if (!confirm("Are you sure you want to delete this sale?")) {
-      return;
-    }
+  const handleDelete = (saleId) => {
+    setDeletingSaleId(saleId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deletingSaleId) return;
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/unitSale?sale_id=${saleId}`, {
+      const response = await fetch(`/api/unitSale?sale_id=${deletingSaleId}`, {
         method: "DELETE",
       });
       const result = await response.json();
       if (result.response_status === "success") {
         toast.success("Sale deleted successfully");
-        fetchSales();
+        setIsDeleteDialogOpen(false);
+        setDeletingSaleId(null);
+        // If the deleted sale is currently loaded in edit mode, clear the form
+        if (editingSaleId === deletingSaleId) {
+          reset({
+            sale_date: new Date().toISOString().split("T")[0],
+            prounit_id: "",
+            floc_id: "",
+            customer_id: "",
+            farm_rate: "",
+            sale_rate: "",
+            product_id: "",
+            price: "",
+            quantity: "",
+            van_number: "",
+            tax_type: "flat",
+            tax_value: "",
+            discount_type: "percentage",
+            discount_value: "",
+            description: "",
+          });
+          setCustomerBalance(null);
+          setFsRateSet(false);
+          setFsRateEditable(true);
+          setIsEditMode(false);
+          setEditingSaleId(null);
+        }
+        fetchSales(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete sale");
       }
     } catch (error) {
       console.error("Error deleting sale:", error);
       toast.error("Failed to delete sale");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1261,6 +1296,18 @@ export default function UnitSalePage() {
                     ? "Update Sale"
                     : "Create Sale"}
               </Button>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeleting}
+                  onClick={() => handleDelete(editingSaleId)}
+                  className="w-full sm:w-auto"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
@@ -1522,14 +1569,6 @@ export default function UnitSalePage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(sale.sale_id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1 text-destructive" />
-                          Delete
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1650,14 +1689,6 @@ export default function UnitSalePage() {
                                 className="h-8 w-8 p-0"
                               >
                                 <Edit2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(sale.sale_id)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </div>
                           </td>
@@ -1935,6 +1966,37 @@ export default function UnitSalePage() {
             </Button>
             <Button type="button" onClick={handleCreateCustomer}>
               Create Purcher
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Sale</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this unit income?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Yes, Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

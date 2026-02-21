@@ -118,6 +118,8 @@ function WholeSaleTab() {
   const [fsRateEditable, setFsRateEditable] = useState(true);
   const [previousFsRates, setPreviousFsRates] = useState([]);
   const [isFsRateHistoryOpen, setIsFsRateHistoryOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] =
     useState(false);
@@ -527,7 +529,8 @@ function WholeSaleTab() {
     if (!saleDate) return;
     try {
       const response = await fetch(
-        `/api/wholeSale/checkFsRate?sale_date=${saleDate.toISOString().split("T")[0]
+        `/api/wholeSale/checkFsRate?sale_date=${
+          saleDate.toISOString().split("T")[0]
         }`,
       );
       const result = await response.json();
@@ -667,6 +670,48 @@ function WholeSaleTab() {
     } catch (error) {
       console.error("Error saving whole sale:", error);
       toast.error("Failed to save whole sale");
+    }
+  };
+
+  const handleDeleteSale = async () => {
+    if (!editingSaleId) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/wholeSale?sale_id=${editingSaleId}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+      if (result.response_status === "success") {
+        toast.success("Whole sale deleted successfully");
+        setIsDeleteDialogOpen(false);
+        reset({
+          sale_date: new Date().toISOString().split("T")[0],
+          farm_rate: "",
+          sale_rate: "",
+          former_account: "",
+          van_number: "",
+          weight: "",
+          former_rate: "",
+          former_amount: "",
+          purcher_account: "",
+          purcher_rate: "",
+          purcher_amount: "",
+          profit: "",
+        });
+        setSaleDate(new Date());
+        setSupplierBalance(null);
+        setCustomerBalance(null);
+        setIsEditMode(false);
+        setEditingSaleId(null);
+        fetchWholeSales(currentPage, itemsPerPage);
+      } else {
+        toast.error(result.response_message || "Failed to delete whole sale");
+      }
+    } catch (error) {
+      console.error("Error deleting whole sale:", error);
+      toast.error("Failed to delete whole sale");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -855,15 +900,15 @@ function WholeSaleTab() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                          !supplierAccounts.find(
-                            (acc) => acc.acc_id === selectedAccount.acc_id,
-                          )
+                        !supplierAccounts.find(
+                          (acc) => acc.acc_id === selectedAccount.acc_id,
+                        )
                           ? [
-                            {
-                              value: selectedAccount.acc_id.toString(),
-                              label: selectedAccount.account_nam,
-                            },
-                          ]
+                              {
+                                value: selectedAccount.acc_id.toString(),
+                                label: selectedAccount.account_nam,
+                              },
+                            ]
                           : []),
                       ];
 
@@ -991,15 +1036,15 @@ function WholeSaleTab() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                          !customerAccounts.find(
-                            (acc) => acc.acc_id === selectedAccount.acc_id,
-                          )
+                        !customerAccounts.find(
+                          (acc) => acc.acc_id === selectedAccount.acc_id,
+                        )
                           ? [
-                            {
-                              value: selectedAccount.acc_id.toString(),
-                              label: selectedAccount.account_nam,
-                            },
-                          ]
+                              {
+                                value: selectedAccount.acc_id.toString(),
+                                label: selectedAccount.account_nam,
+                              },
+                            ]
                           : []),
                       ];
 
@@ -1082,10 +1127,11 @@ function WholeSaleTab() {
             <div className="flex items-center gap-1">
               <Label className="whitespace-nowrap text-xs">Profit</Label>
               <span
-                className={`text-xs underline ${parseFloat(watch("profit") || 0) < 0
-                  ? "text-red-600 font-semibold"
-                  : ""
-                  }`}
+                className={`text-xs underline ${
+                  parseFloat(watch("profit") || 0) < 0
+                    ? "text-red-600 font-semibold"
+                    : ""
+                }`}
               >
                 {watch("profit") || "0"}
               </span>
@@ -1093,7 +1139,6 @@ function WholeSaleTab() {
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-2">
-
               <Button
                 type="button"
                 variant="outline"
@@ -1115,15 +1160,27 @@ function WholeSaleTab() {
                 </Button>
               )}
               {isEditMode && (
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-3 text-xs"
-                >
-                  {isSubmitting ? "Updating..." : "Update"}
-                </Button>
+                <>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                  >
+                    {isSubmitting ? "Updating..." : "Update"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete
+                  </Button>
+                </>
               )}
               <Button
                 type="button"
@@ -1293,11 +1350,11 @@ function WholeSaleTab() {
                                       "sale_date",
                                       sale.sale_date
                                         ? new Date(sale.sale_date)
-                                          .toISOString()
-                                          .split("T")[0]
+                                            .toISOString()
+                                            .split("T")[0]
                                         : new Date()
-                                          .toISOString()
-                                          .split("T")[0],
+                                            .toISOString()
+                                            .split("T")[0],
                                     );
                                     setSaleDate(
                                       sale.sale_date
@@ -1720,6 +1777,37 @@ function WholeSaleTab() {
               onClick={() => setIsFsRateHistoryOpen(false)}
             >
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Whole Sale</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this whole sale?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteSale}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Yes, Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

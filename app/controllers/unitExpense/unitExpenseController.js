@@ -317,7 +317,44 @@ class UnitExpenseController {
         return errorResponse(new Error("expense_id is required"), 400);
       }
 
-      await UnitExpenseRepository.delete(expense_id);
+      // Check if the expense exists before attempting deletion
+      const existingExpense = await UnitExpenseRepository.readById(expense_id);
+      if (!existingExpense) {
+        ErrorLogger.log(
+          "Failed to delete unit expense in Method: UnitExpenseController.delete",
+          new Error("Expense not found"),
+        );
+        return errorResponse(new Error("Expense not found"), 404);
+      }
+
+      // Atomically soft-delete the transactions and the expense record
+      await prisma.$transaction(
+        async (tx) => {
+          try {
+            // Soft-delete all transactions linked to this expense
+            await TransactionRepository.softDeleteByReferenceId(
+              expense_id,
+              "Unit Expense",
+              tx,
+            );
+
+            // Soft-delete the expense record itself
+            await UnitExpenseRepository.delete(expense_id, tx);
+          } catch (transactionError) {
+            ErrorLogger.log(
+              "Transaction failed in UnitExpenseController.delete",
+              transactionError,
+            );
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 5000,
+          timeout: 10000,
+          isolationLevel: "Serializable",
+        },
+      );
+
       return successResponse({}, "Unit expense deleted successfully");
     } catch (err) {
       if (err.code === "P2025") {

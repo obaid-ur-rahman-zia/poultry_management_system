@@ -99,6 +99,9 @@ export default function UnitExpensePage() {
   const [filterFloc, setFilterFloc] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingExpenseId, setDeletingExpenseId] = useState(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -596,18 +599,43 @@ export default function UnitExpensePage() {
     }
   };
 
-  const handleDelete = async (expenseId) => {
-    if (!confirm("Are you sure you want to delete this expense?")) {
-      return;
-    }
+  const handleDelete = (expenseId) => {
+    setDeletingExpenseId(expenseId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deletingExpenseId) return;
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/unitExpense?expense_id=${expenseId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/unitExpense?expense_id=${deletingExpenseId}`,
+        { method: "DELETE" },
+      );
       const result = await response.json();
       if (result.response_status === "success") {
         toast.success("Expense deleted successfully");
+        setIsDeleteDialogOpen(false);
+        setDeletingExpenseId(null);
+        // If the deleted expense is currently loaded in edit mode, clear the form
+        if (editingExpenseId === deletingExpenseId) {
+          reset({
+            expense_date: new Date().toISOString().split("T")[0],
+            prounit_id: "",
+            floc_id: "",
+            supplier_id: "",
+            product_id: "",
+            price: "",
+            quantity: "",
+            tax_type: "flat",
+            tax_value: "",
+            discount_type: "percentage",
+            discount_value: "",
+            description: "",
+          });
+          setIsEditMode(false);
+          setEditingExpenseId(null);
+        }
         fetchExpenses(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete expense");
@@ -615,6 +643,8 @@ export default function UnitExpensePage() {
     } catch (error) {
       console.error("Error deleting expense:", error);
       toast.error("Failed to delete expense");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1111,6 +1141,17 @@ export default function UnitExpensePage() {
                     ? "Update Expense"
                     : "Create Expense"}
               </Button>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeleting}
+                  onClick={() => handleDelete(editingExpenseId)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
@@ -1263,14 +1304,6 @@ export default function UnitExpensePage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(expense.expense_id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1 text-destructive" />
-                          Delete
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1379,14 +1412,6 @@ export default function UnitExpensePage() {
                                 className="h-8 w-8 p-0"
                               >
                                 <Edit2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(expense.expense_id)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </div>
                           </td>
@@ -1659,6 +1684,37 @@ export default function UnitExpensePage() {
             </Button>
             <Button type="button" onClick={handleCreateCompany}>
               Create Company
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Expense</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this unit expense?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Yes, Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

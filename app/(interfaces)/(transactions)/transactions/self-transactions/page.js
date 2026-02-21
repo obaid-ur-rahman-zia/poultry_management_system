@@ -75,7 +75,8 @@ export default function SelfTransactionPage() {
   const [balanceLoading, setBalanceLoading] = useState(false);
 
   // Account search dialog states
-  const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
+  const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] =
+    useState(false);
   const [accountSearchType, setAccountSearchType] = useState("all");
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [allAccounts, setAllAccounts] = useState([]);
@@ -87,6 +88,9 @@ export default function SelfTransactionPage() {
   const [filterDate, setFilterDate] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [isMobile, setIsMobile] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingTransactionId, setDeletingTransactionId] = useState(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -102,8 +106,8 @@ export default function SelfTransactionPage() {
     session?.user?.cashInHandAccountId?.toString();
   const selectableAccounts = userCashInHandAccountId
     ? accounts.filter(
-      (account) => account.acc_id?.toString() !== userCashInHandAccountId,
-    )
+        (account) => account.acc_id?.toString() !== userCashInHandAccountId,
+      )
     : accounts;
 
   useEffect(() => {
@@ -325,21 +329,37 @@ export default function SelfTransactionPage() {
     });
   };
 
-  const handleDelete = async (transactionId) => {
-    if (!confirm("Are you sure you want to delete this transaction?")) {
-      return;
-    }
+  const handleDelete = (transactionId) => {
+    setDeletingTransactionId(transactionId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deletingTransactionId) return;
+    setIsDeleting(true);
     try {
       const response = await fetch(
-        `/api/selfTransaction?transaction_id=${transactionId}`,
-        {
-          method: "DELETE",
-        },
+        `/api/selfTransaction?transaction_id=${deletingTransactionId}`,
+        { method: "DELETE" },
       );
       const result = await response.json();
       if (result.response_status === "success") {
         toast.success("Transaction deleted successfully");
+        setIsDeleteDialogOpen(false);
+        setDeletingTransactionId(null);
+        if (editingTransactionId === deletingTransactionId) {
+          reset({
+            transaction_date: new Date().toISOString().split("T")[0],
+            is_bank: false,
+            account_id: "",
+            transaction_type: "receive",
+            amount: "",
+            description: "",
+          });
+          setCurrentBalance(null);
+          setIsEditMode(false);
+          setEditingTransactionId(null);
+        }
         fetchTransactions(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete transaction");
@@ -347,6 +367,8 @@ export default function SelfTransactionPage() {
     } catch (error) {
       console.error("Error deleting transaction:", error);
       toast.error("Failed to delete transaction");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -370,7 +392,7 @@ export default function SelfTransactionPage() {
       filterDate === "" ||
       (transaction.transaction_date &&
         new Date(transaction.transaction_date).toISOString().split("T")[0] ===
-        filterDate);
+          filterDate);
 
     const matchesType =
       filterType === "all" || transaction.transaction_type === filterType;
@@ -488,10 +510,12 @@ export default function SelfTransactionPage() {
                       size="sm"
                       onClick={() => {
                         const purcherSubHead = accountSubHeads.find(
-                          (sh) => sh.subhead_nam?.toLowerCase() === "purcher"
+                          (sh) => sh.subhead_nam?.toLowerCase() === "purcher",
                         );
                         setAccountSearchType(
-                          purcherSubHead ? purcherSubHead.sub_id.toString() : "all"
+                          purcherSubHead
+                            ? purcherSubHead.sub_id.toString()
+                            : "all",
                         );
                         setAccountSearchQuery("");
                         setIsAccountSearchDialogOpen(true);
@@ -659,6 +683,17 @@ export default function SelfTransactionPage() {
                     ? "Update Transaction"
                     : "Create Transaction"}
               </Button>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeleting}
+                  onClick={() => handleDelete(editingTransactionId)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
@@ -854,8 +889,8 @@ export default function SelfTransactionPage() {
                         <span className="text-sm font-medium">
                           {transaction.transaction_date
                             ? new Date(
-                              transaction.transaction_date,
-                            ).toLocaleDateString()
+                                transaction.transaction_date,
+                              ).toLocaleDateString()
                             : "N/A"}
                         </span>
                       </div>
@@ -917,16 +952,6 @@ export default function SelfTransactionPage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleDelete(transaction.transaction_id)
-                          }
-                        >
-                          <Trash2 className="h-4 w-4 mr-1 text-destructive" />
-                          Delete
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -969,8 +994,8 @@ export default function SelfTransactionPage() {
                         <td className="p-2 align-middle whitespace-nowrap">
                           {transaction.transaction_date
                             ? new Date(
-                              transaction.transaction_date,
-                            ).toLocaleDateString()
+                                transaction.transaction_date,
+                              ).toLocaleDateString()
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
@@ -1019,15 +1044,6 @@ export default function SelfTransactionPage() {
                               onClick={() => handleEdit(transaction)}
                             >
                               <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                handleDelete(transaction.transaction_id)
-                              }
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
                         </td>
@@ -1130,6 +1146,38 @@ export default function SelfTransactionPage() {
           </MobileListToggle>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Transaction</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this transaction?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Yes, Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

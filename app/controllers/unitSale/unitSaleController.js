@@ -456,7 +456,44 @@ class UnitSaleController {
         return errorResponse(new Error("sale_id is required"), 400);
       }
 
-      await UnitSaleRepository.delete(sale_id);
+      // Check if the sale exists before attempting deletion
+      const existingSale = await UnitSaleRepository.readById(sale_id);
+      if (!existingSale) {
+        ErrorLogger.log(
+          "Failed to delete unit sale in Method: UnitSaleController.delete",
+          new Error("Sale not found"),
+        );
+        return errorResponse(new Error("Sale not found"), 404);
+      }
+
+      // Atomically soft-delete the transactions and the sale record
+      await prisma.$transaction(
+        async (tx) => {
+          try {
+            // Soft-delete all transactions linked to this sale
+            await TransactionRepository.softDeleteByReferenceId(
+              sale_id,
+              "Unit Sale",
+              tx,
+            );
+
+            // Soft-delete the sale record itself
+            await UnitSaleRepository.delete(sale_id, tx);
+          } catch (transactionError) {
+            ErrorLogger.log(
+              "Transaction failed in UnitSaleController.delete",
+              transactionError,
+            );
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 5000,
+          timeout: 10000,
+          isolationLevel: "Serializable",
+        },
+      );
+
       return successResponse({}, "Unit sale deleted successfully");
     } catch (err) {
       if (err.code === "P2025") {

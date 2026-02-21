@@ -332,7 +332,44 @@ class TradingController {
         return errorResponse(new Error("trading_id is required"), 400);
       }
 
-      const result = await TradingRepository.delete(trading_id);
+      // Check if trade exists before attempting deletion
+      const existingTrade = await TradingRepository.readById(trading_id);
+      if (!existingTrade) {
+        ErrorLogger.log(
+          "Failed to delete trade in Method: TradingController.delete",
+          new Error("Trade not found"),
+        );
+        return errorResponse(new Error("Trade not found"), 404);
+      }
+
+      // Use a database transaction to atomically delete the trade and its transactions
+      await prisma.$transaction(
+        async (tx) => {
+          try {
+            // Soft-delete all transactions linked to this trade
+            await TransactionRepository.softDeleteByReferenceId(
+              trading_id,
+              "Trading",
+              tx,
+            );
+
+            // Soft-delete the trade record itself
+            await TradingRepository.delete(trading_id, tx);
+          } catch (transactionError) {
+            ErrorLogger.log(
+              "Transaction failed in TradingController.delete",
+              transactionError,
+            );
+            throw transactionError;
+          }
+        },
+        {
+          maxWait: 5000,
+          timeout: 10000,
+          isolationLevel: "Serializable",
+        },
+      );
+
       return successResponse({}, "Trade deleted successfully");
     } catch (err) {
       if (err.code === "P2025") {

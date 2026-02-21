@@ -223,8 +223,9 @@ class UnitSaleRepository {
     });
   }
 
-  async delete(sale_id) {
-    return prisma.unit_sale.update({
+  async delete(sale_id, tx) {
+    const prismaClient = tx || prisma;
+    return prismaClient.unit_sale.update({
       where: {
         sale_id: Number(sale_id),
       },
@@ -351,11 +352,11 @@ class UnitSaleRepository {
     // Calculate grand totals
     const grandTotalPurchase = results.reduce(
       (sum, row) => sum + row.purchase_amount,
-      0
+      0,
     );
     const grandTotalSale = results.reduce(
       (sum, row) => sum + row.sale_amount,
-      0
+      0,
     );
     const netProfit = grandTotalSale - grandTotalPurchase;
 

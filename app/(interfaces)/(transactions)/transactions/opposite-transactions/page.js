@@ -97,6 +97,9 @@ export default function OppositeTransactionsPage() {
   const [filterReceivedBy, setFilterReceivedBy] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingTransactionId, setDeletingTransactionId] = useState(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -460,21 +463,36 @@ export default function OppositeTransactionsPage() {
     });
   };
 
-  const handleDelete = async (transactionId) => {
-    if (!confirm("Are you sure you want to delete this transaction?")) {
-      return;
-    }
+  const handleDelete = (transactionId) => {
+    setDeletingTransactionId(transactionId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deletingTransactionId) return;
+    setIsDeleting(true);
     try {
       const response = await fetch(
-        `/api/oppositeTransaction?transaction_id=${transactionId}`,
-        {
-          method: "DELETE",
-        },
+        `/api/oppositeTransaction?transaction_id=${deletingTransactionId}`,
+        { method: "DELETE" },
       );
       const result = await response.json();
       if (result.response_status === "success") {
         toast.success("Transaction deleted successfully");
+        setIsDeleteDialogOpen(false);
+        setDeletingTransactionId(null);
+        if (editingTransactionId === deletingTransactionId) {
+          reset({
+            transaction_date: new Date().toISOString().split("T")[0],
+            paid_by: "",
+            bank_account: "",
+            received_by: "",
+            amount: "",
+            description: "",
+          });
+          setIsEditMode(false);
+          setEditingTransactionId(null);
+        }
         fetchTransactions(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete transaction");
@@ -482,6 +500,8 @@ export default function OppositeTransactionsPage() {
     } catch (error) {
       console.error("Error deleting transaction:", error);
       toast.error("Failed to delete transaction");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -513,7 +533,7 @@ export default function OppositeTransactionsPage() {
       filterDate === "" ||
       (transaction.transaction_date &&
         new Date(transaction.transaction_date).toISOString().split("T")[0] ===
-        filterDate);
+          filterDate);
 
     return matchesSearch && matchesPaidBy && matchesReceivedBy && matchesDate;
   });
@@ -582,15 +602,15 @@ export default function OppositeTransactionsPage() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                          !accounts.find(
-                            (acc) => acc.acc_id === selectedAccount.acc_id,
-                          )
+                        !accounts.find(
+                          (acc) => acc.acc_id === selectedAccount.acc_id,
+                        )
                           ? [
-                            {
-                              value: selectedAccount.acc_id.toString(),
-                              label: selectedAccount.account_nam,
-                            },
-                          ]
+                              {
+                                value: selectedAccount.acc_id.toString(),
+                                label: selectedAccount.account_nam,
+                              },
+                            ]
                           : []),
                       ];
 
@@ -615,10 +635,12 @@ export default function OppositeTransactionsPage() {
                     onClick={() => {
                       setAccountSearchField("paid_by");
                       const purcherSubHead = accountSubHeads.find(
-                        (sh) => sh.subhead_nam?.toLowerCase() === "purcher"
+                        (sh) => sh.subhead_nam?.toLowerCase() === "purcher",
                       );
                       setAccountSearchType(
-                        purcherSubHead ? purcherSubHead.sub_id.toString() : "all"
+                        purcherSubHead
+                          ? purcherSubHead.sub_id.toString()
+                          : "all",
                       );
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
@@ -717,15 +739,15 @@ export default function OppositeTransactionsPage() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                          !accounts.find(
-                            (acc) => acc.acc_id === selectedAccount.acc_id,
-                          )
+                        !accounts.find(
+                          (acc) => acc.acc_id === selectedAccount.acc_id,
+                        )
                           ? [
-                            {
-                              value: selectedAccount.acc_id.toString(),
-                              label: selectedAccount.account_nam,
-                            },
-                          ]
+                              {
+                                value: selectedAccount.acc_id.toString(),
+                                label: selectedAccount.account_nam,
+                              },
+                            ]
                           : []),
                       ];
 
@@ -750,10 +772,10 @@ export default function OppositeTransactionsPage() {
                     onClick={() => {
                       setAccountSearchField("received_by");
                       const formerSubHead = accountSubHeads.find(
-                        (sh) => sh.subhead_nam?.toLowerCase() === "former"
+                        (sh) => sh.subhead_nam?.toLowerCase() === "former",
                       );
                       setAccountSearchType(
-                        formerSubHead ? formerSubHead.sub_id.toString() : "all"
+                        formerSubHead ? formerSubHead.sub_id.toString() : "all",
                       );
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
@@ -849,6 +871,17 @@ export default function OppositeTransactionsPage() {
                     ? "Update Transaction"
                     : "Create Transaction"}
               </Button>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeleting}
+                  onClick={() => handleDelete(editingTransactionId)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
@@ -938,8 +971,8 @@ export default function OppositeTransactionsPage() {
                         <span className="text-sm font-medium">
                           {transaction.transaction_date
                             ? new Date(
-                              transaction.transaction_date,
-                            ).toLocaleDateString()
+                                transaction.transaction_date,
+                              ).toLocaleDateString()
                             : "N/A"}
                         </span>
                       </div>
@@ -958,8 +991,8 @@ export default function OppositeTransactionsPage() {
                         <span className="text-sm font-medium">
                           {transaction.bank_account
                             ? accounts.find(
-                              (a) => a.acc_id === transaction.bank_account,
-                            )?.account_nam || "N/A"
+                                (a) => a.acc_id === transaction.bank_account,
+                              )?.account_nam || "N/A"
                             : "N/A"}
                         </span>
                       </div>
@@ -998,16 +1031,6 @@ export default function OppositeTransactionsPage() {
                         >
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleDelete(transaction.transaction_id)
-                          }
-                        >
-                          <Trash2 className="h-4 w-4 mr-1 text-destructive" />
-                          Delete
                         </Button>
                       </div>
                     </CardContent>
@@ -1051,8 +1074,8 @@ export default function OppositeTransactionsPage() {
                         <td className="p-2 align-middle whitespace-nowrap">
                           {transaction.transaction_date
                             ? new Date(
-                              transaction.transaction_date,
-                            ).toLocaleDateString()
+                                transaction.transaction_date,
+                              ).toLocaleDateString()
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
@@ -1063,8 +1086,8 @@ export default function OppositeTransactionsPage() {
                         <td className="p-2 align-middle whitespace-nowrap">
                           {transaction.bank_account
                             ? accounts.find(
-                              (a) => a.acc_id === transaction.bank_account,
-                            )?.account_nam || "N/A"
+                                (a) => a.acc_id === transaction.bank_account,
+                              )?.account_nam || "N/A"
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
@@ -1089,15 +1112,6 @@ export default function OppositeTransactionsPage() {
                               onClick={() => handleEdit(transaction)}
                             >
                               <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                handleDelete(transaction.transaction_id)
-                              }
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
                         </td>
@@ -1385,6 +1399,38 @@ export default function OppositeTransactionsPage() {
               disabled={!newBankAccountName.trim() || !bankSubHead}
             >
               Create Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Transaction</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this transaction?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Yes, Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

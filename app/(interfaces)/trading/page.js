@@ -32,6 +32,8 @@ import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -99,6 +101,9 @@ export default function TradingPage() {
   const [filterSaleAccount, setFilterSaleAccount] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingTradeId, setDeletingTradeId] = useState(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -584,18 +589,28 @@ export default function TradingPage() {
     });
   };
 
-  const handleDelete = async (tradeId) => {
-    if (!confirm("Are you sure you want to delete this trade?")) {
-      return;
-    }
+  const handleDelete = (tradeId) => {
+    setDeletingTradeId(tradeId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deletingTradeId) return;
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/trading?trading_id=${tradeId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/trading?trading_id=${deletingTradeId}`,
+        { method: "DELETE" },
+      );
       const result = await response.json();
       if (result.response_status === "success") {
         toast.success("Trade deleted successfully");
+        setIsDeleteDialogOpen(false);
+        setDeletingTradeId(null);
+        // If trade being deleted is the one currently loaded in edit mode, clear the form
+        if (editingTradeId === deletingTradeId) {
+          handleClear();
+        }
         fetchTrades(currentPage, itemsPerPage);
       } else {
         toast.error(result.response_message || "Failed to delete trade");
@@ -603,6 +618,8 @@ export default function TradingPage() {
     } catch (error) {
       console.error("Error deleting trade:", error);
       toast.error("Failed to delete trade");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1259,6 +1276,17 @@ export default function TradingPage() {
                     ? "Update Trade"
                     : "Create Trade"}
               </Button>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeleting}
+                  onClick={() => handleDelete(editingTradeId)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
@@ -1296,7 +1324,7 @@ export default function TradingPage() {
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label>Buy From Account</Label>
                     <Combobox
                       options={[
@@ -1333,7 +1361,7 @@ export default function TradingPage() {
                       searchPlaceholder="Search accounts..."
                       emptyText="No account found."
                     />
-                  </div>
+                  </div> */}
                   <div className="space-y-2">
                     <Label>Date</Label>
                     <Input
@@ -1360,7 +1388,7 @@ export default function TradingPage() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Buy From Account</Label>
                   <Combobox
                     options={[
@@ -1397,7 +1425,7 @@ export default function TradingPage() {
                     searchPlaceholder="Search accounts..."
                     emptyText="No account found."
                   />
-                </div>
+                </div> */}
                 <div className="space-y-2">
                   <Label>Date</Label>
                   <Input
@@ -1536,14 +1564,6 @@ export default function TradingPage() {
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        {/* <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(trade.trading_id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1 text-destructive" />
-                          Delete
-                        </Button> */}
                       </div>
                     </CardContent>
                   </Card>
@@ -1779,6 +1799,37 @@ export default function TradingPage() {
           </MobileListToggle>
         </CardContent>
       </Card>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Trade</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this trade?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Yes, Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

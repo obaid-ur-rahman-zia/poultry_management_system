@@ -188,8 +188,9 @@ class TradingRepository {
     });
   }
 
-  async delete(trading_id) {
-    return prisma.trading.update({
+  async delete(trading_id, tx) {
+    const prismaClient = tx || prisma;
+    return prismaClient.trading.update({
       where: {
         trading_id: Number(trading_id),
       },
