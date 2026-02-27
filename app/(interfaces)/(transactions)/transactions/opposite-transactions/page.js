@@ -441,7 +441,7 @@ export default function OppositeTransactionsPage() {
             : "Transaction created successfully",
         );
         reset({
-          transaction_date: new Date().toISOString().split("T")[0],
+          transaction_date: data.transaction_date,
           paid_by: "",
           bank_account: "",
           received_by: "",

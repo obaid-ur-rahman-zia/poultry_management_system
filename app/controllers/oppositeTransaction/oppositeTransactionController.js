@@ -4,6 +4,7 @@ import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import prisma from "@/lib/prisma";
 import { calculateFinancialYear } from "@/app/components/calculateFinYear/financialYear";
+import RedisService from "@/app/utils/redis";
 
 class OppositeTransactionController {
   async readAll(req) {
@@ -222,7 +223,6 @@ class OppositeTransactionController {
     }
   }
 
-  
   async update(req) {
     try {
       const { req_object } = await req.json();

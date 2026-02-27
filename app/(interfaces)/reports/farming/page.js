@@ -17,19 +17,19 @@ const reportCategories = [
   {
     id: "expense-reports",
     title: "Unit Expense Reports",
-    href: "/reports/expenseReports",
+    href: "/reports/farming/expenseReports",
     icon: Receipt,
   },
   {
     id: "income-reports",
     title: "Unit Income Reports",
-    href: "/reports/incomeReports",
+    href: "/reports/farming/incomeReports",
     icon: TrendingUp,
   },
   {
     id: "trade-reports",
     title: "Trading Reports",
-    href: "/reports/tradeReports",
+    href: "/reports/farming/tradeReports",
     icon: LineChart,
   },
 ];

@@ -494,7 +494,7 @@ export default function TradingPage() {
             : "Trade created successfully",
         );
         reset({
-          trading_date: new Date().toISOString().split("T")[0],
+          trading_date: data.trading_date,
           buy_from_account: "",
           do_number: "",
           product_id: "",

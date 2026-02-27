@@ -254,14 +254,18 @@ class WholeSaleRepository {
   async readProfitLossReport(req_object) {
     const { start_dat, end_dat, group_by } = req_object;
 
+    const startDate = new Date(start_dat);
+    const endDate = new Date(end_dat);
+
     const whereClause = {
       sale_date: {
-        gte: new Date(start_dat),
-        lte: new Date(end_dat),
+        gte: startDate,
+        lte: endDate,
       },
       status: 1,
     };
 
+    // Fetch whole sale records
     const sales = await prisma.whole_sale.findMany({
       where: whereClause,
       select: {
@@ -269,6 +273,21 @@ class WholeSaleRepository {
         former_amount: true,
         purcher_amount: true,
         profit: true,
+      },
+    });
+
+    // Fetch opposite transactions in the same date range
+    const oppositeTransactions = await prisma.opposite_transaction.findMany({
+      where: {
+        transaction_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: 1,
+      },
+      select: {
+        transaction_date: true,
+        amount: true,
       },
     });
 
@@ -281,6 +300,7 @@ class WholeSaleRepository {
           purchase: 0,
           sale: 0,
           profit: 0,
+          recovery: 0,
           date: sale.sale_date,
         });
       }
@@ -288,6 +308,22 @@ class WholeSaleRepository {
       group.purchase += sale.former_amount;
       group.sale += sale.purcher_amount;
       group.profit += sale.profit;
+    });
+
+    // Group opposite transactions into the same period buckets
+    oppositeTransactions.forEach((opp) => {
+      const key = getGroupKey(opp.transaction_date, group_by);
+      if (!groupedData.has(key)) {
+        // Period may only have recovery (no whole sale), still add it
+        groupedData.set(key, {
+          purchase: 0,
+          sale: 0,
+          profit: 0,
+          recovery: 0,
+          date: opp.transaction_date,
+        });
+      }
+      groupedData.get(key).recovery += opp.amount;
     });
 
     // Convert to array
@@ -298,6 +334,7 @@ class WholeSaleRepository {
         purchase_amount: data.purchase,
         sale_amount: data.sale,
         profit_loss: data.profit,
+        recovery_amount: data.recovery,
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -311,12 +348,17 @@ class WholeSaleRepository {
       0,
     );
     const netProfit = results.reduce((sum, row) => sum + row.profit_loss, 0);
+    const grandTotalRecovery = results.reduce(
+      (sum, row) => sum + row.recovery_amount,
+      0,
+    );
 
     return {
       results,
       grandTotalPurchase,
       grandTotalSale,
       netProfit,
+      grandTotalRecovery,
     };
   }
 }

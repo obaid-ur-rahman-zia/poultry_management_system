@@ -234,40 +234,40 @@ export default function TradingReportModal() {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
+                <table className="w-full border-collapse text-sm border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         T. ID
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Date
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         DO#
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Product
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Type
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Account
                       </th>
-                      <th className="px-3 py-2 text-right font-bold text-gray-700">
+                      <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Qty
                       </th>
-                      <th className="px-3 py-2 text-right font-bold text-gray-700">
+                      <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Price
                       </th>
-                      <th className="px-3 py-2 text-right font-bold text-gray-700">
+                      <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Disc
                       </th>
-                      <th className="px-3 py-2 text-right font-bold text-gray-700">
+                      <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Tax
                       </th>
-                      <th className="px-3 py-2 text-right font-bold text-gray-700">
+                      <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Total
                       </th>
                     </tr>
@@ -280,26 +280,26 @@ export default function TradingReportModal() {
                         <React.Fragment key={trade.trading_id}>
                           {/* Buy Row */}
                           <tr className="border-b border-gray-200 hover:bg-blue-50">
-                            <td className="px-3 py-2 text-center font-semibold">
+                            <td className="px-3 py-2 text-center font-semibold border border-gray-300">
                               {trade.trading_id}
                             </td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 border border-gray-300">
                               {new Date(
                                 trade.trading_date
                               ).toLocaleDateString()}
                             </td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 border border-gray-300">
                               {trade.do_number || "-"}
                             </td>
-                            <td className="px-3 py-2 font-medium">
+                            <td className="px-3 py-2 font-medium border border-gray-300">
                               {trade.product.product_title}
                             </td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 border border-gray-300">
                               <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">
                                 BUY
                               </span>
                             </td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 border border-gray-300">
                               <div className="font-medium">
                                 {trade.buy_from_account_ref.account_nam}
                               </div>
@@ -310,42 +310,42 @@ export default function TradingReportModal() {
                                 )
                               </div>
                             </td>
-                            <td className="px-3 py-2 text-right">
+                            <td className="px-3 py-2 text-right border border-gray-300">
                               {trade.buy_quantity}
                             </td>
-                            <td className="px-3 py-2 text-right">
+                            <td className="px-3 py-2 text-right border border-gray-300">
                               {trade.buy_price.toFixed(2)}
                             </td>
 
-                            <td className="px-3 py-2 text-right">
+                            <td className="px-3 py-2 text-right border border-gray-300">
                               {trade.buy_discount_type === "percentage"
                                 ? `${trade.buy_discount_value}%`
                                 : trade.buy_discount_value.toFixed(2)}
                             </td>
-                            <td className="px-3 py-2 text-right">
+                            <td className="px-3 py-2 text-right border border-gray-300">
                               {trade.buy_tax_type === "percentage"
                                 ? `${trade.buy_tax_value}%`
                                 : trade.buy_tax_value.toFixed(2)}
                             </td>
-                            <td className="px-3 py-2 text-right font-semibold">
+                            <td className="px-3 py-2 text-right font-semibold border border-gray-300">
                               {trade.buy_total.toFixed(2)}
                             </td>
                           </tr>
 
                           {/* Sale Row */}
                           <tr className="border-b border-gray-200 hover:bg-green-50">
-                            <td className="px-3 py-2 text-center text-gray-400">
+                            <td className="px-3 py-2 text-center text-gray-400 border border-gray-300">
                               -
                             </td>
-                            <td className="px-3 py-2 text-gray-400">-</td>
-                            <td className="px-3 py-2 text-gray-400">-</td>
-                            <td className="px-3 py-2 text-gray-400">-</td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 text-gray-400 border border-gray-300">-</td>
+                            <td className="px-3 py-2 text-gray-400 border border-gray-300">-</td>
+                            <td className="px-3 py-2 text-gray-400 border border-gray-300">-</td>
+                            <td className="px-3 py-2 border border-gray-300">
                               <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
                                 SALE
                               </span>
                             </td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 border border-gray-300">
                               <div className="font-medium">
                                 {trade.sale_to_account_ref.account_nam}
                               </div>
@@ -356,24 +356,24 @@ export default function TradingReportModal() {
                                 )
                               </div>
                             </td>
-                            <td className="px-3 py-2 text-right">
+                            <td className="px-3 py-2 text-right border border-gray-300">
                               {trade.sale_quantity}
                             </td>
-                            <td className="px-3 py-2 text-right">
+                            <td className="px-3 py-2 text-right border border-gray-300">
                               {trade.sale_price.toFixed(2)}
                             </td>
 
-                            <td className="px-3 py-2 text-right">
+                            <td className="px-3 py-2 text-right border border-gray-300">
                               {trade.sale_discount_type === "percentage"
                                 ? `${trade.sale_discount_value}%`
                                 : trade.sale_discount_value.toFixed(2)}
                             </td>
-                            <td className="px-3 py-2 text-right">
+                            <td className="px-3 py-2 text-right border border-gray-300">
                               {trade.sale_tax_type === "percentage"
                                 ? `${trade.sale_tax_value}%`
                                 : trade.sale_tax_value.toFixed(2)}
                             </td>
-                            <td className="px-3 py-2 text-right font-semibold">
+                            <td className="px-3 py-2 text-right font-semibold border border-gray-300">
                               {trade.sale_total.toFixed(2)}
                             </td>
                           </tr>
@@ -382,11 +382,11 @@ export default function TradingReportModal() {
                           <tr className="bg-gray-50 border-b-2 border-gray-300">
                             <td
                               colSpan="10"
-                              className="px-3 py-2 text-right font-semibold"
+                              className="px-3 py-2 text-right font-semibold border border-gray-300"
                             >
                               Profit/Loss for Trade #{trade.trading_id}:
                             </td>
-                            <td className="px-3 py-2 text-right font-bold">
+                            <td className="px-3 py-2 text-right font-bold border border-gray-300">
                               <span
                                 className={
                                   profit >= 0
@@ -407,22 +407,22 @@ export default function TradingReportModal() {
                     {tradingData.length > 0 && (
                       <>
                         <tr className="bg-cyan-50 font-bold">
-                          <td colSpan="6" className="px-3 py-3 text-right">
+                          <td colSpan="6" className="px-3 py-3 text-right border border-gray-300">
                             Grand Total Buy Amount:
                           </td>
-                          <td className="px-3 py-3 text-right text-blue-700">
+                          <td className="px-3 py-3 text-right text-blue-700 border border-gray-300">
                             {grandTotals.totalBuy.toFixed(2)}
                           </td>
-                          <td className="px-3 py-3 text-right">
+                          <td className="px-3 py-3 text-right border border-gray-300">
                             Grand Total Sale Amount:
                           </td>
-                          <td className="px-3 py-3 text-right text-green-700">
+                          <td className="px-3 py-3 text-right text-green-700 border border-gray-300">
                             {grandTotals.totalSale.toFixed(2)}
                           </td>
-                          <td className="px-3 py-3 text-right text-lg">
+                          <td className="px-3 py-3 text-right text-lg border border-gray-300">
                             Net Profit:
                           </td>
-                          <td className="px-3 py-3 text-right text-lg">
+                          <td className="px-3 py-3 text-right text-lg border border-gray-300">
                             <span
                               className={
                                 grandTotals.totalProfit >= 0

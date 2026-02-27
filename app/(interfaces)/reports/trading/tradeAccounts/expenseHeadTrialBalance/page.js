@@ -308,10 +308,10 @@ export default function ExpenseHeadTrialBalance() {
                   if (chunk.type === "TABLE") {
                     return (
                       <div key={idx} className="overflow-x-auto">
-                        <table className="w-full border-collapse text-sm mb-2">
+                        <table className="w-full border-collapse text-sm mb-2 border border-gray-300">
                           <thead>
                             <tr className="bg-orange-50 border-b-2 border-orange-200">
-                              <th className="px-3 py-2 text-left font-bold text-gray-700 w-[40%]">
+                              <th className="px-3 py-2 text-left font-bold text-gray-700 w-[40%] border border-gray-300">
                                 Account Name{" "}
                                 {chunk.isContinued && (
                                   <span className="text-[10px] text-orange-500 ml-1">
@@ -319,16 +319,16 @@ export default function ExpenseHeadTrialBalance() {
                                   </span>
                                 )}
                               </th>
-                              <th className="px-3 py-2 text-left font-bold text-gray-700 w-[15%]">
+                              <th className="px-3 py-2 text-left font-bold text-gray-700 w-[15%] border border-gray-300">
                                 Contact
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-gray-700">
+                              <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                                 Total Debit
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-gray-700">
+                              <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                                 Total Credit
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-gray-700">
+                              <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                                 Balance
                               </th>
                             </tr>
@@ -339,19 +339,19 @@ export default function ExpenseHeadTrialBalance() {
                                 key={rIdx}
                                 className="border-b border-gray-200 hover:bg-orange-50/40"
                               >
-                                <td className="px-3 py-2 font-medium text-gray-900">
+                                <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
                                   {row.name}
                                 </td>
-                                <td className="px-3 py-2 text-gray-600">
+                                <td className="px-3 py-2 text-gray-600 border border-gray-300">
                                   {row.contact || "-"}
                                 </td>
-                                <td className="px-3 py-2 text-right">
+                                <td className="px-3 py-2 text-right border border-gray-300">
                                   {formatCurrency(row.total_debit)}
                                 </td>
-                                <td className="px-3 py-2 text-right">
+                                <td className="px-3 py-2 text-right border border-gray-300">
                                   {formatCurrency(row.total_credit)}
                                 </td>
-                                <td className="px-3 py-2 text-right font-semibold">
+                                <td className="px-3 py-2 text-right font-semibold border border-gray-300">
                                   {formatCurrency(row.balance)}
                                 </td>
                               </tr>
@@ -393,35 +393,35 @@ export default function ExpenseHeadTrialBalance() {
                         <h2 className="text-xl font-bold mb-2 text-gray-800 uppercase">
                           Grand Conclusion
                         </h2>
-                        <table className="w-full border-collapse text-sm">
+                        <table className="w-full border-collapse text-sm border border-gray-300">
                           <thead>
                             <tr className="bg-gray-200 border-b-2 border-gray-400">
-                              <th className="px-3 py-2 text-left font-bold text-gray-800">
+                              <th className="px-3 py-2 text-left font-bold text-gray-800 border border-gray-300">
                                 Description
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-green-800">
+                              <th className="px-3 py-2 text-right font-bold text-green-800 border border-gray-300">
                                 Total Debit
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-red-800">
+                              <th className="px-3 py-2 text-right font-bold text-red-800 border border-gray-300">
                                 Total Credit
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-blue-800">
+                              <th className="px-3 py-2 text-right font-bold text-blue-800 border border-gray-300">
                                 Total Balance
                               </th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr className="bg-white border-b border-gray-300">
-                              <td className="px-3 py-3 font-bold text-gray-900">
+                              <td className="px-3 py-3 font-bold text-gray-900 border border-gray-300">
                                 Final Aggregates
                               </td>
-                              <td className="px-3 py-3 text-right font-bold text-green-700 text-lg">
+                              <td className="px-3 py-3 text-right font-bold text-green-700 text-lg border border-gray-300">
                                 {formatCurrency(chunk.total_debit)}
                               </td>
-                              <td className="px-3 py-3 text-right font-bold text-red-700 text-lg">
+                              <td className="px-3 py-3 text-right font-bold text-red-700 text-lg border border-gray-300">
                                 {formatCurrency(chunk.total_credit)}
                               </td>
-                              <td className="px-3 py-3 text-right font-bold text-blue-700 text-lg">
+                              <td className="px-3 py-3 text-right font-bold text-blue-700 text-lg border border-gray-300">
                                 {formatCurrency(chunk.total_balance)}
                               </td>
                             </tr>

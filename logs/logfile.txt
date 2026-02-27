@@ -299,3 +299,13 @@ custom-exception:  [Failed to create floc in Method: FlocController.create] |
 system-exception:  [Error: Unit already has an active floc. Please end the current floc first.]
 
 
+exception-time:       [2026-02-27T16:34:11.977Z]  
+custom-exception:  [Failed to update opposite transaction in Method: OppositeTransactionController.update] | 
+system-exception:  [ReferenceError: RedisService is not defined]
+
+
+exception-time:       [2026-02-27T17:54:13.481Z]  
+custom-exception:  [Failed to update opposite transaction in Method: OppositeTransactionController.update] | 
+system-exception:  [ReferenceError: RedisService is not defined]
+
+

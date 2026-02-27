@@ -287,31 +287,31 @@ export default function BalanceSheetReport() {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
+                <table className="w-full border-collapse text-sm border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Sr. No
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Date
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Name
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Paid
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Name
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Received
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Description
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Balance
                       </th>
                     </tr>
@@ -351,18 +351,18 @@ export default function BalanceSheetReport() {
                           key={`${trans.type}-${trans.transaction_id}`}
                           className="border-b border-gray-200 hover:bg-gray-50"
                         >
-                          <td className="px-3 py-2">{serialNumber}</td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 border border-gray-300">{serialNumber}</td>
+                          <td className="px-3 py-2 border border-gray-300">
                             {new Date(
                               trans.transaction_date,
                             ).toLocaleDateString()}
                           </td>
-                          <td className="px-3 py-2">{receiverName}</td>
-                          <td className="px-3 py-2">{amountReceived || "-"}</td>
-                          <td className="px-3 py-2">{payerName}</td>
-                          <td className="px-3 py-2">{amountPaid || "-"}</td>
-                          <td className="px-3 py-2">{description}</td>
-                          <td className="px-3 py-2 font-medium">
+                          <td className="px-3 py-2 border border-gray-300">{receiverName}</td>
+                          <td className="px-3 py-2 border border-gray-300">{amountReceived || "-"}</td>
+                          <td className="px-3 py-2 border border-gray-300">{payerName}</td>
+                          <td className="px-3 py-2 border border-gray-300">{amountPaid || "-"}</td>
+                          <td className="px-3 py-2 border border-gray-300">{description}</td>
+                          <td className="px-3 py-2 font-medium border border-gray-300">
                             <span
                               className={
                                 runningBalance < 0
@@ -380,11 +380,11 @@ export default function BalanceSheetReport() {
                     {/* Closing Balance Row */}
                     {transactions.length > 0 && (
                       <tr className="bg-gray-200 border-t-2 border-gray-400 font-bold">
-                        <td className="px-3 py-2"></td>
-                        <td className="px-3 py-2" colSpan="6">
+                        <td className="px-3 py-2 border border-gray-300"></td>
+                        <td className="px-3 py-2 border border-gray-300" colSpan="6">
                           Closing Balance
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 border border-gray-300">
                           <span
                             className={
                               closingBalance < 0

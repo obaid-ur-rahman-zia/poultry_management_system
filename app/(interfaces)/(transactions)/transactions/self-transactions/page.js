@@ -293,7 +293,7 @@ export default function SelfTransactionPage() {
             : "Transaction created successfully",
         );
         reset({
-          transaction_date: new Date().toISOString().split("T")[0],
+          transaction_date: data.transaction_date,
           is_bank: false,
           account_id: "",
           transaction_type: "receive",

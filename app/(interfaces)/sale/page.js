@@ -645,7 +645,7 @@ function WholeSaleTab() {
         }
 
         reset({
-          sale_date: new Date().toISOString().split("T")[0],
+          sale_date: data.sale_date,
           farm_rate: "",
           sale_rate: "",
           former_account: "",
@@ -658,7 +658,6 @@ function WholeSaleTab() {
           purcher_amount: "",
           profit: "",
         });
-        setSaleDate(new Date());
         setSupplierBalance(null);
         setCustomerBalance(null);
         setIsEditMode(false);
@@ -685,7 +684,7 @@ function WholeSaleTab() {
         toast.success("Whole sale deleted successfully");
         setIsDeleteDialogOpen(false);
         reset({
-          sale_date: new Date().toISOString().split("T")[0],
+          sale_date: data.sale_date,
           farm_rate: "",
           sale_rate: "",
           former_account: "",
@@ -698,7 +697,6 @@ function WholeSaleTab() {
           purcher_amount: "",
           profit: "",
         });
-        setSaleDate(new Date());
         setSupplierBalance(null);
         setCustomerBalance(null);
         setIsEditMode(false);
@@ -1314,14 +1312,14 @@ function WholeSaleTab() {
                             <TableCell>{sale.van_number || "N/A"}</TableCell>
                             <TableCell>{sale.weight || "N/A"}</TableCell>
                             <TableCell>
-                              {supplierAccounts.find(
+                              {allAccounts.find(
                                 (a) => a.acc_id === sale.former_account,
                               )?.account_nam || "N/A"}
                             </TableCell>
                             <TableCell>{sale.former_rate || "N/A"}</TableCell>
                             <TableCell>{sale.former_amount || "N/A"}</TableCell>
                             <TableCell>
-                              {customerAccounts.find(
+                              {allAccounts.find(
                                 (a) => a.acc_id === sale.purcher_account,
                               )?.account_nam || "N/A"}
                             </TableCell>

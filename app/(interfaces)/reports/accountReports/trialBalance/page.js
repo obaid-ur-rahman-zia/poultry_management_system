@@ -218,22 +218,22 @@ export default function TrialBalanceModal() {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
+                <table className="w-full border-collapse text-sm border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-4 py-2 text-left font-bold text-gray-700">
+                      <th className="px-4 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Sr No
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-700">
+                      <th className="px-4 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Account Code
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-700">
+                      <th className="px-4 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Account Name
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Debit Balance
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Credit Balance
                       </th>
                     </tr>
@@ -246,20 +246,20 @@ export default function TrialBalanceModal() {
                           key={account.acc_id}
                           className="border-b border-gray-200 hover:bg-gray-50"
                         >
-                          <td className="px-4 py-2 text-center">
+                          <td className="px-4 py-2 text-center border border-gray-300">
                             {serialNumber}
                           </td>
-                          <td className="px-4 py-2 font-mono text-sm">
+                          <td className="px-4 py-2 font-mono text-sm border border-gray-300">
                             {formatAccountCode(
                               account.head_id,
                               account.sub_id,
                               account.account_id
                             )}
                           </td>
-                          <td className="px-4 py-2 font-medium">
+                          <td className="px-4 py-2 font-medium border border-gray-300">
                             {account.account_nam}
                           </td>
-                          <td className="px-4 py-2 text-right">
+                          <td className="px-4 py-2 text-right border border-gray-300">
                             {account.debit_balance > 0 ? (
                               <span className="text-green-600 font-semibold">
                                 {account.debit_balance.toFixed(2)}
@@ -268,7 +268,7 @@ export default function TrialBalanceModal() {
                               <span className="text-gray-400">-</span>
                             )}
                           </td>
-                          <td className="px-4 py-2 text-right">
+                          <td className="px-4 py-2 text-right border border-gray-300">
                             {account.credit_balance > 0 ? (
                               <span className="text-red-600 font-semibold">
                                 {account.credit_balance.toFixed(2)}
@@ -283,13 +283,13 @@ export default function TrialBalanceModal() {
 
                     {/* Grand Total Row */}
                     <tr className="bg-green-50 border-t-2 border-gray-400 font-bold">
-                      <td colSpan="3" className="px-4 py-3 text-right">
+                      <td colSpan="3" className="px-4 py-3 text-right border border-gray-300">
                         Grand Total:
                       </td>
-                      <td className="px-4 py-3 text-right text-green-600">
+                      <td className="px-4 py-3 text-right text-green-600 border border-gray-300">
                         {totalDebit.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-right text-red-600">
+                      <td className="px-4 py-3 text-right text-red-600 border border-gray-300">
                         {totalCredit.toFixed(2)}
                       </td>
                     </tr>

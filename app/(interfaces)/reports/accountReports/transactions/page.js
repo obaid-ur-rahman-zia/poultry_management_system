@@ -640,39 +640,39 @@ export default function AccountingReports() {
           <CardContent>
             <div className="border rounded-lg overflow-hidden">
               <div className="max-h-[600px] overflow-auto">
-                <table className="w-full">
-                  <thead className="bg-blue-50 sticky top-0">
+                <table className="w-full border border-gray-300">
+                  <thead className="bg-blue-50 sticky top-0 border border-gray-300">
                     <tr className="border-b">
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-300">
                         Date
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-300">
                         Voucher
                       </th>
 
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-300">
                         Head
                       </th>
 
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-300">
                         Account
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-300">
                         Reference
                       </th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 border border-gray-300">
                         Debit
                       </th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 border border-gray-300">
                         Credit
                       </th>
-                      {/* <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                      {/* <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 border border-gray-300">
                             Balance
                           </th> */}
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-300">
                         Remarks
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-300">
                         Actions
                       </th>
                     </tr>
@@ -682,7 +682,7 @@ export default function AccountingReports() {
                       <tr>
                         <td
                           colSpan={9}
-                          className="text-center py-8 text-gray-500"
+                          className="text-center py-8 text-gray-500 border border-gray-300"
                         >
                           Loading transactions...
                         </td>
@@ -692,7 +692,7 @@ export default function AccountingReports() {
                       <tr>
                         <td
                           colSpan={9}
-                          className="text-center py-8 text-gray-500"
+                          className="text-center py-8 text-gray-500 border border-gray-300"
                         >
                           No transactions found
                         </td>
@@ -709,35 +709,35 @@ export default function AccountingReports() {
                               key={transaction.transaction_id}
                               className="border-b hover:bg-gray-50"
                             >
-                              <td className="px-4 py-3 whitespace-nowrap text-sm">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm border border-gray-300">
                                 {formatDate(transaction.transaction_dat)}
                               </td>
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-3 border border-gray-300">
                                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                                   {transaction.voucher_type}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 font-medium text-sm">
+                              <td className="px-4 py-3 font-medium text-sm border border-gray-300">
                                 {highlightText(
                                   getAccountDetails(transaction.acc_id)
                                     .headName,
                                 )}
                               </td>
-                              <td className="px-4 py-3 font-medium text-sm">
+                              <td className="px-4 py-3 font-medium text-sm border border-gray-300">
                                 {highlightText(
                                   getAccountName(transaction.acc_id),
                                   filters.accountSearch,
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-600">
+                              <td className="px-4 py-3 text-sm text-gray-600 border border-gray-300">
                                 {transaction.reference || "-"}
                               </td>
-                              <td className="px-4 py-3 text-right font-medium text-green-700 text-sm">
+                              <td className="px-4 py-3 text-right font-medium text-green-700 text-sm border border-gray-300">
                                 {transaction.debit >= 0
                                   ? formatCurrency(transaction.debit)
                                   : "-"}
                               </td>
-                              <td className="px-4 py-3 text-right font-medium text-red-700 text-sm">
+                              <td className="px-4 py-3 text-right font-medium text-red-700 text-sm border border-gray-300">
                                 {transaction.credit >= 0
                                   ? formatCurrency(transaction.credit)
                                   : "-"}
@@ -752,13 +752,13 @@ export default function AccountingReports() {
                                     {formatCurrency(Math.abs(runningBalance))}{" "}
                                     {runningBalance < 0 ? "Cr" : "Dr"}
                                   </td> */}
-                              <td className="px-4 py-3 text-sm text-gray-600  truncate">
+                              <td className="px-4 py-3 text-sm text-gray-600  truncate border border-gray-300">
                                 {highlightText(
                                   transaction.remarks || "-",
                                   filters.accountSearch,
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-600 truncate">
+                              <td className="px-4 py-3 text-sm text-gray-600 truncate border border-gray-300">
                                 <Button
                                   variant="outline"
                                   size="icon"

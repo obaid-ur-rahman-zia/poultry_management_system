@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { X, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { X, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 
@@ -9,9 +9,7 @@ export default function WholeSaleReport() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const itemsPerPage = 10;
 
   const fetchReport = async () => {
     if (!startDate || !endDate) {
@@ -22,7 +20,7 @@ export default function WholeSaleReport() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `/api/wholeSale/read/readReportDetail?start_dat=${startDate}&end_dat=${endDate}`
+        `/api/wholeSale/read/readReportDetail?start_dat=${startDate}&end_dat=${endDate}`,
       );
 
       if (!res.ok) {
@@ -32,7 +30,6 @@ export default function WholeSaleReport() {
       const data = await res.json();
       setReportData(data.response_result || []);
       setIsOpen(true);
-      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching report:", error);
       toast.error("Failed to fetch report");
@@ -41,11 +38,63 @@ export default function WholeSaleReport() {
     }
   };
 
-  // Pagination logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = reportData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(reportData.length / itemsPerPage);
+  // Group sales by the former account
+  const groupedByFormer = reportData.reduce((acc, item) => {
+    const formerKey =
+      item.former_account_ref?.account_id ||
+      item.former_account_ref?.account_nam ||
+      "Unknown";
+    const formerName = item.former_account_ref?.account_nam || "Unknown";
+
+    if (!acc[formerKey]) {
+      acc[formerKey] = {
+        formerName,
+        formerContact: item.former_account_ref?.account_contact || "",
+        sales: [],
+      };
+    }
+    acc[formerKey].sales.push(item);
+    return acc;
+  }, {});
+
+  // Compute per-former totals
+  const formers = Object.values(groupedByFormer).map((group) => {
+    const totalWeight = group.sales.reduce(
+      (s, i) => s + (Number(i.weight) || 0),
+      0,
+    );
+    const totalFormerAmount = group.sales.reduce(
+      (s, i) => s + (Number(i.former_amount) || 0),
+      0,
+    );
+    const totalPurchaserAmount = group.sales.reduce(
+      (s, i) => s + (Number(i.purcher_amount) || 0),
+      0,
+    );
+    const totalProfit = group.sales.reduce(
+      (s, i) => s + (Number(i.profit) || 0),
+      0,
+    );
+    return {
+      ...group,
+      totalWeight,
+      totalFormerAmount,
+      totalPurchaserAmount,
+      totalProfit,
+    };
+  });
+
+  // Grand totals
+  const grandTotalWeight = formers.reduce((s, f) => s + f.totalWeight, 0);
+  const grandTotalFormerAmount = formers.reduce(
+    (s, f) => s + f.totalFormerAmount,
+    0,
+  );
+  const grandTotalPurchaserAmount = formers.reduce(
+    (s, f) => s + f.totalPurchaserAmount,
+    0,
+  );
+  const grandTotalProfit = formers.reduce((s, f) => s + f.totalProfit, 0);
 
   const handleExport = () => {
     if (!reportData.length) {
@@ -54,11 +103,11 @@ export default function WholeSaleReport() {
     }
 
     const headers = [
+      "Former",
       "Sale ID",
       "Date",
       "Van Number",
       "Weight",
-      "Former Name",
       "Former Rate",
       "Former Amount",
       "Purchaser Name",
@@ -67,26 +116,47 @@ export default function WholeSaleReport() {
       "Profit",
     ];
 
-    const rows = reportData.map((item) => [
-      item.sale_id,
-      new Date(item.sale_date).toLocaleDateString(),
-      item.van_number,
-      item.weight,
-      item.former_account_ref?.account_nam || "N/A",
-      Number(item.former_rate).toFixed(2),
-      Number(item.former_amount).toFixed(2),
-      item.purcher_account_ref?.account_nam || "N/A",
-      Number(item.purcher_rate || 0).toFixed(2),
-      Number(item.purcher_amount).toFixed(2),
-      Number(item.profit).toFixed(2),
-    ]);
+    const rows = [];
+    formers.forEach((group) => {
+      group.sales.forEach((item) => {
+        rows.push([
+          group.formerName,
+          item.sale_id,
+          new Date(item.sale_date).toLocaleDateString(),
+          item.van_number,
+          item.weight,
+          Number(item.former_rate).toFixed(2),
+          Number(item.former_amount).toFixed(2),
+          item.purcher_account_ref?.account_nam || "N/A",
+          Number(item.purcher_rate || 0).toFixed(2),
+          Number(item.purcher_amount).toFixed(2),
+          Number(item.profit).toFixed(2),
+        ]);
+      });
+      rows.push([
+        `${group.formerName} - Total`,
+        "",
+        "",
+        "",
+        group.totalWeight,
+        "",
+        group.totalFormerAmount.toFixed(2),
+        "",
+        "",
+        group.totalPurchaserAmount.toFixed(2),
+        group.totalProfit.toFixed(2),
+      ]);
+    });
 
     exportToCSV(
       `Whole_Sale_Report_${startDate}_to_${endDate}.csv`,
       headers,
-      rows
+      rows,
     );
   };
+
+  const fmt = (n, decimals = 2) =>
+    Number(n).toLocaleString(undefined, { minimumFractionDigits: decimals });
 
   return (
     <div>
@@ -101,11 +171,9 @@ export default function WholeSaleReport() {
             </div>
           </div>
 
-          <h3 className="text-lg font-semibold text-gray-900 ">
-            Whole Sale Report
+          <h3 className="text-lg font-semibold text-gray-900">
+            Whole Sale Detail Report
           </h3>
-
-          <h1 className="text-sm font-bold text-gray-900 mb-4">All</h1>
 
           <div className="space-y-3 mb-4">
             <div>
@@ -157,15 +225,13 @@ export default function WholeSaleReport() {
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center justify-between p-2 border-b border-gray-300">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  Whole Sale Report
-                </h1>
+                <h1 className="text-xl font-bold ">Whole Sale Report</h1>
                 <p className="text-sm text-gray-600">
-                  {new Date(startDate).toLocaleDateString()} -{" "}
+                  {new Date(startDate).toLocaleDateString()} –{" "}
                   {new Date(endDate).toLocaleDateString()}
                 </p>
               </div>
@@ -187,202 +253,174 @@ export default function WholeSaleReport() {
 
             {/* Content */}
             <div className="flex-1 overflow-auto p-4">
-              <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                <table className="w-full border-collapse text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
+              {formers.length === 0 ? (
+                <div className="flex items-center justify-center h-40 text-gray-500 border border-gray-300 rounded">
+                  No records found for this period
+                </div>
+              ) : (
+                <table className="w-full border-collapse text-sm border border-gray-400">
+                  {/* Column Headers */}
+                  <thead className="bg-gray-100 sticky top-0 z-10">
                     <tr>
-                      <th className="px-4 py-3 text-left font-bold text-gray-700 border-b">
+                      <th className="px-3 py-2 text-left font-semibold text-gray-800 border border-gray-400">
                         Date
                       </th>
-                      <th className="px-4 py-3 text-left font-bold text-gray-700 border-b">
+                      <th className="px-3 py-2 text-left font-semibold text-gray-800 border border-gray-400">
                         Van #
                       </th>
-                      <th className="px-4 py-3 text-right font-bold text-gray-700 border-b">
+                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
                         Weight
                       </th>
-                      <th className="px-4 py-3 text-left font-bold text-gray-700 border-b border-l">
-                        Former
+                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                        Former Rate
                       </th>
-                      <th className="px-4 py-3 text-right font-bold text-gray-700 border-b">
-                        Rate
+                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                        Former Amt
                       </th>
-                      <th className="px-4 py-3 text-right font-bold text-gray-700 border-b">
-                        Amount
-                      </th>
-                      <th className="px-4 py-3 text-left font-bold text-gray-700 border-b border-l">
+                      <th className="px-3 py-2 text-left font-semibold text-gray-800 border border-gray-400">
                         Purchaser
                       </th>
-                      <th className="px-4 py-3 text-right font-bold text-gray-700 border-b">
-                        Rate
+                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                        Purcher Rate
                       </th>
-                      <th className="px-4 py-3 text-right font-bold text-gray-700 border-b">
-                        Amount
+                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                        Purcher Amt
                       </th>
-                      <th className="px-4 py-3 text-right font-bold text-gray-700 border-b border-l bg-green-50">
+                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
                         Profit
                       </th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    {currentItems.map((item) => (
-                      <tr
-                        key={item.sale_id}
-                        className="border-b hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="font-medium text-gray-900">
-                            {new Date(item.sale_date).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            ID: {item.sale_id}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {item.van_number}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-gray-700 bg-gray-50/50">
-                          {Number(item.weight).toLocaleString()}
-                        </td>
+                    {formers.map((group, gi) => (
+                      <React.Fragment key={gi}>
+                        {/* Former Header Row */}
+                        <tr>
+                          <td
+                            colSpan={9}
+                            className="px-3 py-2 font-bold  border border-black"
+                          >
+                            {group.formerName}
+                            {group.formerContact && (
+                              <span className="ml-2 font-normal text-xs ">
+                                ({group.formerContact})
+                              </span>
+                            )}
+                          </td>
+                        </tr>
 
-                        {/* Former Section */}
-                        <td className="px-4 py-3 border-l border-gray-100">
-                          <div className="font-medium text-gray-900">
-                            {item.former_account_ref?.account_nam}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {item.former_account_ref?.account_contact}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-gray-600">
-                          {Number(item.former_rate).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono font-medium text-gray-900 bg-red-50/30">
-                          {Number(item.former_amount).toLocaleString(
-                            undefined,
-                            { minimumFractionDigits: 2 }
-                          )}
-                        </td>
+                        {/* Individual Sale Rows */}
+                        {group.sales.map((item) => (
+                          <tr
+                            key={item.sale_id}
+                            className="hover:bg-gray-50 transition-colors"
+                          >
+                            <td className="px-3 py-2 border border-black">
+                              <div className="">
+                                {new Date(item.sale_date).toLocaleDateString()}
+                              </div>
+                              <div className="text-xs">ID: {item.sale_id}</div>
+                            </td>
+                            <td className="px-3 py-2 border border-black">
+                              {item.van_number}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono border border-black">
+                              {fmt(item.weight, 0)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono border border-black">
+                              {fmt(item.former_rate)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono border border-black">
+                              {fmt(item.former_amount)}
+                            </td>
+                            <td className="px-3 py-2 border border-black">
+                              <div className="text-gray-900">
+                                {item.purcher_account_ref?.account_nam || "—"}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {item.purcher_account_ref?.account_contact}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono border border-black">
+                              {fmt(item.purcher_rate || 0)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono border border-black">
+                              {fmt(item.purcher_amount)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-black">
+                              {fmt(item.profit)}
+                            </td>
+                          </tr>
+                        ))}
 
-                        {/* Purchaser Section */}
-                        <td className="px-4 py-3 border-l border-gray-100">
-                          <div className="font-medium text-gray-900">
-                            {item.purcher_account_ref?.account_nam}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {item.purcher_account_ref?.account_contact}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-gray-600">
-                          {Number(item.purcher_rate).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono font-medium text-gray-900 bg-blue-50/30">
-                          {Number(item.purcher_amount).toLocaleString(
-                            undefined,
-                            { minimumFractionDigits: 2 }
-                          )}
-                        </td>
+                        {/* Per-Former Subtotal Row */}
+                        <tr className="bg-gray-100 font-semibold">
+                          <td
+                            colSpan={2}
+                            className="px-3 py-2 text-right text-gray-700 border border-black"
+                          >
+                            {group.formerName} Total:
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
+                            {fmt(group.totalWeight, 0)}
+                          </td>
+                          <td className="px-3 py-2 border border-black" />
+                          <td className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
+                            {fmt(group.totalFormerAmount)}
+                          </td>
+                          <td className="px-3 py-2 border border-black" />
+                          <td className="px-3 py-2 border border-black" />
+                          <td className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
+                            {fmt(group.totalPurchaserAmount)}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono font-bold text-gray-900 border border-black">
+                            {fmt(group.totalProfit)}
+                          </td>
+                        </tr>
 
-                        {/* Profit */}
-                        <td className="px-4 py-3 text-right font-mono font-bold text-green-700 border-l border-gray-100 bg-green-50/50">
-                          {Number(item.profit).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
-                      </tr>
+                        {/* Spacer between formers */}
+                        {gi < formers.length - 1 && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="py-1 border-0 bg-white"
+                            />
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))}
-
-                    {currentItems.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={10}
-                          className="px-4 py-12 text-center text-gray-500"
-                        >
-                          No records found for this period
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
-                  {/* Optional: Totals Row for the current page or whole? 
-                       Usually pagination makes totals tricky, but we can sum current page at least 
-                   */}
-                  {currentItems.length > 0 && (
-                    <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-300">
-                      <tr>
-                        <td colSpan={3} className="px-4 py-3 text-right">
-                          Page Total:
-                        </td>
-                        <td colSpan={3} className="px-4 py-3 text-right">
-                          {Number(
-                            currentItems.reduce(
-                              (acc, curr) =>
-                                acc + (Number(curr.former_amount) || 0),
-                              0
-                            )
-                          ).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
-                        <td colSpan={3} className="px-4 py-3 text-right">
-                          {Number(
-                            currentItems.reduce(
-                              (acc, curr) =>
-                                acc + (Number(curr.purcher_amount) || 0),
-                              0
-                            )
-                          ).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
-                        <td className="px-4 py-3 text-right text-green-800">
-                          {Number(
-                            currentItems.reduce(
-                              (acc, curr) => acc + (Number(curr.profit) || 0),
-                              0
-                            )
-                          ).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  )}
-                </table>
-              </div>
-            </div>
 
-            {/* Pagination Footer */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between p-4 border-t bg-gray-50">
-                <div className="text-sm text-gray-600">
-                  Showing {indexOfFirstItem + 1} to{" "}
-                  {Math.min(indexOfLastItem, reportData.length)} of{" "}
-                  {reportData.length} records
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <div className="px-4 py-1 bg-orange-500 text-white rounded-lg font-medium flex items-center">
-                    {currentPage} / {totalPages}
-                  </div>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            )}
+                  {/* Grand Total Footer */}
+                  <tfoot>
+                    <tr className="bg-gray-800 text-white font-bold">
+                      <td
+                        colSpan={2}
+                        className="px-3 py-3 text-right border border-black"
+                      >
+                        Grand Total:
+                      </td>
+                      <td className="px-3 py-3 text-right font-mono border border-black">
+                        {fmt(grandTotalWeight, 0)}
+                      </td>
+                      <td className="px-3 py-3 border border-black" />
+                      <td className="px-3 py-3 text-right font-mono border border-black">
+                        {fmt(grandTotalFormerAmount)}
+                      </td>
+                      <td className="px-3 py-3 border border-black" />
+                      <td className="px-3 py-3 border border-black" />
+                      <td className="px-3 py-3 text-right font-mono border border-black">
+                        {fmt(grandTotalPurchaserAmount)}
+                      </td>
+                      <td className="px-3 py-3 text-right font-mono border border-black">
+                        {fmt(grandTotalProfit)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              )}
+            </div>
           </div>
         </div>
       )}

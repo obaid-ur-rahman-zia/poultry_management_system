@@ -319,22 +319,22 @@ export default function ProfitLossModal() {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
+                <table className="w-full border-collapse text-sm border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-4 py-2 text-left font-bold text-gray-700">
+                      <th className="px-4 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         {getPeriodHeader()}
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Purchase Amount
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Sale Amount
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Profit
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Loss
                       </th>
                     </tr>
@@ -345,19 +345,19 @@ export default function ProfitLossModal() {
                         key={index}
                         className="border-b border-gray-200 hover:bg-gray-50"
                       >
-                        <td className="px-4 py-2 font-medium">
+                        <td className="px-4 py-2 font-medium border border-gray-300">
                           {formatPeriod(row.period, groupBy)}
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-4 py-2 text-right border border-gray-300">
                           {row.purchase_amount.toFixed(2)}
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-4 py-2 text-right border border-gray-300">
                           {row.sale_amount.toFixed(2)}
                         </td>
-                        <td className="px-4 py-2 text-right font-semibold">
+                        <td className="px-4 py-2 text-right font-semibold border border-gray-300">
                           {row.profit_loss > 0 ? row.profit_loss.toFixed(2) : 0}
                         </td>
-                        <td className="px-4 py-2 text-right font-semibold">
+                        <td className="px-4 py-2 text-right font-semibold border border-gray-300">
                           {row.profit_loss < 0 ? row.profit_loss.toFixed(2) : 0}
                         </td>
                       </tr>
@@ -366,17 +366,17 @@ export default function ProfitLossModal() {
                     {/* Grand Total Row */}
                     {reportData.length > 0 && (
                       <tr className="bg-indigo-50 border-t-2 border-gray-400 font-bold">
-                        <td className="px-4 py-3">Grand Total:</td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 border border-gray-300">Grand Total:</td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {grandTotalPurchase.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {grandTotalSale.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {netProfit.toFixed(2) > 0 ? netProfit.toFixed(2) : 0}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {netProfit.toFixed(2) < 0 ? netProfit.toFixed(2) : 0}
                         </td>
                       </tr>
@@ -385,10 +385,10 @@ export default function ProfitLossModal() {
                     {/* Net Profit Row */}
                     {reportData.length > 0 && (
                       <tr className="bg-gray-100 border-t border-gray-300 font-bold">
-                        <td colSpan="3" className="px-4 py-3 text-right">
+                        <td colSpan="3" className="px-4 py-3 text-right border border-gray-300">
                           Net Profit:
                         </td>
-                        <td className="px-4 py-3 text-right text-lg">
+                        <td className="px-4 py-3 text-right text-lg border border-gray-300">
                           <span
                             className={
                               netProfit >= 0 ? "text-green-600" : "text-red-600"
@@ -397,7 +397,7 @@ export default function ProfitLossModal() {
                             {netProfit.toFixed(2)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold"></td>
+                        <td className="px-4 py-3 text-right font-semibold border border-gray-300"></td>
                       </tr>
                     )}
                   </tbody>

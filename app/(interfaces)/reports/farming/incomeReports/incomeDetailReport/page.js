@@ -240,31 +240,31 @@ export default function PurchaseReportModal() {
 
                     {/* Products Table */}
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse text-sm">
+                      <table className="w-full border-collapse text-sm border border-gray-300">
                         <thead>
                           <tr className="bg-gray-100 border-b-2 border-gray-300">
-                            <th className="px-2 py-2 text-left font-bold text-gray-700">
+                            <th className="px-2 py-2 text-left font-bold text-gray-700 border border-gray-300">
                               Product Name
                             </th>
-                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                            <th className="px-2 py-2 text-right font-bold text-gray-700 border border-gray-300">
                               Price
                             </th>
-                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                            <th className="px-2 py-2 text-right font-bold text-gray-700 border border-gray-300">
                               Farm Rate
                             </th>
-                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                            <th className="px-2 py-2 text-right font-bold text-gray-700 border border-gray-300">
                               Sale Rate
                             </th>
-                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                            <th className="px-2 py-2 text-right font-bold text-gray-700 border border-gray-300">
                               Qty
                             </th>
-                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                            <th className="px-2 py-2 text-right font-bold text-gray-700 border border-gray-300">
                               Disc
                             </th>
-                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                            <th className="px-2 py-2 text-right font-bold text-gray-700 border border-gray-300">
                               Tax
                             </th>
-                            <th className="px-2 py-2 text-right font-bold text-gray-700">
+                            <th className="px-2 py-2 text-right font-bold text-gray-700 border border-gray-300">
                               Total
                             </th>
                           </tr>
@@ -274,34 +274,34 @@ export default function PurchaseReportModal() {
                             key={purchase.sale_id}
                             className="border-b border-gray-200 hover:bg-gray-50"
                           >
-                            <td className="px-2 py-2">
+                            <td className="px-2 py-2 border border-gray-300">
                               {purchase.product.product_title}
                             </td>
-                            <td className="px-2 py-2 text-right">
+                            <td className="px-2 py-2 text-right border border-gray-300">
                               {Number(purchase.price).toFixed(2)}
                             </td>
 
-                            <td className="px-2 py-2 text-right">
+                            <td className="px-2 py-2 text-right border border-gray-300">
                               {Number(purchase.farm_rate).toFixed(2)}
                             </td>
 
-                            <td className="px-2 py-2 text-right">
+                            <td className="px-2 py-2 text-right border border-gray-300">
                               {Number(purchase.sale_rate).toFixed(2)}
                             </td>
-                            <td className="px-2 py-2 text-right">
+                            <td className="px-2 py-2 text-right border border-gray-300">
                               {purchase.quantity}
                             </td>
-                            <td className="px-2 py-2 text-right">
+                            <td className="px-2 py-2 text-right border border-gray-300">
                               {Number(purchase.discount_value || 0).toFixed(2) +
                                 " " +
                                 purchase.discount_type}
                             </td>
-                            <td className="px-2 py-2 text-right">
+                            <td className="px-2 py-2 text-right border border-gray-300">
                               {Number(purchase.tax_value || 0).toFixed(2) +
                                 " " +
                                 purchase.tax_type}
                             </td>
-                            <td className="px-2 py-2 text-right font-medium">
+                            <td className="px-2 py-2 text-right font-medium border border-gray-300">
                               {Number(purchase.total).toFixed(2)}
                             </td>
                           </tr>

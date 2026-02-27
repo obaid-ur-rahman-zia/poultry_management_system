@@ -404,28 +404,28 @@ export default function AccountLedgerModal() {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
+                <table className="w-full border-collapse text-sm border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Sr. No
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Date
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         T.No
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Description
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Debit
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Credit
                       </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700">
+                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Balance
                       </th>
                     </tr>
@@ -433,13 +433,13 @@ export default function AccountLedgerModal() {
                   <tbody>
                     {/* Opening Balance Row */}
                     <tr className="bg-blue-50 border-b border-gray-300 font-semibold">
-                      <td className="px-3 py-2"></td>
-                      <td className="px-3 py-2" colSpan="3">
+                      <td className="px-3 py-2 border border-gray-300"></td>
+                      <td className="px-3 py-2 border border-gray-300" colSpan="3">
                         Opening Balance
                       </td>
-                      <td className="px-3 py-2 text-right"></td>
-                      <td className="px-3 py-2 text-right"></td>
-                      <td className="px-3 py-2 ">
+                      <td className="px-3 py-2 text-right border border-gray-300"></td>
+                      <td className="px-3 py-2 text-right border border-gray-300"></td>
+                      <td className="px-3 py-2  border border-gray-300">
                         <span
                           className={
                             openingBalance < 0
@@ -464,21 +464,21 @@ export default function AccountLedgerModal() {
                           key={trans.t_id}
                           className="border-b border-gray-200 hover:bg-gray-50"
                         >
-                          <td className="px-3 py-2 t">{serialNumber}</td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 t border border-gray-300">{serialNumber}</td>
+                          <td className="px-3 py-2 border border-gray-300">
                             {new Date(
                               trans.transaction_dat
                             ).toLocaleDateString()}
                           </td>
-                          <td className="px-3 py-2">{trans.t_id}</td>
-                          <td className="px-3 py-2">{trans.remarks || "-"}</td>
-                          <td className="px-3 py-2 ">
+                          <td className="px-3 py-2 border border-gray-300">{trans.t_id}</td>
+                          <td className="px-3 py-2 border border-gray-300">{trans.remarks || "-"}</td>
+                          <td className="px-3 py-2  border border-gray-300">
                             {trans.debit ? trans.debit.toFixed(2) : "-"}
                           </td>
-                          <td className="px-3 py-2 ">
+                          <td className="px-3 py-2  border border-gray-300">
                             {trans.credit ? trans.credit.toFixed(2) : "-"}
                           </td>
-                          <td className="px-3 py-2  font-medium">
+                          <td className="px-3 py-2  font-medium border border-gray-300">
                             <span
                               className={
                                 runningBalance < 0
@@ -496,21 +496,21 @@ export default function AccountLedgerModal() {
                     {/* Closing Balance Row */}
                     {transactions.length > 0 && (
                       <tr className="bg-gray-200 border-t-2 border-gray-400 font-bold">
-                        <td className="px-3 py-2"></td>
-                        <td className="px-3 py-2" colSpan="3">
+                        <td className="px-3 py-2 border border-gray-300"></td>
+                        <td className="px-3 py-2 border border-gray-300" colSpan="3">
                           Closing Balance
                         </td>
-                        <td className="px-3 py-2 ">
+                        <td className="px-3 py-2  border border-gray-300">
                           {transactions
                             .reduce((sum, t) => sum + (t.debit || 0), 0)
                             .toFixed(2)}
                         </td>
-                        <td className="px-3 py-2 ">
+                        <td className="px-3 py-2  border border-gray-300">
                           {transactions
                             .reduce((sum, t) => sum + (t.credit || 0), 0)
                             .toFixed(2)}
                         </td>
-                        <td className="px-3 py-2 ">
+                        <td className="px-3 py-2  border border-gray-300">
                           <span
                             className={
                               calculateRunningBalance(transactions.length - 1) <

@@ -12,6 +12,7 @@ export default function WholeSaleProfitModal() {
   const [reportData, setReportData] = useState([]);
   const [grandTotalPurchase, setGrandTotalPurchase] = useState(0);
   const [grandTotalSale, setGrandTotalSale] = useState(0);
+  const [grandTotalRecovery, setGrandTotalRecovery] = useState(0);
   const [netProfit, setNetProfit] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -79,6 +80,7 @@ export default function WholeSaleProfitModal() {
         setReportData(data.response_result.results);
         setGrandTotalPurchase(data.response_result.grandTotalPurchase);
         setGrandTotalSale(data.response_result.grandTotalSale);
+        setGrandTotalRecovery(data.response_result.grandTotalRecovery || 0);
         setNetProfit(data.response_result.netProfit);
         setIsOpen(true);
         setCurrentPage(1);
@@ -117,6 +119,7 @@ export default function WholeSaleProfitModal() {
       getPeriodHeader(),
       "Whole Sale Purchase",
       "Whole Sale Amount",
+      "Recovery",
       "Profit",
       "Loss",
     ];
@@ -129,6 +132,7 @@ export default function WholeSaleProfitModal() {
         formatPeriod(row.period, groupBy),
         row.purchase_amount.toFixed(2),
         row.sale_amount.toFixed(2),
+        (row.recovery_amount || 0).toFixed(2),
         profit.toFixed(2),
         loss.toFixed(2),
       ];
@@ -139,6 +143,7 @@ export default function WholeSaleProfitModal() {
       "Grand Total",
       grandTotalPurchase.toFixed(2),
       grandTotalSale.toFixed(2),
+      grandTotalRecovery.toFixed(2),
       netProfit > 0 ? netProfit.toFixed(2) : "0.00",
       netProfit < 0 ? Math.abs(netProfit).toFixed(2) : "0.00",
     ]);
@@ -323,22 +328,25 @@ export default function WholeSaleProfitModal() {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
+                <table className="w-full border-collapse text-sm border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-4 py-2 text-left font-bold text-gray-700">
+                      <th className="px-4 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         {getPeriodHeader()}
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Whole Sale Purchase
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Whole Sale Amount
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                        Recovery
+                      </th>
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Profit
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Loss
                       </th>
                     </tr>
@@ -349,19 +357,22 @@ export default function WholeSaleProfitModal() {
                         key={index}
                         className="border-b border-gray-200 hover:bg-gray-50"
                       >
-                        <td className="px-4 py-2 font-medium">
+                        <td className="px-4 py-2 font-medium border border-gray-300">
                           {formatPeriod(row.period, groupBy)}
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-4 py-2 text-right border border-gray-300">
                           {row.purchase_amount.toFixed(2)}
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-4 py-2 text-right border border-gray-300">
                           {row.sale_amount.toFixed(2)}
                         </td>
-                        <td className="px-4 py-2 text-right font-semibold">
+                        <td className="px-4 py-2 text-right text-blue-700 font-semibold border border-gray-300">
+                          {(row.recovery_amount || 0).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-2 text-right font-semibold border border-gray-300">
                           {row.profit_loss > 0 ? row.profit_loss.toFixed(2) : 0}
                         </td>
-                        <td className="px-4 py-2 text-right font-semibold">
+                        <td className="px-4 py-2 text-right font-semibold border border-gray-300">
                           {row.profit_loss < 0
                             ? Math.abs(row.profit_loss).toFixed(2)
                             : 0}
@@ -372,17 +383,20 @@ export default function WholeSaleProfitModal() {
                     {/* Grand Total Row */}
                     {reportData.length > 0 && (
                       <tr className="bg-indigo-50 border-t-2 border-gray-400 font-bold">
-                        <td className="px-4 py-3">Grand Total:</td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 border border-gray-300">Grand Total:</td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {grandTotalPurchase.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {grandTotalSale.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right text-blue-700 border border-gray-300">
+                          {grandTotalRecovery.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {netProfit > 0 ? netProfit.toFixed(2) : 0}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {netProfit < 0 ? Math.abs(netProfit).toFixed(2) : 0}
                         </td>
                       </tr>
@@ -391,10 +405,10 @@ export default function WholeSaleProfitModal() {
                     {/* Net Profit Row */}
                     {reportData.length > 0 && (
                       <tr className="bg-gray-100 border-t border-gray-300 font-bold">
-                        <td colSpan="3" className="px-4 py-3 text-right">
+                        <td colSpan="4" className="px-4 py-3 text-right border border-gray-300">
                           Net Profit:
                         </td>
-                        <td className="px-4 py-3 text-right text-lg">
+                        <td className="px-4 py-3 text-right text-lg border border-gray-300">
                           <span
                             className={
                               netProfit >= 0 ? "text-green-600" : "text-red-600"
@@ -403,7 +417,7 @@ export default function WholeSaleProfitModal() {
                             {netProfit.toFixed(2)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold"></td>
+                        <td className="px-4 py-3 text-right font-semibold border border-gray-300"></td>
                       </tr>
                     )}
                   </tbody>

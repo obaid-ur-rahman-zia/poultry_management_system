@@ -253,8 +253,10 @@ export default function ExpenseHeadPage() {
         // Preserve date and expense head — only reset account-specific fields
         reset({
           transaction_date: data.transaction_date,
+          is_bank: false,
           sub_id: data.sub_id,
           account_id: "",
+          transaction_type: "pay",
           amount: "",
           description: "",
         });
