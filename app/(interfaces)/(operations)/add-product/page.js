@@ -712,7 +712,7 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Category</Label>
                 <Select
                   value={filterCategory}
@@ -752,7 +752,7 @@ export default function ProductPage() {
                   value={filterName}
                   onChange={(e) => setFilterName(e.target.value)}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 

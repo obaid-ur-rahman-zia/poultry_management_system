@@ -3,47 +3,44 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
-  Wallet,
-  LayoutGrid,
-  ShoppingCart,
+  Receipt,
+  TrendingUp,
+  LineChart,
   Sparkles,
-  FileText,
+  LayoutGrid,
+  ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const reportCategories = [
   {
-    id: "account-reports",
-    title: "Account Reports",
-    description:
-      "View ledgers, trial balances, balance sheets, and full transaction history.",
-    href: "/reports/accountReports",
-    icon: Wallet,
+    id: "expense-reports",
+    title: "Unit Expense Reports",
+    href: "/reports/expenseReports",
+    icon: Receipt,
   },
   {
-    id: "farming-reports",
-    title: "Farming Reports",
-    description:
-      "Access unit expense, unit income, and trading reports related to farming.",
-    href: "/reports/farming",
-    icon: LayoutGrid,
+    id: "income-reports",
+    title: "Unit Income Reports",
+    href: "/reports/incomeReports",
+    icon: TrendingUp,
   },
   {
-    id: "trading-reports",
+    id: "trade-reports",
     title: "Trading Reports",
-    description: "View wholesale and other major trading transaction reports.",
-    href: "/reports/trading",
-    icon: ShoppingCart,
+    href: "/reports/tradeReports",
+    icon: LineChart,
   },
 ];
 
 const colorMap = {
-  "account-reports": "bg-emerald-500",
-  "farming-reports": "bg-blue-500",
-  "trading-reports": "bg-purple-500",
+  "expense-reports": "bg-rose-500",
+  "income-reports": "bg-emerald-500",
+  "trade-reports": "bg-orange-500",
 };
 
-export default function ReportsLandingPage() {
+export default function FarmingReportsPage() {
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
   const calculatePetalPosition = (index, total) => {
@@ -59,14 +56,25 @@ export default function ReportsLandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 py-10 px-4 flex flex-col items-center overflow-x-hidden">
-      <div className="max-w-5xl mx-auto mb-5 text-center">
-        <h1 className="text-4xl font-bold text-gray-900  tracking-tight flex items-center justify-center gap-3">
-          <Sparkles className="w-8 h-8 text-emerald-500" />
-          Reports Center
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Select a category to view reports
-        </p>
+      <div className="max-w-5xl w-full mx-auto mb-5 flex items-center justify-center relative">
+        <Link href="/reports" className="absolute left-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full shadow-sm bg-white hover:bg-slate-100"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight flex items-center justify-center gap-3">
+            <Sparkles className="w-8 h-8 text-blue-500" />
+            Farming Reports
+          </h1>
+          <p className="text-gray-500 text-sm">
+            Select a category to view reports
+          </p>
+        </div>
       </div>
 
       <div className="relative w-full max-w-4xl h-[600px] flex items-center justify-center mx-auto ">
@@ -75,11 +83,11 @@ export default function ReportsLandingPage() {
           className="absolute z-10 flex items-center justify-center bg-white rounded-full shadow-2xl transition-all duration-300 hover:scale-105 border border-gray-100"
           style={{ width: "120px", height: "120px" }}
         >
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/10 to-teal-600/10 animate-pulse" />
-          <div className="text-center text-emerald-600 relative z-10">
-            <FileText className="w-10 h-10 mx-auto mb-1" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-600/10 animate-pulse" />
+          <div className="text-center text-blue-600 relative z-10">
+            <LayoutGrid className="w-10 h-10 mx-auto mb-1" />
             <div className="text-xs font-bold uppercase tracking-wider">
-              Reports
+              Farming
             </div>
           </div>
         </div>
@@ -119,7 +127,7 @@ export default function ReportsLandingPage() {
           );
           const isHovered = hoveredIndex === index;
           const Icon = category.icon;
-          const colorClass = colorMap[category.id] || "bg-emerald-500";
+          const colorClass = colorMap[category.id] || "bg-blue-500";
 
           return (
             <div

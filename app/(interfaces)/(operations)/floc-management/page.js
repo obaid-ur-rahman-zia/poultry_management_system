@@ -1172,7 +1172,7 @@ export default function FlocManagementPage() {
                 <TableBody className={"max-h-[500px] overflow-y-auto"}>
                   {filteredFlocs.map((floc) => {
                     const today = new Date();
-                    today.setHours(0, 0, 0, 0);
+                    today.setHours(23, 59, 59, 999);
                     const endDate = floc.ending_date
                       ? new Date(floc.ending_date)
                       : null;

@@ -182,12 +182,14 @@ export default function AccountPage() {
   const fetchAccounts = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/account/accounts/readAll?page=${page}&limit=${limit}`);
+      const response = await fetch(
+        `/api/account/accounts/readAll?page=${page}&limit=${limit}`,
+      );
       const result = await response.json();
 
       if (result.response_status === "success") {
         const responseData = result.response_result;
-        
+
         // Handle paginated response
         if (responseData?.pagination) {
           const accountsData = responseData.data || [];
@@ -556,6 +558,7 @@ export default function AccountPage() {
 
   // Filter accounts (client-side filtering on paginated data)
   const filteredAccounts = accounts.filter((account) => {
+    if (account.acc_id === 1) return false; // Filter out cash in hand account inherently with acc_id 1
     const matchesSearch =
       searchQuery === "" ||
       account.account_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1032,7 +1035,7 @@ export default function AccountPage() {
                           />
                         </div>
                       </div>
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <Label>Account Type</Label>
                         <Select
                           value={filterAccountType}
@@ -1065,15 +1068,15 @@ export default function AccountPage() {
                           value={filterContact}
                           onChange={(e) => setFilterContact(e.target.value)}
                         />
-                      </div>
-                      <div className="space-y-2">
+                      </div> */}
+                      {/* <div className="space-y-2">
                         <Label>Name</Label>
                         <Input
                           placeholder="Filter by name..."
                           value={filterName}
                           onChange={(e) => setFilterName(e.target.value)}
                         />
-                      </div>
+                      </div> */}
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
@@ -1112,7 +1115,7 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label>Account Type</Label>
                       <Select
                         value={filterAccountType}
@@ -1155,7 +1158,7 @@ export default function AccountPage() {
                         value={filterName}
                         onChange={(e) => setFilterName(e.target.value)}
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
@@ -1292,7 +1295,9 @@ export default function AccountPage() {
             {totalPages >= 1 && (
               <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                  <Label className="text-sm text-muted-foreground">
+                    Items per page:
+                  </Label>
                   <Select
                     value={itemsPerPage.toString()}
                     onValueChange={(value) => {
@@ -1321,7 +1326,11 @@ export default function AccountPage() {
                           setCurrentPage(newPage);
                           fetchAccounts(newPage, itemsPerPage);
                         }}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
                       />
                     </PaginationItem>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -1357,13 +1366,19 @@ export default function AccountPage() {
                           setCurrentPage(newPage);
                           fetchAccounts(newPage, itemsPerPage);
                         }}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        className={
+                          currentPage === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
                 <div className="text-sm text-muted-foreground">
-                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} accounts
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                  {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
+                  {totalItems} accounts
                 </div>
               </div>
             )}

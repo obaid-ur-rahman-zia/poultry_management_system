@@ -2,9 +2,6 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 import AccountLedger from "./accountLedger/page";
 import TrialBalance from "./trialBalance/page";
-import SubheadTrialBalance from "./subheadTrialBalance/page";
-import ExpenseHeadTrialBalance from "./expenseHeadTrialBalance/page";
-import BalanceSheet from "./balanceSheet/page";
 
 export default function ReportPage() {
   return (
@@ -49,9 +46,6 @@ export default function ReportPage() {
           </Link>
           <AccountLedger />
           <TrialBalance />
-          <SubheadTrialBalance />
-          <ExpenseHeadTrialBalance />
-          <BalanceSheet />
         </div>
       </div>
     </main>

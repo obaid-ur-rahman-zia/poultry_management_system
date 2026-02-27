@@ -1343,7 +1343,7 @@ export default function UnitSalePage() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label>Unit</Label>
                       <Combobox
                         options={[
@@ -1380,7 +1380,7 @@ export default function UnitSalePage() {
                         searchPlaceholder="Search flocs..."
                         emptyText="No floc found."
                       />
-                    </div>
+                    </div> */}
                     <div className="space-y-2">
                       <Label>Date</Label>
                       <Input
@@ -1407,7 +1407,7 @@ export default function UnitSalePage() {
                       />
                     </div>
                   </div>
-
+                  {/* 
                   <div className="space-y-2">
                     <Label>Unit</Label>
                     <Combobox
@@ -1446,7 +1446,7 @@ export default function UnitSalePage() {
                       searchPlaceholder="Search flocs..."
                       emptyText="No floc found."
                     />
-                  </div>
+                  </div> */}
 
                   <div className="space-y-2">
                     <Label>Date</Label>

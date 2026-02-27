@@ -1177,7 +1177,7 @@ export default function UnitExpensePage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Unit</Label>
                   <Combobox
                     options={[
@@ -1195,7 +1195,7 @@ export default function UnitExpensePage() {
                     searchPlaceholder="Search units..."
                     emptyText="No unit found."
                   />
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <Label>Date</Label>

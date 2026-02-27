@@ -611,7 +611,7 @@ export default function ExpenseHeadPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Account</Label>
                   <Combobox
                     options={[
@@ -627,7 +627,7 @@ export default function ExpenseHeadPage() {
                     searchPlaceholder="Search accounts..."
                     emptyText="No account found."
                   />
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <Label>Date</Label>

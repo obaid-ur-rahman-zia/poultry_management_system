@@ -88,10 +88,10 @@ export default function BalanceSheetReport() {
     const headers = [
       "Sr No",
       "Date",
-      "Receiver Name",
-      "Amount Received",
-      "Payer Name",
-      "Amount Paid",
+      "Name",
+      "Paid",
+      "Name",
+      "Received",
       "Description",
       "Running Balance",
     ];
@@ -297,16 +297,16 @@ export default function BalanceSheetReport() {
                         Date
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700">
-                        Receiver Name
+                        Name
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700">
-                        Amount Received
+                        Paid
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700">
-                        Payer Name
+                        Name
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700">
-                        Amount Paid
+                        Received
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700">
                         Description

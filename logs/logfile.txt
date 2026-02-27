@@ -289,3 +289,13 @@ custom-exception:  [Failed to delete account in Method: AccountsController.delet
 system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete()` invocation in E:\Switch2iTech\Poultry Tanvir\poultry_management_system\.next\server\chunks\[root-of-the-server]__938cbf70._.js:605:154    602     });   603 }   604 async delete(acc_id) { → 605     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.delete( Foreign key constraint violated on the constraint: `transaction_acc_id_fkey`]
 
 
+exception-time:       [2026-02-27T13:05:51.123Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [Error: Unit already has an active floc. Please end the current floc first.]
+
+
+exception-time:       [2026-02-27T13:10:07.951Z]  
+custom-exception:  [Failed to create floc in Method: FlocController.create] | 
+system-exception:  [Error: Unit already has an active floc. Please end the current floc first.]
+
+

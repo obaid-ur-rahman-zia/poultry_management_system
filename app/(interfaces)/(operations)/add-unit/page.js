@@ -4,12 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { Plus, Search, Edit2, Trash2 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +52,7 @@ export default function UnitPage() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingUnitId, setEditingUnitId] = useState(null);
-  
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCapacity, setFilterCapacity] = useState("");
@@ -77,12 +72,14 @@ export default function UnitPage() {
   const fetchUnits = async (page = currentPage, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/unit/readAll?page=${page}&limit=${limit}`);
+      const response = await fetch(
+        `/api/unit/readAll?page=${page}&limit=${limit}`,
+      );
       const result = await response.json();
-      
+
       if (result.response_status === "success") {
         const responseData = result.response_result;
-        
+
         // Handle paginated response
         if (responseData?.pagination) {
           const unitsData = responseData.data || [];
@@ -134,7 +131,9 @@ export default function UnitPage() {
 
       if (result.response_status === "success") {
         toast.success(
-          isEditMode ? "Unit updated successfully" : "Unit created successfully"
+          isEditMode
+            ? "Unit updated successfully"
+            : "Unit created successfully",
         );
         reset({
           prounit_nam: "",
@@ -162,20 +161,24 @@ export default function UnitPage() {
       address: "",
     });
     // Scroll to form
-    document.getElementById("unit-form")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("unit-form")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleEdit = (unit) => {
     setIsEditMode(true);
     setEditingUnitId(unit.prounit_id);
-    
+
     reset({
       prounit_nam: unit.prounit_nam || "",
       capacity: unit.capacity?.toString() || "",
       address: unit.address || "",
     });
     // Scroll to form
-    document.getElementById("unit-form")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("unit-form")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleDelete = async (unitId) => {
@@ -205,18 +208,22 @@ export default function UnitPage() {
 
   // Filter units (client-side filtering on paginated data)
   const filteredUnits = units.filter((unit) => {
-    const matchesSearch = searchQuery === "" || 
+    const matchesSearch =
+      searchQuery === "" ||
       unit.prounit_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       unit.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       unit.capacity?.toString().includes(searchQuery);
 
-    const matchesCapacity = filterCapacity === "" ||
+    const matchesCapacity =
+      filterCapacity === "" ||
       unit.capacity?.toString().includes(filterCapacity);
 
-    const matchesName = filterName === "" ||
+    const matchesName =
+      filterName === "" ||
       unit.prounit_nam?.toLowerCase().includes(filterName.toLowerCase());
 
-    const matchesAddress = filterAddress === "" ||
+    const matchesAddress =
+      filterAddress === "" ||
       unit.address?.toLowerCase().includes(filterAddress.toLowerCase());
 
     return matchesSearch && matchesCapacity && matchesName && matchesAddress;
@@ -239,11 +246,14 @@ export default function UnitPage() {
 
   return (
     <div className="p-6 space-y-6">
-
       {/* Form Section */}
       <Card className={"max-w-4xl mx-auto"}>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="unit-form">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4"
+            id="unit-form"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Name */}
               <div className="space-y-2">
@@ -270,7 +280,10 @@ export default function UnitPage() {
                   type="number"
                   step="0.01"
                   {...register("capacity", {
-                    min: { value: 0, message: "Capacity must be greater than or equal to 0" },
+                    min: {
+                      value: 0,
+                      message: "Capacity must be greater than or equal to 0",
+                    },
                   })}
                   placeholder="Enter capacity"
                 />
@@ -306,7 +319,11 @@ export default function UnitPage() {
                 {isEditMode ? "Cancel Edit" : "Clear Form"}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : isEditMode ? "Update Unit" : "Create Unit"}
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Unit"
+                    : "Create Unit"}
               </Button>
             </div>
           </form>
@@ -332,7 +349,7 @@ export default function UnitPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Name</Label>
                 <Input
                   placeholder="Filter by name..."
@@ -358,7 +375,7 @@ export default function UnitPage() {
                   value={filterAddress}
                   onChange={(e) => setFilterAddress(e.target.value)}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -388,7 +405,10 @@ export default function UnitPage() {
                       </TableCell>
                       <TableCell>
                         {unit.capacity !== null && unit.capacity !== undefined
-                          ? unit.capacity.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+                          ? unit.capacity.toLocaleString(undefined, {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2,
+                            })
                           : "N/A"}
                       </TableCell>
                       <TableCell className="max-w-xs truncate">
@@ -423,14 +443,16 @@ export default function UnitPage() {
           {totalPages >= 1 && (
             <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <Label className="text-sm text-muted-foreground">Items per page:</Label>
+                <Label className="text-sm text-muted-foreground">
+                  Items per page:
+                </Label>
                 <Select
                   value={itemsPerPage.toString()}
-                      onValueChange={(value) => {
-                        setItemsPerPage(Number(value));
-                        setCurrentPage(1);
-                        fetchUnits(1, Number(value));
-                      }}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                    fetchUnits(1, Number(value));
+                  }}
                 >
                   <SelectTrigger className="w-20">
                     <SelectValue />
@@ -452,7 +474,11 @@ export default function UnitPage() {
                         setCurrentPage(newPage);
                         fetchUnits(newPage, itemsPerPage);
                       }}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
                     />
                   </PaginationItem>
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -468,33 +494,39 @@ export default function UnitPage() {
                     }
                     return (
                       <PaginationItem key={pageNum}>
-                              <PaginationLink
-                                onClick={() => {
-                                  setCurrentPage(pageNum);
-                                  fetchUnits(pageNum, itemsPerPage);
-                                }}
-                                isActive={currentPage === pageNum}
-                                className="cursor-pointer"
-                              >
+                        <PaginationLink
+                          onClick={() => {
+                            setCurrentPage(pageNum);
+                            fetchUnits(pageNum, itemsPerPage);
+                          }}
+                          isActive={currentPage === pageNum}
+                          className="cursor-pointer"
+                        >
                           {pageNum}
                         </PaginationLink>
                       </PaginationItem>
                     );
                   })}
                   <PaginationItem>
-                          <PaginationNext
-                            onClick={() => {
-                              const newPage = Math.min(totalPages, currentPage + 1);
-                              setCurrentPage(newPage);
-                              fetchUnits(newPage, itemsPerPage);
-                            }}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
+                    <PaginationNext
+                      onClick={() => {
+                        const newPage = Math.min(totalPages, currentPage + 1);
+                        setCurrentPage(newPage);
+                        fetchUnits(newPage, itemsPerPage);
+                      }}
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
               <div className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} units
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
+                {totalItems} units
               </div>
             </div>
           )}
@@ -503,4 +535,3 @@ export default function UnitPage() {
     </div>
   );
 }
-

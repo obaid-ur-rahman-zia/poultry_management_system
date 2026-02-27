@@ -130,11 +130,19 @@ export default function OppositeTransactionsPage() {
         // Handle response (with or without pagination)
         if (responseData?.pagination) {
           const accountsData = responseData.data || [];
-          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+          setAllAccounts(
+            Array.isArray(accountsData)
+              ? accountsData.filter((a) => a.acc_id !== 1)
+              : [],
+          );
         } else {
           // Non-paginated response (all accounts)
           const accountsData = responseData?.data || responseData || [];
-          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+          setAllAccounts(
+            Array.isArray(accountsData)
+              ? accountsData.filter((a) => a.acc_id !== 1)
+              : [],
+          );
         }
       }
     } catch (error) {
@@ -203,7 +211,11 @@ export default function OppositeTransactionsPage() {
       if (result.response_status === "success") {
         const accountsData =
           result.response_result?.data || result.response_result || [];
-        setAccounts(accountsData);
+        setAccounts(
+          Array.isArray(accountsData)
+            ? accountsData.filter((a) => a.acc_id !== 1)
+            : [],
+        );
       }
     } catch (error) {
       console.error("Error fetching accounts:", error);
