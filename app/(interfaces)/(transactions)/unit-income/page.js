@@ -472,11 +472,11 @@ export default function UnitSalePage() {
           customer_contact: "",
         });
       } else {
-        toast.error(result.response_message || "Failed to create purcher");
+        toast.error(result.response_message || "Failed to create purchaser");
       }
     } catch (error) {
-      console.error("Error creating purcher:", error);
-      toast.error("Failed to create purcher");
+      console.error("Error creating purchaser:", error);
+      toast.error("Failed to create purcheser");
     }
   };
 
@@ -985,11 +985,11 @@ export default function UnitSalePage() {
                           }}
                           placeholder={
                             customers.length > 0
-                              ? "Select purcher"
-                              : "No purchers"
+                              ? "Select purchaser"
+                              : "No purchasers"
                           }
-                          searchPlaceholder="Search purchers..."
-                          emptyText="No purcher found."
+                          searchPlaceholder="Search purchaser..."
+                          emptyText="No purchaser found."
                         />
                       </div>
                     )}
@@ -1886,7 +1886,7 @@ export default function UnitSalePage() {
           <DialogHeader>
             <DialogTitle>Create New Purcher</DialogTitle>
             <DialogDescription>
-              Create a new purcher account. The purcher will be created with
+              Create a new purchaser account. The purchaser will be created with
               is_customer flag set to true.
             </DialogDescription>
           </DialogHeader>
@@ -1902,7 +1902,7 @@ export default function UnitSalePage() {
                     customer_name: e.target.value,
                   })
                 }
-                placeholder="Enter purcher name"
+                placeholder="Enter purchaserpurcher name"
               />
             </div>
             <div className="space-y-2">

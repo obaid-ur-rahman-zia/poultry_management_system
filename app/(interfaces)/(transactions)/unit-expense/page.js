@@ -377,11 +377,11 @@ export default function UnitExpensePage() {
           supplier_company_id: "",
         });
       } else {
-        toast.error(result.response_message || "Failed to create former");
+        toast.error(result.response_message || "Failed to create farmer");
       }
     } catch (error) {
-      console.error("Error creating former:", error);
-      toast.error("Failed to create former");
+      console.error("Error creating farmer:", error);
+      toast.error("Failed to create farmer");
     }
   };
 
@@ -814,9 +814,9 @@ export default function UnitExpensePage() {
                           }
                           value={field.value}
                           onValueChange={field.onChange}
-                          placeholder="Select former"
-                          searchPlaceholder="Search formers..."
-                          emptyText="No former found."
+                          placeholder="Select farmer"
+                          searchPlaceholder="Search farmers..."
+                          emptyText="No farmer found."
                         />
                       </div>
                     )}
@@ -1523,7 +1523,7 @@ export default function UnitExpensePage() {
           <DialogHeader>
             <DialogTitle>Create New Former</DialogTitle>
             <DialogDescription>
-              Create a new former account. The former will be created with
+              Create a new farmer account. The farmer will be created with
               is_supplier flag set to true.
             </DialogDescription>
           </DialogHeader>
@@ -1539,7 +1539,7 @@ export default function UnitExpensePage() {
                     supplier_name: e.target.value,
                   })
                 }
-                placeholder="Enter former name"
+                placeholder="Enter farmer name"
               />
             </div>
             <div className="space-y-2">

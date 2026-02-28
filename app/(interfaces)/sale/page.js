@@ -310,7 +310,7 @@ function WholeSaleTab() {
 
       const result = await response.json();
       if (result.response_status === "success") {
-        toast.success("Former created successfully");
+        toast.success("Farmer created successfully");
         const accId = result.response_result?.acc_id;
         if (accId) {
           setValue("former_account", accId.toString());
@@ -325,11 +325,11 @@ function WholeSaleTab() {
         });
         await fetchSupplierAccounts();
       } else {
-        toast.error(result.response_message || "Failed to create former");
+        toast.error(result.response_message || "Failed to create farmer");
       }
     } catch (error) {
-      console.error("Error creating former:", error);
-      toast.error("Failed to create former");
+      console.error("Error creating farmer:", error);
+      toast.error("Failed to create farmer");
     }
   };
 
@@ -363,7 +363,7 @@ function WholeSaleTab() {
 
       const result = await response.json();
       if (result.response_status === "success") {
-        toast.success("Purcher created successfully");
+        toast.success("Purchaser created successfully");
         const accId = result.response_result?.acc_id;
         if (accId) {
           setValue("purcher_account", accId.toString());
@@ -377,11 +377,11 @@ function WholeSaleTab() {
         });
         await fetchCustomerAccounts();
       } else {
-        toast.error(result.response_message || "Failed to create purcher");
+        toast.error(result.response_message || "Failed to create purchaser");
       }
     } catch (error) {
-      console.error("Error creating purcher:", error);
-      toast.error("Failed to create purcher");
+      console.error("Error creating purchaser:", error);
+      toast.error("Failed to create purchaser");
     }
   };
 
@@ -880,11 +880,11 @@ function WholeSaleTab() {
             <div className="space-y-4">
               <div className="space-y-4">
                 <div className="flex w-full items-center gap-1">
-                  <Label className="whitespace-nowrap text-xs">Former</Label>
+                  <Label className="whitespace-nowrap text-xs">Farmer</Label>
                   <Controller
                     name="former_account"
                     control={control}
-                    rules={{ required: "Former account is required" }}
+                    rules={{ required: "Farmer account is required" }}
                     render={({ field }) => {
                       // Get selected account from allAccounts if it exists
                       const selectedAccount = allAccounts.find(
@@ -916,9 +916,9 @@ function WholeSaleTab() {
                             options={options}
                             value={field.value}
                             onValueChange={field.onChange}
-                            placeholder="Select Former"
-                            searchPlaceholder="Search former accounts..."
-                            emptyText="No former account found."
+                            placeholder="Select Farmer"
+                            searchPlaceholder="Search farmer accounts..."
+                            emptyText="No farmer account found."
                           />
                         </div>
                       );
@@ -1016,11 +1016,11 @@ function WholeSaleTab() {
             <div className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center gap-1">
-                  <Label className="whitespace-nowrap text-xs">Purcher</Label>
+                  <Label className="whitespace-nowrap text-xs">Purchaser</Label>
                   <Controller
                     name="purcher_account"
                     control={control}
-                    rules={{ required: "Purcher account is required" }}
+                    rules={{ required: "Purchaser account is required" }}
                     render={({ field }) => {
                       // Get selected account from allAccounts if it exists
                       const selectedAccount = allAccounts.find(
@@ -1052,9 +1052,9 @@ function WholeSaleTab() {
                             options={options}
                             value={field.value}
                             onValueChange={field.onChange}
-                            placeholder="Select Purcher"
-                            searchPlaceholder="Search purcher accounts..."
-                            emptyText="No purcher account found."
+                            placeholder="Select Purchaser"
+                            searchPlaceholder="Search purchaser accounts..."
+                            emptyText="No purchaser account found."
                           />
                         </div>
                       );
@@ -1104,7 +1104,7 @@ function WholeSaleTab() {
                   <Label className="whitespace-nowrap text-xs">Rate</Label>
                   <Input
                     {...register("purcher_rate", {
-                      required: "Purcher rate is required",
+                      required: "Purchaser rate is required",
                     })}
                     type="number"
                     step="0.01"
@@ -1295,10 +1295,10 @@ function WholeSaleTab() {
                           <TableHead>Sir</TableHead>
                           <TableHead>Van</TableHead>
                           <TableHead>Weight</TableHead>
-                          <TableHead>Former</TableHead>
+                          <TableHead>Farmer</TableHead>
                           <TableHead>Rate</TableHead>
                           <TableHead>Amount</TableHead>
-                          <TableHead>Purcher</TableHead>
+                          <TableHead>Purchaser</TableHead>
                           <TableHead>Rate</TableHead>
                           <TableHead>Amount</TableHead>
                           <TableHead>Profit</TableHead>

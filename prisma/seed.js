@@ -45,7 +45,7 @@ async function main() {
       {
         head_id: firstHead.head_id,
         subhead_id: 2,
-        subhead_nam: "Former",
+        subhead_nam: "Farmer",
         is_parent: 0,
         parent_sub_id: null,
         status: 1,
@@ -53,7 +53,7 @@ async function main() {
       {
         head_id: firstHead.head_id,
         subhead_id: 3,
-        subhead_nam: "Purcher",
+        subhead_nam: "Purchaser",
         is_parent: 0,
         parent_sub_id: null,
         status: 1,
@@ -83,7 +83,7 @@ async function main() {
           head_id: subhead.head_id,
           subhead_nam: {
             equals: subhead.subhead_nam,
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         },
       });
@@ -110,9 +110,13 @@ async function main() {
         await prisma.account_sub_head.create({
           data: subhead,
         });
-        console.log(`✅ Created subhead: ${subhead.subhead_nam} (subhead_id: ${subhead.subhead_id})`);
+        console.log(
+          `✅ Created subhead: ${subhead.subhead_nam} (subhead_id: ${subhead.subhead_id})`,
+        );
       } else {
-        console.log(`✅ Subhead already exists: ${subhead.subhead_nam} (sub_id: ${existing.sub_id})`);
+        console.log(
+          `✅ Subhead already exists: ${subhead.subhead_nam} (sub_id: ${existing.sub_id})`,
+        );
       }
     }
   }
@@ -263,9 +267,13 @@ async function main() {
           status: 1,
         },
       });
-      console.log(`✅ Cash In Hand account created for Super Admin: ${accountName}`);
+      console.log(
+        `✅ Cash In Hand account created for Super Admin: ${accountName}`,
+      );
     } else {
-      console.log(`✅ Cash In Hand account already exists for Super Admin: ${cashInHandAccount.account_nam}`);
+      console.log(
+        `✅ Cash In Hand account already exists for Super Admin: ${cashInHandAccount.account_nam}`,
+      );
     }
 
     // Link the account to the super admin user (if not already linked)
@@ -283,34 +291,40 @@ async function main() {
   const formerSubhead = await prisma.account_sub_head.findFirst({
     where: {
       subhead_nam: {
-        equals: "Former",
-        mode: 'insensitive',
+        equals: "Farmer",
+        mode: "insensitive",
       },
     },
   });
   const purcherSubhead = await prisma.account_sub_head.findFirst({
     where: {
       subhead_nam: {
-        equals: "Purcher",
-        mode: 'insensitive',
+        equals: "Purchaser",
+        mode: "insensitive",
       },
     },
   });
 
   if (formerSubhead) {
-    console.log(`✅ Former subhead exists: sub_id=${formerSubhead.sub_id}, subhead_id=${formerSubhead.subhead_id}`);
+    console.log(
+      `✅ Farmer subhead exists: sub_id=${formerSubhead.sub_id}, subhead_id=${formerSubhead.subhead_id}`,
+    );
   } else {
-    console.log("❌ Former subhead NOT found!");
+    console.log("❌ Farmer subhead NOT found!");
   }
 
   if (purcherSubhead) {
-    console.log(`✅ Purcher subhead exists: sub_id=${purcherSubhead.sub_id}, subhead_id=${purcherSubhead.subhead_id}`);
+    console.log(
+      `✅ Purchaser subhead exists: sub_id=${purcherSubhead.sub_id}, subhead_id=${purcherSubhead.subhead_id}`,
+    );
   } else {
-    console.log("❌ Purcher subhead NOT found!");
+    console.log("❌ Purchaser subhead NOT found!");
   }
 
   console.log("\n✅ Seed completed!");
-  console.log("⚠️  Note: If you're using Redis caching, restart your server or wait for cache TTL to expire.");
+  console.log(
+    "⚠️  Note: If you're using Redis caching, restart your server or wait for cache TTL to expire.",
+  );
 }
 
 main()
