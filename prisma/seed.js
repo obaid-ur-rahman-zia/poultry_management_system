@@ -177,13 +177,13 @@ async function main() {
   });
 
   // Generate password hash for "admin"
-  const hashedPassword = await Bcrypt.hash("Admin@123", 10);
+  const hashedPassword = await Bcrypt.hash("Tanvir@1234?", 10);
 
   if (!superAdmin) {
     superAdmin = await prisma.user.create({
       data: {
         user_nam: "Super Admin",
-        email: "admin@system.com",
+        email: "tanvir@system.com",
         // Unhashed password: admin
         password: hashedPassword,
         role: "SUPER_ADMIN",

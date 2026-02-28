@@ -6,9 +6,10 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 
 # Keep install layer cache-friendly
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json* yarn.lock* ./
 COPY prisma ./prisma
-RUN npm ci
+RUN npm install --frozen-lockfile 2>/dev/null || npm install
+RUN npx prisma generate
 
 # ---------- Builder ----------
 FROM node:20-alpine AS builder
@@ -19,7 +20,6 @@ RUN apk add --no-cache libc6-compat openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
-RUN npx prisma generate
 
 # ---------- Runner ----------
 FROM node:20-alpine AS runner
