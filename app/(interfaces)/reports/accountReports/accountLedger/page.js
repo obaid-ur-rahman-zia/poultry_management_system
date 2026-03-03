@@ -25,8 +25,8 @@ const selectStyles = {
     backgroundColor: state.isSelected
       ? "#6366F1"
       : state.isFocused
-      ? "#F0F9FF"
-      : "white",
+        ? "#F0F9FF"
+        : "white",
     color: state.isSelected ? "white" : "#374151",
   }),
   menu: (provided) => ({
@@ -92,7 +92,7 @@ export default function AccountLedgerModal() {
     try {
       // Fetch transactions
       const transResponse = await fetch(
-        `/api/account/accounts/read/readLedger?acc_id=${selectedAccount}&start_dat=${startDate}&end_dat=${endDate}`
+        `/api/account/accounts/read/readLedger?acc_id=${selectedAccount}&start_dat=${startDate}&end_dat=${endDate}`,
       );
       const transData = await transResponse.json();
 
@@ -113,13 +113,13 @@ export default function AccountLedgerModal() {
   const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
   const currentTransactions = transactions.slice(
     indexOfFirstTransaction,
-    indexOfLastTransaction
+    indexOfLastTransaction,
   );
   const totalPages = Math.ceil(transactions.length / transactionsPerPage);
 
   // Get selected account details
   const selectedAccountData = accounts.find(
-    (acc) => acc.acc_id === parseInt(selectedAccount)
+    (acc) => acc.acc_id === parseInt(selectedAccount),
   );
 
   // Calculate running balance
@@ -146,7 +146,7 @@ export default function AccountLedgerModal() {
     try {
       setIsLoading(true);
       const res = await fetch(
-        `/api/account/accounts/read/downloadLedger?acc_id=${selectedAccount}&start_dat=${startDate}&end_dat=${endDate}`
+        `/api/account/accounts/read/downloadLedger?acc_id=${selectedAccount}&start_dat=${startDate}&end_dat=${endDate}`,
       );
 
       if (!res.ok) throw new Error("Failed to generate PDF");
@@ -157,7 +157,7 @@ export default function AccountLedgerModal() {
       a.href = url;
       a.download = `Account_Ledger_${selectedAccountData?.account_nam.replace(
         /\s+/g,
-        "_"
+        "_",
       )}_${startDate}_to_${endDate}.pdf`;
       document.body.appendChild(a);
       a.click();
@@ -220,10 +220,9 @@ export default function AccountLedgerModal() {
     exportToCSV(
       `Account_Ledger_${selectedAccountData.account_nam}_${startDate}_to_${endDate}.csv`,
       headers,
-      rows
+      rows,
     );
   };
-
   return (
     <div>
       {/* Card to trigger ledger */}
@@ -258,7 +257,7 @@ export default function AccountLedgerModal() {
                     value={
                       selectedAccount
                         ? accountOptions.find(
-                            (a) => a.value === selectedAccount
+                            (a) => a.value === selectedAccount,
                           )
                         : null
                     }
@@ -394,7 +393,7 @@ export default function AccountLedgerModal() {
                         {formatAccountCode(
                           selectedAccountData.head_id,
                           selectedAccountData.subhead.subhead_id,
-                          selectedAccountData.account_id
+                          selectedAccountData.account_id,
                         )}
                       </span>
                     </div>
@@ -434,7 +433,10 @@ export default function AccountLedgerModal() {
                     {/* Opening Balance Row */}
                     <tr className="bg-blue-50 border-b border-gray-300 font-semibold">
                       <td className="px-3 py-2 border border-gray-300"></td>
-                      <td className="px-3 py-2 border border-gray-300" colSpan="3">
+                      <td
+                        className="px-3 py-2 border border-gray-300"
+                        colSpan="3"
+                      >
                         Opening Balance
                       </td>
                       <td className="px-3 py-2 text-right border border-gray-300"></td>
@@ -464,14 +466,20 @@ export default function AccountLedgerModal() {
                           key={trans.t_id}
                           className="border-b border-gray-200 hover:bg-gray-50"
                         >
-                          <td className="px-3 py-2 t border border-gray-300">{serialNumber}</td>
+                          <td className="px-3 py-2 t border border-gray-300">
+                            {serialNumber}
+                          </td>
                           <td className="px-3 py-2 border border-gray-300">
                             {new Date(
-                              trans.transaction_dat
+                              trans.transaction_dat,
                             ).toLocaleDateString()}
                           </td>
-                          <td className="px-3 py-2 border border-gray-300">{trans.t_id}</td>
-                          <td className="px-3 py-2 border border-gray-300">{trans.remarks || "-"}</td>
+                          <td className="px-3 py-2 border border-gray-300">
+                            {trans.t_id}
+                          </td>
+                          <td className="px-3 py-2 border border-gray-300">
+                            {trans.remarks || "-"}
+                          </td>
                           <td className="px-3 py-2  border border-gray-300">
                             {trans.debit ? trans.debit.toFixed(2) : "-"}
                           </td>
@@ -497,7 +505,10 @@ export default function AccountLedgerModal() {
                     {transactions.length > 0 && (
                       <tr className="bg-gray-200 border-t-2 border-gray-400 font-bold">
                         <td className="px-3 py-2 border border-gray-300"></td>
-                        <td className="px-3 py-2 border border-gray-300" colSpan="3">
+                        <td
+                          className="px-3 py-2 border border-gray-300"
+                          colSpan="3"
+                        >
                           Closing Balance
                         </td>
                         <td className="px-3 py-2  border border-gray-300">
@@ -520,7 +531,7 @@ export default function AccountLedgerModal() {
                             }
                           >
                             {calculateRunningBalance(
-                              transactions.length - 1
+                              transactions.length - 1,
                             ).toFixed(2)}
                           </span>
                         </td>
