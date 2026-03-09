@@ -6,7 +6,7 @@ export async function generateAccountLedgerPDF(
   accountsData,
   startDate,
   endDate,
-  acc_id
+  acc_id,
 ) {
   let browser;
 
@@ -16,7 +16,7 @@ export async function generateAccountLedgerPDF(
 
     // Find the account data
     const accountData = accountsData.find(
-      (acc) => acc.acc_id === parseInt(acc_id)
+      (acc) => acc.acc_id === parseInt(acc_id),
     );
 
     if (!accountData) {
@@ -27,6 +27,8 @@ export async function generateAccountLedgerPDF(
 
     browser = await puppeteer.launch({
       headless: "new",
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -46,7 +48,7 @@ export async function generateAccountLedgerPDF(
       openingBalance,
       accountData,
       startDate,
-      endDate
+      endDate,
     );
     console.log("HTML generated, length:", htmlContent.length);
 
@@ -98,7 +100,7 @@ function generateLedgerHTML(
   openingBalance,
   accountData,
   startDate,
-  endDate
+  endDate,
 ) {
   if (!transactions || !Array.isArray(transactions)) {
     console.error("Invalid transactions:", transactions);
@@ -154,7 +156,7 @@ function generateLedgerHTML(
       <tr style="border-bottom: 1px solid #e5e7eb; page-break-inside: avoid;">
         <td style="padding: 6px; text-align: center; font-size: 10px;">${serialNumber}</td>
         <td style="padding: 6px; font-size: 10px;">${new Date(
-          trans.transaction_dat
+          trans.transaction_dat,
         ).toLocaleDateString()}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.t_id}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.remarks || "-"}</td>
@@ -258,10 +260,10 @@ function generateLedgerHTML(
       <div class="header">
         <h1>Account Ledger</h1>
         <p>From: <strong>${new Date(
-          startDate
+          startDate,
         ).toLocaleDateString()}</strong> To: <strong>${new Date(
-    endDate
-  ).toLocaleDateString()}</strong></p>
+          endDate,
+        ).toLocaleDateString()}</strong></p>
       </div>
       
       <!-- Account Details -->
@@ -311,10 +313,10 @@ function generateLedgerHTML(
           <tr class="closing-balance">
             <td colspan="4" style="padding: 8px; font-size: 11px;">Closing Balance</td>
             <td style="padding: 8px; text-align: right; font-size: 11px;">${totalDebit.toFixed(
-              2
+              2,
             )}</td>
             <td style="padding: 8px; text-align: right; font-size: 11px;">${totalCredit.toFixed(
-              2
+              2,
             )}</td>
             <td style="padding: 8px; text-align: right; font-size: 11px; color: ${
               closingBalance < 0 ? "#dc2626" : "#16a34a"
