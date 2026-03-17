@@ -784,7 +784,7 @@ function WholeSaleTab() {
   return (
     <>
       {/* Form Section */}
-      <Card className="max-w-2xl p-0! mx-auto">
+      <Card className="max-w-4xl p-0! mx-auto">
         <CardContent className="p-3 sm:p-4">
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -799,8 +799,8 @@ function WholeSaleTab() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="h-8 px-2 text-xs justify-start"
+                      size="xs"
+                      className="h-8 px-2 text-l justify-start"
                     >
                       <CalendarIcon className="mr-1 h-3 w-3" />
                       {saleDate
@@ -829,7 +829,7 @@ function WholeSaleTab() {
               <Button
                 type="button"
                 variant="default"
-                size="sm"
+                size="xs"
                 onClick={handleGetData}
                 className="h-8 px-3 text-xs"
               >
@@ -848,9 +848,9 @@ function WholeSaleTab() {
                     })}
                     placeholder="0.00"
                     disabled={!fsRateEditable}
-                    className={`h-8 w-20 text-xs ${!fsRateEditable ? "bg-muted" : ""}`}
+                    className={`h-8 w-20 text-l ${!fsRateEditable ? "bg-muted" : ""}`}
                   />
-                  <span className="text-xs">-</span>
+                  <span className="text-l">-</span>
                   <Input
                     id="sale_rate"
                     type="number"
@@ -860,15 +860,15 @@ function WholeSaleTab() {
                     })}
                     placeholder="0.00"
                     disabled={!fsRateEditable}
-                    className={`h-8 w-20 text-xs ${!fsRateEditable ? "bg-muted" : ""}`}
+                    className={`h-8 w-20 text-l ${!fsRateEditable ? "bg-muted" : ""}`}
                   />
                 </div>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="xs"
                   onClick={handleOpenFsRateHistory}
-                  className="h-8 px-2 text-xs"
+                  className="h-8 px-2 text-l"
                 >
                   <History className="h-3 w-3 mr-1" />
                   ADD RATE
@@ -880,7 +880,7 @@ function WholeSaleTab() {
             <div className="space-y-4">
               <div className="space-y-4">
                 <div className="flex w-full items-center gap-1">
-                  <Label className="whitespace-nowrap text-xs">Farmer</Label>
+                  <Label className="whitespace-nowrap text-l">Farmer</Label>
                   <Controller
                     name="former_account"
                     control={control}
@@ -927,7 +927,7 @@ function WholeSaleTab() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="xs"
                     onClick={() => {
                       setAccountSearchField("former");
                       // Find "Former" subhead and set its sub_id as default
@@ -947,11 +947,11 @@ function WholeSaleTab() {
                   </Button>
                   <div className="flex items-center gap-1">
                     {loadingSupplierBalance ? (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-l text-muted-foreground">
                         Loading...
                       </span>
                     ) : (
-                      <span className="text-xs underline">
+                      <span className="text-l underline">
                         Balance{" "}
                         {supplierBalance !== null
                           ? supplierBalance.toFixed(2)
@@ -964,7 +964,7 @@ function WholeSaleTab() {
               <div className="flex flex-nowrap items-start   gap-2">
                 <div className="flex flex-col justify-center gap-2">
                   <div className="flex items-center gap-1">
-                    <Label className="whitespace-nowrap text-xs">
+                    <Label className="whitespace-nowrap text-l">
                       Van Number
                     </Label>
                     <Input
@@ -972,16 +972,16 @@ function WholeSaleTab() {
                         required: "Van number is required",
                       })}
                       placeholder="Enter van number"
-                      className="h-8 text-xs"
+                      className="h-8 text-l"
                     />
                   </div>
-                  <span className="text-xs underline">
+                  <span className="text-l underline">
                     Amount {formerAmount || "0"}
                   </span>
                 </div>
                 <div className="flex flex-col justify-center gap-2">
                   <div className="flex items-center gap-1">
-                    <Label className="whitespace-nowrap text-xs">Weight</Label>
+                    <Label className="whitespace-nowrap text-l">Weight</Label>
                     <Input
                       {...register("weight", {
                         required: "Weight is required",
@@ -989,16 +989,16 @@ function WholeSaleTab() {
                       type="number"
                       step="0.01"
                       placeholder="Enter weight"
-                      className="h-8 text-xs"
+                      className="h-8 text-l"
                     />
                   </div>
 
-                  <span className="text-xs underline">
+                  <span className="text-l underline">
                     Net Balance {supplierNetBalance.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Label className="whitespace-nowrap text-xs">Rate</Label>
+                  <Label className="whitespace-nowrap text-l">Rate</Label>
                   <Input
                     {...register("former_rate", {
                       required: "Rate is required",
@@ -1006,7 +1006,7 @@ function WholeSaleTab() {
                     type="number"
                     step="0.01"
                     placeholder="Enter rate"
-                    className="h-8 text-xs"
+                    className="h-8 text-l"
                   />
                 </div>
               </div>
@@ -1016,7 +1016,7 @@ function WholeSaleTab() {
             <div className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center gap-1">
-                  <Label className="whitespace-nowrap text-xs">Purchaser</Label>
+                  <Label className="whitespace-nowrap text-l">Purchaser</Label>
                   <Controller
                     name="purcher_account"
                     control={control}
@@ -1063,7 +1063,7 @@ function WholeSaleTab() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="xs"
                     onClick={() => {
                       setAccountSearchField("purcher");
                       // Find "Purcher" subhead and set its sub_id as default
@@ -1085,11 +1085,11 @@ function WholeSaleTab() {
                   </Button>
                   <div className="flex items-center gap-1">
                     {loadingCustomerBalance ? (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-l text-muted-foreground">
                         Loading...
                       </span>
                     ) : (
-                      <span className="text-xs underline">
+                      <span className="text-l underline">
                         Balance{" "}
                         {customerBalance !== null
                           ? customerBalance.toFixed(2)
@@ -1101,7 +1101,7 @@ function WholeSaleTab() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1">
-                  <Label className="whitespace-nowrap text-xs">Rate</Label>
+                  <Label className="whitespace-nowrap text-l">Rate</Label>
                   <Input
                     {...register("purcher_rate", {
                       required: "Purchaser rate is required",
@@ -1109,13 +1109,13 @@ function WholeSaleTab() {
                     type="number"
                     step="0.01"
                     placeholder="Enter rate"
-                    className="h-8 text-xs"
+                    className="h-8 text-l"
                   />
                 </div>
-                <span className="text-xs underline">
+                <span className="text-l underline">
                   Amount {purcherAmount || "0"}
                 </span>
-                <span className="text-xs underline">
+                <span className="text-l underline">
                   Net Balance {customerNetBalance.toFixed(2)}
                 </span>
               </div>
@@ -1123,9 +1123,9 @@ function WholeSaleTab() {
 
             {/* Profit Display */}
             <div className="flex items-center gap-1">
-              <Label className="whitespace-nowrap text-xs">Profit</Label>
+              <Label className="whitespace-nowrap text-l">Profit</Label>
               <span
-                className={`text-xs underline ${
+                className={`text-l underline ${
                   parseFloat(watch("profit") || 0) < 0
                     ? "text-red-600 font-semibold"
                     : ""
@@ -1140,9 +1140,9 @@ function WholeSaleTab() {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="xs"
                 onClick={handleCreateNew}
-                className="h-8 px-3 text-xs"
+                className="h-8 px-3 text-l"
               >
                 New
               </Button>
@@ -1151,8 +1151,8 @@ function WholeSaleTab() {
                   type="submit"
                   disabled={isSubmitting}
                   variant="outline"
-                  size="sm"
-                  className="h-8 px-3 text-xs"
+                  size="xs"
+                  className="h-8 px-3 text-l"
                 >
                   {isSubmitting ? "Saving..." : "Save"}
                 </Button>
@@ -1163,17 +1163,17 @@ function WholeSaleTab() {
                     type="submit"
                     disabled={isSubmitting}
                     variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
+                    size="xs"
+                    className="h-8 px-3 text-l"
                   >
                     {isSubmitting ? "Updating..." : "Update"}
                   </Button>
                   <Button
                     type="button"
                     variant="destructive"
-                    size="sm"
+                    size="xs"
                     onClick={() => setIsDeleteDialogOpen(true)}
-                    className="h-8 px-3 text-xs"
+                    className="h-8 px-3 text-l"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
                     Delete
@@ -1183,13 +1183,13 @@ function WholeSaleTab() {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="xs"
                 onClick={() => {
                   reset();
                   setIsEditMode(false);
                   setEditingSaleId(null);
                 }}
-                className="h-8 px-3 text-xs"
+                className="h-8 px-3 text-l"
               >
                 Close
               </Button>
@@ -1340,7 +1340,7 @@ function WholeSaleTab() {
                               <div className="flex gap-2">
                                 <Button
                                   variant="ghost"
-                                  size="sm"
+                                  size="xs"
                                   onClick={() => {
                                     setIsEditMode(true);
                                     setEditingSaleId(sale.sale_id);
@@ -1413,7 +1413,7 @@ function WholeSaleTab() {
                                 </Button>
                                 {/* <Button
                                   variant="ghost"
-                                  size="sm"
+                                  size="xs"
                                   onClick={async () => {
                                     if (
                                       !confirm(
@@ -1473,7 +1473,7 @@ function WholeSaleTab() {
                 {totalPages >= 1 && (
                   <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
-                      <Label className="text-sm text-muted-foreground">
+                      <Label className="text-l text-muted-foreground">
                         Items per page:
                       </Label>
                       <Select
@@ -1559,7 +1559,7 @@ function WholeSaleTab() {
                         </PaginationItem>
                       </PaginationContent>
                     </Pagination>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-l text-muted-foreground">
                       Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
                       {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
                       {totalItems} sales
@@ -1711,7 +1711,7 @@ function WholeSaleTab() {
               </div>
             ) : (
               <div className="relative max-h-[400px] overflow-auto">
-                <table className="w-full caption-bottom text-sm">
+                <table className="w-full caption-bottom text-l">
                   <thead className="sticky top-0 bg-background z-20 border-b-2">
                     <tr className="border-b">
                       <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
@@ -1755,7 +1755,7 @@ function WholeSaleTab() {
                         <td className="p-2 align-middle whitespace-nowrap">
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="xs"
                             onClick={() => handleSelectPreviousFsRate(rate)}
                           >
                             Select
@@ -1792,7 +1792,7 @@ function WholeSaleTab() {
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="xs"
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={isDeleting}
             >
@@ -1801,7 +1801,7 @@ function WholeSaleTab() {
             <Button
               type="button"
               variant="destructive"
-              size="sm"
+              size="xs"
               onClick={handleDeleteSale}
               disabled={isDeleting}
             >

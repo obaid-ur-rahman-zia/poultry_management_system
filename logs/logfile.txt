@@ -309,3 +309,183 @@ custom-exception:  [Failed to update opposite transaction in Method: OppositeTra
 system-exception:  [ReferenceError: RedisService is not defined]
 
 
+exception-time:       [2026-03-16T10:46:28.997Z]  
+custom-exception:  [Failed to create account in Method: AccountsController.create] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findUnique()` invocation in E:\Switch2iTech\Poultry Tanvir\poultry_management_system\.next\server\chunks\[root-of-the-server]__85489d89._.js:1932:168    1929     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$utils$2f$response$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["errorResponse"])(error, 400);   1930 }   1931 // Validate that head_id and sub_id exist → 1932 const head = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_head.findUnique( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-03-16T16:52:32.505Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-16T16:52:34.486Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-16T16:52:36.242Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-16T16:52:38.167Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-16T16:58:17.575Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-16T16:58:19.123Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:04:41.527Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:04:43.156Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:04:44.682Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:04:45.842Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:04:46.560Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:04:47.227Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:04:47.878Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:04:48.550Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:07:30.937Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:07:32.760Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:07:34.473Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:07:36.043Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:07:37.135Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:07:37.789Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:07:38.471Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:07:39.190Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:19:57.741Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:19:58.367Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:20:51.604Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T13:21:27.251Z]  
+custom-exception:  [LocalSaleController.readAll] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-03-17T17:45:05.582Z]  
+custom-exception:  [Failed to get products in Method: ProductController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany()` invocation in E:\Switch2iTech\Poultry Tanvir\poultry_management_system\.next\server\chunks\[root-of-the-server]__ab1af2cd._.js:115:144    112 }   113 async readAllWithPagination(skip = 0, take = 10) {   114     const [data, total] = await Promise.all([ → 115         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].product.findMany( Can't reach database server at `localhost:5432`  Please make sure your database server is running at `localhost:5432`.]
+
+
+exception-time:       [2026-03-17T17:45:05.615Z]  
+custom-exception:  [Failed to fetch units in Method: UnitController.readAll] | 
+system-exception:  [PrismaClientInitializationError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany()` invocation in E:\Switch2iTech\Poultry Tanvir\poultry_management_system\.next\server\chunks\[root-of-the-server]__938cbf70._.js:89:145    86 }   87 async readAllWithPagination(skip = 0, take = 10) {   88     const [data, total] = await Promise.all([ → 89         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].pro_unit.findMany( Can't reach database server at `localhost:5432`  Please make sure your database server is running at `localhost:5432`.]
+
+
+exception-time:       [2026-03-17T17:48:51.323Z]  
+custom-exception:  [LocalSaleController.create] | 
+system-exception:  [Error: No active configuration found for account type: Cash In Hand Acc]
+
+
+exception-time:       [2026-03-17T17:49:42.387Z]  
+custom-exception:  [LocalSaleController.create] | 
+system-exception:  [Error: No active configuration found for account type: Cash In Hand]
+
+
+exception-time:       [2026-03-17T17:49:46.433Z]  
+custom-exception:  [LocalSaleController.create] | 
+system-exception:  [Error: No active configuration found for account type: Cash In Hand]
+
+
+exception-time:       [2026-03-17T17:54:52.420Z]  
+custom-exception:  [LocalSaleController.create] | 
+system-exception:  [Error: Cannot sell more than available stock in local account. Available stock: 300]
+
+
+exception-time:       [2026-03-17T17:55:12.927Z]  
+custom-exception:  [LocalSaleController.create] | 
+system-exception:  [Error: No active configuration found for account type: Cash In Hand]
+
+
+exception-time:       [2026-03-17T17:57:46.044Z]  
+custom-exception:  [LocalSaleController.create] | 
+system-exception:  [Error: No active configuration found for account type: Cash In Hand]
+
+
+exception-time:       [2026-03-17T18:05:06.994Z]  
+custom-exception:  [LocalSaleController.create] | 
+system-exception:  [PrismaClientValidationError:  Invalid `prismaClient.account_sub_head.findFirst()` invocation in E:\Switch2iTech\Poultry Tanvir\poultry_management_system\.next\server\chunks\[root-of-the-server]__d383a085._.js:248:60    245 class AccountConfigService {   246     async getAccountConfig(description, tx) {   247         const prismaClient = tx ? tx : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"]; → 248         const config = await prismaClient.account_sub_head.findFirst({                 where: {                   subhead_nam: "Cash In Hand"                 },                 select: {                   head_id: true,                   sub_id: true,                   acc_id: true,                   ~~~~~~               ?   subhead_id?: true,               ?   subhead_nam?: true,               ?   is_parent?: true,               ?   parent_sub_id?: true,               ?   insert_dat?: true,               ?   update_dat?: true,               ?   insert_by?: true,               ?   update_by?: true,               ?   status?: true,               ?   head?: true,               ?   parent?: true,               ?   children?: true,               ?   accounts?: true,               ?   accounts_manage?: true,               ?   _count?: true                 }               })  Unknown field `acc_id` for select statement on model `account_sub_head`. Available options are marked with ?.]
+
+

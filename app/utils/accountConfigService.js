@@ -4,22 +4,20 @@ import prisma from "@/lib/prisma";
 export class AccountConfigService {
   async getAccountConfig(description, tx) {
     const prismaClient = tx ? tx : prisma;
-    const config = await prismaClient.account_manage.findFirst({
+    const config = await prismaClient.accounts.findFirst({
       where: {
-        description: description,
-        is_active: 1,
+        account_nam: description,
       },
       select: {
         head_id: true,
         sub_id: true,
         acc_id: true,
-        display_category: true,
       },
     });
 
     if (!config) {
       throw new Error(
-        `No active configuration found for account type: ${description}`
+        `No active configuration found for account type: ${description}`,
       );
     }
 

@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl"]
   // output   = "../lib/generated/prisma"
 }
@@ -558,6 +558,12 @@ model accounts {
   account_contact   String? @db.VarChar(50)
   account_reference String? @db.VarChar(255)
   account_no        String? @db.VarChar(100)
+  weight_one        Float?
+  weight_two        Float?
+  weight_three      Float?
+  rate_one          Float?
+  rate_two          Float?
+  rate_three        Float?
 
   // Account type flags
   is_employee     Int @default(0)
@@ -617,6 +623,8 @@ model accounts {
   unit_expenses         unit_expense[]         @relation("UnitExpenseSupplier")
   unit_sales            unit_sale[]            @relation("UnitSaleCustomer")
   expenseTransactions   expense_transaction[]  @relation("ExpenseTransactionAccount")
+  local_sale_local      local_sale[]           @relation("LocalSaleLocal")
+  local_sale_purchaser  local_sale[]           @relation("LocalSalePurchaser")
 
   // Unique constraint to ensure account_id is unique within each sub_id
   @@unique([sub_id, account_id], name: "uq_sub_account")
@@ -1027,4 +1035,23 @@ model whole_sale {
   @@index([former_account])
   @@index([purcher_account])
   @@index([sale_date])
+}
+
+model local_sale {
+  local_sale_id     Int      @id @default(autoincrement())
+  local_sale_date   DateTime
+  local_account     Int
+  purchaser_account Int
+  purchaser_weight  Float
+  purchaser_rate    Float
+  purchaser_amount  Float
+  received_amount   Float
+  insert_dat        DateTime @default(now()) @db.Timestamp(0)
+  update_dat        DateTime @default(now()) @db.Timestamp(0)
+  insert_by         String   @default("user 1") @db.VarChar(50)
+  update_by         String   @default("user 1") @db.VarChar(50)
+  status            Int      @default(1)
+
+  local_account_ref     accounts @relation("LocalSaleLocal", fields: [local_account], references: [acc_id])
+  purchaser_account_ref accounts @relation("LocalSalePurchaser", fields: [purchaser_account], references: [acc_id])
 }
