@@ -161,6 +161,30 @@ class OppositeTransactionRepository {
       },
     });
 
+    // Fetch local transactions within date range
+    const localSales = await prisma.local_sale.findMany({
+      where: {
+        local_sale_date: {
+          gte: new Date(start_date),
+          lte: new Date(end_date),
+        },
+        received_amount: {
+          gt: 0,
+        },
+        status: 1,
+      },
+      include: {
+        purchaser_account_ref: {
+          select: {
+            account_nam: true,
+          },
+        },
+      },
+      orderBy: {
+        local_sale_date: "asc",
+      },
+    });
+
     // Combine and sort by date
     const combinedTransactions = [
       ...oppositeTransactions.map((t) => ({
@@ -170,6 +194,11 @@ class OppositeTransactionRepository {
       ...selfTransactions.map((t) => ({
         ...t,
         type: "self",
+      })),
+      ...localSales.map((t) => ({
+        ...t,
+        type: "local_sale",
+        transaction_date: t.local_sale_date,
       })),
     ].sort(
       (a, b) => new Date(a.transaction_date) - new Date(b.transaction_date),

@@ -153,6 +153,26 @@ class LocalSaleController {
     }
   }
 
+  async readReportDetail(req) {
+    try {
+      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const local_account = searchParams.get("local_account");
+
+      if (!start_dat || !end_dat) {
+        return errorResponse(new Error("start_dat and end_dat are required"), 400);
+      }
+
+      const result = await LocalSaleRepository.readReportDetail(start_dat, end_dat, local_account);
+
+      return successResponse(result, "Success");
+    } catch (err) {
+      ErrorLogger.log("LocalSaleController.readReportDetail", err);
+      return errorResponse(err, 500);
+    }
+  }
+
   async create(req) {
     try {
       const { req_object } = await req.json();

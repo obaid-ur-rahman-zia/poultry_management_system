@@ -74,6 +74,8 @@ export default function BalanceSheetReport() {
         } else if (trans.transaction_type === "pay") {
           balance -= trans.amount;
         }
+      } else if (trans.type === "local_sale") {
+        balance += trans.received_amount;
       }
     }
     return balance;
@@ -132,6 +134,10 @@ export default function BalanceSheetReport() {
           receiverName = trans.account?.account_nam || "-";
           amountReceived = trans.amount.toFixed(2);
         }
+      } else if (trans.type === "local_sale") {
+        payerName = trans.purchaser_account_ref?.account_nam || "-";
+        amountPaid = trans.received_amount.toFixed(2);
+        description = "Local Sale";
       }
 
       rows.push([
@@ -344,6 +350,10 @@ export default function BalanceSheetReport() {
                           receiverName = trans.account?.account_nam || "-";
                           amountReceived = trans.amount.toFixed(2);
                         }
+                      } else if (trans.type === "local_sale") {
+                        payerName = trans.purchaser_account_ref?.account_nam || "-";
+                        amountPaid = trans.received_amount.toFixed(2);
+                        description = "Local Sale";
                       }
 
                       return (

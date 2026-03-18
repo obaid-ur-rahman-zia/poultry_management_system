@@ -39,6 +39,31 @@ class LocalSaleRepository {
     });
   }
 
+  async readReportDetail(startDate, endDate, localAccount) {
+    const whereClause = {
+      status: 1,
+      ...(startDate && endDate ? {
+        local_sale_date: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        }
+      } : {}),
+      ...(localAccount ? { local_account: Number(localAccount) } : {}),
+    };
+
+    return prisma.local_sale.findMany({
+      where: whereClause,
+      include: {
+        local_account_ref: true,
+        purchaser_account_ref: true,
+      },
+      orderBy: [
+        { local_sale_date: 'asc' },
+        { local_sale_id: 'asc' }
+      ],
+    });
+  }
+
   async create(data, tx) {
     const prismaClient = tx || prisma;
     return prismaClient.local_sale.create({
@@ -49,7 +74,9 @@ class LocalSaleRepository {
         purchaser_weight: Number(data.purchaser_weight),
         purchaser_rate: Number(data.purchaser_rate),
         purchaser_amount: Number(data.purchaser_amount),
+        previous_balance: data.previous_balance !== undefined ? Number(data.previous_balance) : null,
         received_amount: Number(data.received_amount),
+        net_balance: data.net_balance !== undefined ? Number(data.net_balance) : null,
         insert_by: data.insert_by || "user 1",
         update_by: data.update_by || "user 1",
         status: data.status ?? 1,
@@ -72,7 +99,9 @@ class LocalSaleRepository {
         purchaser_weight: data.purchaser_weight !== undefined ? Number(data.purchaser_weight) : undefined,
         purchaser_rate: data.purchaser_rate !== undefined ? Number(data.purchaser_rate) : undefined,
         purchaser_amount: data.purchaser_amount !== undefined ? Number(data.purchaser_amount) : undefined,
+        previous_balance: data.previous_balance !== undefined ? Number(data.previous_balance) : undefined,
         received_amount: data.received_amount !== undefined ? Number(data.received_amount) : undefined,
+        net_balance: data.net_balance !== undefined ? Number(data.net_balance) : undefined,
         update_by: data.update_by || "user 1",
         update_dat: new Date(),
       },

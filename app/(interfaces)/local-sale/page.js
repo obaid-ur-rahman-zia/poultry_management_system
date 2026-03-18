@@ -53,6 +53,7 @@ const emptyForm = () => ({
   purchaser_weight: "",
   purchaser_rate: "",
   purchaser_amount: "",
+  previous_balance: "",
   received_amount: "",
 });
 
@@ -147,9 +148,10 @@ function LocalSaleTab() {
       ? Number(form.purchaser_weight) * Number(form.purchaser_rate)
       : 0;
 
-  const netBalance = purchaserBalance !== null 
-    ? purchaserBalance + purchaserAmount - Number(form.received_amount || 0)
-    : purchaserAmount - Number(form.received_amount || 0);
+  const previousBalance = purchaserBalance !== null ? purchaserBalance : 0;
+  
+  const netBalance =
+    previousBalance + purchaserAmount - Number(form.received_amount || 0);
 
   // ─── fetch helpers ────────────────────────────────────────────────────
   useEffect(() => {
@@ -304,8 +306,9 @@ function LocalSaleTab() {
     setForm((prev) => ({
       ...prev,
       purchaser_amount: purchaserAmount.toString(),
+      previous_balance: previousBalance.toString(),
     }));
-  }, [purchaserAmount]);
+  }, [purchaserAmount, previousBalance]);
 
   // ─── handlers ────────────────────────────────────────────────────────
   const handleChange = (field, value) => {
@@ -356,7 +359,9 @@ function LocalSaleTab() {
         purchaser_weight: Number(purchaser_weight),
         purchaser_rate: Number(purchaser_rate),
         purchaser_amount: purchaserAmount,
+        previous_balance: previousBalance,
         received_amount: Number(received_amount || 0),
+        net_balance: netBalance,
         ...(isEditMode && { local_sale_id: editingId }),
       },
     };
@@ -398,6 +403,7 @@ function LocalSaleTab() {
       purchaser_weight: sale.purchaser_weight?.toString() || "",
       purchaser_rate: sale.purchaser_rate?.toString() || "",
       purchaser_amount: sale.purchaser_amount?.toString() || "",
+      previous_balance: sale.previous_balance?.toString() || "",
       received_amount: sale.received_amount?.toString() || "",
     });
     document.getElementById("local-sale-form")?.scrollIntoView({ behavior: "smooth" });
@@ -748,7 +754,7 @@ function LocalSaleTab() {
                               <TableCell>{sale.purchaser_rate || "0"}</TableCell>
                               <TableCell>{sale.purchaser_amount || "0"}</TableCell>
                               <TableCell className="text-green-600">{sale.received_amount || "0"}</TableCell>
-                              <TableCell className={rowNet < 0 ? "text-green-600 font-semibold" : rowNet > 0 ? "text-red-600 font-semibold" : ""}>{rowNet || "0"}</TableCell>
+                              <TableCell className={rowNet < 0 ? "text-green-600 font-semibold" : rowNet > 0 ? "text-red-600 font-semibold" : ""}>{sale.net_balance !== null ? sale.net_balance : (rowNet || "0")}</TableCell>
                               <TableCell>
                                 <Button
                                   variant="ghost"

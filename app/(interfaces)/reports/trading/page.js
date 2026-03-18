@@ -3,6 +3,7 @@ import ExpenseHeadTrialBalance from "./expenseHeadTrialBalance/page";
 import BalanceSheet from "./balanceSheet/page";
 import WholeSaleReport from "./wholeSaleDetailReport/page";
 import WholeSaleProfit from "./wholeSaleProfit/page";
+import LocalSaleReport from "./localSaleDetailReport/page";
 
 export default function ReportPage() {
   return (
@@ -12,6 +13,7 @@ export default function ReportPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <WholeSaleReport />
           <WholeSaleProfit />
+          <LocalSaleReport />
           <SubheadTrialBalance />
           <ExpenseHeadTrialBalance />
           <BalanceSheet />

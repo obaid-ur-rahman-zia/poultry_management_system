@@ -1045,7 +1045,9 @@ model local_sale {
   purchaser_weight  Float
   purchaser_rate    Float
   purchaser_amount  Float
+  previous_balance  Float?
   received_amount   Float
+  net_balance       Float?
   insert_dat        DateTime @default(now()) @db.Timestamp(0)
   update_dat        DateTime @default(now()) @db.Timestamp(0)
   insert_by         String   @default("user 1") @db.VarChar(50)
