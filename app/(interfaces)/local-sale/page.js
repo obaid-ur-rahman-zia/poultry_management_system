@@ -611,7 +611,7 @@ function LocalSaleTab() {
                       required
                     />
                   </div>
-                  <span className="text-l underline">Net Balance {netBalance.toFixed(2)}</span>
+                  {!isEditMode && <span className="text-l underline">Net Balance {netBalance.toFixed(2)}</span>}
                 </div>
 
                 <div className="flex flex-col justify-center gap-2">
