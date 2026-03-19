@@ -1,9 +1,33 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Printer, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Printer, X, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import Select from "react-select";
 import { FileText } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select as ShadcnSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Image from "next/image";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
@@ -43,6 +67,10 @@ const selectStyles = {
 export default function AccountLedgerModal() {
   const { control, setValue, watch } = useForm();
   const [isOpen, setIsOpen] = useState(false);
+  const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
+  const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const [accountSearchType, setAccountSearchType] = useState("all");
+  const [accountSubHeads, setAccountSubHeads] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const selectedAccount = watch("selectedAccount");
@@ -56,7 +84,22 @@ export default function AccountLedgerModal() {
   // Fetch all accounts on component mount
   useEffect(() => {
     fetchAccounts();
+    fetchSubHeads();
   }, []);
+
+  const fetchSubHeads = async () => {
+    try {
+      const response = await fetch("/api/account/accountSubHead/readAll");
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const subHeadsData =
+          result.response_result?.data || result.response_result || [];
+        setAccountSubHeads(subHeadsData);
+      }
+    } catch (error) {
+      console.error("Error fetching subheads:", error);
+    }
+  };
 
   const fetchAccounts = async () => {
     try {
@@ -245,30 +288,42 @@ export default function AccountLedgerModal() {
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Select Account
               </label>
-              <Controller
-                control={control}
-                name="selectedAccount"
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    options={accountOptions}
-                    placeholder="Search accounts..."
-                    isSearchable
-                    value={
-                      selectedAccount
-                        ? accountOptions.find(
-                            (a) => a.value === selectedAccount,
-                          )
-                        : null
-                    }
-                    onChange={(opt) => {
-                      field.onChange(opt.value);
-                    }}
-                    styles={selectStyles}
-                    className="w-full text-sm"
+              <div className="flex gap-2 items-center">
+                <div className="flex-1">
+                  <Controller
+                    control={control}
+                    name="selectedAccount"
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        options={accountOptions}
+                        placeholder="Search accounts..."
+                        isSearchable
+                        value={
+                          selectedAccount
+                            ? accountOptions.find(
+                                (a) => a.value === selectedAccount,
+                              )
+                            : null
+                        }
+                        onChange={(opt) => {
+                          field.onChange(opt.value);
+                        }}
+                        styles={selectStyles}
+                        className="w-full text-sm"
+                      />
+                    )}
                   />
-                )}
-              />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAccountSearchDialogOpen(true)}
+                  className="h-10 px-3 border border-gray-300 rounded-lg text-sm font-bold bg-white hover:bg-gray-50 flex items-center justify-center transition-colors shadow-sm"
+                  title="Search Accounts"
+                >
+                  =
+                </button>
+              </div>
             </div>
 
             <div>
@@ -578,6 +633,102 @@ export default function AccountLedgerModal() {
           </div>
         </div>
       )}
+
+      {/* Account Search Dialog */}
+      <Dialog
+        open={isAccountSearchDialogOpen}
+        onOpenChange={setIsAccountSearchDialogOpen}
+      >
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Search Accounts</DialogTitle>
+            <DialogDescription>
+              Search and select an account from all available accounts
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 space-y-2">
+                <Label>Account Type</Label>
+                <ShadcnSelect
+                  value={accountSearchType}
+                  onValueChange={setAccountSearchType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {accountSubHeads.map((subhead) => (
+                      <SelectItem
+                        key={subhead.sub_id}
+                        value={subhead.sub_id.toString()}
+                      >
+                        {subhead.subhead_nam}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </ShadcnSelect>
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label>Search</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search accounts..."
+                    value={accountSearchQuery}
+                    onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="relative max-h-[400px] overflow-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead>Account Name</TableHead>
+                    <TableHead>Account No</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {accounts
+                    .filter((acc) => {
+                      // Filter by account sub-head (account type)
+                      if (accountSearchType !== "all") {
+                        if (acc.sub_id?.toString() !== accountSearchType) {
+                          return false;
+                        }
+                      }
+
+                      if (!accountSearchQuery) return true;
+                      const query = accountSearchQuery.toLowerCase();
+                      return (
+                        acc.account_nam?.toLowerCase().includes(query) ||
+                        acc.account_no?.toLowerCase().includes(query)
+                      );
+                    })
+                    .map((acc) => (
+                      <TableRow
+                        key={acc.acc_id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => {
+                          setValue("selectedAccount", acc.acc_id);
+                          setIsAccountSearchDialogOpen(false);
+                          setAccountSearchQuery("");
+                          setAccountSearchType("all");
+                        }}
+                      >
+                        <TableCell className="font-medium">{acc.account_nam}</TableCell>
+                        <TableCell>{acc.account_no || "N/A"}</TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

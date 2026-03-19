@@ -558,7 +558,29 @@ export default function AccountPage() {
 
   // Filter accounts (client-side filtering on paginated data)
   const filteredAccounts = accounts.filter((account) => {
-    if (account.acc_id === 1) return false; // Filter out cash in hand account inherently with acc_id 1
+    // Find the subhead details for this account from the pre-fetched subHeads
+    const accountSubhead = subHeads.find(
+      (sh) => sh.sub_id === account.sub_id
+    );
+
+    if (accountSubhead) {
+      const subheadName = accountSubhead.subhead_nam;
+      const parentName = accountSubhead.parent?.subhead_nam;
+
+      // Filter out Cash In Hand, Local Sale, Expense Head, and its children
+      if (
+        subheadName === "Cash In Hand" ||
+        subheadName === "Local Sale" ||
+        subheadName === "Expense Head" ||
+        parentName === "Expense Head"
+      ) {
+        return false; // hide these accounts
+      }
+    } else if (account.acc_id === 1) {
+      // Fallback filter out cash in hand account inherently with acc_id 1
+      return false;
+    }
+
     const matchesSearch =
       searchQuery === "" ||
       account.account_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -607,7 +629,13 @@ export default function AccountPage() {
                   render={({ field }) => (
                     <div className="flex-1">
                       <Combobox
-                        options={subHeads.map((subHead) => ({
+                        options={subHeads
+                          .filter(
+                            (subHead) =>
+                              subHead.subhead_nam !== "Expense Head" &&
+                              subHead.parent?.subhead_nam !== "Expense Head"
+                          )
+                          .map((subHead) => ({
                           value: subHead.sub_id.toString(),
                           label: `${subHead.subhead_nam}${
                             subHead.head?.head_nam &&

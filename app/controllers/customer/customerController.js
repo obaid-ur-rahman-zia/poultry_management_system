@@ -21,13 +21,13 @@ class CustomerController {
       await RedisService.setex(
         cacheKey,
         300,
-        JSON.stringify({ customer_data, nextId })
+        JSON.stringify({ customer_data, nextId }),
       );
       return successResponse({ customer_data, nextId }, "Success");
     } catch (err) {
       ErrorLogger.log(
         "Failed to get customers in Method: CustomerController.readAll",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -53,24 +53,24 @@ class CustomerController {
         !customer_contact
       ) {
         const error = new Error(
-          "customer_name, customer_cnic, customer_address, and customer_contact are required"
+          "customer_name, customer_cnic, customer_address, and customer_contact are required",
         );
         ErrorLogger.log(
           "Failed to create customer in Method: CustomerController.create",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
 
       //check if account_cnic is unique
       const duplicate = await CustomerRepository.checkDuplicate(
-        req_object.customer_cnic.trim()
+        req_object.customer_cnic.trim(),
       );
       if (duplicate) {
         const error = new Error("Account with this CNIC already exists");
         ErrorLogger.log(
           "Failed to update customer in Method: CustomerController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -79,12 +79,11 @@ class CustomerController {
       let config;
       try {
         const configService = new AccountConfigService();
-        config = await configService.getAccountConfig("Customer");
+        config = await configService.getSubheadConfig("Purchaser");
       } catch (error) {
         // Config not found, find or create Customer subhead
-        let customerSubhead = await AccountSubHeadRepository.findByName(
-          "Customer"
-        );
+        let customerSubhead =
+          await AccountSubHeadRepository.findByName("Purchaser");
 
         if (!customerSubhead) {
           // Get first account head to use for the subhead
@@ -94,14 +93,14 @@ class CustomerController {
 
           if (!firstHead) {
             throw new Error(
-              "No account head found. Please create an account head first."
+              "No account head found. Please create an account head first.",
             );
           }
 
           // Create Customer subhead
           customerSubhead = await AccountSubHeadRepository.create({
             head_id: firstHead.head_id,
-            subhead_nam: "Customer",
+            subhead_nam: "Purchaser",
             insert_by: "system",
             update_by: "system",
             status: 1,
@@ -136,24 +135,24 @@ class CustomerController {
           acc_id: customer.acc_id,
           account_id: customer.account_id,
         },
-        "Customer created successfully"
+        "Customer created successfully",
       );
     } catch (err) {
       if (err.code === "P2002") {
         return errorResponse(
           new Error("Customer with this combination already exists"),
-          400
+          400,
         );
       }
       if (err.code === "P2003") {
         return errorResponse(
           new Error("Invalid cgroup_id - referenced record does not exist"),
-          400
+          400,
         );
       }
       ErrorLogger.log(
         "Failed to create customer in Method: CustomerController.create",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -168,7 +167,7 @@ class CustomerController {
         const error = new Error("acc_id is required");
         ErrorLogger.log(
           "Failed to get customer by id in Method: CustomerController.readById",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -177,7 +176,7 @@ class CustomerController {
       if (!result) {
         ErrorLogger.log(
           "Failed to get customer by id in Method: CustomerController.readById",
-          new Error("Customer not found")
+          new Error("Customer not found"),
         );
         return errorResponse(new Error("Customer not found"), 404);
       }
@@ -186,7 +185,7 @@ class CustomerController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get customer by id in Method: CustomerController.readById",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -201,7 +200,7 @@ class CustomerController {
         const error = new Error("acc_id is required");
         ErrorLogger.log(
           "Failed to update customer in Method: CustomerController.update",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -223,19 +222,19 @@ class CustomerController {
       if (err.code === "P2025") {
         ErrorLogger.log(
           "Failed to update customer in Method: CustomerController.update",
-          err
+          err,
         );
         return errorResponse(new Error("Customer not found"), 404);
       }
       if (err.code === "P2003") {
         return errorResponse(
           new Error("Invalid cgroup_id - referenced record does not exist"),
-          400
+          400,
         );
       }
       ErrorLogger.log(
         "Failed to update customer in Method: CustomerController.update",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }
@@ -250,7 +249,7 @@ class CustomerController {
         const error = new Error("cgroup_id is required");
         ErrorLogger.log(
           "Failed to get customers by group in Method: CustomerController.readByCustomerGroup",
-          error
+          error,
         );
         return errorResponse(error, 400);
       }
@@ -260,7 +259,7 @@ class CustomerController {
     } catch (err) {
       ErrorLogger.log(
         "Failed to get customers by group in Method: CustomerController.readByCustomerGroup",
-        err
+        err,
       );
       return errorResponse(err, 500);
     }

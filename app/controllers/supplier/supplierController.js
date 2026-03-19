@@ -78,11 +78,11 @@ class SupplierController {
       let config;
       try {
         const configService = new AccountConfigService();
-        config = await configService.getAccountConfig("Supplier");
+        config = await configService.getSubheadConfig("Farmer");
       } catch (error) {
         // Config not found, find or create Supplier subhead
         let supplierSubhead =
-          await AccountSubHeadRepository.findByName("Supplier");
+          await AccountSubHeadRepository.findByName("Farmer");
 
         if (!supplierSubhead) {
           // Get first account head to use for the subhead
@@ -99,7 +99,7 @@ class SupplierController {
           // Create Supplier subhead
           supplierSubhead = await AccountSubHeadRepository.create({
             head_id: firstHead.head_id,
-            subhead_nam: "Supplier",
+            subhead_nam: "Farmer",
             insert_by: "system",
             update_by: "system",
             status: 1,

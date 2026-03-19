@@ -740,9 +740,7 @@ function LocalSaleTab() {
                         </TableRow>
                       ) : (
                         filteredSales.map((sale, index) => {
-                          const rowAmount =
-                            Number(sale.purchaser_weight || 0) *
-                            Number(sale.purchaser_rate || 0);
+                          const rowAmount = Number(sale.purchaser_amount || 0);
                           const rowNet = rowAmount - Number(sale.received_amount || 0);
                           
                           return (
@@ -754,7 +752,7 @@ function LocalSaleTab() {
                               <TableCell>{sale.purchaser_rate || "0"}</TableCell>
                               <TableCell>{sale.purchaser_amount || "0"}</TableCell>
                               <TableCell className="text-green-600">{sale.received_amount || "0"}</TableCell>
-                              <TableCell className={rowNet < 0 ? "text-green-600 font-semibold" : rowNet > 0 ? "text-red-600 font-semibold" : ""}>{sale.net_balance !== null ? sale.net_balance : (rowNet || "0")}</TableCell>
+                              <TableCell className={rowNet < 0 ? "text-green-600 font-semibold" : rowNet > 0 ? "text-red-600 font-semibold" : ""}>{rowNet}</TableCell>
                               <TableCell>
                                 <Button
                                   variant="ghost"

@@ -494,3 +494,8 @@ custom-exception:  [LocalSaleController.readReportDetail] |
 system-exception:  [TypeError: __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$repositories$2f$localSale$2f$localSaleRepository$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__.default.readReportDetail is not a function]
 
 
+exception-time:       [2026-03-19T09:15:08.211Z]  
+custom-exception:  [Failed to update customer in Method: CustomerController.update] | 
+system-exception:  [Error: Account with this CNIC already exists]
+
+

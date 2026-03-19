@@ -24,6 +24,27 @@ export class AccountConfigService {
     return config;
   }
 
+  async getSubheadConfig(description, tx) {
+    const prismaClient = tx ? tx : prisma;
+    const config = await prismaClient.account_sub_head.findFirst({
+      where: {
+        subhead_nam: description,
+      },
+      select: {
+        head_id: true,
+        sub_id: true,
+      },
+    });
+
+    if (!config) {
+      throw new Error(
+        `No active configuration found for subhead: ${description}`,
+      );
+    }
+
+    return config;
+  }
+
   async getAllActiveConfigs() {
     const configs = await prisma.account_manage.findMany({
       where: {
