@@ -4,6 +4,7 @@ import BalanceSheet from "./balanceSheet/page";
 import WholeSaleReport from "./wholeSaleDetailReport/page";
 import WholeSaleProfit from "./wholeSaleProfit/page";
 import LocalSaleReport from "./localSaleDetailReport/page";
+import AccountLedger from "../accountReports/accountLedger/page"
 
 export default function ReportPage() {
   return (
@@ -17,6 +18,7 @@ export default function ReportPage() {
           <SubheadTrialBalance />
           <ExpenseHeadTrialBalance />
           <BalanceSheet />
+          <AccountLedger />
         </div>
       </div>
     </main>

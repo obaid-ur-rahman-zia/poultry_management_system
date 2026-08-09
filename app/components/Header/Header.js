@@ -55,7 +55,7 @@ import { useRouter } from "next/navigation";
 // Quick access buttons - matching the Quick Links style from quick-access page
 const quickAccessLinks = [
   { href: "/", name: "Dashboard", icon: Home, color: "bg-blue-500" },
-  { href: "/account", name: "Accounts", icon: Users, color: "bg-green-500" },
+  // { href: "/account", name: "Accounts", icon: Users, color: "bg-green-500" },
   {
     href: "/sale",
     name: "Whole Sale",

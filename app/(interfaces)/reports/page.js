@@ -12,18 +12,18 @@ import { Button } from "@/components/ui/button";
 const reportCategories = [
   {
     id: "account-reports",
-    title: "Account Reports",
+    title: "LOCALSALE REPORTS",
     description:
       "View ledgers, trial balances, balance sheets, and full transaction history.",
-    buttonLabel: "Accounting",
+    buttonLabel: "LOCALSALE",
     href: "/reports/accountReports",
     icon: Wallet,
   },
   {
     id: "trading-reports",
-    title: "Trading Reports",
+    title: "WHOLESALE REPORTS",
     description: "View wholesale and other major trading transaction reports.",
-    buttonLabel: "Trade",
+    buttonLabel: "WHOLESALE",
     href: "/reports/trading",
     icon: ShoppingCart,
   },

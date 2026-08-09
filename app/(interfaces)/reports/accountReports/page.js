@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
-import AccountLedger from "./accountLedger/page";
-import TrialBalance from "./trialBalance/page";
+// import AccountLedger from "./accountLedger/page";
+import LocalSaleReport from "../trading/localSaleDetailReport/page"
+// import TrialBalance from "./trialBalance/page";
 
 export default function ReportPage() {
   return (
@@ -44,8 +45,9 @@ export default function ReportPage() {
               </div>
             </div>
           </Link>
-          <AccountLedger />
-          <TrialBalance />
+          <LocalSaleReport />
+          {/* <AccountLedger /> */}
+          {/* <TrialBalance /> */}
         </div>
       </div>
     </main>
