@@ -34,10 +34,11 @@ async function main() {
   if (firstHead) {
     // Create subheads one by one to handle duplicates better
     const subheads = [
+      
       {
         head_id: firstHead.head_id,
         subhead_id: 1,
-        subhead_nam: "Bank",
+        subhead_nam: "FARMER",
         is_parent: 0,
         parent_sub_id: null,
         status: 1,
@@ -45,23 +46,22 @@ async function main() {
       {
         head_id: firstHead.head_id,
         subhead_id: 2,
-        subhead_nam: "Farmer",
+        subhead_nam: "PURCHASER",
         is_parent: 0,
         parent_sub_id: null,
         status: 1,
-      },
-      {
+      },      {
         head_id: firstHead.head_id,
         subhead_id: 3,
-        subhead_nam: "Purchaser",
+        subhead_nam: "LOCAL PURCHASER",
         is_parent: 0,
         parent_sub_id: null,
         status: 1,
-      },
-      {
+      },    
+        {
         head_id: firstHead.head_id,
         subhead_id: 4,
-        subhead_nam: "Opening Balance",
+        subhead_nam: "RAW MATERIAL VENDOR",
         is_parent: 0,
         parent_sub_id: null,
         status: 1,
@@ -69,6 +69,90 @@ async function main() {
       {
         head_id: firstHead.head_id,
         subhead_id: 5,
+        subhead_nam: "RAW MATERIAL CLIENT",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 6,
+        subhead_nam: "FEED COMPANIES",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 7,
+        subhead_nam: "FEED CLIENTS",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 8,
+        subhead_nam: "EGG SUPPLIER",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 9,
+        subhead_nam: "EGG CLIENTS",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 10,
+        subhead_nam: "PROPERTIES",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 11,
+        subhead_nam: "FRIENDS",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 12,
+        subhead_nam: "Banks",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 13,
+        subhead_nam: "Cash In Hand",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 14,
+        subhead_nam: "Opening Balance",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 15,
         subhead_nam: "Expense Head",
         is_parent: 1,
         parent_sub_id: null,

@@ -300,7 +300,7 @@ export default function SubheadTrialBalanceModal() {
                   if (chunk.type === "HEADER") {
                     return (
                       <div key={idx} className="mt-4 first:mt-0">
-                        <span className="text-lg font-bold text-gray-800">
+                        <span className="text-xl font-extrabold text-gray-800">
                           {chunk.name}
                         </span>
                         <Badge variant="outline" className="ml-2 text-xs">
@@ -314,6 +314,13 @@ export default function SubheadTrialBalanceModal() {
                     return (
                       <div key={idx} className="overflow-x-auto">
                         <table className="w-full border-collapse text-sm mb-2 border border-gray-300">
+                          <colgroup>
+                            <col className="w-[40%]" />
+                            <col className="w-[15%]" />
+                            <col className="w-[15%]" />
+                            <col className="w-[15%]" />
+                            <col className="w-[15%]" />
+                          </colgroup>
                           <thead>
                             <tr className="bg-gray-100 border-b-2 border-gray-300">
                               <th className="px-3 py-2 text-left font-bold text-gray-700 w-[40%] border border-gray-300">
@@ -371,18 +378,19 @@ export default function SubheadTrialBalanceModal() {
                     return (
                       <div
                         key={idx}
-                        className="bg-gray-100 border-2 border-gray-200 p-2 mb-4 font-bold flex text-sm"
+                        className="bg-gray-100 border-2 border-gray-200 p-2 mb-4 font-bold grid grid-cols-[40%_15%_15%_15%_15%] text-sm"
                       >
-                        <div className="flex-1 text-right mr-10 whitespace-nowrap">
+                        <div className="text-left whitespace-nowrap">
                           Total {chunk.name}:
                         </div>
-                        <div className="w-[100px] text-right text-green-700 ml-auto">
+                        <div />
+                        <div className="text-right text-green-700">
                           {formatCurrency(chunk.debit)}
                         </div>
-                        <div className="w-[100px] text-right text-red-700 ml-8">
+                        <div className="text-right text-red-700">
                           {formatCurrency(chunk.credit)}
                         </div>
-                        <div className="w-[100px] text-right text-blue-700 ml-8">
+                        <div className="text-right text-blue-700">
                           {formatCurrency(chunk.balance)}
                         </div>
                       </div>

@@ -114,7 +114,7 @@ export default function QuickAccessPage() {
     // Always use 6 positions for the petal structure
     const positions = 6;
     const angle = (2 * Math.PI * index) / positions - Math.PI / 2; // Start from top
-    const radius = 140; // Reduced radius for compact view
+    const radius = 110; // Keep the route cluster compact and near the top
     
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
@@ -123,12 +123,12 @@ export default function QuickAccessPage() {
   };
 
   const centerX = 200;
-  const centerY = 200;
+  const centerY = 165;
 
   return (
     <div className="min-h-screen overflow-hidden flex flex-col bg-background">
       {/* Compact Header */}
-      <div className="flex-shrink-0 px-4 sm:px-6 pt-4 pb-2">
+      <div className="flex-shrink-0 px-4 sm:px-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold  flex items-center gap-2">
