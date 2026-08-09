@@ -381,7 +381,7 @@ export default function SubheadTrialBalanceModal() {
                         className="bg-gray-100 border-2 border-gray-200 p-2 mb-4 font-bold grid grid-cols-[40%_15%_15%_15%_15%] text-sm"
                       >
                         <div className="text-left whitespace-nowrap">
-                          Total {chunk.name}:
+                          Total 
                         </div>
                         <div />
                         <div className="text-right text-green-700">

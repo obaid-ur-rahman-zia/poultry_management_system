@@ -57,19 +57,27 @@ const quickAccessLinks = [
   { href: "/", name: "Dashboard", icon: Home, color: "bg-blue-500" },
   { href: "/account", name: "Accounts", icon: Users, color: "bg-green-500" },
   {
-    href: "/trading",
-    name: "Trading",
-    icon: TrendingUp,
+    href: "/sale",
+    name: "Whole Sale",
+    icon: ShoppingCart,
     color: "bg-purple-500",
   },
-  { href: "/sale", name: "Sale", icon: ShoppingCart, color: "bg-pink-500" },
-  { href: "/reports", name: "Reports", icon: FileText, color: "bg-orange-500" },
   {
-    href: "/floc-management",
-    name: "Floc Mgmt",
+    href: "/transactions",
+    name: "Recovery",
     icon: Activity,
     color: "bg-teal-500",
   },
+  
+  {
+    href: "/expense-head",
+    name: "Expenses",
+    icon: DollarSign,
+    color: "bg-teal-500",
+  },
+  { href: "/local-sale", name: "Local Sale", icon: ShoppingCart, color: "bg-pink-500" },
+  { href: "/reports", name: "Reports", icon: FileText, color: "bg-orange-500" },
+  
 ];
 
 const Header = () => {
