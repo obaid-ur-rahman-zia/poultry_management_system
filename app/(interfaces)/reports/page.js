@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import {
   Wallet,
   LayoutGrid,
   ShoppingCart,
   Sparkles,
-  FileText,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const reportCategories = [
   {
@@ -17,46 +15,30 @@ const reportCategories = [
     title: "Account Reports",
     description:
       "View ledgers, trial balances, balance sheets, and full transaction history.",
+    buttonLabel: "Accounting",
     href: "/reports/accountReports",
     icon: Wallet,
+  },
+  {
+    id: "trading-reports",
+    title: "Trading Reports",
+    description: "View wholesale and other major trading transaction reports.",
+    buttonLabel: "Trade",
+    href: "/reports/trading",
+    icon: ShoppingCart,
   },
   {
     id: "farming-reports",
     title: "Farming Reports",
     description:
       "Access unit expense, unit income, and trading reports related to farming.",
+    buttonLabel: "Farming",
     href: "/reports/farming",
     icon: LayoutGrid,
   },
-  {
-    id: "trading-reports",
-    title: "Trading Reports",
-    description: "View wholesale and other major trading transaction reports.",
-    href: "/reports/trading",
-    icon: ShoppingCart,
-  },
 ];
 
-const colorMap = {
-  "account-reports": "bg-emerald-500",
-  "farming-reports": "bg-blue-500",
-  "trading-reports": "bg-purple-500",
-};
-
 export default function ReportsLandingPage() {
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-
-  const calculatePetalPosition = (index, total) => {
-    if (total === 0) return { x: 0, y: 0, angle: 0 };
-    let startAngle = -Math.PI / 2; // Top
-    if (total === 2) startAngle = Math.PI; // L/R
-    const angle = (2 * Math.PI * index) / total + startAngle;
-    const radius = 220;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    return { x, y, angle };
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 py-10 px-4 flex flex-col items-center overflow-x-hidden">
       <div className="max-w-5xl mx-auto mb-5 text-center">
@@ -69,106 +51,22 @@ export default function ReportsLandingPage() {
         </p>
       </div>
 
-      <div className="relative w-full max-w-4xl h-[600px] flex items-center justify-center mx-auto ">
-        {/* Center circle */}
-        <div
-          className="absolute z-10 flex items-center justify-center bg-white rounded-full shadow-2xl transition-all duration-300 hover:scale-105 border border-gray-100"
-          style={{ width: "120px", height: "120px" }}
-        >
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/10 to-teal-600/10 animate-pulse" />
-          <div className="text-center text-emerald-600 relative z-10">
-            <FileText className="w-10 h-10 mx-auto mb-1" />
-            <div className="text-xs font-bold uppercase tracking-wider">
-              Reports
-            </div>
-          </div>
-        </div>
-
-        {/* Lines */}
-        {reportCategories.map((category, index) => {
-          const position = calculatePetalPosition(
-            index,
-            reportCategories.length,
-          );
-          const isHovered = hoveredIndex === index;
-          return (
-            <svg
-              key={`line-${category.id}`}
-              className="absolute pointer-events-none z-0 overflow-visible"
-              style={{ left: "50%", top: "50%" }}
-            >
-              <line
-                x1="0"
-                y1="0"
-                x2={position.x}
-                y2={position.y}
-                stroke={isHovered ? "#94a3b8" : "#cbd5e1"}
-                strokeWidth={isHovered ? "4" : "2"}
-                strokeDasharray="6,6"
-                className="transition-all duration-300"
-              />
-            </svg>
-          );
-        })}
-
-        {/* Petal segments */}
-        {reportCategories.map((category, index) => {
-          const position = calculatePetalPosition(
-            index,
-            reportCategories.length,
-          );
-          const isHovered = hoveredIndex === index;
+      <div className="w-full max-w-4xl mx-auto flex flex-wrap justify-center gap-3">
+        {reportCategories.map((category) => {
           const Icon = category.icon;
-          const colorClass = colorMap[category.id] || "bg-emerald-500";
 
           return (
-            <div
+            <Button
               key={category.id}
-              className="absolute z-20 transition-all duration-500 ease-out"
-              style={{
-                transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px)) scale(${isHovered ? 1.1 : 1})`,
-                left: "50%",
-                top: "50%",
-              }}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
+              asChild
+              size="lg"
+              className="min-w-40 gap-2 border-green-900 bg-green-900 text-white hover:bg-green-800 hover:text-white"
             >
               <Link href={category.href}>
-                <div
-                  className={cn(
-                    "relative w-48 h-32 rounded-2xl shadow-xl cursor-pointer transition-all duration-300 flex flex-col items-center justify-center group overflow-hidden",
-                    colorClass,
-                    isHovered ? "shadow-2xl ring-4 ring-white/50" : "",
-                  )}
-                  style={{
-                    clipPath:
-                      "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-                  }}
-                >
-                  <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-300" />
-
-                  <div className="relative z-10 mb-2">
-                    <Icon className="w-8 h-8 text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-12" />
-                  </div>
-
-                  <div className="relative z-10 text-center px-3">
-                    <div className="text-white font-bold text-sm mb-1 leading-tight drop-shadow-md">
-                      {category.title}
-                    </div>
-                  </div>
-
-                  <div
-                    className={cn(
-                      "absolute inset-0 rounded-2xl animate-ping opacity-15 bg-white",
-                    )}
-                    style={{
-                      clipPath:
-                        "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-                    }}
-                  />
-                </div>
+                <Icon className="h-5 w-5" />
+                {category.buttonLabel}
               </Link>
-            </div>
+            </Button>
           );
         })}
       </div>

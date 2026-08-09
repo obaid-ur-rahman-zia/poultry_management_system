@@ -122,8 +122,8 @@ export default function QuickAccessPage() {
     return { x, y, angle };
   };
 
-  const centerX = 200;
-  const centerY = 165;
+  const centerX = 30;
+  const centerY = 10;
 
   return (
     <div className="min-h-screen overflow-hidden flex flex-col bg-background">
