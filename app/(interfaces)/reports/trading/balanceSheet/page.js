@@ -174,16 +174,9 @@ export default function BalanceSheetReport() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
         <div className="relative p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-500 transition-colors duration-300">
-              <FileText className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
-            </div>
-          </div>
-
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Balance Sheet Report
+            BALANCE SHEET/CASH IN HAND
           </h3>
-
           <div className="space-y-3 mb-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -261,7 +254,7 @@ export default function BalanceSheetReport() {
               {/* Report Header */}
               <div className="text-center mb-4">
                 <h1 className="text-xl font-bold text-gray-900">
-                  Balance Sheet Report - Cash in Hand
+                  Balance Sheet/Cash in Hand
                 </h1>
                 <p className="text-gray-600 text-sm">
                   From:{" "}

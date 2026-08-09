@@ -201,14 +201,9 @@ export default function LocalSaleReport() {
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
         <div className="relative p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-500 transition-colors duration-300">
-              <FileText className="w-6 h-6 text-purple-600 group-hover:text-white transition-colors duration-300" />
-            </div>
-          </div>
 
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Local Sale Report
+          <h3 className="text-lg font-semibold text-gray-900 mb-10">
+            LOCAL SALE REPORT
           </h3>
 
           <div className="space-y-3 mb-4">
@@ -319,11 +314,12 @@ export default function LocalSaleReport() {
                       <th className="px-3 py-2 text-left font-semibold text-gray-800 border border-gray-400">
                         Purchaser
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
-                        Rate
-                      </th>
+                      
                       <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
                         Weight
+                      </th>
+                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                        Rate
                       </th>
                       <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
                         Amount
@@ -365,11 +361,12 @@ export default function LocalSaleReport() {
                                 {item.purchaser_account_ref?.account_contact}
                               </div>
                             </td>
-                            <td className="px-3 py-2 text-right font-mono border border-black">
-                              {fmt(item.purchaser_rate || 0)}
-                            </td>
+                            
                             <td className="px-3 py-2 text-right font-mono border border-black">
                               {fmt(item.purchaser_weight || 0, 0)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono border border-black">
+                              {fmt(item.purchaser_rate || 0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono border border-black">
                               {fmt(item.purchaser_amount || 0)}
@@ -388,14 +385,21 @@ export default function LocalSaleReport() {
 
                         <tr className="bg-gray-100 font-semibold">
                           <td
-                            colSpan={2}
-                            className="px-3 py-2 text-right text-gray-700 border border-black"
-                          >
-                            {group.date} Totals:
+                            colSpan={1}
+                            className="px-3 py-2 text-lg text-left text-gray-700 border border-black"
+                          >TOTAL:
                           </td>
-                          <td className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
+                          <td 
+                          colSpan={1}
+                          className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
                             {fmt(group.totalWeight, 0)}
                           </td>
+                          <td 
+                          colSpan={1}
+                          className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
+                            
+                          </td>
+                          
                           <td className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
                             {fmt(group.totalAmount)}
                           </td>

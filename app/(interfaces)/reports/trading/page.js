@@ -27,9 +27,6 @@ export default function ReportPage() {
 
               <div className="relative p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-500 transition-colors duration-300">
-                    <FileText className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
-                  </div>
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <svg
                       className="w-5 h-5 text-blue-500"

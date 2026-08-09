@@ -165,14 +165,9 @@ export default function WholeSaleReport() {
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
         <div className="relative p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-orange-100 rounded-lg group-hover:bg-orange-500 transition-colors duration-300">
-              <FileText className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
-            </div>
-          </div>
 
-          <h3 className="text-lg font-semibold text-gray-900">
-            Whole Sale Detail Report
+          <h3 className="text-lg mb-15 font-semibold text-gray-900">
+            WHOLESALE DAILY REPORT
           </h3>
 
           <div className="space-y-3 mb-4">

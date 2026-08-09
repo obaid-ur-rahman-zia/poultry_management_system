@@ -205,17 +205,13 @@ export default function WholeSaleProfitModal() {
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
         <div className="relative p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-orange-100 rounded-lg group-hover:bg-orange-500 transition-colors duration-300">
-              <FileText className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
-            </div>
-          </div>
 
-          <h3 className="text-lg font-semibold text-gray-900 ">
-            Whole Sale Profit / Loss Report
+          <h3 className="text-lg ml-20 font-semibold text-gray-900 ">
+            WHOLESALE
           </h3>
-
-          <h1 className="text-sm font-bold text-gray-900 mb-4">All</h1>
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 ">
+            DAILY/MONTHLY/YEARLY REPORT
+          </h3>
 
           {/* Filters */}
           <div className="space-y-3 mb-4">
@@ -307,7 +303,7 @@ export default function WholeSaleProfitModal() {
               {/* Report Header */}
               <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  Whole Sale Profit & Loss Report
+                  WHOLESALE REPORT
                 </h1>
                 <p className="text-gray-600 text-sm">
                   From:{" "}

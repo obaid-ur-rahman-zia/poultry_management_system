@@ -205,17 +205,9 @@ export default function SubheadTrialBalanceModal() {
       <div className="group relative bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
         <div className="relative p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-500 transition-colors duration-300">
-              <Layers className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
-            </div>
-          </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Subhead Wise Trial Balance
+            OVERALL BUSINESS REPORT
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            View account balances grouped by subheads.
-          </p>
           <div className="space-y-3 mb-4">
             <div className="flex flex-col">
               <label className="text-xs font-semibold text-gray-700 mb-1">
@@ -290,7 +282,7 @@ export default function SubheadTrialBalanceModal() {
             <div className="flex-1 overflow-auto sm:p-2 bg-white">
               <div className="mb-2 text-center">
                 <h1 className="text-xl font-bold text-gray-900 uppercase">
-                  Subhead Wise Trial Balance
+                  OVERALL BUSINESS REPORT
                 </h1>
                 <p className="text-gray-600 text-sm">{getDateRangeText()}</p>
               </div>

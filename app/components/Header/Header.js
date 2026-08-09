@@ -153,19 +153,19 @@ const Header = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "flex flex-col items-center gap-1 h-auto py-1.5 px-2.5 hover:shadow-md transition-all hover:bg-slate-700 hover:text-white hover:border-slate-700 group",
+                          "flex flex-col items-center gap-1 h-auto py-1 px-3 hover:shadow-md transition-all hover:bg-slate-700 hover:text-white hover:border-slate-700 group",
                         )}
                         onClick={() => router.push(link.href)}
                       >
                         <div
                           className={cn(
-                            "w-7 h-7 rounded-lg flex items-center justify-center text-white shadow-sm",
+                            "w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm",
                             link.color,
                           )}
                         >
-                          <Icon className="w-3.5 h-3.5" />
+                          <Icon className="w-5 h-5" />
                         </div>
-                        <span className="text-[9px] leading-tight font-medium">
+                        <span className="text-[10px] leading-tight font-medium">
                           {link.name}
                         </span>
                       </Button>
