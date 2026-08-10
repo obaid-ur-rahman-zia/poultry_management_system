@@ -2,93 +2,10 @@ import LocalSaleRepository from "@/app/repositories/localSale/localSaleRepositor
 import { successResponse, errorResponse } from "@/app/utils/response";
 import { AccountConfigService } from "@/app/utils/accountConfigService";
 import ErrorLogger from "@/app/utils/errorLogger";
-
-async function deductStock(local_account, weightToDeduct, tx) {
-  const localAccount = await tx.accounts.findUnique({
-    where: { acc_id: local_account },
-  });
-  if (!localAccount) throw new Error("Local account not found");
-
-  let w1 = localAccount.weight_one || 0;
-  let w2 = localAccount.weight_two || 0;
-  let w3 = localAccount.weight_three || 0;
-
-  let totalStock = w1 + w2 + w3;
-  if (weightToDeduct > totalStock) {
-    throw new Error(
-      `Cannot sell more than available stock in local account. Available stock: ${totalStock}`,
-    );
-  }
-
-  let newW3 = w3;
-  let newW2 = w2;
-  let newW1 = w1;
-  let updateData = {};
-
-  if (weightToDeduct > 0 && newW3 > 0) {
-    if (weightToDeduct >= newW3) {
-      weightToDeduct -= newW3;
-      updateData.weight_three = null;
-      updateData.rate_three = null;
-    } else {
-      updateData.weight_three = newW3 - weightToDeduct;
-      weightToDeduct = 0;
-    }
-  }
-  if (weightToDeduct > 0 && newW2 > 0) {
-    if (weightToDeduct >= newW2) {
-      weightToDeduct -= newW2;
-      updateData.weight_two = null;
-      updateData.rate_two = null;
-    } else {
-      updateData.weight_two = newW2 - weightToDeduct;
-      weightToDeduct = 0;
-    }
-  }
-  if (weightToDeduct > 0 && newW1 > 0) {
-    if (weightToDeduct >= newW1) {
-      weightToDeduct -= newW1;
-      updateData.weight_one = null;
-      updateData.rate_one = null;
-    } else {
-      updateData.weight_one = newW1 - weightToDeduct;
-      weightToDeduct = 0;
-    }
-  }
-
-  if (Object.keys(updateData).length > 0) {
-    await tx.accounts.update({
-      where: { acc_id: local_account },
-      data: updateData,
-    });
-  }
-}
-
-async function addStock(local_account, weightToAdd, tx) {
-  const localAccount = await tx.accounts.findUnique({
-    where: { acc_id: local_account },
-  });
-  if (!localAccount) return;
-
-  let updateData = {};
-  if (!localAccount.weight_one || localAccount.weight_one === 0) {
-    updateData.weight_one = weightToAdd;
-  } else if (!localAccount.weight_two || localAccount.weight_two === 0) {
-    updateData.weight_two = weightToAdd;
-  } else if (!localAccount.weight_three || localAccount.weight_three === 0) {
-    updateData.weight_three = weightToAdd;
-  } else {
-    // fallback, just add to w3
-    updateData.weight_three = (localAccount.weight_three || 0) + weightToAdd;
-  }
-
-  if (Object.keys(updateData).length > 0) {
-    await tx.accounts.update({
-      where: { acc_id: local_account },
-      data: updateData,
-    });
-  }
-}
+import {
+  allocateStock,
+  restoreStock,
+} from "@/app/controllers/localSale/stockService";
 
 import transactionRepository from "@/app/repositories/transaction/transactionRepository";
 import prisma from "@/lib/prisma";
@@ -203,13 +120,20 @@ class LocalSaleController {
         );
       }
 
+      validateLocalSaleAmounts(req_object);
+
       const localSale = await prisma.$transaction(
         async (tx) => {
-          await deductStock(local_account, Number(purchaser_weight), tx);
-
           const created = await LocalSaleRepository.create(req_object, tx);
           if (!created || !created.local_sale_id)
             throw new Error("Failed to create local sale record");
+
+          await allocateStock(
+            local_account,
+            created.local_sale_id,
+            purchaser_weight,
+            tx,
+          );
 
           await createLocalSaleTransactions(created, tx);
           return created;
@@ -235,24 +159,11 @@ class LocalSaleController {
       if (!existing || existing.status === 0)
         return errorResponse(new Error("Local sale not found"), 404);
 
+      validateLocalSaleAmounts(req_object);
+
       const localSale = await prisma.$transaction(
         async (tx) => {
-          const diff =
-            Number(req_object.purchaser_weight) -
-            Number(existing.purchaser_weight);
-          if (diff > 0) {
-            await deductStock(
-              req_object.local_account || existing.local_account,
-              diff,
-              tx,
-            );
-          } else if (diff < 0) {
-            await addStock(
-              req_object.local_account || existing.local_account,
-              Math.abs(diff),
-              tx,
-            );
-          }
+          await restoreStock(local_sale_id, tx);
 
           await transactionRepository.softDeleteByReferenceId(
             local_sale_id,
@@ -266,6 +177,12 @@ class LocalSaleController {
           );
           if (!updated || !updated.local_sale_id)
             throw new Error("Failed to update local sale record");
+          await allocateStock(
+            updated.local_account,
+            updated.local_sale_id,
+            updated.purchaser_weight,
+            tx,
+          );
           await createLocalSaleTransactions(updated, tx);
           return updated;
         },
@@ -292,7 +209,7 @@ class LocalSaleController {
 
       await prisma.$transaction(
         async (tx) => {
-          await addStock(existing.local_account, existing.purchaser_weight, tx);
+          await restoreStock(local_sale_id, tx);
           await transactionRepository.softDeleteByReferenceId(
             local_sale_id,
             "Local Sale",
@@ -308,6 +225,22 @@ class LocalSaleController {
       ErrorLogger.log("LocalSaleController.delete", err);
       return errorResponse(err, 500);
     }
+  }
+}
+
+function validateLocalSaleAmounts(data) {
+  const amount = Number(data.purchaser_amount);
+  const received = Number(data.received_amount);
+  const weight = Number(data.purchaser_weight);
+  const rate = Number(data.purchaser_rate);
+  if (![amount, received, weight, rate].every(Number.isFinite)) {
+    throw new Error("Local sale amounts must be valid numbers");
+  }
+  if (amount < 0 || received < 0 || weight <= 0 || rate < 0) {
+    throw new Error("Local sale amounts must be nonnegative and weight must be greater than zero");
+  }
+  if (received > amount) {
+    throw new Error("Received amount cannot be greater than purchaser amount");
   }
 }
 

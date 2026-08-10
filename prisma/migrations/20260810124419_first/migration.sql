@@ -491,13 +491,18 @@ CREATE TABLE "accounts" (
     "account_contact" VARCHAR(50),
     "account_reference" VARCHAR(255),
     "account_no" VARCHAR(100),
+    "weight_one" DOUBLE PRECISION,
+    "weight_two" DOUBLE PRECISION,
+    "weight_three" DOUBLE PRECISION,
+    "rate_one" DOUBLE PRECISION,
+    "rate_two" DOUBLE PRECISION,
+    "rate_three" DOUBLE PRECISION,
     "is_employee" INTEGER NOT NULL DEFAULT 0,
     "is_driver" INTEGER NOT NULL DEFAULT 0,
     "is_delivery_man" INTEGER NOT NULL DEFAULT 0,
     "is_customer" INTEGER NOT NULL DEFAULT 0,
     "is_supplier" INTEGER NOT NULL DEFAULT 0,
     "is_salesman" INTEGER NOT NULL DEFAULT 0,
-    "credit_limit" DECIMAL(15,2),
     "cgroup_id" INTEGER,
     "subarea_id" INTEGER,
     "company_id" INTEGER,
@@ -615,12 +620,42 @@ CREATE TABLE "farm" (
 );
 
 -- CreateTable
+CREATE TABLE "stackholder" (
+    "stackholder_id" SERIAL NOT NULL,
+    "stackholder_nam" VARCHAR(100) NOT NULL,
+    "stackholder_cnic" VARCHAR(100),
+    "stackholder_contact" VARCHAR(50),
+    "stackholder_address" VARCHAR(255),
+    "insert_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "update_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "insert_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "update_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "status" INTEGER NOT NULL DEFAULT 1,
+
+    CONSTRAINT "stackholder_pkey" PRIMARY KEY ("stackholder_id")
+);
+
+-- CreateTable
+CREATE TABLE "floc_stackholder" (
+    "floc_stackholder_id" SERIAL NOT NULL,
+    "floc_id" INTEGER NOT NULL,
+    "stackholder_id" INTEGER NOT NULL,
+    "percentage" DOUBLE PRECISION NOT NULL,
+    "insert_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "update_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "insert_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "update_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "status" INTEGER NOT NULL DEFAULT 1,
+
+    CONSTRAINT "floc_stackholder_pkey" PRIMARY KEY ("floc_stackholder_id")
+);
+
+-- CreateTable
 CREATE TABLE "floc" (
     "floc_id" SERIAL NOT NULL,
     "prounit_id" INTEGER NOT NULL,
     "starting_date" TIMESTAMP(3) NOT NULL,
     "ending_date" TIMESTAMP(3),
-    "stackholders" JSONB NOT NULL,
     "clear_description" VARCHAR(500),
     "insert_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "update_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -650,6 +685,22 @@ CREATE TABLE "opposite_transaction" (
 );
 
 -- CreateTable
+CREATE TABLE "expense_transaction" (
+    "expense_t_id" SERIAL NOT NULL,
+    "expense_t_date" TIMESTAMP(3) NOT NULL,
+    "account_id" INTEGER NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "description" VARCHAR(500),
+    "insert_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "update_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "insert_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "update_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "status" INTEGER NOT NULL DEFAULT 1,
+
+    CONSTRAINT "expense_transaction_pkey" PRIMARY KEY ("expense_t_id")
+);
+
+-- CreateTable
 CREATE TABLE "self_transaction" (
     "transaction_id" SERIAL NOT NULL,
     "transaction_date" TIMESTAMP(3) NOT NULL,
@@ -673,6 +724,7 @@ CREATE TABLE "unit_expense" (
     "expense_date" TIMESTAMP(3) NOT NULL,
     "prounit_id" INTEGER NOT NULL,
     "floc_id" INTEGER NOT NULL,
+    "supplier_id" INTEGER,
     "product_id" INTEGER NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "quantity" DOUBLE PRECISION NOT NULL,
@@ -697,6 +749,7 @@ CREATE TABLE "unit_sale" (
     "sale_date" TIMESTAMP(3) NOT NULL,
     "prounit_id" INTEGER NOT NULL,
     "floc_id" INTEGER NOT NULL,
+    "customer_id" INTEGER,
     "farm_rate" DOUBLE PRECISION,
     "sale_rate" DOUBLE PRECISION,
     "product_id" INTEGER NOT NULL,
@@ -707,6 +760,7 @@ CREATE TABLE "unit_sale" (
     "discount_type" VARCHAR(20) NOT NULL,
     "discount_value" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "total" DOUBLE PRECISION NOT NULL,
+    "van_number" VARCHAR(50),
     "description" VARCHAR(500),
     "insert_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "update_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -765,6 +819,78 @@ CREATE TABLE "trading" (
     "status" INTEGER NOT NULL DEFAULT 1,
 
     CONSTRAINT "trading_pkey" PRIMARY KEY ("trading_id")
+);
+
+-- CreateTable
+CREATE TABLE "whole_sale" (
+    "sale_id" SERIAL NOT NULL,
+    "sale_date" TIMESTAMP(3) NOT NULL,
+    "farm_rate" DOUBLE PRECISION,
+    "sale_rate" DOUBLE PRECISION,
+    "former_account" INTEGER NOT NULL,
+    "van_number" VARCHAR(100) NOT NULL,
+    "weight" DOUBLE PRECISION NOT NULL,
+    "former_rate" DOUBLE PRECISION NOT NULL,
+    "former_amount" DOUBLE PRECISION NOT NULL,
+    "purcher_account" INTEGER NOT NULL,
+    "purcher_rate" DOUBLE PRECISION,
+    "purcher_amount" DOUBLE PRECISION NOT NULL,
+    "profit" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "insert_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "update_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "insert_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "update_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "status" INTEGER NOT NULL DEFAULT 1,
+
+    CONSTRAINT "whole_sale_pkey" PRIMARY KEY ("sale_id")
+);
+
+-- CreateTable
+CREATE TABLE "local_sale" (
+    "local_sale_id" SERIAL NOT NULL,
+    "local_sale_date" TIMESTAMP(3) NOT NULL,
+    "local_account" INTEGER NOT NULL,
+    "purchaser_account" INTEGER NOT NULL,
+    "purchaser_weight" DOUBLE PRECISION NOT NULL,
+    "purchaser_rate" DOUBLE PRECISION NOT NULL,
+    "purchaser_amount" DOUBLE PRECISION NOT NULL,
+    "previous_balance" DOUBLE PRECISION,
+    "received_amount" DOUBLE PRECISION NOT NULL,
+    "net_balance" DOUBLE PRECISION,
+    "insert_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "update_dat" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "insert_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "update_by" VARCHAR(50) NOT NULL DEFAULT 'user 1',
+    "status" INTEGER NOT NULL DEFAULT 1,
+
+    CONSTRAINT "local_sale_pkey" PRIMARY KEY ("local_sale_id")
+);
+
+-- CreateTable
+CREATE TABLE "stock_lot" (
+    "stock_lot_id" SERIAL NOT NULL,
+    "local_account" INTEGER NOT NULL,
+    "source_sale_id" INTEGER,
+    "original_weight" DOUBLE PRECISION NOT NULL,
+    "remaining_weight" DOUBLE PRECISION NOT NULL,
+    "rate" DOUBLE PRECISION NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "status" INTEGER NOT NULL DEFAULT 1,
+
+    CONSTRAINT "stock_lot_pkey" PRIMARY KEY ("stock_lot_id")
+);
+
+-- CreateTable
+CREATE TABLE "local_sale_stock_allocation" (
+    "allocation_id" SERIAL NOT NULL,
+    "local_sale_id" INTEGER NOT NULL,
+    "stock_lot_id" INTEGER NOT NULL,
+    "weight" DOUBLE PRECISION NOT NULL,
+    "rate" DOUBLE PRECISION NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "local_sale_stock_allocation_pkey" PRIMARY KEY ("allocation_id")
 );
 
 -- CreateIndex
@@ -930,6 +1056,24 @@ CREATE UNIQUE INDEX "voucher_v_id_voucher_id_key" ON "voucher"("v_id", "voucher_
 CREATE UNIQUE INDEX "uq_farm_name" ON "farm"("farm_nam");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "stackholder_stackholder_nam_key" ON "stackholder"("stackholder_nam");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "stackholder_stackholder_cnic_key" ON "stackholder"("stackholder_cnic");
+
+-- CreateIndex
+CREATE INDEX "stackholder_status_idx" ON "stackholder"("status");
+
+-- CreateIndex
+CREATE INDEX "floc_stackholder_floc_id_idx" ON "floc_stackholder"("floc_id");
+
+-- CreateIndex
+CREATE INDEX "floc_stackholder_stackholder_id_idx" ON "floc_stackholder"("stackholder_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "floc_stackholder_floc_id_stackholder_id_key" ON "floc_stackholder"("floc_id", "stackholder_id");
+
+-- CreateIndex
 CREATE INDEX "floc_prounit_id_idx" ON "floc"("prounit_id");
 
 -- CreateIndex
@@ -946,6 +1090,12 @@ CREATE INDEX "opposite_transaction_received_by_idx" ON "opposite_transaction"("r
 
 -- CreateIndex
 CREATE INDEX "opposite_transaction_transaction_date_idx" ON "opposite_transaction"("transaction_date");
+
+-- CreateIndex
+CREATE INDEX "expense_transaction_account_id_idx" ON "expense_transaction"("account_id");
+
+-- CreateIndex
+CREATE INDEX "expense_transaction_expense_t_date_idx" ON "expense_transaction"("expense_t_date");
 
 -- CreateIndex
 CREATE INDEX "self_transaction_account_id_idx" ON "self_transaction"("account_id");
@@ -969,6 +1119,9 @@ CREATE INDEX "unit_expense_product_id_idx" ON "unit_expense"("product_id");
 CREATE INDEX "unit_expense_expense_date_idx" ON "unit_expense"("expense_date");
 
 -- CreateIndex
+CREATE INDEX "unit_expense_supplier_id_idx" ON "unit_expense"("supplier_id");
+
+-- CreateIndex
 CREATE INDEX "unit_sale_prounit_id_idx" ON "unit_sale"("prounit_id");
 
 -- CreateIndex
@@ -981,7 +1134,7 @@ CREATE INDEX "unit_sale_product_id_idx" ON "unit_sale"("product_id");
 CREATE INDEX "unit_sale_sale_date_idx" ON "unit_sale"("sale_date");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "unit_sale_prounit_id_floc_id_sale_date_key" ON "unit_sale"("prounit_id", "floc_id", "sale_date");
+CREATE INDEX "unit_sale_customer_id_idx" ON "unit_sale"("customer_id");
 
 -- CreateIndex
 CREATE INDEX "daily_fs_rate_prounit_id_idx" ON "daily_fs_rate"("prounit_id");
@@ -1006,6 +1159,27 @@ CREATE INDEX "trading_product_id_idx" ON "trading"("product_id");
 
 -- CreateIndex
 CREATE INDEX "trading_trading_date_idx" ON "trading"("trading_date");
+
+-- CreateIndex
+CREATE INDEX "whole_sale_former_account_idx" ON "whole_sale"("former_account");
+
+-- CreateIndex
+CREATE INDEX "whole_sale_purcher_account_idx" ON "whole_sale"("purcher_account");
+
+-- CreateIndex
+CREATE INDEX "whole_sale_sale_date_idx" ON "whole_sale"("sale_date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "stock_lot_source_sale_id_key" ON "stock_lot"("source_sale_id");
+
+-- CreateIndex
+CREATE INDEX "stock_lot_local_account_status_stock_lot_id_idx" ON "stock_lot"("local_account", "status", "stock_lot_id");
+
+-- CreateIndex
+CREATE INDEX "local_sale_stock_allocation_local_sale_id_idx" ON "local_sale_stock_allocation"("local_sale_id");
+
+-- CreateIndex
+CREATE INDEX "local_sale_stock_allocation_stock_lot_id_idx" ON "local_sale_stock_allocation"("stock_lot_id");
 
 -- AddForeignKey
 ALTER TABLE "user" ADD CONSTRAINT "user_cash_in_hand_account_id_fkey" FOREIGN KEY ("cash_in_hand_account_id") REFERENCES "accounts"("acc_id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1143,6 +1317,12 @@ ALTER TABLE "voucher" ADD CONSTRAINT "voucher_acc_id_fkey" FOREIGN KEY ("acc_id"
 ALTER TABLE "voucher" ADD CONSTRAINT "voucher_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "pro_company"("company_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "floc_stackholder" ADD CONSTRAINT "floc_stackholder_floc_id_fkey" FOREIGN KEY ("floc_id") REFERENCES "floc"("floc_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "floc_stackholder" ADD CONSTRAINT "floc_stackholder_stackholder_id_fkey" FOREIGN KEY ("stackholder_id") REFERENCES "stackholder"("stackholder_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "floc" ADD CONSTRAINT "floc_prounit_id_fkey" FOREIGN KEY ("prounit_id") REFERENCES "pro_unit"("prounit_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1153,6 +1333,9 @@ ALTER TABLE "opposite_transaction" ADD CONSTRAINT "opposite_transaction_bank_acc
 
 -- AddForeignKey
 ALTER TABLE "opposite_transaction" ADD CONSTRAINT "opposite_transaction_received_by_fkey" FOREIGN KEY ("received_by") REFERENCES "accounts"("acc_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "expense_transaction" ADD CONSTRAINT "expense_transaction_account_id_fkey" FOREIGN KEY ("account_id") REFERENCES "accounts"("acc_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "self_transaction" ADD CONSTRAINT "self_transaction_account_id_fkey" FOREIGN KEY ("account_id") REFERENCES "accounts"("acc_id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1167,6 +1350,9 @@ ALTER TABLE "unit_expense" ADD CONSTRAINT "unit_expense_floc_id_fkey" FOREIGN KE
 ALTER TABLE "unit_expense" ADD CONSTRAINT "unit_expense_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "product"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "unit_expense" ADD CONSTRAINT "unit_expense_supplier_id_fkey" FOREIGN KEY ("supplier_id") REFERENCES "accounts"("acc_id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "unit_sale" ADD CONSTRAINT "unit_sale_prounit_id_fkey" FOREIGN KEY ("prounit_id") REFERENCES "pro_unit"("prounit_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1174,6 +1360,9 @@ ALTER TABLE "unit_sale" ADD CONSTRAINT "unit_sale_floc_id_fkey" FOREIGN KEY ("fl
 
 -- AddForeignKey
 ALTER TABLE "unit_sale" ADD CONSTRAINT "unit_sale_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "product"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "unit_sale" ADD CONSTRAINT "unit_sale_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "accounts"("acc_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "daily_fs_rate" ADD CONSTRAINT "daily_fs_rate_prounit_id_fkey" FOREIGN KEY ("prounit_id") REFERENCES "pro_unit"("prounit_id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1189,3 +1378,27 @@ ALTER TABLE "trading" ADD CONSTRAINT "trading_sale_to_account_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "trading" ADD CONSTRAINT "trading_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "product"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "whole_sale" ADD CONSTRAINT "whole_sale_former_account_fkey" FOREIGN KEY ("former_account") REFERENCES "accounts"("acc_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "whole_sale" ADD CONSTRAINT "whole_sale_purcher_account_fkey" FOREIGN KEY ("purcher_account") REFERENCES "accounts"("acc_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "local_sale" ADD CONSTRAINT "local_sale_local_account_fkey" FOREIGN KEY ("local_account") REFERENCES "accounts"("acc_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "local_sale" ADD CONSTRAINT "local_sale_purchaser_account_fkey" FOREIGN KEY ("purchaser_account") REFERENCES "accounts"("acc_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "stock_lot" ADD CONSTRAINT "stock_lot_local_account_fkey" FOREIGN KEY ("local_account") REFERENCES "accounts"("acc_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "stock_lot" ADD CONSTRAINT "stock_lot_source_sale_id_fkey" FOREIGN KEY ("source_sale_id") REFERENCES "whole_sale"("sale_id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "local_sale_stock_allocation" ADD CONSTRAINT "local_sale_stock_allocation_local_sale_id_fkey" FOREIGN KEY ("local_sale_id") REFERENCES "local_sale"("local_sale_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "local_sale_stock_allocation" ADD CONSTRAINT "local_sale_stock_allocation_stock_lot_id_fkey" FOREIGN KEY ("stock_lot_id") REFERENCES "stock_lot"("stock_lot_id") ON DELETE RESTRICT ON UPDATE CASCADE;

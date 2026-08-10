@@ -14,6 +14,7 @@ import {
   PlusCircle,
   ArrowUp,
   Calendar as CalendarIcon,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,7 @@ export default function ExpensePage() {
   const [editingAccountId, setEditingAccountId] = useState(null);
   const [subHeads, setSubHeads] = useState([]);
   const [accountHeads, setAccountHeads] = useState([]);
+  const [expenseHeadParentId, setExpenseHeadParentId] = useState(null);
   const [isAddingSubHead, setIsAddingSubHead] = useState(false);
   const [isSubHeadDialogOpen, setIsSubHeadDialogOpen] = useState(false);
   const [newSubHeadName, setNewSubHeadName] = useState("");
@@ -115,6 +117,7 @@ export default function ExpensePage() {
 
     fetchSubHeads();
     fetchAccountHeads();
+    fetchExpenseHeadParent();
     fetchAccounts();
 
     return () => mq.removeEventListener("change", handleResize);
@@ -168,6 +171,26 @@ export default function ExpensePage() {
     } catch (error) {
       console.error("Error fetching subheads:", error);
       toast.error("Failed to fetch account types");
+    }
+  };
+
+  const fetchExpenseHeadParent = async () => {
+    try {
+      const response = await fetch("/api/account/accountSubHead/readAll");
+      const result = await response.json();
+      const subHeadsData =
+        result.response_result?.data || result.response_result || [];
+      const expenseHead = Array.isArray(subHeadsData)
+        ? subHeadsData.find(
+            (subHead) =>
+              subHead.subhead_nam?.trim().toLowerCase() === "expense head",
+          )
+        : null;
+
+      setExpenseHeadParentId(expenseHead?.sub_id || null);
+    } catch (error) {
+      console.error("Error fetching Expense Head parent:", error);
+      setExpenseHeadParentId(null);
     }
   };
 
@@ -242,13 +265,18 @@ export default function ExpensePage() {
       );
       return;
     }
+    if (!expenseHeadParentId) {
+      toast.error("Expense Head parent is not available yet");
+      return;
+    }
 
+    setIsAddingSubHead(true);
     try {
       const payload = {
         req_object: {
           head_id: parseInt(headIdToUse),
           subhead_nam: newSubHeadName.trim(),
-          parent_sub_id: 5,
+          parent_sub_id: expenseHeadParentId,
           insert_by: "user",
           update_by: "user",
           status: 1,
@@ -285,6 +313,8 @@ export default function ExpensePage() {
     } catch (error) {
       console.error("Error creating subhead:", error);
       toast.error("Failed to create subhead");
+    } finally {
+      setIsAddingSubHead(false);
     }
   };
 
@@ -1412,12 +1442,17 @@ export default function ExpensePage() {
               type="button"
               onClick={handleAddSubHead}
               disabled={
+                isAddingSubHead ||
                 !newSubHeadName.trim() ||
                 !newSubHeadHeadId ||
-                accountHeads.length === 0
+                accountHeads.length === 0 ||
+                !expenseHeadParentId
               }
             >
-              Create Expense Head
+              {isAddingSubHead && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isAddingSubHead ? "Creating..." : "Create Expense Head"}
             </Button>
           </DialogFooter>
         </DialogContent>

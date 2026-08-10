@@ -59,6 +59,26 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
+const isRoleAccount = (account, role) => {
+  const subheadName = account.subhead?.subhead_nam?.toLowerCase() || "";
+
+  if (role === "supplier") {
+    return (
+      account.is_supplier === 1 ||
+      subheadName.includes("farmer") ||
+      subheadName.includes("former") ||
+      subheadName.includes("supplier")
+    );
+  }
+
+  return (
+    account.is_customer === 1 ||
+    subheadName.includes("purchaser") ||
+    subheadName.includes("purcher") ||
+    subheadName.includes("customer")
+  );
+};
+
 export default function SalePage() {
   const [activeTab, setActiveTab] = useState("whole-sale");
 
@@ -226,14 +246,16 @@ function WholeSaleTab() {
   // Fetch Supplier accounts
   const fetchSupplierAccounts = async () => {
     try {
-      const response = await fetch("/api/supplier/readAll");
+      const response = await fetch("/api/account/accounts/readAll?all=true");
       const result = await response.json();
       if (result.response_status === "success") {
-        const supplierData =
-          result.response_result?.supplier_data ||
-          result.response_result?.data ||
-          [];
-        setSupplierAccounts(supplierData);
+        const accountsData =
+          result.response_result?.data || result.response_result || [];
+        setSupplierAccounts(
+          Array.isArray(accountsData)
+            ? accountsData.filter((account) => isRoleAccount(account, "supplier"))
+            : [],
+        );
       }
     } catch (error) {
       console.error("Error fetching supplier accounts:", error);
@@ -244,14 +266,16 @@ function WholeSaleTab() {
   // Fetch Customer accounts
   const fetchCustomerAccounts = async () => {
     try {
-      const response = await fetch("/api/customer/readAll");
+      const response = await fetch("/api/account/accounts/readAll?all=true");
       const result = await response.json();
       if (result.response_status === "success") {
-        const customerData =
-          result.response_result?.customer_data ||
-          result.response_result?.data ||
-          [];
-        setCustomerAccounts(customerData);
+        const accountsData =
+          result.response_result?.data || result.response_result || [];
+        setCustomerAccounts(
+          Array.isArray(accountsData)
+            ? accountsData.filter((account) => isRoleAccount(account, "customer"))
+            : [],
+        );
       }
     } catch (error) {
       console.error("Error fetching customer accounts:", error);

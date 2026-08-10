@@ -21,12 +21,15 @@ export async function createTransactions(wholeSale, tx) {
         : new Date(wholeSale.sale_date).toISOString().split("T")[0],
     );
 
+    const transactionRemarks = `Weight ${wholeSale.weight} Former Rate @${wholeSale.former_rate} Purcher Rate @${wholeSale.purcher_rate} Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`;
+
     const wholeSaleConstants = {
       reference_id: wholeSale.sale_id,
 
       financial_year: financialYear,
       reference: "Whole Sale",
       voucher_type: "WS",
+      remarks: transactionRemarks,
     };
 
     // Former account - Debit (payment being taken from)
@@ -36,7 +39,6 @@ export async function createTransactions(wholeSale, tx) {
         acc_id: wholeSale.former_account,
         credit: wholeSale.former_amount,
         debit: 0,
-        remarks: `Weight${wholeSale.weight} Former Rate@${wholeSale.former_rate}  Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`,
         ...wholeSaleConstants,
       });
     }
@@ -48,99 +50,23 @@ export async function createTransactions(wholeSale, tx) {
         acc_id: wholeSale.purcher_account,
         credit: 0,
         debit: wholeSale.purcher_amount,
-        remarks: `Weight${wholeSale.weight} Purcher Rate@${wholeSale.purcher_rate}  Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`,
         ...wholeSaleConstants,
       });
     }
 
-    // Calculate profit
-    // Based on requirement: "jo minus ho ga wo profit"
-    // Profit calculation: If (Purcher - Former) < 0, then profit exists (Former > Purcher)
-    // OR if profit field is negative, use that
+    // The balancing adjustment is derived from the two account entries above.
+    // A positive difference is income; a negative difference is a loss.
     const difference =
       Number(wholeSale.purcher_amount) - Number(wholeSale.former_amount);
-    const profitValue = Number(wholeSale.profit) || 0;
+    const profitAmount = Math.abs(difference);
 
-    console.log("=== PROFIT CALCULATION DEBUG ===");
-    console.log("Whole Sale ID:", wholeSale.sale_id);
-    console.log("Former Amount:", wholeSale.former_amount);
-    console.log("Purcher Amount:", wholeSale.purcher_amount);
-    console.log("Profit Value (from DB):", profitValue);
-    console.log("Difference (Purcher - Former):", difference);
-
-    // Determine profit amount to credit to Sale account
-    // Based on requirement: "jo minus ho ga wo profit"
-    // AND also handle standard case: if difference > 0 (Purcher > Former), that's profit
-    // Profit calculation options:
-    // 1. If profit field is negative: use abs(profitValue) - per requirement "jo minus ho ga wo profit"
-    // 2. If difference < 0 (Former > Purcher): profit = abs(difference) - per requirement
-    // 3. If difference > 0 (Purcher > Former): profit = difference - standard profit case (like trading)
-    let profitAmount = 0;
-
-    // Priority 1: Use profit field if it's negative (profit exists per requirement)
-    if (profitValue < 0) {
-      profitAmount = Math.abs(profitValue);
-      console.log(
-        "✓ Using profit field value (negative):",
-        profitValue,
-        "→ Amount:",
-        profitAmount,
-      );
-    }
-    // Priority 2: Use profit field if it's positive (fallback case)
-    else if (profitValue > 0) {
-      profitAmount = profitValue;
-      console.log(
-        "✓ Using profit field value (positive):",
-        profitValue,
-        "→ Amount:",
-        profitAmount,
-      );
-    }
-    // Priority 3: If profit field is 0, check calculated difference
-    else {
-      // If difference is negative (Former > Purcher), that's profit per requirement
-      if (difference < 0) {
-        profitAmount = Math.abs(difference);
-        console.log(
-          "✓ Using calculated difference (negative, Former > Purcher):",
-          difference,
-          "→ Amount:",
-          profitAmount,
-        );
-      }
-      // If difference is positive (Purcher > Former), that's also profit (standard case)
-      else if (difference > 0) {
-        profitAmount = difference;
-        console.log(
-          "✓ Using calculated difference (positive, Purcher > Former):",
-          difference,
-          "→ Amount:",
-          profitAmount,
-        );
-      } else {
-        console.log(
-          "✗ No profit found. profitValue:",
-          profitValue,
-          "difference:",
-          difference,
-          "(both are 0)",
-        );
-      }
-    }
-
-    // Always add profit transaction to Income account if profit exists (same as trading)
     if (profitAmount > 0) {
-      console.log("Creating profit transaction for amount:", profitAmount);
-      // Find or create "Income" subhead (same as trading)
-      console.log("Looking for 'Income' subhead...");
       let incomeSubhead = await AccountSubHeadRepository.findByName(
         "Income",
         tx,
       );
 
       if (!incomeSubhead) {
-        console.log("Income subhead not found, creating new one...");
         // Get first account head to use for the subhead
         const firstHead = await prismaClient.account_head.findFirst({
           orderBy: { head_id: "asc" },
@@ -174,19 +100,8 @@ export async function createTransactions(wholeSale, tx) {
             status: 1,
           },
         });
-        console.log(
-          "Created Income subhead with sub_id:",
-          incomeSubhead.sub_id,
-        );
-      } else {
-        console.log(
-          "Found existing Income subhead with sub_id:",
-          incomeSubhead.sub_id,
-        );
       }
 
-      // Find or create "Income Acc" account in the Income subhead (same as trading)
-      console.log("Looking for 'Income Acc' account...");
       let incomeAccount =
         await AccountsRepository.findByAccountNameAndSubheadName(
           "Income Acc",
@@ -195,7 +110,6 @@ export async function createTransactions(wholeSale, tx) {
         );
 
       if (!incomeAccount) {
-        console.log("Income Acc account not found, creating new one...");
         // Get the max account_id for this sub_id
         const maxAccount = await prismaClient.accounts.findFirst({
           where: { sub_id: incomeSubhead.sub_id },
@@ -217,33 +131,16 @@ export async function createTransactions(wholeSale, tx) {
             status: 1,
           },
         });
-        console.log(
-          "Created Income Acc account with acc_id:",
-          incomeAccount.acc_id,
-        );
-      } else {
-        console.log(
-          "Found existing Income Acc account with acc_id:",
-          incomeAccount.acc_id,
-        );
       }
 
-      // Add transaction to credit Income account with the profit (same as trading)
-      const profitTransaction = {
+      const adjustmentTransaction = {
         acc_id: incomeAccount.acc_id,
-        debit: 0,
-        credit: profitAmount,
+        debit: difference < 0 ? profitAmount : 0,
+        credit: difference > 0 ? profitAmount : 0,
         ...wholeSaleConstants,
-        remarks: `${wholeSaleConstants.remarks} - Profit`,
+        remarks: `${wholeSaleConstants.remarks} - ${difference < 0 ? "Loss" : "Profit"}`,
       };
-      transactionData.push(profitTransaction);
-      console.log(
-        "Profit transaction added to transactionData array:",
-        profitTransaction,
-      );
-      console.log("Total transactions to create:", transactionData.length);
-    } else {
-      console.log("No profit to credit. profitAmount is 0 or negative.");
+      transactionData.push(adjustmentTransaction);
     }
 
     // Validate that we have at least the required transactions

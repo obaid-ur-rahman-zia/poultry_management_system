@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2, PlusCircle, Equal } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  PlusCircle,
+  Equal,
+  Loader2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,6 +100,8 @@ export default function UnitExpensePage() {
   const [loadingSupplierBalance, setLoadingSupplierBalance] = useState(false);
   const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState("");
+  const [isCreatingSupplier, setIsCreatingSupplier] = useState(false);
+  const [isCreatingCompany, setIsCreatingCompany] = useState(false);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -286,6 +296,7 @@ export default function UnitExpensePage() {
       return;
     }
 
+    setIsCreatingCompany(true);
     try {
       const payload = {
         req_object: {
@@ -321,6 +332,8 @@ export default function UnitExpensePage() {
     } catch (error) {
       console.error("Error creating company:", error);
       toast.error("Failed to create company");
+    } finally {
+      setIsCreatingCompany(false);
     }
   };
 
@@ -335,6 +348,7 @@ export default function UnitExpensePage() {
       return;
     }
 
+    setIsCreatingSupplier(true);
     try {
       const payload = {
         req_object: {
@@ -382,6 +396,8 @@ export default function UnitExpensePage() {
     } catch (error) {
       console.error("Error creating farmer:", error);
       toast.error("Failed to create farmer");
+    } finally {
+      setIsCreatingSupplier(false);
     }
   };
 
@@ -1643,8 +1659,15 @@ export default function UnitExpensePage() {
             >
               Cancel
             </Button>
-            <Button type="button" onClick={handleCreateSupplier}>
-              Create Former
+            <Button
+              type="button"
+              onClick={handleCreateSupplier}
+              disabled={isCreatingSupplier}
+            >
+              {isCreatingSupplier && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isCreatingSupplier ? "Creating..." : "Create Former"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1682,8 +1705,15 @@ export default function UnitExpensePage() {
             >
               Cancel
             </Button>
-            <Button type="button" onClick={handleCreateCompany}>
-              Create Company
+            <Button
+              type="button"
+              onClick={handleCreateCompany}
+              disabled={isCreatingCompany}
+            >
+              {isCreatingCompany && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isCreatingCompany ? "Creating..." : "Create Company"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -24,8 +24,6 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Users,
-  Package,
   Activity,
   RefreshCw,
   ArrowUpRight,
@@ -33,7 +31,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -71,198 +68,44 @@ const cardHoverVariants = {
 };
 
 export default function DashboardPage() {
-  const [dashboardData, setDashboardData] = useState({
-    transactions: [],
-    accounts: [],
-    units: [],
-    products: [],
-    trades: [],
-    unitSales: [],
-    unitExpenses: [],
-    flocs: [],
-    loading: true,
-  });
+  const [dashboardData, setDashboardData] = useState(null);
+  const [selectedDays, setSelectedDays] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(selectedDays);
     // Auto-refresh every 5 minutes
     const interval = setInterval(() => {
-      fetchDashboardData();
+      fetchDashboardData(selectedDays);
     }, 300000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedDays]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (days = selectedDays) => {
+    setLoading(true);
     try {
-      const [
-        transactionsRes,
-        accountsRes,
-        unitsRes,
-        productsRes,
-        tradesRes,
-        unitSalesRes,
-        unitExpensesRes,
-        flocsRes,
-      ] = await Promise.all([
-        fetch("/api/transaction/readAll"),
-        fetch("/api/account/accounts/readAll"),
-        fetch("/api/unit/readAll"),
-        fetch("/api/product/readAll"),
-        fetch("/api/trading/readAll"),
-        fetch("/api/unitSale/readAll"),
-        fetch("/api/unitExpense/readAll"),
-        fetch("/api/floc/readAll"),
-      ]);
-
-      const transactionsData = await transactionsRes.json();
-      const accountsData = await accountsRes.json();
-      const unitsData = await unitsRes.json();
-      const productsData = await productsRes.json();
-      const tradesData = await tradesRes.json();
-      const unitSalesData = await unitSalesRes.json();
-      const unitExpensesData = await unitExpensesRes.json();
-      const flocsData = await flocsRes.json();
-
-      setDashboardData({
-        transactions:
-          transactionsData?.response_result?.data ||
-          transactionsData?.response_result ||
-          [],
-        accounts:
-          accountsData?.response_result?.data ||
-          accountsData?.response_result ||
-          [],
-        units:
-          unitsData?.response_result?.data ||
-          unitsData?.response_result ||
-          [],
-        products:
-          productsData?.response_result?.products ||
-          productsData?.response_result?.data ||
-          productsData?.response_result ||
-          [],
-        trades:
-          tradesData?.response_result?.data ||
-          tradesData?.response_result ||
-          [],
-        unitSales:
-          unitSalesData?.response_result?.data ||
-          unitSalesData?.response_result ||
-          [],
-        unitExpenses:
-          unitExpensesData?.response_result?.data ||
-          unitExpensesData?.response_result ||
-          [],
-        flocs:
-          flocsData?.response_result?.data ||
-          flocsData?.response_result ||
-          [],
-        loading: false,
-      });
+      const response = await fetch(`/api/analytics?days=${days}`);
+      const result = await response.json();
+      if (result.response_status !== "success") {
+        throw new Error(result.response_message || "Failed to fetch analytics");
+      }
+      setDashboardData(result.response_result);
       setLastRefresh(new Date());
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      setDashboardData((prev) => ({ ...prev, loading: false }));
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Calculate statistics
-  const transactions = dashboardData.transactions || [];
-  const accounts = dashboardData.accounts || [];
-  const units = dashboardData.units || [];
-  const products = dashboardData.products || [];
-  const trades = dashboardData.trades || [];
-  const unitSales = dashboardData.unitSales || [];
-  const unitExpenses = dashboardData.unitExpenses || [];
-  const flocs = dashboardData.flocs || [];
+  const metrics = dashboardData?.metrics || {};
+  const counts = dashboardData?.counts || {};
+  const transactionTypeData = dashboardData?.transactionTypeData || [];
+  const dailyData = dashboardData?.dailyData || [];
 
-  // Transaction statistics
-  const totalDebit = transactions.reduce(
-    (sum, t) => sum + (Number(t.debit) || 0),
-    0
-  );
-  const totalCredit = transactions.reduce(
-    (sum, t) => sum + (Number(t.credit) || 0),
-    0
-  );
-  const netBalance = totalDebit - totalCredit;
-
-  // Trading statistics
-  const totalBuyAmount = trades.reduce(
-    (sum, t) => sum + (Number(t.buy_total) || 0),
-    0
-  );
-  const totalSaleAmount = trades.reduce(
-    (sum, t) => sum + (Number(t.sale_total) || 0),
-    0
-  );
-  const tradingProfit = totalSaleAmount - totalBuyAmount;
-
-  // Unit Sales statistics
-  const totalUnitSales = unitSales.reduce(
-    (sum, s) => sum + (Number(s.total) || 0),
-    0
-  );
-  const totalUnitExpenses = unitExpenses.reduce(
-    (sum, e) => sum + (Number(e.total) || 0),
-    0
-  );
-  const unitNetProfit = totalUnitSales - totalUnitExpenses;
-
-  // Active accounts
-  const activeAccounts = accounts.filter((a) => a.status === 1).length;
-  const totalAccounts = accounts.length;
-
-  // Active units
-  const activeUnits = units.filter((u) => u.status === 1).length;
-  const totalUnits = units.length;
-
-  // Active flocs
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const activeFlocs = flocs.filter((f) => {
-    if (!f.ending_date) return true;
-    const endDate = new Date(f.ending_date);
-    endDate.setHours(0, 0, 0, 0);
-    return endDate > today;
-  }).length;
-
-  // Monthly transaction data
-  const monthlyTransactionData = generateMonthlyData(transactions);
-  const monthlyTradingData = generateMonthlyTradingData(trades);
-
-  // Transaction type breakdown
-  const transactionTypeData = [
-    {
-      name: "Cash Receipt",
-      value: transactions.filter((t) => t.voucher_type === "CR").length,
-      color: "#10b981",
-    },
-    {
-      name: "Cash Payment",
-      value: transactions.filter((t) => t.voucher_type === "CP").length,
-      color: "#ef4444",
-    },
-    {
-      name: "Bank Receipt",
-      value: transactions.filter((t) => t.voucher_type === "BR").length,
-      color: "#3b82f6",
-    },
-    {
-      name: "Bank Payment",
-      value: transactions.filter((t) => t.voucher_type === "BP").length,
-      color: "#f59e0b",
-    },
-    {
-      name: "Journal Voucher",
-      value: transactions.filter((t) => t.voucher_type === "JV").length,
-      color: "#8b5cf6",
-    },
-  ].filter((item) => item.value > 0);
-
-  if (dashboardData.loading) {
+  if (loading || !dashboardData) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
         <motion.div
@@ -290,31 +133,49 @@ export default function DashboardPage() {
       className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <Sparkles className="h-8 w-8 text-blue-600" />
-            </motion.div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Last updated: {lastRefresh.toLocaleTimeString()}
-              </p>
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-wrap items-center justify-between gap-3"
+      >
+          <div>
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              >
+                <Sparkles className="h-8 w-8 text-blue-600" />
+              </motion.div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  Last updated: {lastRefresh.toLocaleTimeString()}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <motion.div className="flex items-center gap-2">
+          <div className="flex rounded-md border bg-white p-1" role="group" aria-label="Analytics date range">
+            {[1, 7, 30].map((days) => (
+              <Button
+                key={days}
+                type="button"
+                variant={selectedDays === days ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedDays(days)}
+                disabled={loading}
+              >
+                {days}d
+              </Button>
+            ))}
+          </div>
           <Button
-            onClick={fetchDashboardData}
+            onClick={() => fetchDashboardData(selectedDays)}
             variant="outline"
             size="sm"
             className="gap-2 shadow-sm"
+            disabled={loading}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </motion.div>
@@ -327,38 +188,38 @@ export default function DashboardPage() {
       >
         <MetricCard
           title="Total Debit"
-          value={totalDebit}
+          value={metrics.totalDebit || 0}
           icon={TrendingUp}
           iconColor="text-green-600"
           valueColor="text-green-600"
-          subtitle={`${transactions.filter((t) => t.debit > 0).length} transactions`}
+          subtitle={`${counts.debitTransactions || 0} transactions`}
           index={0}
         />
         <MetricCard
           title="Total Credit"
-          value={totalCredit}
+          value={metrics.totalCredit || 0}
           icon={TrendingDown}
           iconColor="text-red-600"
           valueColor="text-red-600"
-          subtitle={`${transactions.filter((t) => t.credit > 0).length} transactions`}
+          subtitle={`${counts.creditTransactions || 0} transactions`}
           index={1}
         />
         <MetricCard
           title="Net Balance"
-          value={Math.abs(netBalance)}
+          value={Math.abs(metrics.netBalance || 0)}
           icon={DollarSign}
           iconColor="text-blue-600"
-          valueColor={netBalance >= 0 ? "text-blue-600" : "text-orange-600"}
-          subtitle={netBalance >= 0 ? "Surplus" : "Deficit"}
+          valueColor={metrics.netBalance >= 0 ? "text-blue-600" : "text-orange-600"}
+          subtitle={metrics.netBalance >= 0 ? "Surplus" : "Deficit"}
           index={2}
         />
         <MetricCard
           title="Trading Profit"
-          value={Math.abs(tradingProfit)}
+          value={Math.abs(metrics.tradingProfit || 0)}
           icon={Activity}
           iconColor="text-purple-600"
-          valueColor={tradingProfit >= 0 ? "text-green-600" : "text-red-600"}
-          subtitle={`${trades.length} trades`}
+          valueColor={metrics.tradingProfit >= 0 ? "text-green-600" : "text-red-600"}
+          subtitle={`${counts.trades || 0} trades`}
           index={3}
         />
       </motion.div>
@@ -370,44 +231,44 @@ export default function DashboardPage() {
       >
         <MetricCard
           title="Unit Sales"
-          value={totalUnitSales}
+          value={metrics.totalUnitSales || 0}
           icon={ArrowUpRight}
           iconColor="text-green-600"
           valueColor="text-green-600"
-          subtitle={`${unitSales.length} sales records`}
+          subtitle={`${counts.unitSales || 0} sales records`}
           index={4}
         />
         <MetricCard
           title="Unit Expenses"
-          value={totalUnitExpenses}
+          value={metrics.totalUnitExpenses || 0}
           icon={ArrowDownRight}
           iconColor="text-red-600"
           valueColor="text-red-600"
-          subtitle={`${unitExpenses.length} expense records`}
+          subtitle={`${counts.unitExpenses || 0} expense records`}
           index={5}
         />
         <MetricCard
           title="Unit Net Profit"
-          value={Math.abs(unitNetProfit)}
+          value={Math.abs(metrics.unitNetProfit || 0)}
           icon={DollarSign}
           iconColor="text-blue-600"
-          valueColor={unitNetProfit >= 0 ? "text-green-600" : "text-red-600"}
+          valueColor={metrics.unitNetProfit >= 0 ? "text-green-600" : "text-red-600"}
           subtitle="Net from units"
           index={6}
         />
         <MetricCard
-          title="Active Flocs"
-          value={`${activeFlocs} / ${flocs.length}`}
+          title="Date Range"
+          value={`${selectedDays} days`}
           icon={Activity}
           iconColor="text-blue-600"
           valueColor="text-blue-600"
-          subtitle="Active floc operations"
+          subtitle="Analytics period"
           index={7}
-          isString={true}
+          isString
         />
       </motion.div>
 
-      {/* Charts Row */}
+      {/* Charts */}
       <motion.div
         variants={containerVariants}
         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
@@ -465,7 +326,7 @@ export default function DashboardPage() {
           <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
             <CardHeader className="border-b bg-gradient-to-r from-green-50 to-emerald-50">
               <CardTitle className="text-lg font-semibold text-gray-800">
-                Monthly Transactions
+                Daily Transactions
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
@@ -477,9 +338,9 @@ export default function DashboardPage() {
                   }}
                   className="h-full w-full"
                 >
-                  <BarChart data={monthlyTransactionData}>
+                  <BarChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6b7280" />
                     <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="debit" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -490,18 +351,12 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </motion.div>
-      </motion.div>
 
-      {/* Trading and Unit Performance */}
-      <motion.div
-        variants={containerVariants}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-      >
         <motion.div variants={itemVariants}>
           <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
             <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
               <CardTitle className="text-lg font-semibold text-gray-800">
-                Monthly Trading Performance
+                Daily Trading Performance
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
@@ -513,67 +368,15 @@ export default function DashboardPage() {
                   }}
                   className="h-full w-full"
                 >
-                  <LineChart data={monthlyTradingData}>
+                  <LineChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6b7280" />
                     <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line
-                      type="monotone"
-                      dataKey="buy"
-                      stroke="#ef4444"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="sale"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
+                    <Line type="monotone" dataKey="buy" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="sale" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
                   </LineChart>
                 </ChartContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-amber-50">
-              <CardTitle className="text-lg font-semibold text-gray-800">System Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <SystemOverviewItem
-                  icon={Users}
-                  title="Accounts"
-                  active={activeAccounts}
-                  total={totalAccounts}
-                  color="blue"
-                />
-                <SystemOverviewItem
-                  icon={Package}
-                  title="Units"
-                  active={activeUnits}
-                  total={totalUnits}
-                  color="green"
-                />
-                <SystemOverviewItem
-                  icon={Package}
-                  title="Products"
-                  active={products.length}
-                  total={products.length}
-                  color="purple"
-                />
-                <SystemOverviewItem
-                  icon={Activity}
-                  title="Flocs"
-                  active={activeFlocs}
-                  total={flocs.length}
-                  color="orange"
-                />
               </div>
             </CardContent>
           </Card>
@@ -626,91 +429,3 @@ function MetricCard({ title, value, icon: Icon, iconColor, valueColor, subtitle,
   );
 }
 
-function SystemOverviewItem({ icon: Icon, title, active, total, color }) {
-  const colorClasses = {
-    blue: "text-blue-600 bg-blue-50",
-    green: "text-green-600 bg-green-50",
-    purple: "text-purple-600 bg-purple-50",
-    orange: "text-orange-600 bg-orange-50",
-  };
-
-  const percentage = total > 0 ? Math.round((active / total) * 100) : 0;
-
-  return (
-    <motion.div
-      whileHover={{ x: 4 }}
-      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-    >
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div>
-          <div className="text-sm font-semibold text-gray-900">{title}</div>
-          <div className="text-xs text-gray-500">
-            {active} active / {total} total
-          </div>
-        </div>
-      </div>
-      <Badge variant="outline" className="font-semibold">
-        {percentage}%
-      </Badge>
-    </motion.div>
-  );
-}
-
-// Helper function to generate monthly transaction data
-function generateMonthlyData(transactions) {
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-
-  return months.map((month, idx) => {
-    const monthIndex = idx;
-    const monthTransactions = transactions.filter((t) => {
-      if (!t.transaction_dat) return false;
-      const transDate = new Date(t.transaction_dat);
-      return transDate.getMonth() === monthIndex;
-    });
-
-    const debit = monthTransactions.reduce(
-      (sum, t) => sum + (Number(t.debit) || 0),
-      0
-    );
-    const credit = monthTransactions.reduce(
-      (sum, t) => sum + (Number(t.credit) || 0),
-      0
-    );
-
-    return { month, debit, credit };
-  });
-}
-
-// Helper function to generate monthly trading data
-function generateMonthlyTradingData(trades) {
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-
-  return months.map((month, idx) => {
-    const monthIndex = idx;
-    const monthTrades = trades.filter((t) => {
-      if (!t.trading_date) return false;
-      const tradeDate = new Date(t.trading_date);
-      return tradeDate.getMonth() === monthIndex;
-    });
-
-    const buy = monthTrades.reduce(
-      (sum, t) => sum + (Number(t.buy_total) || 0),
-      0
-    );
-    const sale = monthTrades.reduce(
-      (sum, t) => sum + (Number(t.sale_total) || 0),
-      0
-    );
-
-    return { month, buy, sale };
-  });
-}

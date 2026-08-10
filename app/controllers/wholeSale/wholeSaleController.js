@@ -4,6 +4,12 @@ import ErrorLogger from "@/app/utils/errorLogger";
 import { createTransactions } from "./wholeSaleTransactions";
 import transactionRepository from "@/app/repositories/transaction/transactionRepository";
 import prisma from "@/lib/prisma";
+import {
+  createStockLot,
+  isLocalSaleAccount,
+  reverseStockLot,
+  updateStockLot,
+} from "@/app/controllers/localSale/stockService";
 
 class WholeSaleController {
   async readAll(req) {
@@ -172,33 +178,14 @@ class WholeSaleController {
               throw new Error("Failed to create whole sale record");
             }
 
-            // Update local sale account weights if the purchaser is a local sale account
-            const purcherAccount = await tx.accounts.findUnique({
-              where: { acc_id: saleData.purcher_account },
-              include: { head: true, subhead: true }
-            });
-
-            if (purcherAccount) {
-              const headName = (purcherAccount.head?.head_nam || "").toLowerCase();
-              const subheadName = (purcherAccount.subhead?.subhead_nam || "").toLowerCase();
-              
-              if (headName.includes("local sale") || subheadName.includes("local sale")) {
-                let updateData = {};
-                if (!purcherAccount.weight_one) {
-                  updateData = { weight_one: saleData.weight, rate_one: saleData.purcher_rate };
-                } else if (!purcherAccount.weight_two) {
-                  updateData = { weight_two: saleData.weight, rate_two: saleData.purcher_rate };
-                } else if (!purcherAccount.weight_three) {
-                  updateData = { weight_three: saleData.weight, rate_three: saleData.purcher_rate };
-                } else {
-                  throw new Error("Local sale account has reached the maximum of 3 weight records. Please sell some stock first.");
-                }
-
-                await tx.accounts.update({
-                  where: { acc_id: saleData.purcher_account },
-                  data: updateData
-                });
-              }
+            if (await isLocalSaleAccount(saleData.purcher_account, tx)) {
+              await createStockLot(
+                saleData.purcher_account,
+                createdWholeSale.sale_id,
+                saleData.weight,
+                saleData.purcher_rate,
+                tx,
+              );
             }
 
             // Create all related transactions - this will throw if any transaction fails
@@ -306,6 +293,31 @@ class WholeSaleController {
               tx,
             );
 
+            const oldIsLocal = await isLocalSaleAccount(
+              existingWholeSale.purcher_account,
+              tx,
+            );
+            const newIsLocal = await isLocalSaleAccount(purcher_account, tx);
+            if (oldIsLocal && newIsLocal) {
+              await updateStockLot(
+                sale_id,
+                purcher_account,
+                weight,
+                req_object.purcher_rate,
+                tx,
+              );
+            } else if (oldIsLocal) {
+              await reverseStockLot(sale_id, tx);
+            } else if (newIsLocal) {
+              await createStockLot(
+                purcher_account,
+                sale_id,
+                weight,
+                req_object.purcher_rate,
+                tx,
+              );
+            }
+
             // Update the whole sale record
             const updatedWholeSale = await WholeSaleRepository.update(
               sale_id,
@@ -385,6 +397,10 @@ class WholeSaleController {
               "Whole Sale",
               tx,
             );
+
+            if (await isLocalSaleAccount(existingWholeSale.purcher_account, tx)) {
+              await reverseStockLot(sale_id, tx);
+            }
 
             // Delete (soft delete) the whole sale record
             await WholeSaleRepository.delete(sale_id, tx);

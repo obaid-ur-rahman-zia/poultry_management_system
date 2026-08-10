@@ -499,3 +499,18 @@ custom-exception:  [Failed to update customer in Method: CustomerController.upda
 system-exception:  [Error: Account with this CNIC already exists]
 
 
+exception-time:       [2026-08-09T19:51:38.098Z]  
+custom-exception:  [Failed to create opposite transaction in Method: OppositeTransactionController.create] | 
+system-exception:  [Error: Paid by and received by cannot be the same account]
+
+
+exception-time:       [2026-08-09T19:55:00.468Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+
+exception-time:       [2026-08-09T20:02:56.366Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+

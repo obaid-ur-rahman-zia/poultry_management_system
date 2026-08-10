@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2, PlusCircle, Equal } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  PlusCircle,
+  Equal,
+  Loader2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +83,7 @@ export default function OppositeTransactionsPage() {
   const [isBankAccountDialogOpen, setIsBankAccountDialogOpen] = useState(false);
   const [newBankAccountName, setNewBankAccountName] = useState("");
   const [newBankAccountNo, setNewBankAccountNo] = useState("");
+  const [isCreatingBankAccount, setIsCreatingBankAccount] = useState(false);
   const [bankSubHead, setBankSubHead] = useState(null);
   const [paidByBalance, setPaidByBalance] = useState(null);
   const [receivedByBalance, setReceivedByBalance] = useState(null);
@@ -358,6 +367,7 @@ export default function OppositeTransactionsPage() {
       return;
     }
 
+    setIsCreatingBankAccount(true);
     try {
       const payload = {
         req_object: {
@@ -397,6 +407,8 @@ export default function OppositeTransactionsPage() {
     } catch (error) {
       console.error("Error creating bank account:", error);
       toast.error("Failed to create bank account");
+    } finally {
+      setIsCreatingBankAccount(false);
     }
   };
 
@@ -1408,9 +1420,16 @@ export default function OppositeTransactionsPage() {
             <Button
               type="button"
               onClick={handleAddBankAccount}
-              disabled={!newBankAccountName.trim() || !bankSubHead}
+              disabled={
+                isCreatingBankAccount ||
+                !newBankAccountName.trim() ||
+                !bankSubHead
+              }
             >
-              Create Account
+              {isCreatingBankAccount && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isCreatingBankAccount ? "Creating..." : "Create Account"}
             </Button>
           </DialogFooter>
         </DialogContent>

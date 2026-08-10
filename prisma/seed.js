@@ -158,6 +158,14 @@ async function main() {
         parent_sub_id: null,
         status: 1,
       },
+      {
+        head_id: firstHead.head_id,
+        subhead_id: 16,
+        subhead_nam: "LOCAL SALE",
+        is_parent: 0,
+        parent_sub_id: null,
+        status: 1,
+      },
     ];
 
     for (const subhead of subheads) {

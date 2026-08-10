@@ -14,6 +14,7 @@ import {
   PlusCircle,
   ArrowUp,
   Calendar as CalendarIcon,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -272,6 +273,7 @@ export default function AccountPage() {
       return;
     }
 
+    setIsAddingSubHead(true);
     try {
       const payload = {
         req_object: {
@@ -313,6 +315,8 @@ export default function AccountPage() {
     } catch (error) {
       console.error("Error creating subhead:", error);
       toast.error("Failed to create subhead");
+    } finally {
+      setIsAddingSubHead(false);
     }
   };
 
@@ -390,8 +394,8 @@ export default function AccountPage() {
             : "Account created successfully",
         );
         reset({
-          sub_id: "",
-          head_id: "",
+          sub_id: data.sub_id,
+          head_id: data.head_id,
           account_nam: "",
           contact_numbers: [""],
           bank_account_numbers: [""],
@@ -1461,12 +1465,16 @@ export default function AccountPage() {
               type="button"
               onClick={handleAddSubHead}
               disabled={
+                isAddingSubHead ||
                 !newSubHeadName.trim() ||
                 !newSubHeadHeadId ||
                 accountHeads.length === 0
               }
             >
-              Create Account Type
+              {isAddingSubHead && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isAddingSubHead ? "Creating..." : "Create Account Type"}
             </Button>
           </DialogFooter>
         </DialogContent>

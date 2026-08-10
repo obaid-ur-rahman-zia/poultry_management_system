@@ -3,7 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2, History, PlusCircle } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  History,
+  PlusCircle,
+  Loader2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +104,7 @@ export default function UnitSalePage() {
   });
   const [customerBalance, setCustomerBalance] = useState(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -418,6 +427,7 @@ export default function UnitSalePage() {
       return;
     }
 
+    setIsCreatingCustomer(true);
     try {
       const payload = {
         req_object: {
@@ -477,6 +487,8 @@ export default function UnitSalePage() {
     } catch (error) {
       console.error("Error creating purchaser:", error);
       toast.error("Failed to create purcheser");
+    } finally {
+      setIsCreatingCustomer(false);
     }
   };
 
@@ -1964,8 +1976,15 @@ export default function UnitSalePage() {
             >
               Cancel
             </Button>
-            <Button type="button" onClick={handleCreateCustomer}>
-              Create Purcher
+            <Button
+              type="button"
+              onClick={handleCreateCustomer}
+              disabled={isCreatingCustomer}
+            >
+              {isCreatingCustomer && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isCreatingCustomer ? "Creating..." : "Create Purcher"}
             </Button>
           </DialogFooter>
         </DialogContent>

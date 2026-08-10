@@ -111,6 +111,7 @@ function LocalSaleTab() {
   const [isMobile, setIsMobile] = useState(false);
 
   // Delete dialog
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -331,6 +332,7 @@ function LocalSaleTab() {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    if (isSubmitting) return;
     const {
       local_sale_date,
       local_account,
@@ -366,6 +368,7 @@ function LocalSaleTab() {
       },
     };
 
+    setIsSubmitting(true);
     try {
       const method = isEditMode ? "PUT" : "POST";
       const res = await fetch("/api/localSale", {
@@ -388,6 +391,8 @@ function LocalSaleTab() {
     } catch (err) {
       console.error(err);
       toast.error("Operation failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -647,8 +652,9 @@ function LocalSaleTab() {
                   variant="outline"
                   size="xs"
                   className="h-8 px-3 text-l"
+                  disabled={isSubmitting}
                 >
-                  Save
+                  {isSubmitting ? "Saving..." : "Save"}
                 </Button>
               )}
               {isEditMode && (
@@ -658,8 +664,9 @@ function LocalSaleTab() {
                     variant="outline"
                     size="xs"
                     className="h-8 px-3 text-l"
+                    disabled={isSubmitting}
                   >
-                    Update
+                    {isSubmitting ? "Updating..." : "Update"}
                   </Button>
                   <Button
                     type="button"

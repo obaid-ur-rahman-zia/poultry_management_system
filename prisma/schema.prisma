@@ -625,6 +625,7 @@ model accounts {
   expenseTransactions   expense_transaction[]  @relation("ExpenseTransactionAccount")
   local_sale_local      local_sale[]           @relation("LocalSaleLocal")
   local_sale_purchaser  local_sale[]           @relation("LocalSalePurchaser")
+  local_stock_lots      stock_lot[]            @relation("LocalStockLots")
 
   // Unique constraint to ensure account_id is unique within each sub_id
   @@unique([sub_id, account_id], name: "uq_sub_account")
@@ -1031,6 +1032,7 @@ model whole_sale {
 
   former_account_ref  accounts @relation("WholeSaleFormer", fields: [former_account], references: [acc_id])
   purcher_account_ref accounts @relation("WholeSalePurcher", fields: [purcher_account], references: [acc_id])
+  stock_lot           stock_lot?
 
   @@index([former_account])
   @@index([purcher_account])
@@ -1056,4 +1058,38 @@ model local_sale {
 
   local_account_ref     accounts @relation("LocalSaleLocal", fields: [local_account], references: [acc_id])
   purchaser_account_ref accounts @relation("LocalSalePurchaser", fields: [purchaser_account], references: [acc_id])
+  stock_allocations     local_sale_stock_allocation[]
+}
+
+model stock_lot {
+  stock_lot_id       Int      @id @default(autoincrement())
+  local_account      Int
+  source_sale_id     Int?     @unique
+  original_weight    Float
+  remaining_weight   Float
+  rate               Float
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  status             Int      @default(1)
+
+  local_account_ref  accounts                      @relation("LocalStockLots", fields: [local_account], references: [acc_id])
+  source_sale         whole_sale?                  @relation(fields: [source_sale_id], references: [sale_id])
+  allocations         local_sale_stock_allocation[]
+
+  @@index([local_account, status, stock_lot_id])
+}
+
+model local_sale_stock_allocation {
+  allocation_id  Int      @id @default(autoincrement())
+  local_sale_id  Int
+  stock_lot_id   Int
+  weight         Float
+  rate           Float
+  created_at     DateTime @default(now())
+
+  local_sale local_sale @relation(fields: [local_sale_id], references: [local_sale_id], onDelete: Cascade)
+  stock_lot  stock_lot  @relation(fields: [stock_lot_id], references: [stock_lot_id])
+
+  @@index([local_sale_id])
+  @@index([stock_lot_id])
 }
