@@ -384,6 +384,7 @@ function LocalSaleTab() {
             : "Local sale saved successfully"
         );
         handleClear();
+        await fetchAccounts();
         fetchSales(currentPage);
       } else {
         toast.error(data.response_message || "Operation failed");

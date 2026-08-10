@@ -40,12 +40,14 @@ class LocalSaleRepository {
   }
 
   async readReportDetail(startDate, endDate, localAccount) {
+    const start = startDate ? new Date(`${startDate}T00:00:00`) : undefined;
+    const end = endDate ? new Date(`${endDate}T23:59:59.999`) : undefined;
     const whereClause = {
       status: 1,
       ...(startDate && endDate ? {
         local_sale_date: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
+          gte: start,
+          lte: end,
         }
       } : {}),
       ...(localAccount ? { local_account: Number(localAccount) } : {}),
@@ -56,6 +58,13 @@ class LocalSaleRepository {
       include: {
         local_account_ref: true,
         purchaser_account_ref: true,
+        stock_allocations: {
+          include: {
+            stock_lot: {
+              select: { rate: true },
+            },
+          },
+        },
       },
       orderBy: [
         { local_sale_date: 'asc' },
