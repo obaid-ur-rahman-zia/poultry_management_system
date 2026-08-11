@@ -7,6 +7,7 @@ class LocalSaleRepository {
       include: {
         local_account_ref: true,
         purchaser_account_ref: true,
+        source_snapshots: { include: { source: true } },
       },
       where: { status: 1 },
     });
@@ -21,6 +22,7 @@ class LocalSaleRepository {
         include: {
           local_account_ref: true,
           purchaser_account_ref: true,
+          source_snapshots: { include: { source: true } },
         },
         where: { status: 1 },
       }),
@@ -35,6 +37,7 @@ class LocalSaleRepository {
       include: {
         local_account_ref: true,
         purchaser_account_ref: true,
+        source_snapshots: { include: { source: true } },
       },
     });
   }
@@ -53,7 +56,7 @@ class LocalSaleRepository {
       ...(localAccount ? { local_account: Number(localAccount) } : {}),
     };
 
-    return prisma.local_sale.findMany({
+    const localSales = await prisma.local_sale.findMany({
       where: whereClause,
       include: {
         local_account_ref: true,
@@ -65,12 +68,41 @@ class LocalSaleRepository {
             },
           },
         },
+        source_snapshots: { include: { source: true } },
       },
       orderBy: [
         { local_sale_date: 'asc' },
         { local_sale_id: 'asc' }
       ],
     });
+
+    const sourceAccount = localAccount
+      ? Number(localAccount)
+      : undefined;
+    const sourceRows = sourceAccount
+      ? await prisma.bhagtanwala_source.findMany({
+          where: {
+            account_id: sourceAccount,
+            source_date: { gte: start, lte: end },
+            status: 1,
+          },
+          orderBy: { source_date: "asc" },
+        })
+      : [];
+
+    const dailySources = sourceRows.reduce((groups, source) => {
+      const date = source.source_date.toISOString().slice(0, 10);
+      const day = groups[date] || { date, totalWeight: 0, totalCost: 0 };
+      day.totalWeight += Number(source.weight) || 0;
+      day.totalCost += (Number(source.weight) || 0) * (Number(source.rate) || 0);
+      groups[date] = day;
+      return groups;
+    }, {});
+
+    return {
+      localSales,
+      dailySources: Object.values(dailySources),
+    };
   }
 
   async create(data, tx) {

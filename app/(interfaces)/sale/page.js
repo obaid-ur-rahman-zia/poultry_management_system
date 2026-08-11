@@ -625,9 +625,10 @@ function WholeSaleTab() {
       return;
     }
 
+    const selectedSaleDate = saleDate.toISOString().split("T")[0];
     const payload = {
       req_object: {
-        sale_date: data.sale_date,
+        sale_date: selectedSaleDate,
         farm_rate: data.farm_rate || null,
         sale_rate: data.sale_rate || null,
         former_account: parseInt(data.former_account),
@@ -669,7 +670,7 @@ function WholeSaleTab() {
         }
 
         reset({
-          sale_date: data.sale_date,
+          sale_date: selectedSaleDate,
           farm_rate: "",
           sale_rate: "",
           former_account: "",

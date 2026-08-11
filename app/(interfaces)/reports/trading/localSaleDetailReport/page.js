@@ -59,11 +59,13 @@ export default function LocalSaleReport() {
           }
           if (!Array.isArray(accountsData)) accountsData = [];
 
-          const localAccounts = accountsData.filter(
-            (acc) => acc.subhead?.subhead_nam?.toLowerCase() === "local sale" || acc.subhead?.subhead_nam?.toLowerCase() === "local sales"
+          setAccounts(
+            accountsData.filter(
+              (acc) =>
+                acc.account_nam?.toLowerCase() === "bhagtanwala" &&
+                acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
+            ),
           );
-
-          setAccounts(localAccounts.length ? localAccounts : accountsData);
         }
       } catch (err) {
         console.error("Error fetching accounts:", err);
@@ -89,7 +91,7 @@ export default function LocalSaleReport() {
       }
 
       const data = await res.json();
-      setReportData(data.response_result || []);
+      setReportData(data.response_result || { localSales: [], dailySources: [] });
       setIsOpen(true);
     } catch (error) {
       console.error("Error fetching report:", error);
@@ -99,8 +101,14 @@ export default function LocalSaleReport() {
     }
   };
 
-  const purchaserRows = Object.values(
-    reportData.reduce((groups, item) => {
+  const localSales = Array.isArray(reportData) ? reportData : reportData.localSales || [];
+  const dailySources = Array.isArray(reportData)
+    ? []
+    : reportData.dailySources || [];
+
+  const summarizeDate = (date, sales) => {
+    const purchaserRows = Object.values(
+      sales.reduce((groups, item) => {
       const key = item.purchaser_account;
       const row = groups[key] || {
         purchaser_account: key,
@@ -120,45 +128,79 @@ export default function LocalSaleReport() {
       row.totalReceived += Number(item.received_amount) || 0;
       row.totalNetBalance += Number(item.net_balance) || 0;
 
-      if (!item.stock_allocations?.length) {
+      if (!item.source_snapshots?.length) {
         row.hasCostData = false;
       } else {
-        row.cost += item.stock_allocations.reduce(
-          (sum, allocation) =>
-            sum +
-            (Number(allocation.weight) || 0) *
-              (Number(allocation.rate ?? allocation.stock_lot?.rate) || 0),
+        const sourceWeight = item.source_snapshots.reduce(
+          (sum, snapshot) => sum + (Number(snapshot.weight) || 0),
           0,
         );
+        const sourceCost = item.source_snapshots.reduce(
+          (sum, snapshot) =>
+            sum +
+            (Number(snapshot.weight) || 0) *
+              (Number(snapshot.rate ?? snapshot.source?.rate) || 0),
+          0,
+        );
+        row.cost += sourceWeight
+          ? ((Number(item.purchaser_weight) || 0) * sourceCost) / sourceWeight
+          : 0;
       }
 
       groups[key] = row;
       return groups;
-    }, {}),
-  ).sort((a, b) =>
-    (a.account?.account_nam || "").localeCompare(b.account?.account_nam || ""),
-  );
-
-  const grandTotalWeight = purchaserRows.reduce((s, row) => s + row.totalWeight, 0);
-  const grandTotalAmount = purchaserRows.reduce((s, row) => s + row.totalAmount, 0);
-  const grandTotalPreviousBalance = purchaserRows.reduce(
-    (s, row) => s + row.totalPreviousBalance,
-    0,
-  );
-  const grandTotalReceived = purchaserRows.reduce((s, row) => s + row.totalReceived, 0);
-  const grandTotalNetBalance = purchaserRows.reduce(
-    (s, row) => s + row.totalNetBalance,
-    0,
-  );
-  const totalPurchaseCost = purchaserRows.every((row) => row.hasCostData)
-    ? purchaserRows.reduce((s, row) => s + row.cost, 0)
-    : null;
-  const averagePurchaseRate =
-    totalPurchaseCost !== null && grandTotalWeight > 0
-      ? totalPurchaseCost / grandTotalWeight
+      }, {}),
+    ).sort((a, b) =>
+      (a.account?.account_nam || "").localeCompare(b.account?.account_nam || ""),
+    );
+    const totalWeight = purchaserRows.reduce((sum, row) => sum + row.totalWeight, 0);
+    const totalAmount = purchaserRows.reduce((sum, row) => sum + row.totalAmount, 0);
+    const totalPreviousBalance = purchaserRows.reduce((sum, row) => sum + row.totalPreviousBalance, 0);
+    const totalReceived = purchaserRows.reduce((sum, row) => sum + row.totalReceived, 0);
+    const totalNetBalance = purchaserRows.reduce((sum, row) => sum + row.totalNetBalance, 0);
+    const source = dailySources.find((entry) => entry.date === date);
+    const purchaseCost = source && totalWeight > 0
+      ? (totalWeight / source.totalWeight) * source.totalCost
       : null;
-  const totalProfit =
-    totalPurchaseCost !== null ? grandTotalAmount - totalPurchaseCost : null;
+    const averagePurchaseRate = purchaseCost !== null && totalWeight > 0
+      ? purchaseCost / totalWeight
+      : null;
+    return {
+      date,
+      purchaserRows,
+      totalWeight,
+      totalAmount,
+      totalPreviousBalance,
+      totalReceived,
+      totalNetBalance,
+      sourceWeight: source?.totalWeight || 0,
+      purchaseCost,
+      averagePurchaseRate,
+      profit: purchaseCost !== null ? totalAmount - purchaseCost : null,
+      weightDifference: (source?.totalWeight || 0) - totalWeight,
+    };
+  };
+
+  const groupedByDate = localSales.reduce((groups, sale) => {
+    const date = new Date(sale.local_sale_date).toISOString().slice(0, 10);
+    (groups[date] ||= []).push(sale);
+    return groups;
+  }, {});
+  const dateSections = Object.keys(groupedByDate)
+    .sort()
+    .map((date) => summarizeDate(date, groupedByDate[date]));
+
+  const grandTotalWeight = dateSections.reduce((sum, day) => sum + day.totalWeight, 0);
+  const grandTotalAmount = dateSections.reduce((sum, day) => sum + day.totalAmount, 0);
+  const grandTotalPreviousBalance = dateSections.reduce((sum, day) => sum + day.totalPreviousBalance, 0);
+  const grandTotalReceived = dateSections.reduce((sum, day) => sum + day.totalReceived, 0);
+  const grandTotalNetBalance = dateSections.reduce((sum, day) => sum + day.totalNetBalance, 0);
+  const grandTotalSourceWeight = dateSections.reduce((sum, day) => sum + day.sourceWeight, 0);
+  const grandTotalWeightDifference = grandTotalSourceWeight - grandTotalWeight;
+  const totalPurchaseCost = dateSections.every((day) => day.purchaseCost !== null)
+    ? dateSections.reduce((sum, day) => sum + day.purchaseCost, 0)
+    : null;
+  const totalProfit = totalPurchaseCost !== null ? grandTotalAmount - totalPurchaseCost : null;
 
   const selectedAccountName = accounts.find((a) => a.acc_id === (localAccountId ? parseInt(localAccountId) : null))?.account_nam || "Unknown Account";
 
@@ -168,12 +210,13 @@ export default function LocalSaleReport() {
   }));
 
   const handleExport = () => {
-    if (!reportData.length) {
+    if (!dateSections.length) {
       toast.error("No data to export");
       return;
     }
 
     const headers = [
+      "Date",
       "Purchaser",
       "Weight",
       "Rate",
@@ -183,46 +226,25 @@ export default function LocalSaleReport() {
       "Net Balance",
     ];
 
-    const rows = purchaserRows.map((row) => [
-      row.account?.account_contact
-        ? `${row.account?.account_nam || "—"} (${row.account.account_contact})`
-        : row.account?.account_nam || "—",
-      row.totalWeight.toFixed(2),
-      row.totalWeight > 0 ? (row.totalAmount / row.totalWeight).toFixed(2) : "0.00",
-      row.totalAmount.toFixed(2),
-      row.totalPreviousBalance.toFixed(2),
-      row.totalReceived.toFixed(2),
-      row.totalNetBalance.toFixed(2),
-    ]);
-    rows.push([
-      "Grand Total",
-      grandTotalWeight.toFixed(2),
-      "",
-      grandTotalAmount.toFixed(2),
-      grandTotalPreviousBalance.toFixed(2),
-      grandTotalReceived.toFixed(2),
-      grandTotalNetBalance.toFixed(2),
-    ]);
-    rows.push([
-      "Total Purchase Cost",
-      "",
-      averagePurchaseRate?.toFixed(2) || "Unavailable",
-      totalPurchaseCost?.toFixed(2) || "Unavailable",
-      "",
-      "",
-      "",
-    ]);
-    rows.push([
-      "Profit",
-      "",
-      "",
-      totalPurchaseCost === null
-        ? "Unavailable"
-        : `${grandTotalAmount.toFixed(2)} - ${totalPurchaseCost.toFixed(2)} = ${totalProfit.toFixed(2)}`,
-      "",
-      "",
-      "",
-    ]);
+    const rows = [];
+    dateSections.forEach((day) => {
+      day.purchaserRows.forEach((row) => rows.push([
+        day.date,
+        row.account?.account_nam || "-",
+        row.totalWeight.toFixed(2),
+        row.totalWeight > 0 ? (row.totalAmount / row.totalWeight).toFixed(2) : "0.00",
+        row.totalAmount.toFixed(2),
+        row.totalPreviousBalance.toFixed(2),
+        row.totalReceived.toFixed(2),
+        row.totalNetBalance.toFixed(2),
+      ]));
+      rows.push([day.date, "Daily Total", day.totalWeight.toFixed(2), "", day.totalAmount.toFixed(2), day.totalPreviousBalance.toFixed(2), day.totalReceived.toFixed(2), day.totalNetBalance.toFixed(2)]);
+      rows.push([day.date, "Purchase Cost", "", "", day.purchaseCost === null ? "Unavailable" : day.purchaseCost.toFixed(2), "", "", ""]);
+      rows.push([day.date, "Profit", "", "", day.profit === null ? "Unavailable" : `${day.totalAmount.toFixed(2)} - ${day.purchaseCost.toFixed(2)} = ${day.profit.toFixed(2)}`, "", "", ""]);
+      rows.push([day.date, "Weight Difference", `${day.sourceWeight.toFixed(2)} - ${day.totalWeight.toFixed(2)} = ${day.weightDifference.toFixed(2)}`, "", "", "", "", ""]);
+    });
+    rows.push(["", "Grand Total", grandTotalWeight.toFixed(2), "", grandTotalAmount.toFixed(2), grandTotalPreviousBalance.toFixed(2), grandTotalReceived.toFixed(2), grandTotalNetBalance.toFixed(2)]);
+    rows.push(["", "Grand Weight Loss", `${grandTotalSourceWeight.toFixed(2)} - ${grandTotalWeight.toFixed(2)} = ${grandTotalWeightDifference.toFixed(2)}`, "", "", "", "", ""]);
 
     exportToCSV(`Local_Sale_Report_${startDate}_to_${endDate}.csv`, headers, rows);
   };
@@ -338,96 +360,65 @@ export default function LocalSaleReport() {
             </div>
 
             <div className="flex-1 overflow-auto p-4">
-              {purchaserRows.length === 0 ? (
+              {dateSections.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-gray-500 border border-gray-300 rounded">
                   No records found for this period
                 </div>
               ) : (
                 <>
-                <table className="w-full border-collapse text-sm border border-gray-400">
-                  <thead className="bg-gray-100 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-800 border border-gray-400">
-                        Purchaser
-                      </th>
-                      
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
-                        Weight
-                      </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
-                        Rate
-                      </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
-                        Amount
-                      </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
-                        Prev. Balance
-                      </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
-                        Received
-                      </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
-                        Net Balance
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {purchaserRows.map((row) => (
-                      <tr key={row.purchaser_account} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-3 py-2 border border-black">
-                          <div className="text-gray-900 font-medium">{row.account?.account_nam || "—"}</div>
-                          <div className="text-xs text-gray-500">{row.account?.account_contact}</div>
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono border border-black">{fmt(row.totalWeight, 0)}</td>
-                        <td className="px-3 py-2 text-right font-mono border border-black">
-                          {fmt(row.totalWeight > 0 ? row.totalAmount / row.totalWeight : 0)}
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono border border-black">{fmt(row.totalAmount)}</td>
-                        <td className="px-3 py-2 text-right font-mono border border-black">{fmt(row.totalPreviousBalance)}</td>
-                        <td className="px-3 py-2 text-right font-mono border border-black">{fmt(row.totalReceived)}</td>
-                        <td className="px-3 py-2 text-right font-mono font-semibold border border-black">{fmt(row.totalNetBalance)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-
-                  <tfoot>
-                    <tr className="bg-gray-800 text-white font-bold">
-                      <td
-                        colSpan={1}
-                        className="px-3 py-3 text-left border border-black"
-                      >
-                        Grand Total:
-                      </td>
-                      <td colSpan={2} className="px-10 py-3 text-left font-mono border border-black">
-                        {fmt(grandTotalWeight, 0)}
-                      </td>
-                      <td className="px-3 py-3 text-right font-mono border border-black">
-                        {fmt(grandTotalAmount)}
-                      </td>
-                      <td className="px-3 py-3 text-right font-mono border border-black">
-                        {fmt(grandTotalPreviousBalance)}
-                      </td>
-                      <td className="px-3 py-3 text-right font-mono border border-black">
-                        {fmt(grandTotalReceived)}
-                      </td>
-                      <td className="px-3 py-3 text-right font-mono border border-black">
-                        {fmt(grandTotalNetBalance)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-                <div className="mt-5 space-y-2 text-center font-semibold">
-                  <p>
-                    Total Purchase Cost: {totalPurchaseCost === null ? "Unavailable" : fmt(totalPurchaseCost)}
-                  </p>
-                  <p>
-                    Average Purchase Rate: {averagePurchaseRate === null ? "Unavailable" : fmt(averagePurchaseRate)}
-                  </p>
-                  <p >
-                    Profit: {fmt(grandTotalAmount)} - {totalPurchaseCost === null ? "Unavailable" : fmt(totalPurchaseCost)} = {totalProfit === null ? "Unavailable" : fmt(totalProfit)}
-                  </p>
-                </div>
+                  {dateSections.map((day) => (
+                    <section key={day.date} className="mb-8">
+                      <h2 className="mb-2 text-lg font-bold">Date: {day.date}</h2>
+                      <table className="w-full border-collapse text-sm border border-gray-400">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-3 py-2 text-left border border-gray-400">Purchaser</th>
+                            <th className="px-3 py-2 text-right border border-gray-400">Weight</th>
+                            <th className="px-3 py-2 text-right border border-gray-400">Rate</th>
+                            <th className="px-3 py-2 text-right border border-gray-400">Amount</th>
+                            <th className="px-3 py-2 text-right border border-gray-400">Prev. Balance</th>
+                            <th className="px-3 py-2 text-right border border-gray-400">Received</th>
+                            <th className="px-3 py-2 text-right border border-gray-400">Net Balance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {day.purchaserRows.map((row) => (
+                            <tr key={row.purchaser_account}>
+                              <td className="px-3 py-2 border border-black">{row.account?.account_nam || "-"}</td>
+                              <td className="px-3 py-2 text-right border border-black">{fmt(row.totalWeight, 0)}</td>
+                              <td className="px-3 py-2 text-right border border-black">{fmt(row.totalWeight ? row.totalAmount / row.totalWeight : 0)}</td>
+                              <td className="px-3 py-2 text-right border border-black">{fmt(row.totalAmount)}</td>
+                              <td className="px-3 py-2 text-right border border-black">{fmt(row.totalPreviousBalance)}</td>
+                              <td className="px-3 py-2 text-right border border-black">{fmt(row.totalReceived)}</td>
+                              <td className="px-3 py-2 text-right border border-black">{fmt(row.totalNetBalance)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-gray-800 text-white font-bold">
+                            <td className="px-3 py-3 border border-black">Daily Total</td>
+                            <td className="px-3 py-3 text-right border border-black">{fmt(day.totalWeight, 0)}</td>
+                            <td className="px-3 py-3 border border-black" />
+                            <td className="px-3 py-3 text-right border border-black">{fmt(day.totalAmount)}</td>
+                            <td className="px-3 py-3 text-right border border-black">{fmt(day.totalPreviousBalance)}</td>
+                            <td className="px-3 py-3 text-right border border-black">{fmt(day.totalReceived)}</td>
+                            <td className="px-3 py-3 text-right border border-black">{fmt(day.totalNetBalance)}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                      <div className="mt-4 space-y-2 text-center font-semibold">
+                        <p>Purchase Cost: {day.purchaseCost === null ? "Unavailable" : fmt(day.purchaseCost)}</p>
+                        <p>Profit: {fmt(day.totalAmount)} - {day.purchaseCost === null ? "Unavailable" : fmt(day.purchaseCost)} = {day.profit === null ? "Unavailable" : fmt(day.profit)}</p>
+                        <p>Weight Loss: {fmt(day.sourceWeight, 0)} - {fmt(day.totalWeight, 0)} = {fmt(day.weightDifference, 0)}</p>
+                      </div>
+                    </section>
+                  ))}
+                  <div className="mt-8 space-y-2 text-center font-bold">
+                    <p>Grand Total Weight: {fmt(grandTotalWeight, 0)}</p>
+                    <p>Grand Total Amount: {fmt(grandTotalAmount)}</p>
+                    <p>Grand Total Profit: {totalProfit === null ? "Unavailable" : fmt(totalProfit)}</p>
+                    <p>Grand Weight Loss: {fmt(grandTotalSourceWeight, 0)} - {fmt(grandTotalWeight, 0)} = {fmt(grandTotalWeightDifference, 0)}</p>
+                  </div>
                 </>
               )}
             </div>

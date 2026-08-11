@@ -5,11 +5,10 @@ import { createTransactions } from "./wholeSaleTransactions";
 import transactionRepository from "@/app/repositories/transaction/transactionRepository";
 import prisma from "@/lib/prisma";
 import {
-  createStockLot,
-  isLocalSaleAccount,
-  reverseStockLot,
-  updateStockLot,
-} from "@/app/controllers/localSale/stockService";
+  createSource,
+  deactivateSource,
+  updateSource,
+} from "@/app/controllers/localSale/bhagtanwalaSourceService";
 
 class WholeSaleController {
   async readAll(req) {
@@ -178,15 +177,7 @@ class WholeSaleController {
               throw new Error("Failed to create whole sale record");
             }
 
-            if (await isLocalSaleAccount(saleData.purcher_account, tx)) {
-              await createStockLot(
-                saleData.purcher_account,
-                createdWholeSale.sale_id,
-                saleData.weight,
-                saleData.purcher_rate,
-                tx,
-              );
-            }
+            await createSource(createdWholeSale, tx);
 
             // Create all related transactions - this will throw if any transaction fails
             // If ANY transaction fails, the entire transaction will rollback (atomicity)
@@ -293,30 +284,6 @@ class WholeSaleController {
               tx,
             );
 
-            const oldIsLocal = await isLocalSaleAccount(
-              existingWholeSale.purcher_account,
-              tx,
-            );
-            const newIsLocal = await isLocalSaleAccount(purcher_account, tx);
-            if (oldIsLocal && newIsLocal) {
-              await updateStockLot(
-                sale_id,
-                purcher_account,
-                weight,
-                req_object.purcher_rate,
-                tx,
-              );
-            } else if (oldIsLocal) {
-              await reverseStockLot(sale_id, tx);
-            } else if (newIsLocal) {
-              await createStockLot(
-                purcher_account,
-                sale_id,
-                weight,
-                req_object.purcher_rate,
-                tx,
-              );
-            }
 
             // Update the whole sale record
             const updatedWholeSale = await WholeSaleRepository.update(
@@ -329,6 +296,8 @@ class WholeSaleController {
             if (!updatedWholeSale || !updatedWholeSale.sale_id) {
               throw new Error("Failed to update whole sale record");
             }
+
+            await updateSource(updatedWholeSale, tx);
 
             // Create new transactions based on updated values
             await createTransactions(updatedWholeSale, tx);
@@ -398,9 +367,7 @@ class WholeSaleController {
               tx,
             );
 
-            if (await isLocalSaleAccount(existingWholeSale.purcher_account, tx)) {
-              await reverseStockLot(sale_id, tx);
-            }
+            await deactivateSource(sale_id, tx);
 
             // Delete (soft delete) the whole sale record
             await WholeSaleRepository.delete(sale_id, tx);

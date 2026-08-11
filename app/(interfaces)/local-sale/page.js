@@ -90,6 +90,8 @@ function LocalSaleTab() {
 
   // Selected local account details (stock rows)
   const [localAccountDetail, setLocalAccountDetail] = useState(null);
+  const [dateSources, setDateSources] = useState([]);
+  const [sourceDisplayMode, setSourceDisplayMode] = useState("date");
   
   // Balances
   const [purchaserBalance, setPurchaserBalance] = useState(null);
@@ -117,20 +119,10 @@ function LocalSaleTab() {
   const [deletingId, setDeletingId] = useState(null);
 
   // ─── computed: stock rows (read-only) ────────────────────────────────
-  const stockRows = [
-    {
-      weight: localAccountDetail?.weight_one ?? "",
-      rate: localAccountDetail?.rate_one ?? "",
-    },
-    {
-      weight: localAccountDetail?.weight_two ?? "",
-      rate: localAccountDetail?.rate_two ?? "",
-    },
-    {
-      weight: localAccountDetail?.weight_three ?? "",
-      rate: localAccountDetail?.rate_three ?? "",
-    },
-  ];
+  const stockRows = [0, 1, 2].map((index) => ({
+    weight: dateSources[index]?.weight ?? "",
+    rate: dateSources[index]?.rate ?? "",
+  }));
 
   const stockAmounts = stockRows.map((r) =>
     r.weight !== "" && r.rate !== ""
@@ -172,8 +164,8 @@ function LocalSaleTab() {
 
         const locals = list.filter(
           (a) =>
-            a.head?.head_nam?.toLowerCase().includes("local sale") ||
-            a.subhead?.subhead_nam?.toLowerCase().includes("local sale")
+            a.account_nam?.toLowerCase() === "bhagtanwala" &&
+            a.subhead?.subhead_nam?.toLowerCase() === "purchaser"
         );
         const purchasers = list.filter(
           (a) =>
@@ -182,6 +174,12 @@ function LocalSaleTab() {
         );
         setLocalAccounts(locals);
         setPurchaserAccounts(purchasers);
+        if (locals.length > 0) {
+          setForm((prev) => ({
+            ...prev,
+            local_account: locals[0].acc_id.toString(),
+          }));
+        }
       }
     } catch (e) {
       console.error("Error fetching accounts:", e);
@@ -206,6 +204,21 @@ function LocalSaleTab() {
       console.error("Error fetching FS rate:", e);
     }
   }, [form.local_sale_date]);
+
+  const fetchDateSources = useCallback(async (date) => {
+    if (!date) {
+      setDateSources([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/localSale/read/sources?date=${date}`);
+      const data = await res.json();
+      setDateSources(data.response_status === "success" ? data.response_result || [] : []);
+    } catch (error) {
+      console.error("Error fetching Bhagtanwala sources:", error);
+      setDateSources([]);
+    }
+  }, []);
 
   const fetchSales = useCallback(
     async (page = currentPage) => {
@@ -271,6 +284,14 @@ function LocalSaleTab() {
   }, [fetchFsRate]);
 
   useEffect(() => {
+    if (sourceDisplayMode === "snapshot" || !form.local_account) {
+      if (!form.local_account) setDateSources([]);
+      return;
+    }
+    fetchDateSources(form.local_sale_date);
+  }, [form.local_sale_date, form.local_account, fetchDateSources, sourceDisplayMode]);
+
+  useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
     } else {
@@ -313,6 +334,7 @@ function LocalSaleTab() {
 
   // ─── handlers ────────────────────────────────────────────────────────
   const handleChange = (field, value) => {
+    if (field === "local_sale_date") setSourceDisplayMode("date");
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -321,6 +343,8 @@ function LocalSaleTab() {
     setIsEditMode(false);
     setEditingId(null);
     setLocalAccountDetail(null);
+    setDateSources([]);
+    setSourceDisplayMode("date");
     setLocalBalance(null);
     setPurchaserBalance(null);
     document.getElementById("local-sale-form")?.scrollIntoView({ behavior: "smooth" });
@@ -412,6 +436,12 @@ function LocalSaleTab() {
       previous_balance: sale.previous_balance?.toString() || "",
       received_amount: sale.received_amount?.toString() || "",
     });
+    const snapshots = sale.source_snapshots?.map((snapshot) => ({
+        weight: snapshot.weight,
+        rate: snapshot.rate,
+      })) || [];
+    setDateSources(snapshots);
+    setSourceDisplayMode(snapshots.length ? "snapshot" : "date");
     document.getElementById("local-sale-form")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -516,7 +546,7 @@ function LocalSaleTab() {
                 <Label className="whitespace-nowrap text-l">Local Account</Label>
                 <div className="w-60">
                   <Combobox
-                    options={localAccounts.map((a) => ({
+                    options={localAccounts.filter((a) => a.account_nam?.toLowerCase() === "bhagtanwala").map((a) => ({
                       value: a.acc_id.toString(),
                       label: a.account_nam,
                     }))}

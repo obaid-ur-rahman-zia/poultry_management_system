@@ -158,14 +158,6 @@ async function main() {
         parent_sub_id: null,
         status: 1,
       },
-      {
-        head_id: firstHead.head_id,
-        subhead_id: 16,
-        subhead_nam: "LOCAL SALE",
-        is_parent: 0,
-        parent_sub_id: null,
-        status: 1,
-      },
     ];
 
     for (const subhead of subheads) {
@@ -226,6 +218,43 @@ async function main() {
     ],
     skipDuplicates: true,
   });
+
+  const purchaserSubhead = await prisma.account_sub_head.findFirst({
+    where: {
+      head_id: firstHead?.head_id,
+      subhead_nam: { equals: "PURCHASER", mode: "insensitive" },
+    },
+  });
+
+  if (purchaserSubhead) {
+    const existingBhagtanwala = await prisma.accounts.findFirst({
+      where: {
+        sub_id: purchaserSubhead.sub_id,
+        account_nam: { equals: "Bhagtanwala", mode: "insensitive" },
+      },
+    });
+
+    if (!existingBhagtanwala) {
+      const maxAccount = await prisma.accounts.findFirst({
+        where: { sub_id: purchaserSubhead.sub_id },
+        orderBy: { account_id: "desc" },
+        select: { account_id: true },
+      });
+      await prisma.accounts.create({
+        data: {
+          head_id: purchaserSubhead.head_id,
+          sub_id: purchaserSubhead.sub_id,
+          account_id: (maxAccount?.account_id || 0) + 1,
+          account_nam: "Bhagtanwala",
+          is_customer: 1,
+          insert_by: "system",
+          update_by: "system",
+          status: 1,
+        },
+      });
+      console.log("✅ Bhagtanwala account created under PURCHASER");
+    }
+  }
 
   // ---- Account Manage (Subheads - Level 2) ----
   console.log("Creating Account Manage entries (Subheads)...");

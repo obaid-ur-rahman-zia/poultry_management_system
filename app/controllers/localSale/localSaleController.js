@@ -3,9 +3,10 @@ import { successResponse, errorResponse } from "@/app/utils/response";
 import { AccountConfigService } from "@/app/utils/accountConfigService";
 import ErrorLogger from "@/app/utils/errorLogger";
 import {
-  allocateStock,
-  restoreStock,
-} from "@/app/controllers/localSale/stockService";
+  assertBhagtanwala,
+  readSourcesForDate,
+  snapshotSources,
+} from "@/app/controllers/localSale/bhagtanwalaSourceService";
 
 import transactionRepository from "@/app/repositories/transaction/transactionRepository";
 import prisma from "@/lib/prisma";
@@ -70,6 +71,19 @@ class LocalSaleController {
     }
   }
 
+  async readSources(req) {
+    try {
+      const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
+      const date = searchParams.get("date");
+      if (!date) return errorResponse(new Error("date is required"), 400);
+      const sources = await readSourcesForDate(date, prisma);
+      return successResponse(sources, "Success");
+    } catch (err) {
+      ErrorLogger.log("LocalSaleController.readSources", err);
+      return errorResponse(err, 500);
+    }
+  }
+
   async readReportDetail(req) {
     try {
       const searchParams = req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
@@ -80,6 +94,8 @@ class LocalSaleController {
       if (!start_dat || !end_dat) {
         return errorResponse(new Error("start_dat and end_dat are required"), 400);
       }
+
+      if (local_account) await assertBhagtanwala(local_account, prisma);
 
       const result = await LocalSaleRepository.readReportDetail(start_dat, end_dat, local_account);
 
@@ -124,16 +140,12 @@ class LocalSaleController {
 
       const localSale = await prisma.$transaction(
         async (tx) => {
+          await assertBhagtanwala(local_account, tx);
           const created = await LocalSaleRepository.create(req_object, tx);
           if (!created || !created.local_sale_id)
             throw new Error("Failed to create local sale record");
 
-          await allocateStock(
-            local_account,
-            created.local_sale_id,
-            purchaser_weight,
-            tx,
-          );
+          await snapshotSources(created.local_sale_id, local_sale_date, tx);
 
           await createLocalSaleTransactions(created, tx);
           return created;
@@ -163,7 +175,7 @@ class LocalSaleController {
 
       const localSale = await prisma.$transaction(
         async (tx) => {
-          await restoreStock(local_sale_id, tx);
+          await assertBhagtanwala(req_object.local_account, tx);
 
           await transactionRepository.softDeleteByReferenceId(
             local_sale_id,
@@ -177,12 +189,7 @@ class LocalSaleController {
           );
           if (!updated || !updated.local_sale_id)
             throw new Error("Failed to update local sale record");
-          await allocateStock(
-            updated.local_account,
-            updated.local_sale_id,
-            updated.purchaser_weight,
-            tx,
-          );
+          await snapshotSources(updated.local_sale_id, updated.local_sale_date, tx);
           await createLocalSaleTransactions(updated, tx);
           return updated;
         },
@@ -209,7 +216,6 @@ class LocalSaleController {
 
       await prisma.$transaction(
         async (tx) => {
-          await restoreStock(local_sale_id, tx);
           await transactionRepository.softDeleteByReferenceId(
             local_sale_id,
             "Local Sale",
