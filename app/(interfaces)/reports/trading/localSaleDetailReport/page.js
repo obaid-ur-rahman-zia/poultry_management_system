@@ -38,8 +38,8 @@ const selectStyles = {
 
 export default function LocalSaleReport() {
   const [isOpen, setIsOpen] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [localAccountId, setLocalAccountId] = useState("");
   const [accounts, setAccounts] = useState([]);
   const [reportData, setReportData] = useState([]);

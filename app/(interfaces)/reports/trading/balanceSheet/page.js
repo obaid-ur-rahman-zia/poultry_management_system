@@ -7,8 +7,8 @@ import { exportToCSV } from "@/app/utils/exportToCsv";
 
 export default function BalanceSheetReport() {
   const [isOpen, setIsOpen] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [transactions, setTransactions] = useState([]);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [closingBalance, setClosingBalance] = useState(0);

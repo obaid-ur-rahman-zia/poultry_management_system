@@ -176,6 +176,28 @@ export default function OppositeTransactionsPage() {
     }
   };
 
+  const getDefaultAccountSearchType = (field) => {
+    const matchedSubhead = accountSubHeads.find((subhead) => {
+      const subheadName = subhead.subhead_nam?.toLowerCase() || "";
+
+      if (field === "paid_by") {
+        return (
+          subheadName.includes("purchaser") ||
+          subheadName.includes("purcher") ||
+          subheadName.includes("customer")
+        );
+      }
+
+      return (
+        subheadName.includes("farmer") ||
+        subheadName.includes("former") ||
+        subheadName.includes("supplier")
+      );
+    });
+
+    return matchedSubhead ? matchedSubhead.sub_id.toString() : "all";
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.matchMedia("(max-width: 768px)").matches);
@@ -658,13 +680,8 @@ export default function OppositeTransactionsPage() {
                     size="sm"
                     onClick={() => {
                       setAccountSearchField("paid_by");
-                      const purcherSubHead = accountSubHeads.find(
-                        (sh) => sh.subhead_nam?.toLowerCase() === "purcher",
-                      );
                       setAccountSearchType(
-                        purcherSubHead
-                          ? purcherSubHead.sub_id.toString()
-                          : "all",
+                        getDefaultAccountSearchType("paid_by"),
                       );
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
@@ -795,11 +812,8 @@ export default function OppositeTransactionsPage() {
                     size="sm"
                     onClick={() => {
                       setAccountSearchField("received_by");
-                      const formerSubHead = accountSubHeads.find(
-                        (sh) => sh.subhead_nam?.toLowerCase() === "former",
-                      );
                       setAccountSearchType(
-                        formerSubHead ? formerSubHead.sub_id.toString() : "all",
+                        getDefaultAccountSearchType("received_by"),
                       );
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
@@ -1250,67 +1264,70 @@ export default function OppositeTransactionsPage() {
           <DialogHeader>
             <DialogTitle>Search Accounts</DialogTitle>
             <DialogDescription>
-              Search and select an account from all available accounts
+              Search and select an account for this transaction
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4">
               <div className="flex-1 space-y-2">
-                <Label>Account Type</Label>
-                <Select
+                <Label>Account Type (Head)</Label>
+                <Combobox
+                  options={[
+                    { value: "all", label: "All Types" },
+                    ...accountSubHeads
+                      .filter(
+                        (subhead) =>
+                          subhead.subhead_nam !== "Expense Head" &&
+                          subhead.parent?.subhead_nam !== "Expense Head",
+                      )
+                      .map((subhead) => ({
+                        value: subhead.sub_id.toString(),
+                        label: `${subhead.subhead_nam}${
+                          subhead.head?.head_nam &&
+                          subhead.head.head_nam !== "Main Head"
+                            ? ` (${subhead.head.head_nam})`
+                            : ""
+                        }`,
+                      })),
+                  ]}
                   value={accountSearchType}
                   onValueChange={setAccountSearchType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {accountSubHeads.map((subhead) => (
-                      <SelectItem
-                        key={subhead.sub_id}
-                        value={subhead.sub_id.toString()}
-                      >
-                        {subhead.subhead_nam}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select account type"
+                  searchPlaceholder="Search account types..."
+                  emptyText="No account type found."
+                />
               </div>
               <div className="flex-1 space-y-2">
-                <Label>Search</Label>
+                <Label>Search Account</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search accounts..."
+                    placeholder="Search accounts by name, cnic, contact..."
                     value={accountSearchQuery}
                     onChange={(e) => setAccountSearchQuery(e.target.value)}
                     className="pl-9"
+                    autoFocus
                   />
                 </div>
               </div>
             </div>
-            <div className="relative max-h-[400px] overflow-auto">
+            <div className="relative max-h-[400px] overflow-auto border rounded-md">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
                     <TableHead>Sr. No</TableHead>
                     <TableHead>Account Name</TableHead>
+                    <TableHead>Account Type</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allAccounts
                     .filter((acc) => {
-                      // Filter by account sub-head (account type)
                       if (accountSearchType !== "all") {
-                        // Filter by sub_id (account sub-head)
                         if (acc.sub_id?.toString() !== accountSearchType) {
                           return false;
                         }
                       }
-                      // If "all", show all accounts (no filter)
-
-                      // Filter by search query
                       if (accountSearchQuery) {
                         const query = accountSearchQuery.toLowerCase();
                         return (
@@ -1326,7 +1343,6 @@ export default function OppositeTransactionsPage() {
                         key={acc.acc_id}
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => {
-                          // Update the field that opened the dialog
                           if (accountSearchField === "paid_by") {
                             setValue("paid_by", acc.acc_id.toString());
                           } else if (accountSearchField === "received_by") {
@@ -1339,6 +1355,12 @@ export default function OppositeTransactionsPage() {
                         <TableCell>{index + 1}</TableCell>
                         <TableCell className="font-medium">
                           {acc.account_nam}
+                        </TableCell>
+                        <TableCell>
+                          {accountSubHeads.find(
+                            (sh) =>
+                              sh.sub_id?.toString() === acc.sub_id?.toString(),
+                          )?.subhead_nam || "N/A"}
                         </TableCell>
                       </TableRow>
                     ))}

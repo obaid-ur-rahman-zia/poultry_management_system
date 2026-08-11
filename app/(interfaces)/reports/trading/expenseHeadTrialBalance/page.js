@@ -18,8 +18,8 @@ import { exportToCSV } from "@/app/utils/exportToCsv";
 export default function ExpenseHeadTrialBalance() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [reportData, setReportData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 

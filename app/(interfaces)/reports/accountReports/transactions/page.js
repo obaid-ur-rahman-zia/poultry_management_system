@@ -71,8 +71,8 @@ export default function AccountingReports() {
     itemsPerPage: 100,
   });
   const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
     voucherType: "all",
     accountSearch: "",
     financialYear: "all",
@@ -257,8 +257,8 @@ export default function AccountingReports() {
 
   const resetFilters = () => {
     setFilters({
-      startDate: "",
-      endDate: "",
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date().toISOString().split("T")[0],
       voucherType: "all",
       accountSearch: "",
       financialYear: "all",

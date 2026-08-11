@@ -185,6 +185,19 @@ export default function SelfTransactionPage() {
     }
   };
 
+  const getDefaultAccountSearchType = () => {
+    const matchedSubhead = accountSubHeads.find((subhead) => {
+      const subheadName = subhead.subhead_nam?.toLowerCase() || "";
+      return (
+        subheadName.includes("purchaser") ||
+        subheadName.includes("purcher") ||
+        subheadName.includes("customer")
+      );
+    });
+
+    return matchedSubhead ? matchedSubhead.sub_id.toString() : "all";
+  };
+
   const fetchAccountBalance = async (accId) => {
     if (!accId) return;
     setBalanceLoading(true);
@@ -504,22 +517,15 @@ export default function SelfTransactionPage() {
                         )}
                       />
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const purcherSubHead = accountSubHeads.find(
-                          (sh) => sh.subhead_nam?.toLowerCase() === "purcher",
-                        );
-                        setAccountSearchType(
-                          purcherSubHead
-                            ? purcherSubHead.sub_id.toString()
-                            : "all",
-                        );
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setAccountSearchType(getDefaultAccountSearchType());
                         setAccountSearchQuery("");
                         setIsAccountSearchDialogOpen(true);
-                      }}
+                    }}
                       className="h-8 w-8 p-0 font-bold"
                       title="Search Accounts"
                     >
@@ -708,52 +714,60 @@ export default function SelfTransactionPage() {
           <DialogHeader>
             <DialogTitle>Search Accounts</DialogTitle>
             <DialogDescription>
-              Search and select an account from all available accounts
+              Search and select an account for this transaction
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4">
               <div className="flex-1 space-y-2">
-                <Label>Account Type</Label>
-                <Select
+                <Label>Account Type (Head)</Label>
+                <Combobox
+                  options={[
+                    { value: "all", label: "All Types" },
+                    ...accountSubHeads
+                      .filter(
+                        (subhead) =>
+                          subhead.subhead_nam !== "Expense Head" &&
+                          subhead.parent?.subhead_nam !== "Expense Head",
+                      )
+                      .map((subhead) => ({
+                        value: subhead.sub_id.toString(),
+                        label: `${subhead.subhead_nam}${
+                          subhead.head?.head_nam &&
+                          subhead.head.head_nam !== "Main Head"
+                            ? ` (${subhead.head.head_nam})`
+                            : ""
+                        }`,
+                      })),
+                  ]}
                   value={accountSearchType}
                   onValueChange={setAccountSearchType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {accountSubHeads.map((subhead) => (
-                      <SelectItem
-                        key={subhead.sub_id}
-                        value={subhead.sub_id.toString()}
-                      >
-                        {subhead.subhead_nam}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select account type"
+                  searchPlaceholder="Search account types..."
+                  emptyText="No account type found."
+                />
               </div>
               <div className="flex-1 space-y-2">
-                <Label>Search</Label>
+                <Label>Search Account</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search accounts..."
+                    placeholder="Search accounts by name, cnic, contact..."
                     value={accountSearchQuery}
                     onChange={(e) => setAccountSearchQuery(e.target.value)}
                     className="pl-9"
+                    autoFocus
                   />
                 </div>
               </div>
             </div>
-            <div className="relative max-h-[400px] overflow-auto">
+            <div className="relative max-h-[400px] overflow-auto border rounded-md">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
                     <TableHead>Sr. No</TableHead>
                     <TableHead>Account Name</TableHead>
+                    <TableHead>Account Type</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -787,6 +801,12 @@ export default function SelfTransactionPage() {
                         <TableCell>{index + 1}</TableCell>
                         <TableCell className="font-medium">
                           {acc.account_nam}
+                        </TableCell>
+                        <TableCell>
+                          {accountSubHeads.find(
+                            (sh) =>
+                              sh.sub_id?.toString() === acc.sub_id?.toString(),
+                          )?.subhead_nam || "N/A"}
                         </TableCell>
                       </TableRow>
                     ))}

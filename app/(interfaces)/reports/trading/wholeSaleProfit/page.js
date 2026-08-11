@@ -6,8 +6,8 @@ import { exportToCSV } from "@/app/utils/exportToCsv";
 
 export default function WholeSaleProfitModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [groupBy, setGroupBy] = useState("date");
   const [reportData, setReportData] = useState([]);
   const [grandTotalPurchase, setGrandTotalPurchase] = useState(0);

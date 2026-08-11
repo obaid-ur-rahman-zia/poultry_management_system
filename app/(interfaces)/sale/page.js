@@ -234,6 +234,28 @@ function WholeSaleTab() {
     }
   };
 
+  const getDefaultAccountSearchType = (field) => {
+    const matchedSubhead = accountSubHeads.find((subhead) => {
+      const subheadName = subhead.subhead_nam?.toLowerCase() || "";
+
+      if (field === "former") {
+        return (
+          subheadName.includes("farmer") ||
+          subheadName.includes("former") ||
+          subheadName.includes("supplier")
+        );
+      }
+
+      return (
+        subheadName.includes("purchaser") ||
+        subheadName.includes("purcher") ||
+        subheadName.includes("customer")
+      );
+    });
+
+    return matchedSubhead ? matchedSubhead.sub_id.toString() : "all";
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.matchMedia("(max-width: 768px)").matches);
@@ -955,13 +977,7 @@ function WholeSaleTab() {
                     size="xs"
                     onClick={() => {
                       setAccountSearchField("former");
-                      // Find "Former" subhead and set its sub_id as default
-                      const formerSubhead = accountSubHeads.find((sh) =>
-                        sh.subhead_nam?.toLowerCase().includes("former"),
-                      );
-                      setAccountSearchType(
-                        formerSubhead ? formerSubhead.sub_id.toString() : "all",
-                      );
+                      setAccountSearchType(getDefaultAccountSearchType("former"));
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
@@ -1091,15 +1107,7 @@ function WholeSaleTab() {
                     size="xs"
                     onClick={() => {
                       setAccountSearchField("purcher");
-                      // Find "Purcher" subhead and set its sub_id as default
-                      const purcherSubhead = accountSubHeads.find((sh) =>
-                        sh.subhead_nam?.toLowerCase().includes("purcher"),
-                      );
-                      setAccountSearchType(
-                        purcherSubhead
-                          ? purcherSubhead.sub_id.toString()
-                          : "all",
-                      );
+                      setAccountSearchType(getDefaultAccountSearchType("purcher"));
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
@@ -1602,71 +1610,74 @@ function WholeSaleTab() {
         open={isAccountSearchDialogOpen}
         onOpenChange={setIsAccountSearchDialogOpen}
       >
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Search Accounts</DialogTitle>
-            <DialogDescription>
-              Search and select an account from all available accounts
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1 space-y-2">
-                <Label>Account Type</Label>
-                <Select
-                  value={accountSearchType}
-                  onValueChange={setAccountSearchType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {accountSubHeads.map((subhead) => (
-                      <SelectItem
-                        key={subhead.sub_id}
-                        value={subhead.sub_id.toString()}
-                      >
-                        {subhead.subhead_nam}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex-1 space-y-2">
-                <Label>Search</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search accounts..."
-                    value={accountSearchQuery}
-                    onChange={(e) => setAccountSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Search Accounts</DialogTitle>
+          <DialogDescription>
+            Search and select an account to use in this sale
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex-1 space-y-2">
+              <Label>Account Type (Head)</Label>
+              <Combobox
+                options={[
+                  { value: "all", label: "All Types" },
+                  ...accountSubHeads
+                    .filter(
+                      (subhead) =>
+                        subhead.subhead_nam !== "Expense Head" &&
+                        subhead.parent?.subhead_nam !== "Expense Head",
+                    )
+                    .map((subhead) => ({
+                      value: subhead.sub_id.toString(),
+                      label: `${subhead.subhead_nam}${
+                        subhead.head?.head_nam &&
+                        subhead.head.head_nam !== "Main Head"
+                          ? ` (${subhead.head.head_nam})`
+                          : ""
+                      }`,
+                    })),
+                ]}
+                value={accountSearchType}
+                onValueChange={setAccountSearchType}
+                placeholder="Select account type"
+                searchPlaceholder="Search account types..."
+                emptyText="No account type found."
+              />
+            </div>
+            <div className="flex-1 space-y-2">
+              <Label>Search Account</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search accounts by name, cnic, contact..."
+                  value={accountSearchQuery}
+                  onChange={(e) => setAccountSearchQuery(e.target.value)}
+                  className="pl-9"
+                  autoFocus
+                />
               </div>
             </div>
-            <div className="relative max-h-[400px] overflow-auto">
+          </div>
+          <div className="relative max-h-[400px] overflow-auto border rounded-md">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
                     <TableHead>Sr. No</TableHead>
                     <TableHead>Account Name</TableHead>
+                    <TableHead>Account Type</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allAccounts
                     .filter((acc) => {
-                      // Filter by account sub-head (account type)
                       if (accountSearchType !== "all") {
-                        // Filter by sub_id (account sub-head)
                         if (acc.sub_id?.toString() !== accountSearchType) {
                           return false;
                         }
                       }
-                      // If "all", show all accounts (no filter)
-
-                      // Filter by search query
                       if (accountSearchQuery) {
                         const query = accountSearchQuery.toLowerCase();
                         return (
@@ -1682,10 +1693,6 @@ function WholeSaleTab() {
                         key={acc.acc_id}
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => {
-                          // Update the field that opened the dialog - any account type can be selected
-                          // If dialog opened from Former field, set in former_account
-                          // If dialog opened from Purcher field, set in purcher_account
-                          // Account type doesn't matter - any account can be selected
                           if (accountSearchField === "former") {
                             setValue("former_account", acc.acc_id.toString());
                           } else if (accountSearchField === "purcher") {
@@ -1698,6 +1705,12 @@ function WholeSaleTab() {
                         <TableCell>{index + 1}</TableCell>
                         <TableCell className="font-medium">
                           {acc.account_nam}
+                        </TableCell>
+                        <TableCell>
+                          {accountSubHeads.find(
+                            (sh) =>
+                              sh.sub_id?.toString() === acc.sub_id?.toString(),
+                          )?.subhead_nam || "N/A"}
                         </TableCell>
                       </TableRow>
                     ))}

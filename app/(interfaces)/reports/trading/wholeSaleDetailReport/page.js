@@ -6,8 +6,8 @@ import { exportToCSV } from "@/app/utils/exportToCsv";
 
 export default function WholeSaleReport() {
   const [isOpen, setIsOpen] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [reportData, setReportData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 

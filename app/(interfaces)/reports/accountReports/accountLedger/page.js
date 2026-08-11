@@ -71,8 +71,8 @@ export default function AccountLedgerModal() {
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [accountSearchType, setAccountSearchType] = useState("all");
   const [accountSubHeads, setAccountSubHeads] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const selectedAccount = watch("selectedAccount");
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
