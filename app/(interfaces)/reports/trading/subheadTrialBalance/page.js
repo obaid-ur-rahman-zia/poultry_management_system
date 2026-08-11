@@ -150,6 +150,10 @@ export default function SubheadTrialBalanceModal() {
       });
     });
 
+    if (reportData.wholeSaleProfit) {
+      items.push({ type: "WHOLE_SALE_PROFIT", ...reportData.wholeSaleProfit });
+    }
+
     // Final block: CONCLUSION
     items.push({ type: "CONCLUSION", ...reportData.conclusion });
 
@@ -385,6 +389,57 @@ export default function SubheadTrialBalanceModal() {
                         <div className="text-right text-blue-700">
                           {formatCurrency(chunk.balance)}
                         </div>
+                      </div>
+                    );
+                  }
+
+                  if (chunk.type === "WHOLE_SALE_PROFIT") {
+                    return (
+                      <div
+                        key={idx}
+                        className="mt-8 border-t-2 border-gray-400 pt-4"
+                      >
+                        <h2 className="text-xl font-bold mb-2 text-gray-800 uppercase">
+                          Whole Sale Profit
+                        </h2>
+                        <table className="w-full border-collapse text-sm border border-gray-300">
+                          <thead>
+                            <tr className="bg-gray-200 border-b-2 border-gray-400">
+                              <th className="px-3 py-2 text-left font-bold text-gray-800 border border-gray-300">
+                                Description
+                              </th>
+                              <th className="px-3 py-2 text-right font-bold text-green-800 border border-gray-300">
+                                Amount
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="bg-white border-b border-gray-300">
+                              <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
+                                Balance of Income Acc under Income (Credit)
+                              </td>
+                              <td className="px-3 py-2 text-right font-bold text-green-700 border border-gray-300">
+                                {formatCurrency(chunk.income_acc_credit)}
+                              </td>
+                            </tr>
+                            <tr className="bg-white border-b border-gray-300">
+                              <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
+                                Total Expense Head Balance
+                              </td>
+                              <td className="px-3 py-2 text-right font-bold text-red-700 border border-gray-300">
+                                {formatCurrency(chunk.expense_head_debit)}
+                              </td>
+                            </tr>
+                            <tr className="bg-gray-100">
+                              <td className="px-3 py-3 font-bold text-gray-900 border border-gray-300">
+                                Whole Sale Profit
+                              </td>
+                              <td className="px-3 py-3 text-right font-bold text-blue-700 text-lg border border-gray-300">
+                                {formatCurrency(chunk.profit)}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     );
                   }

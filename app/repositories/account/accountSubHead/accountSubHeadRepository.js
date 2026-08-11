@@ -155,6 +155,9 @@ class AccountSubHeadRepository {
       where: { status: 1 },
       orderBy: { subhead_id: "asc" },
       include: {
+        parent: {
+          select: { subhead_nam: true },
+        },
         accounts: {
           where: { status: 1 },
           select: {
@@ -196,10 +199,16 @@ class AccountSubHeadRepository {
     // 3. Construct the report
     let grandTotalDebit = 0;
     let grandTotalCredit = 0;
+    let incomeAccCredit = 0;
+    let expenseHeadDebit = 0;
 
     const reportData = subheads.map((subhead) => {
       let subheadDebit = 0;
       let subheadCredit = 0;
+      const isIncomeSubhead =
+        subhead.subhead_nam.trim().toLowerCase() === "income";
+      const isExpenseHeadSubhead =
+        subhead.parent?.subhead_nam?.trim().toLowerCase() === "expense head";
 
       const processedAccounts = subhead.accounts.map((acc) => {
         const stats = aggMap[acc.acc_id] || { debit: 0, credit: 0 };
@@ -207,6 +216,17 @@ class AccountSubHeadRepository {
 
         subheadDebit += stats.debit;
         subheadCredit += stats.credit;
+
+        if (
+          isIncomeSubhead &&
+          acc.account_nam.trim().toLowerCase() === "income acc"
+        ) {
+          incomeAccCredit += stats.credit;
+        }
+
+        if (isExpenseHeadSubhead) {
+          expenseHeadDebit += stats.debit;
+        }
 
         return {
           name: acc.account_nam,
@@ -234,6 +254,11 @@ class AccountSubHeadRepository {
 
     return {
       details: reportData,
+      wholeSaleProfit: {
+        income_acc_credit: incomeAccCredit,
+        expense_head_debit: expenseHeadDebit,
+        profit: incomeAccCredit - expenseHeadDebit,
+      },
       conclusion: {
         total_debit: grandTotalDebit,
         total_credit: grandTotalCredit,
