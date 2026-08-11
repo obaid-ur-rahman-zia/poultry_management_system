@@ -88,7 +88,6 @@ export default function AccountPage() {
     },
   });
 
-  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingAccountId, setEditingAccountId] = useState(null);
@@ -99,20 +98,13 @@ export default function AccountPage() {
   const [newSubHeadName, setNewSubHeadName] = useState("");
   const [newSubHeadHeadId, setNewSubHeadHeadId] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [isFiltersDialogOpen, setIsFiltersDialogOpen] = useState(false);
   const [accountOpeningDate, setAccountOpeningDate] = useState(new Date());
 
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterAccountType, setFilterAccountType] = useState("all");
-  const [filterContact, setFilterContact] = useState("");
-  const [filterName, setFilterName] = useState("");
-
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  // Account Search Modal states
+  const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
+  const [accountSearchType, setAccountSearchType] = useState("all");
+  const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const [allAccounts, setAllAccounts] = useState([]);
 
   const contactNumbers = watch("contact_numbers") || [""];
   const bankAccountNumbers = watch("bank_account_numbers") || [""];
@@ -125,25 +117,37 @@ export default function AccountPage() {
 
     fetchSubHeads();
     fetchAccountHeads();
-    fetchAccounts(1, 20);
+    fetchAllAccounts();
 
     return () => mq.removeEventListener("change", handleResize);
   }, []);
 
-  // Reset to page 1 when filters change and refetch
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchAccounts(1, itemsPerPage);
-    }
-  }, [searchQuery, filterAccountType, filterContact, filterName]);
+  const fetchAllAccounts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/account/accounts/readAll?all=true");
+      const result = await response.json();
 
-  // Fetch accounts when page or itemsPerPage changes
-  useEffect(() => {
-    fetchAccounts(currentPage, itemsPerPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage]);
+      if (result.success || result.response_status === "success") {
+        const responseData = result.response_result;
+        if (responseData?.pagination) {
+          const accountsData = responseData.data || [];
+          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+        } else {
+          const accountsData = responseData?.data || responseData || [];
+          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+        }
+      } else {
+        toast.error(result.response_message || "Failed to fetch accounts");
+      }
+    } catch (error) {
+      console.error("Error fetching all accounts:", error);
+      toast.error("Failed to fetch accounts");
+      setAllAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchAccountHeads = async () => {
     try {
@@ -180,51 +184,11 @@ export default function AccountPage() {
     }
   };
 
-  const fetchAccounts = async (page = currentPage, limit = itemsPerPage) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/account/accounts/readAll?page=${page}&limit=${limit}`,
-      );
-      const result = await response.json();
-
-      if (result.response_status === "success") {
-        const responseData = result.response_result;
-
-        // Handle paginated response
-        if (responseData?.pagination) {
-          const accountsData = responseData.data || [];
-          setAccounts(accountsData);
-          setTotalPages(responseData.pagination.totalPages || 1);
-          setTotalItems(responseData.pagination.total || 0);
-          setCurrentPage(responseData.pagination.page || page);
-        } else {
-          // Fallback for non-paginated response
-          const accountsData = responseData?.data || responseData || [];
-          setAccounts(accountsData);
-          setTotalPages(1);
-          setTotalItems(accountsData.length);
-        }
-      } else {
-        toast.error(result.response_message || "Failed to fetch accounts");
-      }
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-      toast.error("Failed to fetch accounts");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGetData = async () => {
-    // Scroll to accounts list section
-    const accountsListElement = document.getElementById("get-data");
-    if (accountsListElement) {
-      accountsListElement.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
+    // Default to the first subhead (which is Farmer), otherwise 'all'
+    setAccountSearchType(subHeads.length > 0 ? subHeads[0].sub_id.toString() : "all");
+    setAccountSearchQuery("");
+    setIsAccountSearchDialogOpen(true);
   };
 
   const handleAddContactNumber = () => {
@@ -336,15 +300,13 @@ export default function AccountPage() {
       return;
     }
 
-    // Calculate opening balance (negative for debit) - only for new accounts
+    // Calculate opening balance (negative for debit)
     let finalBalance = null;
-    if (!isEditMode) {
-      const openingBalanceValue = parseFloat(data.opening_balance) || 0;
-      finalBalance =
-        data.balance_type === "credit"
-          ? -Math.abs(openingBalanceValue)
-          : Math.abs(openingBalanceValue);
-    }
+    const openingBalanceValue = parseFloat(data.opening_balance) || 0;
+    finalBalance =
+      data.balance_type === "credit"
+        ? -Math.abs(openingBalanceValue)
+        : Math.abs(openingBalanceValue);
 
     // Combine bank account numbers
     const bankAccounts = (data.bank_account_numbers || [])
@@ -408,7 +370,7 @@ export default function AccountPage() {
         setAccountOpeningDate(new Date());
         setIsEditMode(false);
         setEditingAccountId(null);
-        fetchAccounts(currentPage, itemsPerPage);
+        fetchAllAccounts();
       } else {
         toast.error(result.response_message || "Failed to save account");
       }
@@ -510,7 +472,7 @@ export default function AccountPage() {
 
       if (result.response_status === "success") {
         toast.success("Account deleted successfully");
-        fetchAccounts(currentPage, itemsPerPage);
+        fetchAllAccounts();
       } else {
         toast.error(result.response_message || "Failed to delete account");
       }
@@ -560,57 +522,7 @@ export default function AccountPage() {
     return parts.length > 0 ? parts : textStr;
   };
 
-  // Filter accounts (client-side filtering on paginated data)
-  const filteredAccounts = accounts.filter((account) => {
-    // Find the subhead details for this account from the pre-fetched subHeads
-    const accountSubhead = subHeads.find(
-      (sh) => sh.sub_id === account.sub_id
-    );
-
-    if (accountSubhead) {
-      const subheadName = accountSubhead.subhead_nam;
-      const parentName = accountSubhead.parent?.subhead_nam;
-
-      // Filter out Cash In Hand, Local Sale, Expense Head, and its children
-      if (
-        subheadName === "Cash In Hand" ||
-        subheadName === "Local Sale" ||
-        subheadName === "Expense Head" ||
-        parentName === "Expense Head"
-      ) {
-        return false; // hide these accounts
-      }
-    } else if (account.acc_id === 1) {
-      // Fallback filter out cash in hand account inherently with acc_id 1
-      return false;
-    }
-
-    const matchesSearch =
-      searchQuery === "" ||
-      account.account_nam?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.account_reference
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      account.account_no?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesAccountType =
-      filterAccountType === "all" ||
-      account.sub_id?.toString() === filterAccountType;
-
-    const matchesContact =
-      filterContact === "" ||
-      (account.contact_numbers &&
-        account.contact_numbers.some((c) =>
-          c?.toString().includes(filterContact),
-        )) ||
-      account.account_contact?.includes(filterContact);
-
-    const matchesName =
-      filterName === "" ||
-      account.account_nam?.toLowerCase().includes(filterName.toLowerCase());
-
-    return matchesSearch && matchesAccountType && matchesContact && matchesName;
-  });
+  // Removed client-side filtering on paginated data
 
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4">
@@ -869,45 +781,43 @@ export default function AccountPage() {
             </div>
 
             {/* Opening Balance with Radio Buttons */}
-            {!isEditMode && (
-              <div className="space-y-2">
-                <div className="flex gap-4 items-center">
-                  <Label htmlFor="opening_balance">Opening Balance</Label>
-                  <Input
-                    id="opening_balance"
-                    type="number"
-                    step="0.01"
-                    {...register("opening_balance")}
-                    placeholder="0"
-                    className="w-32"
-                  />
-                  <Controller
-                    name="balance_type"
-                    control={control}
-                    render={({ field }) => (
-                      <RadioGroup
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="credit" id="credit" />
-                          <Label htmlFor="credit" className="cursor-pointer">
-                            Credit
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="debit" id="debit" />
-                          <Label htmlFor="debit" className="cursor-pointer">
-                            Debit
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    )}
-                  />
-                </div>
+            <div className="space-y-2">
+              <div className="flex gap-4 items-center">
+                <Label htmlFor="opening_balance">Opening Balance</Label>
+                <Input
+                  id="opening_balance"
+                  type="number"
+                  step="0.01"
+                  {...register("opening_balance")}
+                  placeholder="0"
+                  className="w-32"
+                />
+                <Controller
+                  name="balance_type"
+                  control={control}
+                  render={({ field }) => (
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="credit" id="credit" />
+                        <Label htmlFor="credit" className="cursor-pointer">
+                          Credit
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="debit" id="debit" />
+                        <Label htmlFor="debit" className="cursor-pointer">
+                          Debit
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
               </div>
-            )}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-4">
@@ -941,482 +851,139 @@ export default function AccountPage() {
         </CardContent>
       </Card>
 
-      {/* Accounts List */}
-      <Card id="get-data">
-        <CardContent>
-          <MobileListToggle title="Accounts">
-            {isMobile ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsFiltersDialogOpen(true)}
-                  >
-                    Filters & Search
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    {totalItems} accounts
-                    {totalPages > 1 && ` (Page ${currentPage}/${totalPages})`}
-                  </p>
+      {/* Account Search Dialog */}
+      <Dialog
+        open={isAccountSearchDialogOpen}
+        onOpenChange={setIsAccountSearchDialogOpen}
+      >
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Search Accounts</DialogTitle>
+            <DialogDescription>
+              Search and select an account to edit
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex-1 space-y-2">
+                <Label>Search Account</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search accounts by name, cnic, contact..."
+                    value={accountSearchQuery}
+                    onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
                 </div>
-
-                {/* Cards on mobile */}
-                {loading ? (
-                  <div className="text-center py-8">Loading...</div>
-                ) : filteredAccounts.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No accounts found
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredAccounts.map((account) => {
-                      const contacts =
-                        account.contact_numbers ||
-                        (account.account_contact
-                          ? account.account_contact.includes("[")
-                            ? JSON.parse(account.account_contact)
-                            : account.account_contact.split(",")
-                          : []);
-                      return (
-                        <Card key={account.acc_id} className="border shadow-sm">
-                          <CardContent className="p-3 space-y-2">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="text-sm font-semibold">
-                                  {account.account_nam || "N/A"}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {account.subhead?.subhead_nam ||
-                                    subHeads.find(
-                                      (sh) => sh.sub_id === account.sub_id,
-                                    )?.subhead_nam ||
-                                    "N/A"}
-                                </p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleEdit(account)}
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-
-                            {contacts.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {contacts.map((contact, idx) => (
-                                  <Badge
-                                    key={idx}
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    <Phone className="h-3 w-3 inline mr-1" />
-                                    {contact}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                              <div>
-                                <p className="font-semibold text-foreground text-xs">
-                                  Account No
-                                </p>
-                                <p>{account.account_no || "N/A"}</p>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-foreground text-xs">
-                                  Reference
-                                </p>
-                                <p>{account.account_reference || "N/A"}</p>
-                              </div>
-                              <div className="col-span-2">
-                                <p className="font-semibold text-foreground text-xs">
-                                  Address
-                                </p>
-                                <p>{account.account_address || "N/A"}</p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <Dialog
-                  open={isFiltersDialogOpen}
-                  onOpenChange={setIsFiltersDialogOpen}
-                >
-                  <DialogContent className="max-w-[95vw] sm:max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle>Filters & Search</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Search</Label>
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Search accounts..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9"
-                          />
-                        </div>
-                      </div>
-                      {/* <div className="space-y-2">
-                        <Label>Account Type</Label>
-                        <Select
-                          value={filterAccountType}
-                          onValueChange={setFilterAccountType}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            {subHeads.map((subHead) => (
-                              <SelectItem
-                                key={subHead.sub_id}
-                                value={subHead.sub_id.toString()}
-                              >
-                                {subHead.subhead_nam}{" "}
-                                {subHead.head?.head_nam &&
-                                subHead.head.head_nam !== "Main Head"
-                                  ? `(${subHead.head.head_nam})`
-                                  : ""}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Contact No</Label>
-                        <Input
-                          placeholder="Filter by contact..."
-                          value={filterContact}
-                          onChange={(e) => setFilterContact(e.target.value)}
-                        />
-                      </div> */}
-                      {/* <div className="space-y-2">
-                        <Label>Name</Label>
-                        <Input
-                          placeholder="Filter by name..."
-                          value={filterName}
-                          onChange={(e) => setFilterName(e.target.value)}
-                        />
-                      </div> */}
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setSearchQuery("");
-                            setFilterAccountType("all");
-                            setFilterContact("");
-                            setFilterName("");
-                          }}
-                        >
-                          Clear
-                        </Button>
-                        <Button onClick={() => setIsFiltersDialogOpen(false)}>
-                          Apply
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
               </div>
-            ) : (
-              <>
-                {/* Filters - desktop */}
-                <div className="space-y-4 mb-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label>Search</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search accounts..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-9"
-                        />
-                      </div>
-                    </div>
-
-                    {/* <div className="space-y-2">
-                      <Label>Account Type</Label>
-                      <Select
-                        value={filterAccountType}
-                        onValueChange={setFilterAccountType}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Types</SelectItem>
-                          {subHeads.map((subHead) => (
-                            <SelectItem
-                              key={subHead.sub_id}
-                              value={subHead.sub_id.toString()}
-                            >
-                              {subHead.subhead_nam}{" "}
-                              {subHead.head?.head_nam &&
-                              subHead.head.head_nam !== "Main Head"
-                                ? `(${subHead.head.head_nam})`
-                                : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Contact No</Label>
-                      <Input
-                        placeholder="Filter by contact..."
-                        value={filterContact}
-                        onChange={(e) => setFilterContact(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Name</Label>
-                      <Input
-                        placeholder="Filter by name..."
-                        value={filterName}
-                        onChange={(e) => setFilterName(e.target.value)}
-                      />
-                    </div> */}
-                  </div>
-                </div>
-
-                {/* Table - desktop */}
-                {loading ? (
-                  <div className="text-center py-8">Loading...</div>
-                ) : filteredAccounts.length === 0 ? (
-                  <div className="text-center h-[300px] flex items-center justify-center py-8 text-muted-foreground">
-                    No accounts found
-                  </div>
-                ) : (
-                  <div className="relative max-h-[300px] overflow-auto -mx-4 sm:mx-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full caption-bottom text-sm min-w-[800px]">
-                        <thead className="sticky top-0 bg-background z-20 border-b-2">
-                          <tr className="border-b">
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
-                              Account Type
-                            </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
-                              Name
-                            </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">
-                              Contact Numbers
-                            </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">
-                              Account No
-                            </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">
-                              Address
-                            </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">
-                              Reference
-                            </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredAccounts.map((account) => {
-                            const contacts =
-                              account.contact_numbers ||
-                              (account.account_contact
-                                ? account.account_contact.includes("[")
-                                  ? JSON.parse(account.account_contact)
-                                  : account.account_contact.split(",")
-                                : []);
-
-                            return (
-                              <tr
-                                key={account.acc_id}
-                                className="hover:bg-muted/50 border-b transition-colors"
-                              >
-                                <td className="p-2 align-middle whitespace-nowrap">
-                                  <Badge variant="outline">
-                                    {account.subhead?.subhead_nam ||
-                                      subHeads.find(
-                                        (sh) => sh.sub_id === account.sub_id,
-                                      )?.subhead_nam ||
-                                      "N/A"}
-                                  </Badge>
-                                </td>
-                                <td className="p-2 align-middle whitespace-nowrap font-medium">
-                                  {searchQuery || filterName
-                                    ? highlightText(
-                                        account.account_nam || "N/A",
-                                        searchQuery || filterName,
-                                      )
-                                    : account.account_nam || "N/A"}
-                                </td>
-                                <td className="p-2 align-middle hidden md:table-cell">
-                                  <div className="flex flex-wrap gap-1">
-                                    {contacts.map((contact, idx) => (
-                                      <Badge
-                                        key={idx}
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        <Phone className="h-3 w-3 inline mr-1" />
-                                        {filterContact
-                                          ? highlightText(
-                                              contact,
-                                              filterContact,
-                                            )
-                                          : contact}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </td>
-                                <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
-                                  {searchQuery
-                                    ? highlightText(
-                                        account.account_no || "N/A",
-                                        searchQuery,
-                                      )
-                                    : account.account_no || "N/A"}
-                                </td>
-                                <td className="p-2 align-middle max-w-xs truncate hidden xl:table-cell">
-                                  {account.account_address || "N/A"}
-                                </td>
-                                <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
-                                  {searchQuery
-                                    ? highlightText(
-                                        account.account_reference || "N/A",
-                                        searchQuery,
-                                      )
-                                    : account.account_reference || "N/A"}
-                                </td>
-                                <td className="p-2 align-middle whitespace-nowrap">
-                                  <div className="flex gap-2">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleEdit(account)}
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <Edit2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Pagination */}
-            {totalPages >= 1 && (
-              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm text-muted-foreground">
-                    Items per page:
-                  </Label>
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={(value) => {
-                      setItemsPerPage(Number(value));
-                      setCurrentPage(1);
-                      fetchAccounts(1, Number(value));
-                    }}
-                  >
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => {
-                          const newPage = Math.max(1, currentPage - 1);
-                          setCurrentPage(newPage);
-                          fetchAccounts(newPage, itemsPerPage);
-                        }}
-                        className={
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
+              <div className="flex-1 space-y-2">
+                <Label>Account Type (Head)</Label>
+                <Combobox
+                  options={[
+                    { value: "all", label: "All Types" },
+                    ...subHeads.map((subhead) => ({
+                      value: subhead.sub_id.toString(),
+                      label: subhead.subhead_nam,
+                    })),
+                  ]}
+                  value={accountSearchType}
+                  onValueChange={setAccountSearchType}
+                  placeholder="Select account type"
+                  searchPlaceholder="Search account types..."
+                  emptyText="No account type found."
+                />
+              </div>
+            </div>
+            <div className="relative max-h-[400px] overflow-auto border rounded-md">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead>Sr. No</TableHead>
+                    <TableHead>Account Name</TableHead>
+                    <TableHead>Account Type</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allAccounts
+                    .filter((acc) => {
+                      if (accountSearchType !== "all") {
+                        if (acc.sub_id?.toString() !== accountSearchType) {
+                          return false;
                         }
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
                       }
-                      return (
-                        <PaginationItem key={pageNum}>
-                          <PaginationLink
-                            onClick={() => {
-                              setCurrentPage(pageNum);
-                              fetchAccounts(pageNum, itemsPerPage);
-                            }}
-                            isActive={currentPage === pageNum}
-                            className="cursor-pointer"
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    })}
-                    <PaginationItem>
-                      <PaginationNext
+                      if (accountSearchQuery) {
+                        const query = accountSearchQuery.toLowerCase();
+                        return (
+                          acc.account_nam?.toLowerCase().includes(query) ||
+                          acc.account_cnic?.toLowerCase().includes(query) ||
+                          acc.account_contact?.toLowerCase().includes(query) ||
+                          acc.account_no?.toLowerCase().includes(query)
+                        );
+                      }
+                      return true;
+                    })
+                    .map((acc, index) => (
+                      <TableRow
+                        key={acc.acc_id}
+                        className="cursor-pointer hover:bg-muted/50"
                         onClick={() => {
-                          const newPage = Math.min(totalPages, currentPage + 1);
-                          setCurrentPage(newPage);
-                          fetchAccounts(newPage, itemsPerPage);
+                          handleEdit(acc);
+                          setIsAccountSearchDialogOpen(false);
+                          setAccountSearchQuery("");
                         }}
-                        className={
-                          currentPage === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
+                      >
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell className="font-medium">
+                          {acc.account_nam}
+                        </TableCell>
+                        <TableCell>
+                          {subHeads.find((sh) => sh.sub_id === acc.sub_id)?.subhead_nam || "N/A"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  {allAccounts.length === 0 || allAccounts.filter((acc) => {
+                      if (accountSearchType !== "all") {
+                        if (acc.sub_id?.toString() !== accountSearchType) {
+                          return false;
                         }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-                <div className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
-                  {totalItems} accounts
-                </div>
-              </div>
-            )}
-          </MobileListToggle>
-        </CardContent>
-      </Card>
+                      }
+                      if (accountSearchQuery) {
+                        const query = accountSearchQuery.toLowerCase();
+                        return (
+                          acc.account_nam?.toLowerCase().includes(query) ||
+                          acc.account_cnic?.toLowerCase().includes(query) ||
+                          acc.account_contact?.toLowerCase().includes(query) ||
+                          acc.account_no?.toLowerCase().includes(query)
+                        );
+                      }
+                      return true;
+                    }).length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-muted-foreground py-4">
+                          No accounts found.
+                        </TableCell>
+                      </TableRow>
+                    ) : null}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsAccountSearchDialogOpen(false);
+                setAccountSearchQuery("");
+              }}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Subhead Dialog */}
       <Dialog open={isSubHeadDialogOpen} onOpenChange={setIsSubHeadDialogOpen}>

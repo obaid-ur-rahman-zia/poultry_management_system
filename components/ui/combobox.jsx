@@ -28,6 +28,7 @@ export function Combobox({
   emptyText = "No option found.",
   disabled = false,
   className,
+  ...props
 }) {
   const [open, setOpen] = React.useState(false);
   const triggerRef = React.useRef(null);
@@ -55,6 +56,7 @@ export function Combobox({
             className
           )}
           disabled={disabled}
+          {...props}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
