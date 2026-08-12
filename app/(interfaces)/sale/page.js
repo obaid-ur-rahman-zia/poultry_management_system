@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -148,6 +148,8 @@ function WholeSaleTab() {
   const [allAccounts, setAllAccounts] = useState([]);
   const [accountSearchField, setAccountSearchField] = useState("former"); // Track which field opened the dialog: "former" or "purcher"
   const [accountSubHeads, setAccountSubHeads] = useState([]); // Store account sub-heads for account type dropdown
+  const accountRowRefs = useRef([]);
+  accountRowRefs.current = [];
   const [supplierFormData, setSupplierFormData] = useState({
     supplier_name: "",
     supplier_cnic: "",
@@ -254,6 +256,13 @@ function WholeSaleTab() {
     });
 
     return matchedSubhead ? matchedSubhead.sub_id.toString() : "all";
+  };
+
+  const focusFirstAccountRow = () => {
+    const firstRow = accountRowRefs.current.find(Boolean);
+    if (!firstRow) return false;
+    firstRow.focus();
+    return true;
   };
 
   useEffect(() => {
@@ -693,8 +702,8 @@ function WholeSaleTab() {
 
         reset({
           sale_date: selectedSaleDate,
-          farm_rate: "",
-          sale_rate: "",
+          farm_rate: data.farm_rate,
+          sale_rate: data.sale_rate,
           former_account: "",
           van_number: "",
           weight: "",
@@ -731,9 +740,9 @@ function WholeSaleTab() {
         toast.success("Whole sale deleted successfully");
         setIsDeleteDialogOpen(false);
         reset({
-          sale_date: data.sale_date,
-          farm_rate: "",
-          sale_rate: "",
+          sale_date: saleDate.toISOString().split("T")[0],
+          farm_rate: watch("farm_rate"),
+          sale_rate: watch("sale_rate"),
           former_account: "",
           van_number: "",
           weight: "",
@@ -1655,6 +1664,12 @@ function WholeSaleTab() {
                   placeholder="Search accounts by name, cnic, contact..."
                   value={accountSearchQuery}
                   onChange={(e) => setAccountSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Tab") {
+                      const moved = focusFirstAccountRow();
+                      if (moved) e.preventDefault();
+                    }
+                  }}
                   className="pl-9"
                   autoFocus
                 />
@@ -1692,6 +1707,10 @@ function WholeSaleTab() {
                       <TableRow
                         key={acc.acc_id}
                         className="cursor-pointer hover:bg-muted/50"
+                        tabIndex={0}
+                        ref={(el) => {
+                          accountRowRefs.current[index] = el;
+                        }}
                         onClick={() => {
                           if (accountSearchField === "former") {
                             setValue("former_account", acc.acc_id.toString());
@@ -1700,6 +1719,18 @@ function WholeSaleTab() {
                           }
                           setIsAccountSearchDialogOpen(false);
                           setAccountSearchQuery("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            if (accountSearchField === "former") {
+                              setValue("former_account", acc.acc_id.toString());
+                            } else if (accountSearchField === "purcher") {
+                              setValue("purcher_account", acc.acc_id.toString());
+                            }
+                            setIsAccountSearchDialogOpen(false);
+                            setAccountSearchQuery("");
+                          }
                         }}
                       >
                         <TableCell>{index + 1}</TableCell>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -99,6 +99,8 @@ export default function OppositeTransactionsPage() {
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [allAccounts, setAllAccounts] = useState([]);
   const [accountSubHeads, setAccountSubHeads] = useState([]);
+  const accountRowRefs = useRef([]);
+  accountRowRefs.current = [];
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -196,6 +198,13 @@ export default function OppositeTransactionsPage() {
     });
 
     return matchedSubhead ? matchedSubhead.sub_id.toString() : "all";
+  };
+
+  const focusFirstAccountRow = () => {
+    const firstRow = accountRowRefs.current.find(Boolean);
+    if (!firstRow) return false;
+    firstRow.focus();
+    return true;
   };
 
   useEffect(() => {
@@ -1305,6 +1314,12 @@ export default function OppositeTransactionsPage() {
                     placeholder="Search accounts by name, cnic, contact..."
                     value={accountSearchQuery}
                     onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Tab") {
+                        const moved = focusFirstAccountRow();
+                        if (moved) e.preventDefault();
+                      }
+                    }}
                     className="pl-9"
                     autoFocus
                   />
@@ -1342,6 +1357,10 @@ export default function OppositeTransactionsPage() {
                       <TableRow
                         key={acc.acc_id}
                         className="cursor-pointer hover:bg-muted/50"
+                        tabIndex={0}
+                        ref={(el) => {
+                          accountRowRefs.current[index] = el;
+                        }}
                         onClick={() => {
                           if (accountSearchField === "paid_by") {
                             setValue("paid_by", acc.acc_id.toString());
@@ -1350,6 +1369,18 @@ export default function OppositeTransactionsPage() {
                           }
                           setIsAccountSearchDialogOpen(false);
                           setAccountSearchQuery("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            if (accountSearchField === "paid_by") {
+                              setValue("paid_by", acc.acc_id.toString());
+                            } else if (accountSearchField === "received_by") {
+                              setValue("received_by", acc.acc_id.toString());
+                            }
+                            setIsAccountSearchDialogOpen(false);
+                            setAccountSearchQuery("");
+                          }
                         }}
                       >
                         <TableCell>{index + 1}</TableCell>

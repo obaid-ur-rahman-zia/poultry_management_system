@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -99,6 +99,16 @@ export default function AccountPage() {
   const [newSubHeadHeadId, setNewSubHeadHeadId] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [accountOpeningDate, setAccountOpeningDate] = useState(new Date());
+
+  const accountRowRefs = useRef([]);
+  accountRowRefs.current = [];
+
+  const focusFirstAccountRow = () => {
+    const firstRow = accountRowRefs.current.find(Boolean);
+    if (!firstRow) return false;
+    firstRow.focus();
+    return true;
+  };
 
   // Account Search Modal states
   const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
@@ -873,6 +883,12 @@ export default function AccountPage() {
                     placeholder="Search accounts by name, cnic, contact..."
                     value={accountSearchQuery}
                     onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Tab") {
+                        const moved = focusFirstAccountRow();
+                        if (moved) e.preventDefault();
+                      }
+                    }}
                     className="pl-9"
                     autoFocus
                   />
@@ -928,10 +944,22 @@ export default function AccountPage() {
                       <TableRow
                         key={acc.acc_id}
                         className="cursor-pointer hover:bg-muted/50"
+                        tabIndex={0}
+                        ref={(el) => {
+                          accountRowRefs.current[index] = el;
+                        }}
                         onClick={() => {
                           handleEdit(acc);
                           setIsAccountSearchDialogOpen(false);
                           setAccountSearchQuery("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleEdit(acc);
+                            setIsAccountSearchDialogOpen(false);
+                            setAccountSearchQuery("");
+                          }
                         }}
                       >
                         <TableCell>{index + 1}</TableCell>

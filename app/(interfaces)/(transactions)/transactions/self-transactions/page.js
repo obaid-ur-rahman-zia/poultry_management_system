@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
@@ -81,6 +81,8 @@ export default function SelfTransactionPage() {
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [allAccounts, setAllAccounts] = useState([]);
   const [accountSubHeads, setAccountSubHeads] = useState([]);
+  const accountRowRefs = useRef([]);
+  accountRowRefs.current = [];
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -196,6 +198,13 @@ export default function SelfTransactionPage() {
     });
 
     return matchedSubhead ? matchedSubhead.sub_id.toString() : "all";
+  };
+
+  const focusFirstAccountRow = () => {
+    const firstRow = accountRowRefs.current.find(Boolean);
+    if (!firstRow) return false;
+    firstRow.focus();
+    return true;
   };
 
   const fetchAccountBalance = async (accId) => {
@@ -755,6 +764,12 @@ export default function SelfTransactionPage() {
                     placeholder="Search accounts by name, cnic, contact..."
                     value={accountSearchQuery}
                     onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Tab") {
+                        const moved = focusFirstAccountRow();
+                        if (moved) e.preventDefault();
+                      }
+                    }}
                     className="pl-9"
                     autoFocus
                   />
@@ -792,10 +807,22 @@ export default function SelfTransactionPage() {
                       <TableRow
                         key={acc.acc_id}
                         className="cursor-pointer hover:bg-muted/50"
+                        tabIndex={0}
+                        ref={(el) => {
+                          accountRowRefs.current[index] = el;
+                        }}
                         onClick={() => {
                           setValue("account_id", acc.acc_id.toString());
                           setIsAccountSearchDialogOpen(false);
                           setAccountSearchQuery("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setValue("account_id", acc.acc_id.toString());
+                            setIsAccountSearchDialogOpen(false);
+                            setAccountSearchQuery("");
+                          }
                         }}
                       >
                         <TableCell>{index + 1}</TableCell>
