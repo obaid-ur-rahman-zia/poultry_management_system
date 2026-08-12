@@ -159,12 +159,13 @@ export default function LocalSaleReport() {
     const totalReceived = purchaserRows.reduce((sum, row) => sum + row.totalReceived, 0);
     const totalNetBalance = purchaserRows.reduce((sum, row) => sum + row.totalNetBalance, 0);
     const source = dailySources.find((entry) => entry.date === date);
-    const purchaseCost = source && totalWeight > 0
-      ? (totalWeight / source.totalWeight) * source.totalCost
+    
+    // FIX applied here:
+    const purchaseCost = source ? source.totalCost : null;
+    const averagePurchaseRate = purchaseCost !== null && source?.totalWeight > 0
+      ? purchaseCost / source.totalWeight
       : null;
-    const averagePurchaseRate = purchaseCost !== null && totalWeight > 0
-      ? purchaseCost / totalWeight
-      : null;
+
     return {
       date,
       purchaserRows,

@@ -160,6 +160,135 @@ class LocalSaleRepository {
       data: { status: 0, update_dat: new Date() },
     });
   }
+
+  async readProfitReport(startDate, endDate, localAccount, groupBy) {
+    const start = startDate ? new Date(`${startDate}T00:00:00`) : undefined;
+    const end = endDate ? new Date(`${endDate}T23:59:59.999`) : undefined;
+
+    const whereClause = {
+      status: 1,
+      ...(startDate && endDate ? {
+        local_sale_date: {
+          gte: start,
+          lte: end,
+        }
+      } : {}),
+      ...(localAccount ? { local_account: Number(localAccount) } : {}),
+    };
+
+    const localSales = await prisma.local_sale.findMany({
+      where: whereClause,
+      select: {
+        local_sale_date: true,
+        purchaser_weight: true,
+        purchaser_amount: true,
+        received_amount: true,
+        source_snapshots: {
+          include: { source: true }
+        }
+      },
+    });
+
+    const sourceAccount = localAccount ? Number(localAccount) : undefined;
+    const sources = sourceAccount
+      ? await prisma.bhagtanwala_source.findMany({
+          where: {
+            account_id: sourceAccount,
+            source_date: { gte: start, lte: end },
+            status: 1,
+          },
+          select: {
+            source_date: true,
+            weight: true,
+            rate: true,
+          }
+        })
+      : [];
+
+    const groupedData = new Map();
+
+    localSales.forEach((sale) => {
+      const key = getGroupKey(sale.local_sale_date, groupBy);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, {
+          date: sale.local_sale_date,
+          sale_amount: 0,
+          received_amount: 0,
+          sold_weight: 0,
+          purchase_amount: 0,
+          source_weight: 0,
+        });
+      }
+      const group = groupedData.get(key);
+      group.sale_amount += Number(sale.purchaser_amount) || 0;
+      group.received_amount += Number(sale.received_amount) || 0;
+      group.sold_weight += Number(sale.purchaser_weight) || 0;
+    });
+
+    sources.forEach((source) => {
+      const key = getGroupKey(source.source_date, groupBy);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, {
+          date: source.source_date,
+          sale_amount: 0,
+          received_amount: 0,
+          sold_weight: 0,
+          purchase_amount: 0,
+          source_weight: 0,
+        });
+      }
+      const group = groupedData.get(key);
+      group.source_weight += Number(source.weight) || 0;
+      group.purchase_amount += (Number(source.weight) || 0) * (Number(source.rate) || 0);
+    });
+
+    const results = Array.from(groupedData.entries())
+      .map(([key, data]) => {
+        const weight_loss = data.source_weight - data.sold_weight;
+        const profit_loss = data.sale_amount - data.purchase_amount;
+        return {
+          period: key,
+          date: data.date,
+          purchase_amount: data.purchase_amount,
+          sale_amount: data.sale_amount,
+          received_amount: data.received_amount,
+          weight_loss: weight_loss,
+          profit_loss: profit_loss,
+          source_weight: data.source_weight,
+          sold_weight: data.sold_weight
+        };
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const grandTotalPurchase = results.reduce((sum, row) => sum + row.purchase_amount, 0);
+    const grandTotalSale = results.reduce((sum, row) => sum + row.sale_amount, 0);
+    const grandTotalReceived = results.reduce((sum, row) => sum + row.received_amount, 0);
+    const grandTotalWeightLoss = results.reduce((sum, row) => sum + row.weight_loss, 0);
+    const netProfit = grandTotalSale - grandTotalPurchase;
+
+    return {
+      results,
+      grandTotalPurchase,
+      grandTotalSale,
+      grandTotalReceived,
+      grandTotalWeightLoss,
+      netProfit,
+    };
+  }
+}
+
+function getGroupKey(date, groupBy) {
+  const d = new Date(date);
+
+  if (groupBy === "date") {
+    return d.toISOString().split("T")[0];
+  } else if (groupBy === "month") {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  } else if (groupBy === "year") {
+    return d.getFullYear().toString();
+  }
+
+  return d.toISOString().split("T")[0]; // Default to date
 }
 
 export default new LocalSaleRepository();

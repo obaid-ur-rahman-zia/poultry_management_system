@@ -4,6 +4,7 @@ import BalanceSheet from "./balanceSheet/page";
 import WholeSaleReport from "./wholeSaleDetailReport/page";
 import WholeSaleProfit from "./wholeSaleProfit/page";
 import LocalSaleReport from "./localSaleDetailReport/page";
+import LocalSaleProfit from "./localSaleProfit/page";
 import AccountLedger from "../accountReports/accountLedger/page"
 import Link from "next/link";
 import { FileText } from "lucide-react";
@@ -17,6 +18,7 @@ export default function ReportPage() {
           <WholeSaleReport />
           <WholeSaleProfit />
           <LocalSaleReport />
+          <LocalSaleProfit />
           <SubheadTrialBalance />
           <ExpenseHeadTrialBalance />
           <BalanceSheet />
