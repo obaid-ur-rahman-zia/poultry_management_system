@@ -1369,6 +1369,14 @@ export default function OppositeTransactionsPage() {
                           }
                           setIsAccountSearchDialogOpen(false);
                           setAccountSearchQuery("");
+                          setTimeout(() => {
+                            if (accountSearchField === "paid_by") {
+                              const searchBtns = document.querySelectorAll('button[title="Search Accounts"]');
+                              if (searchBtns.length > 1) searchBtns[1].focus();
+                            } else if (accountSearchField === "received_by") {
+                              document.getElementById("amount")?.focus();
+                            }
+                          }, 100);
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
@@ -1380,6 +1388,14 @@ export default function OppositeTransactionsPage() {
                             }
                             setIsAccountSearchDialogOpen(false);
                             setAccountSearchQuery("");
+                            setTimeout(() => {
+                              if (accountSearchField === "paid_by") {
+                                const searchBtns = document.querySelectorAll('button[title="Search Accounts"]');
+                                if (searchBtns.length > 1) searchBtns[1].focus();
+                              } else if (accountSearchField === "received_by") {
+                                document.getElementById("amount")?.focus();
+                              }
+                            }, 100);
                           }
                         }}
                       >

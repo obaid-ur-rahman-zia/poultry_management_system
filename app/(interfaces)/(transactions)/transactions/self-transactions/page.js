@@ -815,6 +815,9 @@ export default function SelfTransactionPage() {
                           setValue("account_id", acc.acc_id.toString());
                           setIsAccountSearchDialogOpen(false);
                           setAccountSearchQuery("");
+                          setTimeout(() => {
+                            document.getElementById("amount")?.focus();
+                          }, 100);
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
@@ -822,6 +825,9 @@ export default function SelfTransactionPage() {
                             setValue("account_id", acc.acc_id.toString());
                             setIsAccountSearchDialogOpen(false);
                             setAccountSearchQuery("");
+                            setTimeout(() => {
+                              document.getElementById("amount")?.focus();
+                            }, 100);
                           }
                         }}
                       >
