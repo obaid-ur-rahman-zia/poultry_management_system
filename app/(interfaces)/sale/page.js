@@ -584,8 +584,7 @@ function WholeSaleTab() {
     if (!saleDate) return;
     try {
       const response = await fetch(
-        `/api/wholeSale/checkFsRate?sale_date=${
-          saleDate.toISOString().split("T")[0]
+        `/api/wholeSale/checkFsRate?sale_date=${saleDate.toISOString().split("T")[0]
         }`,
       );
       const result = await response.json();
@@ -954,15 +953,15 @@ function WholeSaleTab() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !supplierAccounts.find(
-                          (acc) => acc.acc_id === selectedAccount.acc_id,
-                        )
+                          !supplierAccounts.find(
+                            (acc) => acc.acc_id === selectedAccount.acc_id,
+                          )
                           ? [
-                              {
-                                value: selectedAccount.acc_id.toString(),
-                                label: selectedAccount.account_nam,
-                              },
-                            ]
+                            {
+                              value: selectedAccount.acc_id.toString(),
+                              label: selectedAccount.account_nam,
+                            },
+                          ]
                           : []),
                       ];
 
@@ -1084,15 +1083,15 @@ function WholeSaleTab() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !customerAccounts.find(
-                          (acc) => acc.acc_id === selectedAccount.acc_id,
-                        )
+                          !customerAccounts.find(
+                            (acc) => acc.acc_id === selectedAccount.acc_id,
+                          )
                           ? [
-                              {
-                                value: selectedAccount.acc_id.toString(),
-                                label: selectedAccount.account_nam,
-                              },
-                            ]
+                            {
+                              value: selectedAccount.acc_id.toString(),
+                              label: selectedAccount.account_nam,
+                            },
+                          ]
                           : []),
                       ];
 
@@ -1167,11 +1166,10 @@ function WholeSaleTab() {
             <div className="flex items-center gap-1">
               <Label className="whitespace-nowrap text-l">Profit</Label>
               <span
-                className={`text-l underline ${
-                  parseFloat(watch("profit") || 0) < 0
+                className={`text-l underline ${parseFloat(watch("profit") || 0) < 0
                     ? "text-red-600 font-semibold"
                     : ""
-                }`}
+                  }`}
               >
                 {watch("profit") || "0"}
               </span>
@@ -1179,15 +1177,6 @@ function WholeSaleTab() {
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
-                onClick={handleCreateNew}
-                className="h-8 px-3 text-l"
-              >
-                New
-              </Button>
               {!isEditMode && (
                 <Button
                   type="submit"
@@ -1222,6 +1211,16 @@ function WholeSaleTab() {
                   </Button>
                 </>
               )}
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={handleCreateNew}
+                className="h-8 px-3 text-l"
+              >
+                New
+              </Button>
+
               <Button
                 type="button"
                 variant="outline"
@@ -1390,11 +1389,11 @@ function WholeSaleTab() {
                                       "sale_date",
                                       sale.sale_date
                                         ? new Date(sale.sale_date)
-                                            .toISOString()
-                                            .split("T")[0]
+                                          .toISOString()
+                                          .split("T")[0]
                                         : new Date()
-                                            .toISOString()
-                                            .split("T")[0],
+                                          .toISOString()
+                                          .split("T")[0],
                                     );
                                     setSaleDate(
                                       sale.sale_date
@@ -1619,64 +1618,63 @@ function WholeSaleTab() {
         open={isAccountSearchDialogOpen}
         onOpenChange={setIsAccountSearchDialogOpen}
       >
-      <DialogContent className="max-w-[95vw] sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Search Accounts</DialogTitle>
-          <DialogDescription>
-            Search and select an account to use in this sale
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="flex flex-col gap-4">
-            <div className="flex-1 space-y-2">
-              <Label>Account Type (Head)</Label>
-              <Combobox
-                options={[
-                  { value: "all", label: "All Types" },
-                  ...accountSubHeads
-                    .filter(
-                      (subhead) =>
-                        subhead.subhead_nam !== "Expense Head" &&
-                        subhead.parent?.subhead_nam !== "Expense Head",
-                    )
-                    .map((subhead) => ({
-                      value: subhead.sub_id.toString(),
-                      label: `${subhead.subhead_nam}${
-                        subhead.head?.head_nam &&
-                        subhead.head.head_nam !== "Main Head"
-                          ? ` (${subhead.head.head_nam})`
-                          : ""
-                      }`,
-                    })),
-                ]}
-                value={accountSearchType}
-                onValueChange={setAccountSearchType}
-                placeholder="Select account type"
-                searchPlaceholder="Search account types..."
-                emptyText="No account type found."
-              />
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label>Search Account</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search accounts by name, cnic, contact..."
-                  value={accountSearchQuery}
-                  onChange={(e) => setAccountSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Tab") {
-                      const moved = focusFirstAccountRow();
-                      if (moved) e.preventDefault();
-                    }
-                  }}
-                  className="pl-9"
-                  autoFocus
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Search Accounts</DialogTitle>
+            <DialogDescription>
+              Search and select an account to use in this sale
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex-1 space-y-2">
+                <Label>Account Type (Head)</Label>
+                <Combobox
+                  options={[
+                    { value: "all", label: "All Types" },
+                    ...accountSubHeads
+                      .filter(
+                        (subhead) =>
+                          subhead.subhead_nam !== "Expense Head" &&
+                          subhead.parent?.subhead_nam !== "Expense Head",
+                      )
+                      .map((subhead) => ({
+                        value: subhead.sub_id.toString(),
+                        label: `${subhead.subhead_nam}${subhead.head?.head_nam &&
+                            subhead.head.head_nam !== "Main Head"
+                            ? ` (${subhead.head.head_nam})`
+                            : ""
+                          }`,
+                      })),
+                  ]}
+                  value={accountSearchType}
+                  onValueChange={setAccountSearchType}
+                  placeholder="Select account type"
+                  searchPlaceholder="Search account types..."
+                  emptyText="No account type found."
                 />
               </div>
+              <div className="flex-1 space-y-2">
+                <Label>Search Account</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search accounts by name, cnic, contact..."
+                    value={accountSearchQuery}
+                    onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Tab") {
+                        const moved = focusFirstAccountRow();
+                        if (moved) e.preventDefault();
+                      }
+                    }}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="relative max-h-[400px] overflow-auto border rounded-md">
+            <div className="relative max-h-[400px] overflow-auto border rounded-md">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
@@ -1719,6 +1717,13 @@ function WholeSaleTab() {
                           }
                           setIsAccountSearchDialogOpen(false);
                           setAccountSearchQuery("");
+                          setTimeout(() => {
+                            if (accountSearchField === "former") {
+                              document.querySelector('[name="van_number"]')?.focus();
+                            } else if (accountSearchField === "purcher") {
+                              document.querySelector('[name="purcher_rate"]')?.focus();
+                            }
+                          }, 100);
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
@@ -1730,6 +1735,13 @@ function WholeSaleTab() {
                             }
                             setIsAccountSearchDialogOpen(false);
                             setAccountSearchQuery("");
+                            setTimeout(() => {
+                              if (accountSearchField === "former") {
+                                document.querySelector('[name="van_number"]')?.focus();
+                              } else if (accountSearchField === "purcher") {
+                                document.querySelector('[name="purcher_rate"]')?.focus();
+                              }
+                            }, 100);
                           }
                         }}
                       >
