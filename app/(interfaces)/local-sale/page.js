@@ -224,9 +224,13 @@ function LocalSaleTab() {
     async (page = currentPage) => {
       setLoading(true);
       try {
-        const res = await fetch(
-          `/api/localSale/readAll?page=${page}&limit=${itemsPerPage}`
-        );
+        const queryParams = new URLSearchParams({
+          page,
+          limit: itemsPerPage,
+          ...(searchQuery && { searchQuery }),
+          ...(filterDate && { filterDate }),
+        });
+        const res = await fetch(`/api/localSale/readAll?${queryParams.toString()}`);
         const data = await res.json();
         if (data.response_status === "success") {
           const result = data.response_result;
@@ -476,17 +480,7 @@ function LocalSaleTab() {
     }
   };
 
-  // Filter local sales client-side
-  const filteredSales = sales.filter((sale) => {
-    const purchaserName = sale.purchaser_account_ref?.account_nam?.toLowerCase() || "";
-    const matchesSearch =
-      searchQuery === "" || purchaserName.includes(searchQuery.toLowerCase());
-    const matchesDate =
-      filterDate === "" ||
-      (sale.local_sale_date &&
-        new Date(sale.local_sale_date).toISOString().split("T")[0] === filterDate);
-    return matchesSearch && matchesDate;
-  });
+
 
   return (
     <>
@@ -772,12 +766,12 @@ function LocalSaleTab() {
                         <TableRow>
                           <TableCell colSpan={9} className="text-center py-8">Loading...</TableCell>
                         </TableRow>
-                      ) : filteredSales.length === 0 ? (
+                      ) : sales.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No local sales found</TableCell>
                         </TableRow>
                       ) : (
-                        filteredSales.map((sale, index) => {
+                        sales.map((sale, index) => {
                           const rowAmount = Number(sale.purchaser_amount || 0);
                           const rowNet = rowAmount - Number(sale.received_amount || 0);
                           
@@ -810,53 +804,54 @@ function LocalSaleTab() {
                 </div>
                 
                 {totalPages > 1 && (
-                  <div className="mt-4 flex justify-between items-center">
-                     <p className="text-sm text-muted-foreground">
-                       Showing page {currentPage} of {totalPages} ({totalItems} records)
-                     </p>
-                     <Pagination>
+                  <div className="mt-4 flex justify-center">
+                    <Pagination>
                       <PaginationContent>
                         <PaginationItem>
-                          <PaginationPrevious
-                            onClick={() =>
-                              currentPage > 1 && fetchSales(currentPage - 1)
-                            }
-                            className={
-                              currentPage <= 1
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                           />
                         </PaginationItem>
-                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                          let page;
-                          if (totalPages <= 5) page = i + 1;
-                          else if (currentPage <= 3) page = i + 1;
-                          else if (currentPage >= totalPages - 2) page = totalPages - 4 + i;
-                          else page = currentPage - 2 + i;
-                          return (
-                            <PaginationItem key={page}>
-                              <PaginationLink
-                                isActive={page === currentPage}
-                                onClick={() => fetchSales(page)}
-                                className="cursor-pointer"
-                              >
-                                {page}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
+                        
+                        {[...Array(totalPages)].map((_, i) => {
+                          const pageNumber = i + 1;
+                          if (
+                            pageNumber === 1 ||
+                            pageNumber === totalPages ||
+                            (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={pageNumber}>
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(pageNumber)}
+                                  isActive={currentPage === pageNumber}
+                                  className="cursor-pointer"
+                                >
+                                  {pageNumber}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                          if (
+                            pageNumber === currentPage - 2 ||
+                            pageNumber === currentPage + 2
+                          ) {
+                            return (
+                              <PaginationItem key={pageNumber}>
+                                <span className="px-2 text-muted-foreground">...</span>
+                              </PaginationItem>
+                            );
+                          }
+                          return null;
                         })}
+
                         <PaginationItem>
-                          <PaginationNext
-                            onClick={() =>
-                              currentPage < totalPages &&
-                              fetchSales(currentPage + 1)
-                            }
-                            className={
-                              currentPage >= totalPages
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
+                          <PaginationNext 
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                           />
                         </PaginationItem>
                       </PaginationContent>

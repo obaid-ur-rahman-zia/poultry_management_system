@@ -13,7 +13,27 @@ class LocalSaleRepository {
     });
   }
 
-  async readAllWithPagination(skip = 0, take = 20) {
+  async readAllWithPagination(skip = 0, take = 20, searchQuery = "", filterDate = "") {
+    const where = { status: 1 };
+    
+    if (searchQuery) {
+      where.purchaser_account_ref = {
+        account_nam: {
+          contains: searchQuery,
+          mode: "insensitive"
+        }
+      };
+    }
+    
+    if (filterDate) {
+      const startOfDay = new Date(`${filterDate}T00:00:00.000Z`);
+      const endOfDay = new Date(`${filterDate}T23:59:59.999Z`);
+      where.local_sale_date = {
+        gte: startOfDay,
+        lte: endOfDay
+      };
+    }
+
     const [data, total] = await Promise.all([
       prisma.local_sale.findMany({
         skip,
@@ -24,9 +44,9 @@ class LocalSaleRepository {
           purchaser_account_ref: true,
           source_snapshots: { include: { source: true } },
         },
-        where: { status: 1 },
+        where,
       }),
-      prisma.local_sale.count({ where: { status: 1 } }),
+      prisma.local_sale.count({ where }),
     ]);
     return { data, total };
   }

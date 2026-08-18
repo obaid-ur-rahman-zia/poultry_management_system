@@ -21,26 +21,6 @@ class AccountsController {
       const limit = parseInt(searchParams.get("limit") || "20");
       const skip = (page - 1) * limit;
 
-      // Get logged-in user session for cash in hand filtering
-      const session = await getServerSession(authOptions);
-      let userCashInHandAccountId = null;
-      let cashInHandSubId = null;
-
-      if (session && session.user?.id) {
-        const userId = parseInt(session.user.id);
-        const user = await UserRepository.readById(userId);
-        if (user && user.cash_in_hand_account_id) {
-          userCashInHandAccountId = user.cash_in_hand_account_id;
-        }
-      }
-
-      // Find "Cash In Hand" subhead
-      const cashInHandSubhead =
-        await AccountSubHeadRepository.findByName("Cash In Hand");
-      if (cashInHandSubhead) {
-        cashInHandSubId = cashInHandSubhead.sub_id;
-      }
-
       if (getAll) {
         const cachedData = await RedisService.get(cacheKey);
         if (cachedData) {
@@ -138,12 +118,8 @@ class AccountsController {
       const session = await getServerSession(authOptions);
       let userCashInHandAccountId = null;
 
-      if (session && session.user?.id) {
-        const userId = parseInt(session.user.id);
-        const user = await UserRepository.readById(userId);
-        if (user && user.cash_in_hand_account_id) {
-          userCashInHandAccountId = user.cash_in_hand_account_id;
-        }
+      if (session && session.user?.cashInHandAccountId) {
+        userCashInHandAccountId = parseInt(session.user.cashInHandAccountId);
       }
 
       // Find "Cash In Hand" subhead

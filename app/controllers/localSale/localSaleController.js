@@ -22,6 +22,9 @@ class LocalSaleController {
       const limit = parseInt(searchParams.get("limit") || "20");
       const skip = (page - 1) * limit;
 
+      const searchQuery = searchParams.get("searchQuery") || "";
+      const filterDate = searchParams.get("filterDate") || "";
+
       let data, total;
       if (getAll) {
         data = await LocalSaleRepository.readAll();
@@ -31,6 +34,8 @@ class LocalSaleController {
         const result = await LocalSaleRepository.readAllWithPagination(
           skip,
           limit,
+          searchQuery,
+          filterDate
         );
         data = result.data;
         total = result.total;

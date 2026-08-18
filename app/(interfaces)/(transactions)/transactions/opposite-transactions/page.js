@@ -122,7 +122,6 @@ export default function OppositeTransactionsPage() {
   const selectedReceivedBy = watch("received_by");
 
   useEffect(() => {
-    fetchAccounts();
     fetchSubHeads();
     fetchAccountHeads();
     fetchTransactions(1, 20);
@@ -139,26 +138,22 @@ export default function OppositeTransactionsPage() {
       if (result.response_status === "success") {
         const responseData = result.response_result;
         // Handle response (with or without pagination)
+        let accountsData = [];
         if (responseData?.pagination) {
-          const accountsData = responseData.data || [];
-          setAllAccounts(
-            Array.isArray(accountsData)
-              ? accountsData.filter((a) => a.acc_id !== 1)
-              : [],
-          );
+          accountsData = responseData.data || [];
         } else {
           // Non-paginated response (all accounts)
-          const accountsData = responseData?.data || responseData || [];
-          setAllAccounts(
-            Array.isArray(accountsData)
-              ? accountsData.filter((a) => a.acc_id !== 1)
-              : [],
-          );
+          accountsData = responseData?.data || responseData || [];
         }
+        
+        const filteredAccounts = Array.isArray(accountsData) ? accountsData.filter((a) => a.acc_id !== 1) : [];
+        setAllAccounts(filteredAccounts);
+        setAccounts(filteredAccounts);
       }
     } catch (error) {
       console.error("Error fetching all accounts:", error);
       setAllAccounts([]);
+      setAccounts([]);
     }
   };
 
@@ -244,23 +239,7 @@ export default function OppositeTransactionsPage() {
     }
   };
 
-  const fetchAccounts = async () => {
-    try {
-      const response = await fetch("/api/account/accounts/readAll?all=true");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const accountsData =
-          result.response_result?.data || result.response_result || [];
-        setAccounts(
-          Array.isArray(accountsData)
-            ? accountsData.filter((a) => a.acc_id !== 1)
-            : [],
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-    }
-  };
+
 
   useEffect(() => {
     if (subHeads.length > 0 && accounts.length > 0) {

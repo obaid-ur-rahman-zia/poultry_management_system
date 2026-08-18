@@ -186,17 +186,15 @@ function WholeSaleTab() {
   const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
-    fetchSupplierAccounts();
-    fetchCustomerAccounts();
+    fetchAllAccounts();
     fetchCompanies();
     fetchWholeSales();
-    fetchAllAccounts();
     fetchAccountSubHeads();
     const currentDate = new Date().toISOString().split("T")[0];
     setValue("sale_date", currentDate);
   }, []);
 
-  // Fetch all accounts for search dialog (fetch all without pagination for search)
+  // Fetch all accounts for search dialog, and filter for suppliers/customers
   const fetchAllAccounts = async () => {
     try {
       // Fetch all accounts without pagination using all=true parameter
@@ -205,18 +203,24 @@ function WholeSaleTab() {
       if (result.success || result.response_status === "success") {
         const responseData = result.response_result;
         // Handle response (with or without pagination)
+        let accountsData = [];
         if (responseData?.pagination) {
-          const accountsData = responseData.data || [];
-          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+          accountsData = responseData.data || [];
         } else {
           // Non-paginated response (all accounts)
-          const accountsData = responseData?.data || responseData || [];
-          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+          accountsData = responseData?.data || responseData || [];
         }
+        
+        accountsData = Array.isArray(accountsData) ? accountsData : [];
+        setAllAccounts(accountsData);
+        setSupplierAccounts(accountsData.filter((account) => isRoleAccount(account, "supplier")));
+        setCustomerAccounts(accountsData.filter((account) => isRoleAccount(account, "customer")));
       }
     } catch (error) {
       console.error("Error fetching all accounts:", error);
       setAllAccounts([]);
+      setSupplierAccounts([]);
+      setCustomerAccounts([]);
     }
   };
 
@@ -274,45 +278,7 @@ function WholeSaleTab() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch Supplier accounts
-  const fetchSupplierAccounts = async () => {
-    try {
-      const response = await fetch("/api/account/accounts/readAll?all=true");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const accountsData =
-          result.response_result?.data || result.response_result || [];
-        setSupplierAccounts(
-          Array.isArray(accountsData)
-            ? accountsData.filter((account) => isRoleAccount(account, "supplier"))
-            : [],
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching supplier accounts:", error);
-      setSupplierAccounts([]);
-    }
-  };
 
-  // Fetch Customer accounts
-  const fetchCustomerAccounts = async () => {
-    try {
-      const response = await fetch("/api/account/accounts/readAll?all=true");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const accountsData =
-          result.response_result?.data || result.response_result || [];
-        setCustomerAccounts(
-          Array.isArray(accountsData)
-            ? accountsData.filter((account) => isRoleAccount(account, "customer"))
-            : [],
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching customer accounts:", error);
-      setCustomerAccounts([]);
-    }
-  };
 
   // Fetch Companies for supplier
   const fetchCompanies = async () => {
