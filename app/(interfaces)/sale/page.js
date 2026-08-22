@@ -178,7 +178,7 @@ function WholeSaleTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSupplier, setFilterSupplier] = useState("all");
   const [filterCustomer, setFilterCustomer] = useState("all");
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDate, setFilterDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);

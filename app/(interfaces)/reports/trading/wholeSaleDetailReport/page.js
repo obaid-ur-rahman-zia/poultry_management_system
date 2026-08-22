@@ -38,63 +38,71 @@ export default function WholeSaleReport() {
     }
   };
 
-  // Group sales by the former account
-  const groupedByFormer = reportData.reduce((acc, item) => {
+  // Group sales by Date then by Former
+  const groupedByDate = reportData.reduce((acc, item) => {
+    const dateStr = new Date(item.sale_date).toLocaleDateString();
+    
+    if (!acc[dateStr]) {
+      acc[dateStr] = {
+        dateStr,
+        formers: {},
+      };
+    }
+
     const formerKey =
       item.former_account_ref?.account_id ||
       item.former_account_ref?.account_nam ||
       "Unknown";
     const formerName = item.former_account_ref?.account_nam || "Unknown";
 
-    if (!acc[formerKey]) {
-      acc[formerKey] = {
+    if (!acc[dateStr].formers[formerKey]) {
+      acc[dateStr].formers[formerKey] = {
         formerName,
         formerContact: item.former_account_ref?.account_contact || "",
         sales: [],
       };
     }
-    acc[formerKey].sales.push(item);
+    
+    acc[dateStr].formers[formerKey].sales.push(item);
     return acc;
   }, {});
 
-  // Compute per-former totals
-  const formers = Object.values(groupedByFormer).map((group) => {
-    const totalWeight = group.sales.reduce(
-      (s, i) => s + (Number(i.weight) || 0),
-      0,
-    );
-    const totalFormerAmount = group.sales.reduce(
-      (s, i) => s + (Number(i.former_amount) || 0),
-      0,
-    );
-    const totalPurchaserAmount = group.sales.reduce(
-      (s, i) => s + (Number(i.purcher_amount) || 0),
-      0,
-    );
-    const totalProfit = group.sales.reduce(
-      (s, i) => s + (Number(i.profit) || 0),
-      0,
-    );
+  // Compute per-former and per-date totals
+  const dates = Object.values(groupedByDate).map((dateGroup) => {
+    const formers = Object.values(dateGroup.formers).map((group) => {
+      const totalWeight = group.sales.reduce((s, i) => s + (Number(i.weight) || 0), 0);
+      const totalFormerAmount = group.sales.reduce((s, i) => s + (Number(i.former_amount) || 0), 0);
+      const totalPurchaserAmount = group.sales.reduce((s, i) => s + (Number(i.purcher_amount) || 0), 0);
+      const totalProfit = group.sales.reduce((s, i) => s + (Number(i.profit) || 0), 0);
+      return {
+        ...group,
+        totalWeight,
+        totalFormerAmount,
+        totalPurchaserAmount,
+        totalProfit,
+      };
+    });
+
+    const dateTotalWeight = formers.reduce((s, f) => s + f.totalWeight, 0);
+    const dateTotalFormerAmount = formers.reduce((s, f) => s + f.totalFormerAmount, 0);
+    const dateTotalPurchaserAmount = formers.reduce((s, f) => s + f.totalPurchaserAmount, 0);
+    const dateTotalProfit = formers.reduce((s, f) => s + f.totalProfit, 0);
+
     return {
-      ...group,
-      totalWeight,
-      totalFormerAmount,
-      totalPurchaserAmount,
-      totalProfit,
+      dateStr: dateGroup.dateStr,
+      formers,
+      dateTotalWeight,
+      dateTotalFormerAmount,
+      dateTotalPurchaserAmount,
+      dateTotalProfit,
     };
   });
 
   // Grand totals
-  const grandTotalWeight = formers.reduce((s, f) => s + f.totalWeight, 0);
-  const grandTotalFormerAmount = formers.reduce(
-    (s, f) => s + f.totalFormerAmount,
-    0,
-  );
-  const grandTotalPurchaserAmount = formers.reduce(
-    (s, f) => s + f.totalPurchaserAmount,
-    0,
-  );
-  const grandTotalProfit = formers.reduce((s, f) => s + f.totalProfit, 0);
+  const grandTotalWeight = dates.reduce((s, d) => s + d.dateTotalWeight, 0);
+  const grandTotalFormerAmount = dates.reduce((s, d) => s + d.dateTotalFormerAmount, 0);
+  const grandTotalPurchaserAmount = dates.reduce((s, d) => s + d.dateTotalPurchaserAmount, 0);
+  const grandTotalProfit = dates.reduce((s, d) => s + d.dateTotalProfit, 0);
 
   const handleExport = () => {
     if (!reportData.length) {
@@ -103,9 +111,9 @@ export default function WholeSaleReport() {
     }
 
     const headers = [
+      "Sr.No.",
       "Former",
       "Sale ID",
-      "Date",
       "Van Number",
       "Weight",
       "Former Rate",
@@ -117,34 +125,51 @@ export default function WholeSaleReport() {
     ];
 
     const rows = [];
-    formers.forEach((group) => {
-      group.sales.forEach((item) => {
+    dates.forEach((dateGroup) => {
+      rows.push([`Date: ${dateGroup.dateStr}`, "", "", "", "", "", "", "", "", "", ""]);
+      
+      dateGroup.formers.forEach((group) => {
+        group.sales.forEach((item, index) => {
+          rows.push([
+            index + 1,
+            group.formerName,
+            item.sale_id,
+            item.van_number,
+            item.weight,
+            Number(item.former_rate).toFixed(2),
+            Number(item.former_amount).toFixed(2),
+            item.purcher_account_ref?.account_nam || "N/A",
+            Number(item.purcher_rate || 0).toFixed(2),
+            Number(item.purcher_amount).toFixed(2),
+            Number(item.profit).toFixed(2),
+          ]);
+        });
         rows.push([
-          group.formerName,
-          item.sale_id,
-          new Date(item.sale_date).toLocaleDateString(),
-          item.van_number,
-          item.weight,
-          Number(item.former_rate).toFixed(2),
-          Number(item.former_amount).toFixed(2),
-          item.purcher_account_ref?.account_nam || "N/A",
-          Number(item.purcher_rate || 0).toFixed(2),
-          Number(item.purcher_amount).toFixed(2),
-          Number(item.profit).toFixed(2),
+          "",
+          `${group.formerName} - Total`,
+          "",
+          "",
+          group.totalWeight,
+          "",
+          group.totalFormerAmount.toFixed(2),
+          "",
+          "",
+          group.totalPurchaserAmount.toFixed(2),
+          group.totalProfit.toFixed(2),
         ]);
       });
       rows.push([
-        `${group.formerName} - Total`,
+        "",
+        `Date Total (${dateGroup.dateStr})`,
         "",
         "",
+        dateGroup.dateTotalWeight,
         "",
-        group.totalWeight,
-        "",
-        group.totalFormerAmount.toFixed(2),
+        dateGroup.dateTotalFormerAmount.toFixed(2),
         "",
         "",
-        group.totalPurchaserAmount.toFixed(2),
-        group.totalProfit.toFixed(2),
+        dateGroup.dateTotalPurchaserAmount.toFixed(2),
+        dateGroup.dateTotalProfit.toFixed(2),
       ]);
     });
 
@@ -179,7 +204,7 @@ export default function WholeSaleReport() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-full px-1 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
               />
             </div>
             <div>
@@ -190,7 +215,7 @@ export default function WholeSaleReport() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-full px-1 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -253,133 +278,166 @@ export default function WholeSaleReport() {
                   No records found for this period
                 </div>
               ) : (
-                <table className="w-full border-collapse text-sm border border-gray-400">
+                <table className="w-full border-collapse text-xs border border-gray-400">
                   {/* Column Headers */}
                   <thead className="bg-gray-100 sticky top-0 z-10">
                     <tr>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-800 border border-gray-400">
-                        Date
+                      <th className="px-1 py-1 text-left font-semibold text-gray-800 border border-gray-400">
+                        Sr.No.
                       </th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-left font-semibold text-gray-800 border border-gray-400">
                         Van #
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
                         Weight
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
                         Former Rate
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
                         Former Amt
                       </th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-left font-semibold text-gray-800 border border-gray-400">
                         Purchaser
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
                         Purcher Rate
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
                         Purcher Amt
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
                         Profit
                       </th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {formers.map((group, gi) => (
-                      <React.Fragment key={gi}>
-                        {/* Former Header Row */}
+                    {dates.map((dateGroup, di) => (
+                      <React.Fragment key={`date-${di}`}>
+                        {/* Date Header Row */}
                         <tr>
                           <td
                             colSpan={9}
-                            className="px-3 py-2 font-bold  border border-black"
+                            className="px-1 py-1 font-bold text-center bg-orange-100 text-orange-900 border border-black text-lg"
                           >
-                            {group.formerName}
-                            {group.formerContact && (
-                              <span className="ml-2 font-normal text-xs ">
-                                ({group.formerContact})
-                              </span>
-                            )}
+                            Date: {dateGroup.dateStr}
                           </td>
                         </tr>
 
-                        {/* Individual Sale Rows */}
-                        {group.sales.map((item) => (
-                          <tr
-                            key={item.sale_id}
-                            className="hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="px-3 py-2 border border-black">
-                              <div className="">
-                                {new Date(item.sale_date).toLocaleDateString()}
-                              </div>
-                              <div className="text-xs">ID: {item.sale_id}</div>
-                            </td>
-                            <td className="px-3 py-2 border border-black">
-                              {item.van_number}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono border border-black">
-                              {fmt(item.weight, 0)}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono border border-black">
-                              {fmt(item.former_rate)}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono border border-black">
-                              {fmt(item.former_amount)}
-                            </td>
-                            <td className="px-3 py-2 border border-black">
-                              <div className="text-gray-900">
-                                {item.purcher_account_ref?.account_nam || "—"}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {item.purcher_account_ref?.account_contact}
-                              </div>
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono border border-black">
-                              {fmt(item.purcher_rate || 0)}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono border border-black">
-                              {fmt(item.purcher_amount)}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-black">
-                              {fmt(item.profit)}
-                            </td>
-                          </tr>
+                        {dateGroup.formers.map((group, gi) => (
+                          <React.Fragment key={`former-${di}-${gi}`}>
+                            {/* Former Header Row */}
+                            <tr>
+                              <td
+                                colSpan={9}
+                                className="px-1 py-1 font-bold bg-gray-50 border border-black"
+                              >
+                                {group.formerName}
+                                {group.formerContact && (
+                                  <span className="ml-2 font-normal text-xs ">
+                                    ({group.formerContact})
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+
+                            {/* Individual Sale Rows */}
+                            {group.sales.map((item, si) => (
+                              <tr
+                                key={item.sale_id}
+                                className="hover:bg-gray-100 transition-colors"
+                              >
+                                <td className="px-1 py-1 border border-black text-center">
+                                  {si + 1}
+                                </td>
+                                <td className="px-1 py-1 border border-black">
+                                  {item.van_number}
+                                </td>
+                                <td className="px-1 py-1 text-right font-mono border border-black">
+                                  {fmt(item.weight, 0)}
+                                </td>
+                                <td className="px-1 py-1 text-right font-mono border border-black">
+                                  {fmt(item.former_rate)}
+                                </td>
+                                <td className="px-1 py-1 text-right font-mono border border-black">
+                                  {fmt(item.former_amount)}
+                                </td>
+                                <td className="px-1 py-1 border border-black">
+                                  <div className="text-gray-900">
+                                    {item.purcher_account_ref?.account_nam || "—"}
+                                  </div>
+                                </td>
+                                <td className="px-1 py-1 text-right font-mono border border-black">
+                                  {fmt(item.purcher_rate || 0)}
+                                </td>
+                                <td className="px-1 py-1 text-right font-mono border border-black">
+                                  {fmt(item.purcher_amount)}
+                                </td>
+                                <td className="px-1 py-1 text-right font-mono font-semibold border border-black">
+                                  {fmt(item.profit)}
+                                </td>
+                              </tr>
+                            ))}
+
+                            {/* Per-Former Subtotal Row */}
+                            <tr className="bg-gray-100 font-semibold">
+                              <td
+                                colSpan={2}
+                                className="px-1 py-1 text-right text-gray-700 border border-black"
+                              >
+                                {group.formerName} Total:
+                              </td>
+                              <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
+                                {fmt(group.totalWeight, 0)}
+                              </td>
+                              <td className="px-1 py-1 border border-black" />
+                              <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
+                                {fmt(group.totalFormerAmount)}
+                              </td>
+                              <td className="px-1 py-1 border border-black" />
+                              <td className="px-1 py-1 border border-black" />
+                              <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
+                                {fmt(group.totalPurchaserAmount)}
+                              </td>
+                              <td className="px-1 py-1 text-right font-mono font-bold text-gray-900 border border-black">
+                                {fmt(group.totalProfit)}
+                              </td>
+                            </tr>
+                          </React.Fragment>
                         ))}
 
-                        {/* Per-Former Subtotal Row */}
-                        <tr className="bg-gray-100 font-semibold">
+                        {/* Per-Date Subtotal Row */}
+                        <tr className="bg-orange-50 font-bold text-orange-900">
                           <td
                             colSpan={2}
-                            className="px-3 py-2 text-right text-gray-700 border border-black"
+                            className="px-1 py-1 text-right border border-black"
                           >
-                            {group.formerName} Total:
+                            Date Total ({dateGroup.dateStr}):
                           </td>
-                          <td className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
-                            {fmt(group.totalWeight, 0)}
+                          <td className="px-1 py-1 text-right font-mono border border-black">
+                            {fmt(dateGroup.dateTotalWeight, 0)}
                           </td>
-                          <td className="px-3 py-2 border border-black" />
-                          <td className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
-                            {fmt(group.totalFormerAmount)}
+                          <td className="px-1 py-1 border border-black" />
+                          <td className="px-1 py-1 text-right font-mono border border-black">
+                            {fmt(dateGroup.dateTotalFormerAmount)}
                           </td>
-                          <td className="px-3 py-2 border border-black" />
-                          <td className="px-3 py-2 border border-black" />
-                          <td className="px-3 py-2 text-right font-mono text-gray-800 border border-black">
-                            {fmt(group.totalPurchaserAmount)}
+                          <td className="px-1 py-1 border border-black" />
+                          <td className="px-1 py-1 border border-black" />
+                          <td className="px-1 py-1 text-right font-mono border border-black">
+                            {fmt(dateGroup.dateTotalPurchaserAmount)}
                           </td>
-                          <td className="px-3 py-2 text-right font-mono font-bold text-gray-900 border border-black">
-                            {fmt(group.totalProfit)}
+                          <td className="px-1 py-1 text-right font-mono border border-black">
+                            {fmt(dateGroup.dateTotalProfit)}
                           </td>
                         </tr>
 
-                        {/* Spacer between formers */}
-                        {gi < formers.length - 1 && (
+                        {/* Spacer between dates */}
+                        {di < dates.length - 1 && (
                           <tr>
                             <td
                               colSpan={9}
-                              className="py-1 border-0 bg-white"
+                              className="py-2 border-0 bg-white"
                             />
                           </tr>
                         )}
@@ -392,23 +450,23 @@ export default function WholeSaleReport() {
                     <tr className="bg-gray-800 text-white font-bold">
                       <td
                         colSpan={2}
-                        className="px-3 py-3 text-right border border-black"
+                        className="px-1 py-1 text-right border border-black"
                       >
                         Grand Total:
                       </td>
-                      <td className="px-3 py-3 text-right font-mono border border-black">
+                      <td className="px-1 py-1 text-right font-mono border border-black">
                         {fmt(grandTotalWeight, 0)}
                       </td>
-                      <td className="px-3 py-3 border border-black" />
-                      <td className="px-3 py-3 text-right font-mono border border-black">
+                      <td className="px-1 py-1 border border-black" />
+                      <td className="px-1 py-1 text-right font-mono border border-black">
                         {fmt(grandTotalFormerAmount)}
                       </td>
-                      <td className="px-3 py-3 border border-black" />
-                      <td className="px-3 py-3 border border-black" />
-                      <td className="px-3 py-3 text-right font-mono border border-black">
+                      <td className="px-1 py-1 border border-black" />
+                      <td className="px-1 py-1 border border-black" />
+                      <td className="px-1 py-1 text-right font-mono border border-black">
                         {fmt(grandTotalPurchaserAmount)}
                       </td>
-                      <td className="px-3 py-3 text-right font-mono border border-black">
+                      <td className="px-1 py-1 text-right font-mono border border-black">
                         {fmt(grandTotalProfit)}
                       </td>
                     </tr>
