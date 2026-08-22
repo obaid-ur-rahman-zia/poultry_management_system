@@ -21,15 +21,15 @@ export async function createTransactions(wholeSale, tx) {
         : new Date(wholeSale.sale_date).toISOString().split("T")[0],
     );
 
-    const transactionRemarks = `Weight ${wholeSale.weight} Former Rate @${wholeSale.former_rate} Purcher Rate @${wholeSale.purcher_rate} Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`;
+    const formerRemarks = `Weight ${wholeSale.weight} Former Rate @${wholeSale.former_rate} Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`;
+    const purcherRemarks = `Weight ${wholeSale.weight} Purcher Rate @${wholeSale.purcher_rate} Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`;
+    const combinedRemarks = `Weight ${wholeSale.weight} Former Rate @${wholeSale.former_rate} Purcher Rate @${wholeSale.purcher_rate} Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`;
 
     const wholeSaleConstants = {
       reference_id: wholeSale.sale_id,
-
       financial_year: financialYear,
       reference: "Whole Sale",
       voucher_type: "WS",
-      remarks: transactionRemarks,
     };
 
     // Former account - Debit (payment being taken from)
@@ -40,6 +40,7 @@ export async function createTransactions(wholeSale, tx) {
         credit: wholeSale.former_amount,
         debit: 0,
         ...wholeSaleConstants,
+        remarks: formerRemarks,
       });
     }
 
@@ -51,6 +52,7 @@ export async function createTransactions(wholeSale, tx) {
         credit: 0,
         debit: wholeSale.purcher_amount,
         ...wholeSaleConstants,
+        remarks: purcherRemarks,
       });
     }
 
@@ -138,7 +140,7 @@ export async function createTransactions(wholeSale, tx) {
         debit: difference < 0 ? profitAmount : 0,
         credit: difference > 0 ? profitAmount : 0,
         ...wholeSaleConstants,
-        remarks: `${wholeSaleConstants.remarks} - ${difference < 0 ? "Loss" : "Profit"}`,
+        remarks: `${combinedRemarks} - ${difference < 0 ? "Loss" : "Profit"}`,
       };
       transactionData.push(adjustmentTransaction);
     }
