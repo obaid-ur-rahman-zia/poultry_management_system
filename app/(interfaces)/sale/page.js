@@ -105,10 +105,11 @@ function WholeSaleTab() {
     reset,
     setValue,
     watch,
+    setFocus,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
-      sale_date: new Date().toISOString().split("T")[0],
+      sale_date: format(new Date(), "yyyy-MM-dd"),
       farm_rate: "",
       sale_rate: "",
       former_account: "",
@@ -190,7 +191,7 @@ function WholeSaleTab() {
     fetchCompanies();
     fetchWholeSales();
     fetchAccountSubHeads();
-    const currentDate = new Date().toISOString().split("T")[0];
+    const currentDate = format(new Date(), "yyyy-MM-dd");
     setValue("sale_date", currentDate);
   }, []);
 
@@ -550,8 +551,7 @@ function WholeSaleTab() {
     if (!saleDate) return;
     try {
       const response = await fetch(
-        `/api/wholeSale/checkFsRate?sale_date=${saleDate.toISOString().split("T")[0]
-        }`,
+        `/api/wholeSale/checkFsRate?sale_date=${format(saleDate, "yyyy-MM-dd")}`,
       );
       const result = await response.json();
       if (result.response_status === "success") {
@@ -621,7 +621,7 @@ function WholeSaleTab() {
       return;
     }
 
-    const selectedSaleDate = saleDate.toISOString().split("T")[0];
+    const selectedSaleDate = format(saleDate, "yyyy-MM-dd");
     const payload = {
       req_object: {
         sale_date: selectedSaleDate,
@@ -669,7 +669,7 @@ function WholeSaleTab() {
           sale_date: selectedSaleDate,
           farm_rate: data.farm_rate,
           sale_rate: data.sale_rate,
-          former_account: "",
+          former_account: data.former_account,
           van_number: "",
           weight: "",
           former_rate: "",
@@ -679,11 +679,12 @@ function WholeSaleTab() {
           purcher_amount: "",
           profit: "",
         });
-        setSupplierBalance(null);
+        fetchSupplierBalance(data.former_account);
         setCustomerBalance(null);
         setIsEditMode(false);
         setEditingSaleId(null);
         fetchWholeSales(currentPage, itemsPerPage);
+        setTimeout(() => setFocus("van_number"), 0);
       } else {
         toast.error(result.response_message || "Failed to save whole sale");
       }
@@ -705,7 +706,7 @@ function WholeSaleTab() {
         toast.success("Whole sale deleted successfully");
         setIsDeleteDialogOpen(false);
         reset({
-          sale_date: saleDate.toISOString().split("T")[0],
+          sale_date: format(saleDate, "yyyy-MM-dd"),
           farm_rate: watch("farm_rate"),
           sale_rate: watch("sale_rate"),
           former_account: "",
@@ -738,7 +739,7 @@ function WholeSaleTab() {
     setIsEditMode(false);
     setEditingSaleId(null);
     reset({
-      sale_date: new Date().toISOString().split("T")[0],
+      sale_date: format(new Date(), "yyyy-MM-dd"),
       farm_rate: "",
       sale_rate: "",
       former_account: "",
@@ -783,7 +784,7 @@ function WholeSaleTab() {
     const matchesDate =
       filterDate === "" ||
       (sale.sale_date &&
-        new Date(sale.sale_date).toISOString().split("T")[0] === filterDate);
+        format(new Date(sale.sale_date), "yyyy-MM-dd") === filterDate);
     return matchesSearch && matchesSupplier && matchesCustomer && matchesDate;
   });
 
@@ -838,7 +839,7 @@ function WholeSaleTab() {
                           setSaleDate(date);
                           setValue(
                             "sale_date",
-                            date.toISOString().split("T")[0],
+                            format(date, "yyyy-MM-dd"),
                           );
                         }
                       }}
@@ -1354,12 +1355,8 @@ function WholeSaleTab() {
                                     setValue(
                                       "sale_date",
                                       sale.sale_date
-                                        ? new Date(sale.sale_date)
-                                          .toISOString()
-                                          .split("T")[0]
-                                        : new Date()
-                                          .toISOString()
-                                          .split("T")[0],
+                                        ? format(new Date(sale.sale_date), "yyyy-MM-dd")
+                                        : format(new Date(), "yyyy-MM-dd"),
                                     );
                                     setSaleDate(
                                       sale.sale_date
