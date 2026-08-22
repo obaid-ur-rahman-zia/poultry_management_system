@@ -327,23 +327,23 @@ export default function WholeSaleProfitModal() {
                 <table className="w-full border-collapse text-sm border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-4 py-2 text-left font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-center font-bold text-gray-700 border border-gray-300">
                         {getPeriodHeader()}
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
-                        Whole Sale Purchase
+                      <th className="px-4 py-2 text-center font-bold text-gray-700 border border-gray-300">
+                        WHOLE SALE PURCHASE
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
-                        Whole Sale Amount
+                      <th className="px-4 py-2 text-center font-bold text-gray-700 border border-gray-300">
+                        WHOLE SALE AMOUNT
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
-                        Recovery
+                      <th className="px-4 py-2 text-center font-bold text-gray-700 border border-gray-300">
+                        RECOVERY
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
-                        Profit
+                      <th className="px-4 py-2 text-center font-bold text-gray-700 border border-gray-300">
+                        PROFIT
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
-                        Loss
+                      <th className="px-4 py-2 text-center font-bold text-gray-700 border border-gray-300">
+                        LOSS
                       </th>
                     </tr>
                   </thead>

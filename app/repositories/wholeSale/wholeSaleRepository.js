@@ -222,11 +222,16 @@ class WholeSaleRepository {
   async readReportDetail(req_object) {
     const { start_dat, end_dat } = req_object;
 
+    const startDate = new Date(start_dat);
+    const endDate = new Date(end_dat);
+    endDate.setUTCHours(23, 59, 59, 999);
+
     const whereClause = {
       sale_date: {
-        gte: new Date(start_dat),
-        lte: new Date(end_dat),
+        gte: startDate,
+        lte: endDate,
       },
+      status: 1,
     };
 
     return prisma.whole_sale.findMany({
@@ -256,6 +261,7 @@ class WholeSaleRepository {
 
     const startDate = new Date(start_dat);
     const endDate = new Date(end_dat);
+    endDate.setUTCHours(23, 59, 59, 999);
 
     const whereClause = {
       sale_date: {

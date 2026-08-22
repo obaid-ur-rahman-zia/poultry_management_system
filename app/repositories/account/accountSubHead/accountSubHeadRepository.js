@@ -171,11 +171,15 @@ class AccountSubHeadRepository {
 
     // 2. Aggregate transactions
     const whereCondition = { isDeleted: false };
-    if (startDate && endDate) {
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setUTCHours(23, 59, 59, 999);
       whereCondition.transaction_dat = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
+        lte: end,
       };
+      if (startDate) {
+        whereCondition.transaction_dat.gte = new Date(startDate);
+      }
     }
 
     const transactionAggregates = await prisma.transaction.groupBy({

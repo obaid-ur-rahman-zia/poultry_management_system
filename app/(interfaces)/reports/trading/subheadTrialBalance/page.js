@@ -23,7 +23,6 @@ import { exportToCSV } from "@/app/utils/exportToCsv";
 export default function SubheadTrialBalanceModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [reportData, setReportData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,7 +38,6 @@ export default function SubheadTrialBalanceModal() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
 
       const response = await fetch(
@@ -113,12 +111,8 @@ export default function SubheadTrialBalanceModal() {
   };
 
   const getDateRangeText = () => {
-    if (startDate && endDate)
-      return `From ${new Date(startDate).toLocaleDateString()} To ${new Date(endDate).toLocaleDateString()}`;
-    if (startDate)
-      return `From ${new Date(startDate).toLocaleDateString()} To ${new Date().toLocaleDateString()}`;
     if (endDate)
-      return `From Beginning To ${new Date(endDate).toLocaleDateString()}`;
+      return `As of ${new Date(endDate).toLocaleDateString()}`;
     return `All Time Records`;
   };
 
@@ -216,7 +210,6 @@ export default function SubheadTrialBalanceModal() {
     setIsPrinting(true);
     try {
       const params = new URLSearchParams();
-      if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
 
       const response = await fetch(
@@ -296,18 +289,7 @@ export default function SubheadTrialBalanceModal() {
           <div className="space-y-3 mb-4">
             <div className="flex flex-col">
               <label className="text-xs font-semibold text-gray-700 mb-1">
-                Start Date (Optional)
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="h-[40px] border-2 border-gray-200 rounded-lg px-3 text-sm focus:border-green-500 outline-none"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-xs font-semibold text-gray-700 mb-1">
-                End Date (Optional)
+                As of Date
               </label>
               <input
                 type="date"
@@ -320,7 +302,6 @@ export default function SubheadTrialBalanceModal() {
           <div className="flex gap-2">
             <button
               onClick={() => {
-                setStartDate("");
                 setEndDate("");
               }}
               className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg font-medium hover:shadow-lg transition-all"

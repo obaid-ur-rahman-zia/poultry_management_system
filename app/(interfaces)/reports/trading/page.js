@@ -19,10 +19,11 @@ export default function ReportPage() {
           <WholeSaleProfit />
           <LocalSaleReport />
           <LocalSaleProfit />
-          <SubheadTrialBalance />
-          <ExpenseHeadTrialBalance />
           <BalanceSheet />
           <AccountLedger />
+
+          <SubheadTrialBalance />
+          <ExpenseHeadTrialBalance />
           <Link href="/reports/accountReports/transactions">
             <div className="group relative bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden h-full">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

@@ -41,7 +41,7 @@ export default function WholeSaleReport() {
   // Group sales by Date then by Former
   const groupedByDate = reportData.reduce((acc, item) => {
     const dateStr = new Date(item.sale_date).toLocaleDateString();
-    
+
     if (!acc[dateStr]) {
       acc[dateStr] = {
         dateStr,
@@ -62,7 +62,7 @@ export default function WholeSaleReport() {
         sales: [],
       };
     }
-    
+
     acc[dateStr].formers[formerKey].sales.push(item);
     return acc;
   }, {});
@@ -127,7 +127,7 @@ export default function WholeSaleReport() {
     const rows = [];
     dates.forEach((dateGroup) => {
       rows.push([`Date: ${dateGroup.dateStr}`, "", "", "", "", "", "", "", "", "", ""]);
-      
+
       dateGroup.formers.forEach((group) => {
         group.sales.forEach((item, index) => {
           rows.push([
@@ -245,7 +245,7 @@ export default function WholeSaleReport() {
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl h-[100vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-2 border-b border-gray-300">
               <div>
@@ -282,16 +282,16 @@ export default function WholeSaleReport() {
                   {/* Column Headers */}
                   <thead className="bg-gray-100 sticky top-0 z-10">
                     <tr>
-                      <th className="px-1 py-1 text-left font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-left font-semibold text-gray-800 border border-gray-400 w-15">
                         Sr.No.
                       </th>
-                      <th className="px-1 py-1 text-left font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-1 py-1 text-left font-semibold text-gray-800 border border-gray-400 w-25">
                         Van #
                       </th>
-                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className="px-2 py-1 text-right font-semibold text-gray-800 border border-gray-400">
                         Weight
                       </th>
-                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className=" py-1 text-right font-semibold text-gray-800 border border-gray-400 w-18">
                         Former Rate
                       </th>
                       <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
@@ -300,7 +300,7 @@ export default function WholeSaleReport() {
                       <th className="px-1 py-1 text-left font-semibold text-gray-800 border border-gray-400">
                         Purchaser
                       </th>
-                      <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
+                      <th className="w-18 py-1 text-right font-semibold text-gray-800 border border-gray-400">
                         Purcher Rate
                       </th>
                       <th className="px-1 py-1 text-right font-semibold text-gray-800 border border-gray-400">
@@ -319,7 +319,7 @@ export default function WholeSaleReport() {
                         <tr>
                           <td
                             colSpan={9}
-                            className="px-1 py-1 font-bold text-center bg-orange-100 text-orange-900 border border-black text-lg"
+                            className="px-1 py-1 font-bold text-center  border border-black text-lg"
                           >
                             Date: {dateGroup.dateStr}
                           </td>
@@ -331,14 +331,9 @@ export default function WholeSaleReport() {
                             <tr>
                               <td
                                 colSpan={9}
-                                className="px-1 py-1 font-bold bg-gray-50 border border-black"
+                                className="px-1 py-1 font-bold bg-gray-50 border border-black text-lg"
                               >
                                 {group.formerName}
-                                {group.formerContact && (
-                                  <span className="ml-2 font-normal text-xs ">
-                                    ({group.formerContact})
-                                  </span>
-                                )}
                               </td>
                             </tr>
 
@@ -386,7 +381,7 @@ export default function WholeSaleReport() {
                                 colSpan={2}
                                 className="px-1 py-1 text-right text-gray-700 border border-black"
                               >
-                                {group.formerName} Total:
+                                Total:
                               </td>
                               <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
                                 {fmt(group.totalWeight, 0)}
@@ -408,7 +403,7 @@ export default function WholeSaleReport() {
                         ))}
 
                         {/* Per-Date Subtotal Row */}
-                        <tr className="bg-orange-50 font-bold text-orange-900">
+                        <tr className=" font-bold">
                           <td
                             colSpan={2}
                             className="px-1 py-1 text-right border border-black"
