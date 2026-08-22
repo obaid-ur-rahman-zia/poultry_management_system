@@ -8,11 +8,16 @@ import {
   FileDown,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Search,
+  Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 
 export default function SubheadTrialBalanceModal() {
@@ -22,6 +27,10 @@ export default function SubheadTrialBalanceModal() {
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [reportData, setReportData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
 
   // 200vh roughly supports ~80-100 items of accounting data
   const itemsPerPage = 80;
@@ -157,27 +166,25 @@ export default function SubheadTrialBalanceModal() {
     // Final block: CONCLUSION
     items.push({ type: "CONCLUSION", ...reportData.conclusion });
 
-    return items;
+    return items.map((item, index) => ({ ...item, flatIndex: index }));
   }, [reportData]);
 
-  const totalPages = Math.ceil(flatItems.length / itemsPerPage);
+  const totalPages = Math.ceil(flatItems.length / itemsPerPage) || 1;
   const currentItems = flatItems.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
 
-  // Group items into logical chunks for rendering (e.g. group consecutive ROWs into one <table>)
-  const renderChunks = useMemo(() => {
+  const getChunks = (items) => {
     const chunks = [];
     let currentTableRows = [];
     let lastSubheadNam = "";
 
-    currentItems.forEach((item, index) => {
+    items.forEach((item, index) => {
       if (item.type === "ROW") {
         currentTableRows.push(item);
         lastSubheadNam = item.subhead_nam;
       } else {
-        // If we were building a table, push it first
         if (currentTableRows.length > 0) {
           chunks.push({
             type: "TABLE",
@@ -201,7 +208,81 @@ export default function SubheadTrialBalanceModal() {
     }
 
     return chunks;
-  }, [currentItems]);
+  };
+
+  const renderChunks = useMemo(() => getChunks(currentItems), [currentItems]);
+
+  const handlePrint = async () => {
+    setIsPrinting(true);
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+
+      const response = await fetch(
+        `/api/reports/subheadTrialBalance/print?${params.toString()}`,
+      );
+
+      if (!response.ok) throw new Error("Print failed");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate print PDF");
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  const goToMatch = (flatIndex) => {
+    const targetPage = Math.floor(flatIndex / itemsPerPage) + 1;
+    setCurrentPage(targetPage);
+    
+    setTimeout(() => {
+      const el = document.getElementById(`item-${flatIndex}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+  };
+
+  const handleFind = () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const query = searchQuery.toLowerCase();
+    const results = [];
+    flatItems.forEach((item) => {
+      if (item.type === "ROW" && item.name?.toLowerCase().includes(query)) {
+        results.push(item.flatIndex);
+      } else if (item.type === "HEADER" && item.name?.toLowerCase().includes(query)) {
+        results.push(item.flatIndex);
+      }
+    });
+
+    setSearchResults(results);
+    if (results.length > 0) {
+      setCurrentSearchIndex(0);
+      goToMatch(results[0]);
+    } else {
+      toast.info("No matches found");
+    }
+  };
+
+  const handleFindNext = () => {
+    if (searchResults.length === 0) return;
+    const nextIndex = (currentSearchIndex + 1) % searchResults.length;
+    setCurrentSearchIndex(nextIndex);
+    goToMatch(searchResults[nextIndex]);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    document.getElementById("report-scroll-area")?.scrollTo(0, 0);
+  };
 
   return (
     <div>
@@ -263,27 +344,73 @@ export default function SubheadTrialBalanceModal() {
 
       {/* Report Modal */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex bg-black/50 items-center justify-center">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col">
-            <div className="flex items-center justify-end p-1 border-b bg-gray-50">
-              <div className="flex gap-2">
-                <Button
-                  variant="default"
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                  onClick={handleExport}
-                >
-                  <FileDown className="mr-2 h-4 w-4" /> Export CSV
-                </Button>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                >
-                  <X className="w-6 h-6 text-gray-600" />
-                </button>
-              </div>
-            </div>
+            <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b bg-gray-50 gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Pagination */}
+                  <div className="flex items-center gap-1 bg-white border rounded-md p-1 shadow-sm">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(1)} disabled={currentPage === 1} title="First Page">
+                      <ChevronsLeft className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} title="Previous Page">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium px-2 text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} title="Next Page">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} title="Last Page">
+                      <ChevronsRight className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-            <div className="flex-1 overflow-auto sm:p-2 bg-white">
+                  {/* Find */}
+                  <div className="flex items-center gap-1 bg-white border rounded-md p-1 shadow-sm">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
+                      <Input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleFind()}
+                        placeholder="Find in report..."
+                        className="h-8 w-40 pl-7 text-xs border-none shadow-none focus-visible:ring-0"
+                      />
+                    </div>
+                    <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={handleFind}>
+                      Find
+                    </Button>
+                    <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={handleFindNext} disabled={searchResults.length === 0}>
+                      Next
+                    </Button>
+                    {searchResults.length > 0 && (
+                      <span className="text-xs text-gray-500 px-2 font-medium whitespace-nowrap">
+                        {currentSearchIndex + 1} / {searchResults.length}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" className="h-9" onClick={handlePrint} disabled={isPrinting}>
+                    {isPrinting ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating PDF...</>
+                    ) : (
+                      <><Printer className="mr-2 h-4 w-4" /> Print</>
+                    )}
+                  </Button>
+                  <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white h-9" onClick={handleExport}>
+                    <FileDown className="mr-2 h-4 w-4" /> Export CSV
+                  </Button>
+                  <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors ml-2">
+                    <X className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+
+            <div className="flex-1 overflow-auto sm:p-2 bg-white" id="report-scroll-area">
               <div className="mb-2 text-center">
                 <h1 className="text-xl font-bold text-gray-900 uppercase">
                   OVERALL BUSINESS REPORT
@@ -294,9 +421,10 @@ export default function SubheadTrialBalanceModal() {
               <div className="px-4 space-y-4 pb-10">
                 {renderChunks.map((chunk, idx) => {
                   if (chunk.type === "HEADER") {
+                    const isMatch = searchResults[currentSearchIndex] === chunk.flatIndex;
                     return (
-                      <div key={idx} className="mt-4 first:mt-0">
-                        <span className="text-xl font-extrabold text-gray-800">
+                      <div key={idx} className="mt-4 first:mt-0" id={`item-${chunk.flatIndex}`}>
+                        <span className={`text-xl font-extrabold text-gray-800 ${isMatch ? "bg-yellow-200 px-1 rounded" : ""}`}>
                           {chunk.name}
                         </span>
                         <Badge variant="outline" className="ml-2 text-xs">
@@ -342,10 +470,13 @@ export default function SubheadTrialBalanceModal() {
                             </tr>
                           </thead>
                           <tbody>
-                            {chunk.rows.map((row, rIdx) => (
+                            {chunk.rows.map((row, rIdx) => {
+                              const isMatch = searchResults[currentSearchIndex] === row.flatIndex;
+                              return (
                               <tr
                                 key={rIdx}
-                                className="border-b border-gray-200 hover:bg-gray-50"
+                                id={`item-${row.flatIndex}`}
+                                className={`border-b border-gray-200 ${isMatch ? "bg-yellow-200 hover:bg-yellow-300" : "hover:bg-gray-50"}`}
                               >
                                 <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
                                   {row.name}
@@ -363,7 +494,7 @@ export default function SubheadTrialBalanceModal() {
                                   {formatCurrency(row.balance)}
                                 </td>
                               </tr>
-                            ))}
+                            )})}
                           </tbody>
                         </table>
                       </div>
@@ -492,44 +623,6 @@ export default function SubheadTrialBalanceModal() {
                   }
                   return null;
                 })}
-
-                {/* Pagination UI */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-6 border-t mt-4 mb-10">
-                    <div className="text-sm text-gray-600">
-                      Page {currentPage} of {totalPages} ({flatItems.length}{" "}
-                      lines total)
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setCurrentPage((p) => Math.max(p - 1, 1));
-                          document
-                            .querySelector(".overflow-auto")
-                            ?.scrollTo(0, 0);
-                        }}
-                        disabled={currentPage === 1}
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-1" /> Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setCurrentPage((p) => Math.min(p + 1, totalPages));
-                          document
-                            .querySelector(".overflow-auto")
-                            ?.scrollTo(0, 0);
-                        }}
-                        disabled={currentPage === totalPages}
-                      >
-                        Next <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

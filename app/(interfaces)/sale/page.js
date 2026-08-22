@@ -60,22 +60,22 @@ import {
 } from "@/components/ui/pagination";
 
 const isRoleAccount = (account, role) => {
-  const subheadName = account.subhead?.subhead_nam?.toLowerCase() || "";
+  const subheadName = account.subhead?.subhead_nam?.toLowerCase().trim() || "";
 
   if (role === "supplier") {
     return (
       account.is_supplier === 1 ||
-      subheadName.includes("farmer") ||
-      subheadName.includes("former") ||
-      subheadName.includes("supplier")
+      subheadName === "farmer" ||
+      subheadName === "former" ||
+      subheadName === "supplier"
     );
   }
 
   return (
     account.is_customer === 1 ||
-    subheadName.includes("purchaser") ||
-    subheadName.includes("purcher") ||
-    subheadName.includes("customer")
+    subheadName === "purchaser" ||
+    subheadName === "purcher" ||
+    subheadName === "customer"
   );
 };
 
