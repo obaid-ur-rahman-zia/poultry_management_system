@@ -273,7 +273,7 @@ export default function WholeSaleReport() {
 
             {/* Content */}
             <div className="flex-1 overflow-auto p-4">
-              {formers.length === 0 ? (
+              {dates.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-gray-500 border border-gray-300 rounded">
                   No records found for this period
                 </div>
