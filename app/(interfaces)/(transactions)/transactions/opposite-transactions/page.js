@@ -624,19 +624,27 @@ export default function OppositeTransactionsPage() {
                     control={control}
                     rules={{ required: "Paid by is required" }}
                     render={({ field }) => {
+                      // Filter accounts for paid_by (purchasers)
+                      const defaultAccounts = accounts.filter(acc => {
+                        const subhead = accountSubHeads.find(sh => sh.sub_id === acc.sub_id);
+                        if (!subhead) return false;
+                        const shName = subhead.subhead_nam?.toLowerCase() || "";
+                        return shName.includes("purchaser") || shName.includes("purcher") || shName.includes("customer");
+                      });
+
                       // Get selected account from allAccounts if it exists
                       const selectedAccount = allAccounts.find(
                         (acc) => acc.acc_id?.toString() === field.value,
                       );
 
-                      // Combine accounts with selected account if it's not in accounts
+                      // Combine defaultAccounts with selected account if it's not in defaultAccounts
                       const options = [
-                        ...accounts.map((acc) => ({
+                        ...defaultAccounts.map((acc) => ({
                           value: acc.acc_id.toString(),
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !accounts.find(
+                        !defaultAccounts.find(
                           (acc) => acc.acc_id === selectedAccount.acc_id,
                         )
                           ? [
@@ -756,19 +764,27 @@ export default function OppositeTransactionsPage() {
                     control={control}
                     rules={{ required: "Received by is required" }}
                     render={({ field }) => {
+                      // Filter accounts for received_by (farmers)
+                      const defaultAccounts = accounts.filter(acc => {
+                        const subhead = accountSubHeads.find(sh => sh.sub_id === acc.sub_id);
+                        if (!subhead) return false;
+                        const shName = subhead.subhead_nam?.toLowerCase() || "";
+                        return shName.includes("farmer") || shName.includes("former") || shName.includes("supplier");
+                      });
+
                       // Get selected account from allAccounts if it exists
                       const selectedAccount = allAccounts.find(
                         (acc) => acc.acc_id?.toString() === field.value,
                       );
 
-                      // Combine accounts with selected account if it's not in accounts
+                      // Combine defaultAccounts with selected account if it's not in defaultAccounts
                       const options = [
-                        ...accounts.map((acc) => ({
+                        ...defaultAccounts.map((acc) => ({
                           value: acc.acc_id.toString(),
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !accounts.find(
+                        !defaultAccounts.find(
                           (acc) => acc.acc_id === selectedAccount.acc_id,
                         )
                           ? [

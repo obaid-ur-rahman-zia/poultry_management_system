@@ -21,9 +21,9 @@ export async function createTransactions(wholeSale, tx) {
         : new Date(wholeSale.sale_date).toISOString().split("T")[0],
     );
 
-    const formerRemarks = `Weight ${wholeSale.weight} Former Rate @${wholeSale.former_rate} Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`;
-    const purcherRemarks = `Weight ${wholeSale.weight} Purcher Rate @${wholeSale.purcher_rate} Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`;
-    const combinedRemarks = `Weight ${wholeSale.weight} Former Rate @${wholeSale.former_rate} Purcher Rate @${wholeSale.purcher_rate} Whole Sale#${wholeSale.sale_id}${wholeSale.van_number ? ` Van#${wholeSale.van_number}` : ""}`;
+    const formerRemarks = `van: ${wholeSale.van_number || "-"} Weight: ${wholeSale.weight} Rate ${wholeSale.former_rate}`;
+    const purcherRemarks = `van: ${wholeSale.van_number || "-"} Weight: ${wholeSale.weight} Rate ${wholeSale.purcher_rate}`;
+    const combinedRemarks = `van: ${wholeSale.van_number || "-"} Weight: ${wholeSale.weight} F.Rate ${wholeSale.former_rate} P.Rate ${wholeSale.purcher_rate}`;
 
     const wholeSaleConstants = {
       reference_id: wholeSale.sale_id,

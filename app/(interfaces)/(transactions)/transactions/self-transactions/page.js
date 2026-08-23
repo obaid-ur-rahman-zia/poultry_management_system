@@ -511,19 +511,50 @@ export default function SelfTransactionPage() {
                         name="account_id"
                         control={control}
                         rules={{ required: "Account is required" }}
-                        render={({ field }) => (
-                          <Combobox
-                            options={selectableAccounts.map((account) => ({
+                        render={({ field }) => {
+                          // Filter selectable accounts to show only purchasers by default
+                          const defaultAccounts = selectableAccounts.filter(acc => {
+                            const subhead = accountSubHeads.find(sh => sh.sub_id === acc.sub_id);
+                            if (!subhead) return false;
+                            const shName = subhead.subhead_nam?.toLowerCase() || "";
+                            return shName.includes("purchaser") || shName.includes("purcher") || shName.includes("customer");
+                          });
+
+                          // Get selected account from allAccounts if it exists
+                          const selectedAccount = allAccounts.find(
+                            (acc) => acc.acc_id?.toString() === field.value,
+                          );
+
+                          // Combine defaultAccounts with selected account if it's not in defaultAccounts
+                          const options = [
+                            ...defaultAccounts.map((account) => ({
                               value: account.acc_id.toString(),
                               label: account.account_nam,
-                            }))}
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder="Select account"
-                            searchPlaceholder="Search accounts..."
-                            emptyText="No account found."
-                          />
-                        )}
+                            })),
+                            ...(selectedAccount &&
+                            !defaultAccounts.find(
+                              (acc) => acc.acc_id === selectedAccount.acc_id,
+                            ) && (!userCashInHandAccountId || selectedAccount.acc_id?.toString() !== userCashInHandAccountId)
+                              ? [
+                                  {
+                                    value: selectedAccount.acc_id.toString(),
+                                    label: selectedAccount.account_nam,
+                                  },
+                                ]
+                              : []),
+                          ];
+
+                          return (
+                            <Combobox
+                              options={options}
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              placeholder="Select account"
+                              searchPlaceholder="Search accounts..."
+                              emptyText="No account found."
+                            />
+                          );
+                        }}
                       />
                     </div>
                   <Button

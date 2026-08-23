@@ -297,6 +297,22 @@ class WholeSaleRepository {
       },
     });
 
+    // Fetch self transactions where cash is received in the same date range
+    const selfTransactions = await prisma.self_transaction.findMany({
+      where: {
+        transaction_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        transaction_type: "receive",
+        status: 1,
+      },
+      select: {
+        transaction_date: true,
+        amount: true,
+      },
+    });
+
     const groupedData = new Map();
 
     sales.forEach((sale) => {
@@ -330,6 +346,21 @@ class WholeSaleRepository {
         });
       }
       groupedData.get(key).recovery += opp.amount;
+    });
+
+    // Group self transactions into the same period buckets
+    selfTransactions.forEach((self) => {
+      const key = getGroupKey(self.transaction_date, group_by);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, {
+          purchase: 0,
+          sale: 0,
+          profit: 0,
+          recovery: 0,
+          date: self.transaction_date,
+        });
+      }
+      groupedData.get(key).recovery += self.amount;
     });
 
     // Convert to array
