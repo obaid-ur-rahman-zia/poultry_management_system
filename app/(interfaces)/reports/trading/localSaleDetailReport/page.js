@@ -340,8 +340,8 @@ export default function LocalSaleReport() {
                   {selectedAccountName}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {new Date(startDate).toLocaleDateString()} –{" "}
-                  {new Date(endDate).toLocaleDateString()}
+                  {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} –{" "}
+                  {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                 </p>
               </div>
               <div className="flex gap-2">

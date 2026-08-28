@@ -89,7 +89,7 @@ export default function TradingReportModal() {
     ];
 
     const rows = tradingData.flatMap((trade) => {
-      const date = new Date(trade.trading_date).toLocaleDateString();
+      const date = new Date(trade.trading_date).toLocaleDateString("en-GB").replace(/\//g, "-");
 
       return [
         [
@@ -223,11 +223,11 @@ export default function TradingReportModal() {
                 <p className="text-gray-600 text-sm">
                   From:{" "}
                   <span className="font-semibold">
-                    {new Date(startDate).toLocaleDateString()}
+                    {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                   </span>{" "}
                   To:{" "}
                   <span className="font-semibold">
-                    {new Date(endDate).toLocaleDateString()}
+                    {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                   </span>
                 </p>
               </div>
@@ -286,7 +286,7 @@ export default function TradingReportModal() {
                             <td className="px-3 py-2 border border-gray-300">
                               {new Date(
                                 trade.trading_date
-                              ).toLocaleDateString()}
+                              ).toLocaleDateString("en-GB").replace(/\//g, "-")}
                             </td>
                             <td className="px-3 py-2 border border-gray-300">
                               {trade.do_number || "-"}

@@ -157,7 +157,7 @@ export default function PurchaseReportModal() {
     const rows = currentPurchases.map((purchase) => [
       purchase.sale_id,
       purchase.floc_id,
-      new Date(purchase.sale_date).toLocaleDateString(),
+      new Date(purchase.sale_date).toLocaleDateString("en-GB").replace(/\//g, "-"),
       purchase.customer.account_nam,
       purchase.customer.account_contact || "N/A",
       purchase.product.product_title,
@@ -343,11 +343,11 @@ export default function PurchaseReportModal() {
                 <p className="text-gray-600 text-sm">
                   From:{" "}
                   <span className="font-semibold">
-                    {new Date(startDate).toLocaleDateString()}
+                    {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                   </span>{" "}
                   To:{" "}
                   <span className="font-semibold">
-                    {new Date(endDate).toLocaleDateString()}
+                    {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                   </span>
                 </p>
               </div>
@@ -371,7 +371,7 @@ export default function PurchaseReportModal() {
                         <div>
                           <span className="font-semibold">Income Date: </span>
                           <span>
-                            {new Date(purchase.sale_date).toLocaleDateString()}
+                            {new Date(purchase.sale_date).toLocaleDateString("en-GB").replace(/\//g, "-")}
                           </span>
                           <span className="ml-6 font-semibold">Customer: </span>
                           <span>{purchase.customer.account_nam}</span>

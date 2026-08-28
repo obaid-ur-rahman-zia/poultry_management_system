@@ -114,7 +114,7 @@ function generatePurchaseSummaryHTML(purchaseData, startDate, endDate) {
           }</td>
           <td style="border: 1px solid #e5e7eb; padding: 6px; font-size: 10px;">${new Date(
             purchase.purchase_dat
-          ).toLocaleDateString()}</td>
+          ).toLocaleDateString("en-GB").replace(/\//g, "-")}</td>
           <td style="border: 1px solid #e5e7eb; padding: 6px; font-size: 10px;">
             <div style="font-weight: 500;">${
               purchase.suppliers.account_nam
@@ -188,9 +188,9 @@ function generatePurchaseSummaryHTML(purchaseData, startDate, endDate) {
         <h1>Purchase Summary</h1>
         <p>From: <strong>${new Date(
           startDate
-        ).toLocaleDateString()}</strong> To: <strong>${new Date(
+        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong> To: <strong>${new Date(
     endDate
-  ).toLocaleDateString()}</strong></p>
+  ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong></p>
       </div>
       
       <table>

@@ -42,6 +42,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  TableFooter,
+} from "@/components/ui/table";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 import {
   Pagination,
@@ -106,17 +109,17 @@ export default function OppositeTransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPaidBy, setFilterPaidBy] = useState("all");
   const [filterReceivedBy, setFilterReceivedBy] = useState("all");
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDate, setFilterDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [isMobile, setIsMobile] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingTransactionId, setDeletingTransactionId] = useState(null);
 
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  // Modal states
+  const [isGetDataModalOpen, setIsGetDataModalOpen] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
 
   const selectedPaidBy = watch("paid_by");
   const selectedReceivedBy = watch("received_by");
@@ -124,7 +127,7 @@ export default function OppositeTransactionsPage() {
   useEffect(() => {
     fetchSubHeads();
     fetchAccountHeads();
-    fetchTransactions(1, 20);
+    fetchTransactions(filterDate);
     fetchAllAccounts();
     fetchAccountSubHeads();
   }, []);
@@ -145,7 +148,7 @@ export default function OppositeTransactionsPage() {
           // Non-paginated response (all accounts)
           accountsData = responseData?.data || responseData || [];
         }
-        
+
         const filteredAccounts = Array.isArray(accountsData) ? accountsData.filter((a) => a.acc_id !== 1) : [];
         setAllAccounts(filteredAccounts);
         setAccounts(filteredAccounts);
@@ -327,32 +330,20 @@ export default function OppositeTransactionsPage() {
   }, [selectedReceivedBy]);
 
   const fetchTransactions = async (
-    page = currentPage,
-    limit = itemsPerPage,
+    dateFilter = filterDate
   ) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/oppositeTransaction/readAll?page=${page}&limit=${limit}`,
-      );
+      let url = `/api/oppositeTransaction/readAll?all=true`;
+      if (dateFilter) {
+        url += `&date=${dateFilter}`;
+      }
+      const response = await fetch(url);
       const result = await response.json();
       if (result.response_status === "success") {
         const responseData = result.response_result;
-
-        // Handle paginated response
-        if (responseData?.pagination) {
-          const transactionsData = responseData.data || [];
-          setTransactions(transactionsData);
-          setTotalPages(responseData.pagination.totalPages || 1);
-          setTotalItems(responseData.pagination.total || 0);
-          setCurrentPage(responseData.pagination.page || page);
-        } else {
-          // Fallback for non-paginated response
-          const transactionsData = responseData?.data || responseData || [];
-          setTransactions(transactionsData);
-          setTotalPages(1);
-          setTotalItems(transactionsData.length);
-        }
+        const transactionsData = responseData?.data || responseData || [];
+        setTransactions(transactionsData);
       } else {
         toast.error(result.response_message || "Failed to fetch transactions");
       }
@@ -472,7 +463,7 @@ export default function OppositeTransactionsPage() {
         });
         setIsEditMode(false);
         setEditingTransactionId(null);
-        fetchTransactions(currentPage, itemsPerPage);
+        fetchTransactions(filterDate);
       } else {
         toast.error(result.response_message || "Failed to save transaction");
       }
@@ -527,7 +518,7 @@ export default function OppositeTransactionsPage() {
           setIsEditMode(false);
           setEditingTransactionId(null);
         }
-        fetchTransactions(currentPage, itemsPerPage);
+        fetchTransactions(filterDate);
       } else {
         toast.error(result.response_message || "Failed to delete transaction");
       }
@@ -540,6 +531,7 @@ export default function OppositeTransactionsPage() {
   };
 
   // Filter transactions (client-side filtering on paginated data)
+  // Filter transactions (client-side filtering for main view)
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
       searchQuery === "" ||
@@ -563,29 +555,34 @@ export default function OppositeTransactionsPage() {
       filterReceivedBy === "all" ||
       transaction.received_by?.toString() === filterReceivedBy;
 
-    const matchesDate =
-      filterDate === "" ||
-      (transaction.transaction_date &&
-        new Date(transaction.transaction_date).toISOString().split("T")[0] ===
-          filterDate);
-
-    return matchesSearch && matchesPaidBy && matchesReceivedBy && matchesDate;
+    return matchesSearch && matchesPaidBy && matchesReceivedBy;
   });
 
-  // Reset to page 1 when filters change and refetch
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchTransactions(1, itemsPerPage);
-    }
-  }, [searchQuery, filterPaidBy, filterReceivedBy, filterDate]);
+  // Filter for modal (universal search)
+  const modalFilteredTransactions = transactions.filter((transaction) => {
+    if (!modalSearchQuery) return true;
 
-  // Fetch transactions when page or itemsPerPage changes
+    const query = modalSearchQuery.toLowerCase();
+    const paidByName = accounts.find((a) => a.acc_id === transaction.paid_by)?.account_nam?.toLowerCase() || "";
+    const receivedByName = accounts.find((a) => a.acc_id === transaction.received_by)?.account_nam?.toLowerCase() || "";
+    const bankName = transaction.bank_account ? accounts.find((a) => a.acc_id === transaction.bank_account)?.account_nam?.toLowerCase() || "" : "";
+
+    return (
+      paidByName.includes(query) ||
+      receivedByName.includes(query) ||
+      bankName.includes(query) ||
+      transaction.amount?.toString().includes(query) ||
+      (transaction.description && transaction.description.toLowerCase().includes(query))
+    );
+  });
+
+  const totalAmount = filteredTransactions.reduce((sum, transaction) => sum + (parseFloat(transaction.amount) || 0), 0);
+  const modalTotalAmount = modalFilteredTransactions.reduce((sum, transaction) => sum + (parseFloat(transaction.amount) || 0), 0);
+
+  // Refetch when filterDate changes
   useEffect(() => {
-    fetchTransactions(currentPage, itemsPerPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage]);
+    fetchTransactions(filterDate);
+  }, [filterDate]);
 
   return (
     <div className="p-6 space-y-6">
@@ -601,13 +598,26 @@ export default function OppositeTransactionsPage() {
               {/* Date */}
               <div className="space-y-2">
                 <Label htmlFor="transaction_date">Date *</Label>
-                <Input
-                  id="transaction_date"
-                  type="date"
-                  {...register("transaction_date", {
-                    required: "Date is required",
-                  })}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="transaction_date"
+                    type="date"
+                    {...register("transaction_date", {
+                      required: "Date is required",
+                    })}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setModalSearchQuery("");
+                      setIsGetDataModalOpen(true);
+                    }}
+                    className="whitespace-nowrap"
+                    variant="default"
+                  >
+                    Get Data
+                  </Button>
+                </div>
                 {errors.transaction_date && (
                   <p className="text-sm text-destructive">
                     {errors.transaction_date.message}
@@ -617,8 +627,8 @@ export default function OppositeTransactionsPage() {
 
               {/* Paid By */}
               <div className="space-y-2">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="paid_by">Paid By *</Label>
+                <Label htmlFor="paid_by">Paid By *</Label>
+                <div className="flex gap-2">
                   <Controller
                     name="paid_by"
                     control={control}
@@ -644,15 +654,15 @@ export default function OppositeTransactionsPage() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !defaultAccounts.find(
-                          (acc) => acc.acc_id === selectedAccount.acc_id,
-                        )
+                          !defaultAccounts.find(
+                            (acc) => acc.acc_id === selectedAccount.acc_id,
+                          )
                           ? [
-                              {
-                                value: selectedAccount.acc_id.toString(),
-                                label: selectedAccount.account_nam,
-                              },
-                            ]
+                            {
+                              value: selectedAccount.acc_id.toString(),
+                              label: selectedAccount.account_nam,
+                            },
+                          ]
                           : []),
                       ];
 
@@ -673,7 +683,7 @@ export default function OppositeTransactionsPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => {
                       setAccountSearchField("paid_by");
                       setAccountSearchType(
@@ -682,7 +692,7 @@ export default function OppositeTransactionsPage() {
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
-                    className="h-8 w-8 p-0 font-bold"
+                    className="font-bold"
                     title="Search Accounts"
                   >
                     =
@@ -757,8 +767,8 @@ export default function OppositeTransactionsPage() {
 
               {/* Received By */}
               <div className="space-y-2">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="received_by">Received By *</Label>
+                <Label htmlFor="received_by">Received By *</Label>
+                <div className="flex gap-2">
                   <Controller
                     name="received_by"
                     control={control}
@@ -784,15 +794,15 @@ export default function OppositeTransactionsPage() {
                           label: acc.account_nam,
                         })),
                         ...(selectedAccount &&
-                        !defaultAccounts.find(
-                          (acc) => acc.acc_id === selectedAccount.acc_id,
-                        )
+                          !defaultAccounts.find(
+                            (acc) => acc.acc_id === selectedAccount.acc_id,
+                          )
                           ? [
-                              {
-                                value: selectedAccount.acc_id.toString(),
-                                label: selectedAccount.account_nam,
-                              },
-                            ]
+                            {
+                              value: selectedAccount.acc_id.toString(),
+                              label: selectedAccount.account_nam,
+                            },
+                          ]
                           : []),
                       ];
 
@@ -813,7 +823,7 @@ export default function OppositeTransactionsPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => {
                       setAccountSearchField("received_by");
                       setAccountSearchType(
@@ -822,7 +832,7 @@ export default function OppositeTransactionsPage() {
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
-                    className="h-8 w-8 p-0 font-bold"
+                    className="font-bold"
                     title="Search Accounts"
                   >
                     =
@@ -888,6 +898,14 @@ export default function OppositeTransactionsPage() {
             </div>
 
             <div className="flex justify-end gap-2">
+
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Transaction"
+                    : "Create Transaction"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -905,13 +923,6 @@ export default function OppositeTransactionsPage() {
                 }}
               >
                 {isEditMode ? "Cancel Edit" : "Clear Form"}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Saving..."
-                  : isEditMode
-                    ? "Update Transaction"
-                    : "Create Transaction"}
               </Button>
               {isEditMode && (
                 <Button
@@ -987,11 +998,13 @@ export default function OppositeTransactionsPage() {
 
                 <div className="space-y-2">
                   <Label>Date</Label>
-                  <Input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="date"
+                      value={filterDate}
+                      onChange={(e) => setFilterDate(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1013,8 +1026,8 @@ export default function OppositeTransactionsPage() {
                         <span className="text-sm font-medium">
                           {transaction.transaction_date
                             ? new Date(
-                                transaction.transaction_date,
-                              ).toLocaleDateString()
+                              transaction.transaction_date,
+                            ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </span>
                       </div>
@@ -1033,8 +1046,8 @@ export default function OppositeTransactionsPage() {
                         <span className="text-sm font-medium">
                           {transaction.bank_account
                             ? accounts.find(
-                                (a) => a.acc_id === transaction.bank_account,
-                              )?.account_nam || "N/A"
+                              (a) => a.acc_id === transaction.bank_account,
+                            )?.account_nam || "N/A"
                             : "N/A"}
                         </span>
                       </div>
@@ -1080,73 +1093,73 @@ export default function OppositeTransactionsPage() {
                 ))}
               </div>
             ) : (
-              <div className="relative max-h-[600px] overflow-auto">
-                <table className="w-full caption-bottom text-sm">
-                  <thead className="sticky top-0 bg-background z-20 border-b-2">
-                    <tr className="border-b">
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+              <div className="relative max-h-[600px] overflow-auto [&_[data-slot=table-container]]:overflow-visible">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-20 border-b-2">
+                    <TableRow className="border-b">
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Date
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Paid By
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Bank Account
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Received By
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Amount
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Description
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filteredTransactions.map((transaction) => (
-                      <tr
+                      <TableRow
                         key={transaction.transaction_id}
                         className="hover:bg-muted/50 border-b transition-colors"
                       >
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           {transaction.transaction_date
                             ? new Date(
-                                transaction.transaction_date,
-                              ).toLocaleDateString()
+                              transaction.transaction_date,
+                            ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           {accounts.find(
                             (a) => a.acc_id === transaction.paid_by,
                           )?.account_nam || "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           {transaction.bank_account
                             ? accounts.find(
-                                (a) => a.acc_id === transaction.bank_account,
-                              )?.account_nam || "N/A"
+                              (a) => a.acc_id === transaction.bank_account,
+                            )?.account_nam || "N/A"
                             : "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           {accounts.find(
                             (a) => a.acc_id === transaction.received_by,
                           )?.account_nam || "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap font-medium">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap font-medium">
                           {transaction.amount?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           }) || "0.00"}
-                        </td>
-                        <td className="p-2 align-middle">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle">
                           {transaction.description || "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           <div className="flex gap-2">
                             <Button
                               variant="ghost"
@@ -1156,108 +1169,142 @@ export default function OppositeTransactionsPage() {
                               <Edit2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                  <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                    <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                      <TableCell colSpan={4} className="text-right pr-4 text-foreground">Grand Total:</TableCell>
+                      <TableCell className="text-foreground">{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell colSpan={2}></TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
               </div>
             )}
 
-            {/* Pagination */}
-            {totalPages >= 1 && (
-              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm text-muted-foreground">
-                    Items per page:
-                  </Label>
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={(value) => {
-                      setItemsPerPage(Number(value));
-                      setCurrentPage(1);
-                      fetchTransactions(1, Number(value));
-                    }}
-                  >
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => {
-                          const newPage = Math.max(1, currentPage - 1);
-                          setCurrentPage(newPage);
-                          fetchTransactions(newPage, itemsPerPage);
-                        }}
-                        className={
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-                      return (
-                        <PaginationItem key={pageNum}>
-                          <PaginationLink
-                            onClick={() => {
-                              setCurrentPage(pageNum);
-                              fetchTransactions(pageNum, itemsPerPage);
-                            }}
-                            isActive={currentPage === pageNum}
-                            className="cursor-pointer"
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    })}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => {
-                          const newPage = Math.min(totalPages, currentPage + 1);
-                          setCurrentPage(newPage);
-                          fetchTransactions(newPage, itemsPerPage);
-                        }}
-                        className={
-                          currentPage === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-                <div className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
-                  {totalItems} transactions
-                </div>
-              </div>
-            )}
+
           </MobileListToggle>
         </CardContent>
       </Card>
+
+      {/* Get Data Modal */}
+      <Dialog
+        open={isGetDataModalOpen}
+        onOpenChange={setIsGetDataModalOpen}
+      >
+        <DialogContent className="max-w-[95vw] sm:max-w-6xl min-h-[100vh] overflow-hidden flex flex-col p-4">
+          <div className="flex flex-col gap-4 flex-1 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
+              <div className="space-y-2">
+                <Label>Search Everything</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search everywhere..."
+                    value={modalSearchQuery}
+                    onChange={(e) => setModalSearchQuery(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Date Filter</Label>
+                <Input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="relative flex-1 overflow-auto [&_[data-slot=table-container]]:overflow-visible min-h-0 border rounded-md">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-20 border-b-2 shadow-sm">
+                  <TableRow>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Paid By</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Bank Account</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Received By</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Amount</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Description</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modalFilteredTransactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No data found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    modalFilteredTransactions.map((transaction, index) => (
+                      <TableRow key={transaction.transaction_id || index} className="py-1">
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          {transaction.transaction_date
+                            ? new Date(transaction.transaction_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          {accounts.find(
+                            (a) => a.acc_id === transaction.paid_by,
+                          )?.account_nam || "N/A"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          {transaction.bank_account
+                            ? accounts.find(
+                              (a) => a.acc_id === transaction.bank_account,
+                            )?.account_nam || "N/A"
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          {accounts.find(
+                            (a) => a.acc_id === transaction.received_by,
+                          )?.account_nam || "N/A"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap font-medium">
+                          {transaction.amount?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3">
+                          {transaction.description || "N/A"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => {
+                              handleEdit(transaction);
+                              setIsGetDataModalOpen(false);
+                              document
+                                .getElementById("opposite-transaction-form")
+                                ?.scrollIntoView({ behavior: "smooth" });
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+                <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                  <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                    <TableCell colSpan={4} className="text-right pr-4 text-foreground py-2">Grand Total:</TableCell>
+                    <TableCell className="text-foreground py-2">{modalTotalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell colSpan={2} className="py-2"></TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Account Search Dialog */}
       <Dialog
@@ -1286,12 +1333,11 @@ export default function OppositeTransactionsPage() {
                       )
                       .map((subhead) => ({
                         value: subhead.sub_id.toString(),
-                        label: `${subhead.subhead_nam}${
-                          subhead.head?.head_nam &&
+                        label: `${subhead.subhead_nam}${subhead.head?.head_nam &&
                           subhead.head.head_nam !== "Main Head"
-                            ? ` (${subhead.head.head_nam})`
-                            : ""
-                        }`,
+                          ? ` (${subhead.head.head_nam})`
+                          : ""
+                          }`,
                       })),
                   ]}
                   value={accountSearchType}

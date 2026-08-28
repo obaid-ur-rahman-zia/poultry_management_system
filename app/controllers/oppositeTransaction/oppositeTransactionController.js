@@ -15,12 +15,13 @@ class OppositeTransactionController {
       const getAll = searchParams.get("all") === "true";
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "20");
+      const date = searchParams.get("date");
       const skip = (page - 1) * limit;
 
       // If getAll is true, fetch all opposite transactions without pagination
       let data, total;
       if (getAll) {
-        data = await OppositeTransactionRepository.readAll();
+        data = await OppositeTransactionRepository.readAll(date);
         total = data.length;
       } else {
         // Get total count and paginated opposite transactions
@@ -28,6 +29,7 @@ class OppositeTransactionController {
           await OppositeTransactionRepository.readAllWithPagination(
             skip,
             limit,
+            date
           );
         data = result.data;
         total = result.total;

@@ -223,8 +223,8 @@ export default function AccountLedgerModal() {
     }
 
     const headers = [
-      "Sr No",
       "Date",
+      "Fs Rate",
       "Transaction No",
       "Description",
       "Debit",
@@ -236,13 +236,13 @@ export default function AccountLedgerModal() {
 
     // 🔹 Opening Balance row
     rows.push([
-      "",
       new Date(startDate).toLocaleDateString(),
+      "",
       "",
       "Opening Balance",
       "",
       "",
-      openingBalance.toFixed(2),
+      `${Math.abs(openingBalance).toFixed(2)} ${openingBalance >= 0 ? "Dr" : "Cr"}`,
     ]);
 
     // 🔹 Transaction rows
@@ -250,13 +250,13 @@ export default function AccountLedgerModal() {
       const runningBalance = calculateRunningBalance(index);
 
       rows.push([
-        index + 1,
         new Date(trans.transaction_dat).toLocaleDateString(),
+        trans.fs_rate || "-",
         trans.t_id,
         trans.remarks || "-",
-        trans.debit ? trans.debit.toFixed(2) : "",
-        trans.credit ? trans.credit.toFixed(2) : "",
-        runningBalance.toFixed(2),
+        trans.debit ? `${trans.debit.toFixed(2)} Dr` : "",
+        trans.credit ? `${trans.credit.toFixed(2)} Cr` : "",
+        `${Math.abs(runningBalance).toFixed(2)} ${runningBalance >= 0 ? "Dr" : "Cr"}`,
       ]);
     });
 
@@ -297,8 +297,8 @@ export default function AccountLedgerModal() {
                         value={
                           selectedAccount
                             ? accountOptions.find(
-                                (a) => a.value === selectedAccount,
-                              )
+                              (a) => a.value === selectedAccount,
+                            )
                             : null
                         }
                         onChange={(opt) => {
@@ -404,26 +404,23 @@ export default function AccountLedgerModal() {
             <div className="flex-1 overflow-auto px-4 py-1">
               {/* Report Header */}
               <div className="text-center mb-4">
-                <h1 className="text-xl font-bold text-gray-900 ">
-                  Account Ledger
+                <h1 className="text-3xl font-bold text-gray-900 ">
+                  BHAGTANWALA POULTRY NETWORK
                 </h1>
-                <p className="text-gray-600 text-sm ">
-                  From:{" "}
-                  <span className="font-semibold">
-                    {new Date(startDate).toLocaleDateString()}
-                  </span>{" "}
-                  To:{" "}
-                  <span className="font-semibold">
-                    {new Date(endDate).toLocaleDateString()}
-                  </span>
-                </p>
+                <h1 className="text-xl font-bold text-gray-900 ">
+                  TANVEER AHMAD
+                </h1>
+                <h1 className="text-xl font-bold text-gray-900 ">
+                  03218600026/03218600526
+                </h1>
+
 
                 {/* Account Details */}
                 <div className="bg-gray-50 rounded-lg p-3 inline-block">
                   <div className="text-left">
-                    <div className="mb-1">
+                    <div className="mb-1 text-xl font-bold">
                       <span className="font-semibold text-gray-700">
-                        Account Name:{" "}
+                        Name:{" "}
                       </span>
                       {selectedAccountData.is_customer === 1 ? (
                         <span className="text-gray-900">
@@ -435,18 +432,16 @@ export default function AccountLedgerModal() {
                         </span>
                       )}
                     </div>
-                    <div>
-                      <span className="font-semibold text-gray-700">
-                        Acc Code:{" "}
+                    <p className="text-gray-600 text-sm ">
+                      From:{" "}
+                      <span className="font-semibold">
+                        {new Date(startDate).toLocaleDateString()}
+                      </span>{" "}
+                      To:{" "}
+                      <span className="font-semibold">
+                        {new Date(endDate).toLocaleDateString()}
                       </span>
-                      <span className="text-gray-900 font-mono">
-                        {formatAccountCode(
-                          selectedAccountData.head_id,
-                          selectedAccountData.subhead.subhead_id,
-                          selectedAccountData.account_id,
-                        )}
-                      </span>
-                    </div>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -457,13 +452,10 @@ export default function AccountLedgerModal() {
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
                       <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Sr. No
-                      </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Date
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        T.No
+                        Fs Rate
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Description
@@ -482,7 +474,6 @@ export default function AccountLedgerModal() {
                   <tbody>
                     {/* Opening Balance Row */}
                     <tr className="bg-blue-50 border-b border-gray-300 font-semibold">
-                      <td className="px-3 py-2 border border-gray-300"></td>
                       <td
                         className="px-3 py-2 border border-gray-300"
                         colSpan="3"
@@ -499,7 +490,7 @@ export default function AccountLedgerModal() {
                               : "text-green-600"
                           }
                         >
-                          {openingBalance.toFixed(2)}
+                          {Math.abs(openingBalance).toFixed(2)} {openingBalance >= 0 ? "Dr" : "Cr"}
                         </span>
                       </td>
                     </tr>
@@ -516,25 +507,22 @@ export default function AccountLedgerModal() {
                           key={trans.t_id}
                           className="border-b border-gray-200 hover:bg-gray-50"
                         >
-                          <td className="px-3 py-2 t border border-gray-300">
-                            {serialNumber}
-                          </td>
                           <td className="px-3 py-2 border border-gray-300">
                             {new Date(
                               trans.transaction_dat,
                             ).toLocaleDateString()}
                           </td>
                           <td className="px-3 py-2 border border-gray-300">
-                            {trans.t_id}
+                            {trans.fs_rate || "-"}
                           </td>
                           <td className="px-3 py-2 border border-gray-300">
                             {trans.remarks || "-"}
                           </td>
                           <td className="px-3 py-2  border border-gray-300">
-                            {trans.debit ? trans.debit.toFixed(2) : "-"}
+                            {trans.debit ? `${trans.debit.toFixed(2)} Dr` : "-"}
                           </td>
                           <td className="px-3 py-2  border border-gray-300">
-                            {trans.credit ? trans.credit.toFixed(2) : "-"}
+                            {trans.credit ? `${trans.credit.toFixed(2)} Cr` : "-"}
                           </td>
                           <td className="px-3 py-2  font-medium border border-gray-300">
                             <span
@@ -544,7 +532,7 @@ export default function AccountLedgerModal() {
                                   : "text-green-600"
                               }
                             >
-                              {runningBalance.toFixed(2)}
+                              {Math.abs(runningBalance).toFixed(2)} {runningBalance >= 0 ? "Dr" : "Cr"}
                             </span>
                           </td>
                         </tr>
@@ -554,7 +542,6 @@ export default function AccountLedgerModal() {
                     {/* Closing Balance Row */}
                     {transactions.length > 0 && (
                       <tr className="bg-gray-200 border-t-2 border-gray-400 font-bold">
-                        <td className="px-3 py-2 border border-gray-300"></td>
                         <td
                           className="px-3 py-2 border border-gray-300"
                           colSpan="3"
@@ -564,25 +551,23 @@ export default function AccountLedgerModal() {
                         <td className="px-3 py-2  border border-gray-300">
                           {transactions
                             .reduce((sum, t) => sum + (t.debit || 0), 0)
-                            .toFixed(2)}
+                            .toFixed(2)} Dr
                         </td>
                         <td className="px-3 py-2  border border-gray-300">
                           {transactions
                             .reduce((sum, t) => sum + (t.credit || 0), 0)
-                            .toFixed(2)}
+                            .toFixed(2)} Cr
                         </td>
                         <td className="px-3 py-2  border border-gray-300">
                           <span
                             className={
                               calculateRunningBalance(transactions.length - 1) <
-                              0
+                                0
                                 ? "text-red-600"
                                 : "text-green-600"
                             }
                           >
-                            {calculateRunningBalance(
-                              transactions.length - 1,
-                            ).toFixed(2)}
+                            {Math.abs(calculateRunningBalance(transactions.length - 1)).toFixed(2)} {calculateRunningBalance(transactions.length - 1) >= 0 ? "Dr" : "Cr"}
                           </span>
                         </td>
                       </tr>

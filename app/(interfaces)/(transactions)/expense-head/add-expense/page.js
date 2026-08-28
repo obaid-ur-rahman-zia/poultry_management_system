@@ -664,7 +664,7 @@ export default function ExpenseHeadPage() {
                           {transaction.expense_t_date
                             ? new Date(
                                 transaction.expense_t_date,
-                              ).toLocaleDateString()
+                              ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </span>
                       </div>
@@ -754,7 +754,7 @@ export default function ExpenseHeadPage() {
                           {transaction.expense_t_date
                             ? new Date(
                                 transaction.expense_t_date,
-                              ).toLocaleDateString()
+                              ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">

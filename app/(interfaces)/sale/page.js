@@ -31,6 +31,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
@@ -174,17 +175,9 @@ function WholeSaleTab() {
   const purcherAmount = watch("purcher_amount");
   const formerAmount = watch("former_amount");
 
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterSupplier, setFilterSupplier] = useState("all");
-  const [filterCustomer, setFilterCustomer] = useState("all");
+  const [isGetDataModalOpen, setIsGetDataModalOpen] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [filterDate, setFilterDate] = useState(format(new Date(), "yyyy-MM-dd"));
-
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     fetchAllAccounts();
@@ -211,7 +204,7 @@ function WholeSaleTab() {
           // Non-paginated response (all accounts)
           accountsData = responseData?.data || responseData || [];
         }
-        
+
         accountsData = Array.isArray(accountsData) ? accountsData : [];
         setAllAccounts(accountsData);
         setSupplierAccounts(accountsData.filter((account) => isRoleAccount(account, "supplier")));
@@ -503,30 +496,17 @@ function WholeSaleTab() {
   }, [formerAmount, purcherAmount, setValue]);
 
   // Fetch whole sales
-  const fetchWholeSales = async (page = currentPage, limit = itemsPerPage) => {
+  const fetchWholeSales = async (date = filterDate) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/wholeSale/readAll?page=${page}&limit=${limit}`,
+        `/api/wholeSale/readAll?all=true&date=${date}`,
       );
       const result = await response.json();
       if (result.response_status === "success") {
         const responseData = result.response_result;
-
-        // Handle paginated response
-        if (responseData?.pagination) {
-          const salesData = responseData.data || [];
-          setWholeSales(salesData);
-          setTotalPages(responseData.pagination.totalPages || 1);
-          setTotalItems(responseData.pagination.total || 0);
-          setCurrentPage(responseData.pagination.page || page);
-        } else {
-          // Fallback for non-paginated response
-          const salesData = responseData?.data || responseData || [];
-          setWholeSales(salesData);
-          setTotalPages(1);
-          setTotalItems(salesData.length);
-        }
+        const salesData = responseData?.data || responseData || [];
+        setWholeSales(salesData);
       } else {
         toast.error(result.response_message || "Failed to fetch whole sales");
       }
@@ -538,12 +518,13 @@ function WholeSaleTab() {
     }
   };
 
+  // Refetch when filterDate changes
+  useEffect(() => {
+    fetchWholeSales(filterDate);
+  }, [filterDate]);
+
   const handleGetData = () => {
-    // Scroll to transactions list
-    const listElement = document.getElementById("whole-sale-list");
-    if (listElement) {
-      listElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    setIsGetDataModalOpen(true);
   };
 
   // Check if F.S Rate is already set for today
@@ -770,38 +751,39 @@ function WholeSaleTab() {
   const customerNetBalance =
     (customerBalance || 0) + (parseFloat(purcherAmount) || 0);
 
-  // Filter whole sales (client-side filtering on paginated data)
-  const filteredWholeSales = wholeSales.filter((sale) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      sale.van_number?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSupplier =
-      filterSupplier === "all" ||
-      sale.former_account?.toString() === filterSupplier;
-    const matchesCustomer =
-      filterCustomer === "all" ||
-      sale.purcher_account?.toString() === filterCustomer;
-    const matchesDate =
-      filterDate === "" ||
-      (sale.sale_date &&
-        format(new Date(sale.sale_date), "yyyy-MM-dd") === filterDate);
-    return matchesSearch && matchesSupplier && matchesCustomer && matchesDate;
+  // Filter whole sales
+  const filteredWholeSales = wholeSales;
+
+  // Filter whole sales for modal (universal search)
+  const modalFilteredWholeSales = wholeSales.filter((sale) => {
+    if (!modalSearchQuery) return true;
+
+    const query = modalSearchQuery.toLowerCase();
+    const farmerName = allAccounts.find(a => a.acc_id === sale.former_account)?.account_nam?.toLowerCase() || "";
+    const purchaserName = allAccounts.find(a => a.acc_id === sale.purcher_account)?.account_nam?.toLowerCase() || "";
+
+    return (
+      sale.van_number?.toLowerCase().includes(query) ||
+      farmerName.includes(query) ||
+      purchaserName.includes(query) ||
+      sale.weight?.toString().includes(query) ||
+      sale.former_rate?.toString().includes(query) ||
+      sale.former_amount?.toString().includes(query) ||
+      sale.purcher_rate?.toString().includes(query) ||
+      sale.purcher_amount?.toString().includes(query) ||
+      sale.profit?.toString().includes(query)
+    );
   });
 
-  // Reset to page 1 when filters change and refetch
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchWholeSales(1, itemsPerPage);
-    }
-  }, [searchQuery, filterSupplier, filterCustomer, filterDate]);
+  const totalWeight = filteredWholeSales.reduce((sum, sale) => sum + (parseFloat(sale.weight) || 0), 0);
+  const totalPurchaseAmount = filteredWholeSales.reduce((sum, sale) => sum + (parseFloat(sale.former_amount) || 0), 0);
+  const totalSaleAmount = filteredWholeSales.reduce((sum, sale) => sum + (parseFloat(sale.purcher_amount) || 0), 0);
+  const totalProfit = filteredWholeSales.reduce((sum, sale) => sum + (parseFloat(sale.profit) || 0), 0);
 
-  // Fetch whole sales when page or itemsPerPage changes
-  useEffect(() => {
-    fetchWholeSales(currentPage, itemsPerPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage]);
+  const modalTotalWeight = modalFilteredWholeSales.reduce((sum, sale) => sum + (parseFloat(sale.weight) || 0), 0);
+  const modalTotalPurchaseAmount = modalFilteredWholeSales.reduce((sum, sale) => sum + (parseFloat(sale.former_amount) || 0), 0);
+  const modalTotalSaleAmount = modalFilteredWholeSales.reduce((sum, sale) => sum + (parseFloat(sale.purcher_amount) || 0), 0);
+  const modalTotalProfit = modalFilteredWholeSales.reduce((sum, sale) => sum + (parseFloat(sale.profit) || 0), 0);
 
   return (
     <>
@@ -1134,8 +1116,8 @@ function WholeSaleTab() {
               <Label className="whitespace-nowrap text-l">Profit</Label>
               <span
                 className={`text-l underline ${parseFloat(watch("profit") || 0) < 0
-                    ? "text-red-600 font-semibold"
-                    : ""
+                  ? "text-red-600 font-semibold"
+                  : ""
                   }`}
               >
                 {watch("profit") || "0"}
@@ -1222,62 +1204,6 @@ function WholeSaleTab() {
                 <div className="space-y-4 mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-4">
-                      <Label>Search</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search by van number..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-9"
-                        />
-                      </div>
-                    </div>
-                    {/* <div className="space-y-4">
-                      <Label>Former</Label>
-                      <Select
-                        value={filterSupplier}
-                        onValueChange={setFilterSupplier}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Formers</SelectItem>
-                          {supplierAccounts.map((acc) => (
-                            <SelectItem
-                              key={acc.acc_id}
-                              value={acc.acc_id.toString()}
-                            >
-                              {acc.account_nam}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-4">
-                      <Label>Purcher</Label>
-                      <Select
-                        value={filterCustomer}
-                        onValueChange={setFilterCustomer}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Purchers</SelectItem>
-                          {customerAccounts.map((acc) => (
-                            <SelectItem
-                              key={acc.acc_id}
-                              value={acc.acc_id.toString()}
-                            >
-                              {acc.account_nam}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div> */}
-                    <div className="space-y-4">
                       <Label>Date</Label>
                       <Input
                         type="date"
@@ -1296,7 +1222,7 @@ function WholeSaleTab() {
                     No whole sales found
                   </div>
                 ) : (
-                  <div className="relative max-h-[300px] overflow-auto">
+                  <div className="relative max-h-[300px] overflow-auto [&_[data-slot=table-container]]:overflow-visible">
                     <Table>
                       <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
@@ -1469,105 +1395,19 @@ function WholeSaleTab() {
                           </TableRow>
                         ))}
                       </TableBody>
+                      <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                        <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                          <TableCell colSpan={2} className="text-right pr-4">Grand Total:</TableCell>
+                          <TableCell>{totalWeight.toFixed(2)}</TableCell>
+                          <TableCell colSpan={2}></TableCell>
+                          <TableCell>{totalPurchaseAmount.toFixed(2)}</TableCell>
+                          <TableCell colSpan={2}></TableCell>
+                          <TableCell>{totalSaleAmount.toFixed(2)}</TableCell>
+                          <TableCell className={totalProfit < 0 ? 'text-red-600' : ''}>{totalProfit.toFixed(2)}</TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableFooter>
                     </Table>
-                  </div>
-                )}
-
-                {/* Pagination */}
-                {totalPages >= 1 && (
-                  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-l text-muted-foreground">
-                        Items per page:
-                      </Label>
-                      <Select
-                        value={itemsPerPage.toString()}
-                        onValueChange={(value) => {
-                          setItemsPerPage(Number(value));
-                          setCurrentPage(1);
-                          fetchWholeSales(1, Number(value));
-                        }}
-                      >
-                        <SelectTrigger className="w-20">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="5">5</SelectItem>
-                          <SelectItem value="10">10</SelectItem>
-                          <SelectItem value="20">20</SelectItem>
-                          <SelectItem value="50">50</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            onClick={() => {
-                              const newPage = Math.max(1, currentPage - 1);
-                              setCurrentPage(newPage);
-                              fetchWholeSales(newPage, itemsPerPage);
-                            }}
-                            className={
-                              currentPage === 1
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
-                          />
-                        </PaginationItem>
-                        {Array.from(
-                          { length: Math.min(5, totalPages) },
-                          (_, i) => {
-                            let pageNum;
-                            if (totalPages <= 5) {
-                              pageNum = i + 1;
-                            } else if (currentPage <= 3) {
-                              pageNum = i + 1;
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + i;
-                            } else {
-                              pageNum = currentPage - 2 + i;
-                            }
-                            return (
-                              <PaginationItem key={pageNum}>
-                                <PaginationLink
-                                  onClick={() => {
-                                    setCurrentPage(pageNum);
-                                    fetchWholeSales(pageNum, itemsPerPage);
-                                  }}
-                                  isActive={currentPage === pageNum}
-                                  className="cursor-pointer"
-                                >
-                                  {pageNum}
-                                </PaginationLink>
-                              </PaginationItem>
-                            );
-                          },
-                        )}
-                        <PaginationItem>
-                          <PaginationNext
-                            onClick={() => {
-                              const newPage = Math.min(
-                                totalPages,
-                                currentPage + 1,
-                              );
-                              setCurrentPage(newPage);
-                              fetchWholeSales(newPage, itemsPerPage);
-                            }}
-                            className={
-                              currentPage === totalPages
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                    <div className="text-l text-muted-foreground">
-                      Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                      {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
-                      {totalItems} sales
-                    </div>
                   </div>
                 )}
               </>
@@ -1604,9 +1444,9 @@ function WholeSaleTab() {
                       .map((subhead) => ({
                         value: subhead.sub_id.toString(),
                         label: `${subhead.subhead_nam}${subhead.head?.head_nam &&
-                            subhead.head.head_nam !== "Main Head"
-                            ? ` (${subhead.head.head_nam})`
-                            : ""
+                          subhead.head.head_nam !== "Main Head"
+                          ? ` (${subhead.head.head_nam})`
+                          : ""
                           }`,
                       })),
                   ]}
@@ -1780,9 +1620,9 @@ function WholeSaleTab() {
                       >
                         <td className="p-2 align-middle whitespace-nowrap">
                           {rate.date
-                            ? new Date(rate.date).toLocaleDateString()
+                            ? new Date(rate.date).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : rate.sale_date
-                              ? new Date(rate.sale_date).toLocaleDateString()
+                              ? new Date(rate.sale_date).toLocaleDateString("en-GB").replace(/\//g, "-")
                               : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
@@ -1851,6 +1691,178 @@ function WholeSaleTab() {
             >
               {isDeleting ? "Deleting..." : "Yes, Delete"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Get Data Modal */}
+      <Dialog open={isGetDataModalOpen} onOpenChange={setIsGetDataModalOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-6xl min-h-[100vh] overflow-hidden flex flex-col p-4">
+          <div className="flex flex-col gap-4 flex-1 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
+              <div className="space-y-2">
+                <Label>Search Everything</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by van, farmer, purchaser, amounts, rates..."
+                    value={modalSearchQuery}
+                    onChange={(e) => setModalSearchQuery(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Date Filter</Label>
+                <Input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto border rounded-md [&_[data-slot=table-container]]:overflow-visible">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead className="px-3 py-2">Sir</TableHead>
+                    <TableHead className="px-3 py-2">Van</TableHead>
+                    <TableHead className="px-3 py-2">Weight</TableHead>
+                    <TableHead className="px-3 py-2">Farmer</TableHead>
+                    <TableHead className="px-3 py-2">Rate</TableHead>
+                    <TableHead className="px-3 py-2">Amount</TableHead>
+                    <TableHead className="px-3 py-2">Purchaser</TableHead>
+                    <TableHead className="px-3 py-2">Rate</TableHead>
+                    <TableHead className="px-3 py-2">Amount</TableHead>
+                    <TableHead className="px-3 py-2">Profit</TableHead>
+                    <TableHead className="px-3 py-2">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modalFilteredWholeSales.map((sale, index) => (
+                    <TableRow key={sale.sale_id || index}>
+                      <TableCell className="py-1">{index + 1}</TableCell>
+                      <TableCell className="py-1">{sale.van_number || "N/A"}</TableCell>
+                      <TableCell className="py-1">{sale.weight || "N/A"}</TableCell>
+                      <TableCell className="py-1">
+                        {allAccounts.find(
+                          (a) => a.acc_id === sale.former_account,
+                        )?.account_nam || "N/A"}
+                      </TableCell>
+                      <TableCell className="py-1">{sale.former_rate || "N/A"}</TableCell>
+                      <TableCell className="py-1">{sale.former_amount || "N/A"}</TableCell>
+                      <TableCell className="py-1">
+                        {allAccounts.find(
+                          (a) => a.acc_id === sale.purcher_account,
+                        )?.account_nam || "N/A"}
+                      </TableCell>
+                      <TableCell className="py-1">{sale.purcher_rate || "N/A"}</TableCell>
+                      <TableCell className="py-1">
+                        {sale.purcher_amount || "N/A"}
+                      </TableCell>
+                      <TableCell
+                        className={`py-1 ${parseFloat(sale.profit || 0) < 0
+                          ? "text-red-600 font-semibold"
+                          : ""
+                          }`}
+                      >
+                        {sale.profit || "N/A"}
+                      </TableCell>
+                      <TableCell className="py-1">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => {
+                              setIsEditMode(true);
+                              setEditingSaleId(sale.sale_id);
+                              setValue(
+                                "sale_date",
+                                sale.sale_date
+                                  ? format(new Date(sale.sale_date), "yyyy-MM-dd")
+                                  : format(new Date(), "yyyy-MM-dd"),
+                              );
+                              setSaleDate(
+                                sale.sale_date
+                                  ? new Date(sale.sale_date)
+                                  : new Date(),
+                              );
+                              setValue(
+                                "farm_rate",
+                                sale.farm_rate?.toString() || "",
+                              );
+                              setValue(
+                                "sale_rate",
+                                sale.sale_rate?.toString() || "",
+                              );
+                              setValue(
+                                "former_account",
+                                sale.former_account?.toString() || "",
+                              );
+                              setValue(
+                                "van_number",
+                                sale.van_number || "",
+                              );
+                              setValue(
+                                "weight",
+                                sale.weight?.toString() || "",
+                              );
+                              setValue(
+                                "former_rate",
+                                sale.former_rate?.toString() || "",
+                              );
+                              setValue(
+                                "former_amount",
+                                sale.former_amount?.toString() || "",
+                              );
+                              setValue(
+                                "purcher_account",
+                                sale.purcher_account?.toString() || "",
+                              );
+                              setValue(
+                                "purcher_rate",
+                                sale.purcher_rate?.toString() || "",
+                              );
+                              setValue(
+                                "purcher_amount",
+                                sale.purcher_amount?.toString() || "",
+                              );
+                              setValue(
+                                "profit",
+                                sale.profit?.toString() || "",
+                              );
+                              setIsGetDataModalOpen(false);
+                              document
+                                .getElementById("whole-sale-form")
+                                ?.scrollIntoView({ behavior: "smooth" });
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                  <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                    <TableCell colSpan={2} className="text-right pr-4 py-1">Grand Total:</TableCell>
+                    <TableCell className="py-1">{modalTotalWeight.toFixed(2)}</TableCell>
+                    <TableCell colSpan={2} className="py-1"></TableCell>
+                    <TableCell className="py-1">{modalTotalPurchaseAmount.toFixed(2)}</TableCell>
+                    <TableCell colSpan={2} className="py-1"></TableCell>
+                    <TableCell className="py-1">{modalTotalSaleAmount.toFixed(2)}</TableCell>
+                    <TableCell className={`py-1 ${modalTotalProfit < 0 ? 'text-red-600' : ''}`}>{modalTotalProfit.toFixed(2)}</TableCell>
+                    <TableCell className="py-1"></TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </div>
+          </div>
+          <DialogFooter className="shrink-0 mt-4">
+            <Button variant="outline" onClick={() => setIsGetDataModalOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -944,7 +944,7 @@ export default function UnitSalePage() {
                     <Combobox
                       options={availableFlocs.map((floc) => ({
                         value: floc.floc_id.toString(),
-                        label: `Floc #${floc.floc_id} - ${new Date(floc.starting_date).toLocaleDateString()}`,
+                        label: `Floc #${floc.floc_id} - ${new Date(floc.starting_date).toLocaleDateString("en-GB").replace(/\//g, "-")}`,
                       }))}
                       value={field.value}
                       onValueChange={field.onChange}
@@ -1488,7 +1488,7 @@ export default function UnitSalePage() {
                         <span className="text-xs text-gray-500">Date</span>
                         <span className="text-sm font-medium">
                           {sale.sale_date
-                            ? new Date(sale.sale_date).toLocaleDateString()
+                            ? new Date(sale.sale_date).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </span>
                       </div>
@@ -1635,7 +1635,7 @@ export default function UnitSalePage() {
                         >
                           <td className="p-2 align-middle whitespace-nowrap">
                             {sale.sale_date
-                              ? new Date(sale.sale_date).toLocaleDateString()
+                              ? new Date(sale.sale_date).toLocaleDateString("en-GB").replace(/\//g, "-")
                               : "N/A"}
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap">
@@ -1846,7 +1846,7 @@ export default function UnitSalePage() {
                       >
                         <td className="p-2 align-middle whitespace-nowrap">
                           {rate.date
-                            ? new Date(rate.date).toLocaleDateString()
+                            ? new Date(rate.date).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">

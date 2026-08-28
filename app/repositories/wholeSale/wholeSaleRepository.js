@@ -1,20 +1,46 @@
 import prisma from "@/lib/prisma";
 
 class WholeSaleRepository {
-  async readAll() {
+  async readAll(dateStr) {
+    let whereClause = { status: 1 };
+    
+    if (dateStr) {
+      const date = new Date(dateStr);
+      date.setHours(0, 0, 0, 0);
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      whereClause.sale_date = {
+        gte: date,
+        lt: nextDay,
+      };
+    }
+
     return prisma.whole_sale.findMany({
       orderBy: { sale_id: "desc" },
       include: {
         former_account_ref: true,
         purcher_account_ref: true,
       },
-      where: {
-        status: 1,
-      },
+      where: whereClause,
     });
   }
 
-  async readAllWithPagination(skip = 0, take = 10) {
+  async readAllWithPagination(skip = 0, take = 10, dateStr) {
+    let whereClause = { status: 1 };
+    
+    if (dateStr) {
+      const date = new Date(dateStr);
+      date.setHours(0, 0, 0, 0);
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      whereClause.sale_date = {
+        gte: date,
+        lt: nextDay,
+      };
+    }
+
     const [data, total] = await Promise.all([
       prisma.whole_sale.findMany({
         skip,
@@ -24,14 +50,10 @@ class WholeSaleRepository {
           former_account_ref: true,
           purcher_account_ref: true,
         },
-        where: {
-          status: 1,
-        },
+        where: whereClause,
       }),
       prisma.whole_sale.count({
-        where: {
-          status: 1,
-        },
+        where: whereClause,
       }),
     ]);
     return { data, total };

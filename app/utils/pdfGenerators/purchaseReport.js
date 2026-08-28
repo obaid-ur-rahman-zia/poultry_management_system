@@ -129,7 +129,7 @@ function generatePurchaseReportHTML(purchaseData, startDate, endDate) {
             item.batch || "-"
           }</td>
           <td style="border: 1px solid #e5e7eb; padding: 6px; font-size: 9px;">${
-            item.expiry ? new Date(item.expiry).toLocaleDateString() : "-"
+            item.expiry ? new Date(item.expiry).toLocaleDateString("en-GB").replace(/\//g, "-") : "-"
           }</td>
         </tr>
       `;
@@ -150,10 +150,10 @@ function generatePurchaseReportHTML(purchaseData, startDate, endDate) {
             <div>
               <strong>Purchase Date:</strong> ${new Date(
                 purchase.purchase_dat
-              ).toLocaleDateString()}
+              ).toLocaleDateString("en-GB").replace(/\//g, "-")}
               <span style="margin-left: 20px;"><strong>Ref. Invoice Date:</strong> ${new Date(
                 purchase.invoice_dat
-              ).toLocaleDateString()}</span>
+              ).toLocaleDateString("en-GB").replace(/\//g, "-")}</span>
             </div>
           </div>
           <div style="font-size: 10px;">
@@ -242,9 +242,9 @@ function generatePurchaseReportHTML(purchaseData, startDate, endDate) {
         <h1>Purchase Detail Report</h1>
         <p>From: <strong>${new Date(
           startDate
-        ).toLocaleDateString()}</strong> To: <strong>${new Date(
+        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong> To: <strong>${new Date(
     endDate
-  ).toLocaleDateString()}</strong></p>
+  ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong></p>
       </div>
       
       ${purchaseTables}

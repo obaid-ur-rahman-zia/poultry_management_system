@@ -786,7 +786,7 @@ export default function UnitExpensePage() {
                     <Combobox
                       options={availableFlocs.map((floc) => ({
                         value: floc.floc_id.toString(),
-                        label: `Floc #${floc.floc_id} - ${new Date(floc.starting_date).toLocaleDateString()}`,
+                        label: `Floc #${floc.floc_id} - ${new Date(floc.starting_date).toLocaleDateString("en-GB").replace(/\//g, "-")}`,
                       }))}
                       value={field.value}
                       onValueChange={field.onChange}
@@ -1242,7 +1242,7 @@ export default function UnitExpensePage() {
                           {expense.expense_date
                             ? new Date(
                                 expense.expense_date,
-                              ).toLocaleDateString()
+                              ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </span>
                       </div>
@@ -1370,7 +1370,7 @@ export default function UnitExpensePage() {
                             {expense.expense_date
                               ? new Date(
                                   expense.expense_date,
-                                ).toLocaleDateString()
+                                ).toLocaleDateString("en-GB").replace(/\//g, "-")
                               : "N/A"}
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap">

@@ -93,7 +93,7 @@ export default function ProfitLossModal() {
     value: f.floc_id.toString(),
     label: `Floc #${f.floc_id} - ${new Date(
       f.starting_date,
-    ).toLocaleDateString()}`,
+    ).toLocaleDateString("en-GB").replace(/\//g, "-")}`,
   }));
 
   const fetchFlocsByUnit = async (prounitId) => {
@@ -117,7 +117,7 @@ export default function ProfitLossModal() {
   const formatPeriod = (period, groupType) => {
     if (groupType === "date") {
       const date = new Date(period);
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString("en-GB", {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -125,7 +125,7 @@ export default function ProfitLossModal() {
     } else if (groupType === "month") {
       const [year, month] = period.split("-");
       const date = new Date(year, parseInt(month) - 1);
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString("en-GB", {
         month: "long",
         year: "numeric",
       });
@@ -456,11 +456,11 @@ export default function ProfitLossModal() {
                 <p className="text-gray-600 text-sm">
                   From:{" "}
                   <span className="font-semibold">
-                    {new Date(startDate).toLocaleDateString()}
+                    {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                   </span>{" "}
                   To:{" "}
                   <span className="font-semibold">
-                    {new Date(endDate).toLocaleDateString()}
+                    {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                   </span>
                   {" | "}
                   <span className="font-semibold">

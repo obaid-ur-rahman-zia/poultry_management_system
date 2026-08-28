@@ -1,7 +1,23 @@
 import prisma from "@/lib/prisma";
 
 class SelfTransactionRepository {
-  async readAll() {
+  async readAll(date = null) {
+    let dateFilter = {};
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setUTCHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(date);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+
+      dateFilter = {
+        transaction_date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      };
+    }
+
     return prisma.self_transaction.findMany({
       orderBy: { transaction_id: "desc" },
       include: {
@@ -9,11 +25,28 @@ class SelfTransactionRepository {
       },
       where: {
         status: 1,
+        ...dateFilter,
       },
     });
   }
 
-  async readAllWithPagination(skip = 0, take = 10) {
+  async readAllWithPagination(skip = 0, take = 10, date = null) {
+    let dateFilter = {};
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setUTCHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(date);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+
+      dateFilter = {
+        transaction_date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      };
+    }
+
     const [data, total] = await Promise.all([
       prisma.self_transaction.findMany({
         skip,
@@ -24,11 +57,13 @@ class SelfTransactionRepository {
         },
         where: {
           status: 1,
+          ...dateFilter,
         },
       }),
       prisma.self_transaction.count({
         where: {
           status: 1,
+          ...dateFilter,
         },
       }),
     ]);

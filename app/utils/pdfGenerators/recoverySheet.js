@@ -155,7 +155,7 @@ function generateRecoveryHTML(
           ${remaining.toFixed(2)}
         </td>
         <td style="padding: 6px; text-align: center; font-size: 8px;">
-          ${lastDate ? new Date(lastDate).toLocaleDateString() : "N/A"}
+          ${lastDate ? new Date(lastDate).toLocaleDateString("en-GB").replace(/\//g, "-") : "N/A"}
         </td>
         <td style="padding: 6px; text-align: center; font-size: 9px;">${
           sale.customer?.account_contact || "N/A"
@@ -229,7 +229,7 @@ function generateRecoveryHTML(
       <div class="header">
         <h1>Recovery Sheet</h1>
         <p class="header-info">
-          <span>Date:</span> ${new Date(selectedDate).toLocaleDateString()}
+          <span>Date:</span> ${new Date(selectedDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
         </p>
         <p class="header-info">
           <span>Salesman:</span> ${salesmanName}

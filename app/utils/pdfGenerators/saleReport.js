@@ -144,7 +144,7 @@ function generateReportHTML(salesData, startDate, endDate) {
           </div>
         </td>
         <td colspan="6" style="padding: 8px; text-align: center; font-weight: 500; border: 1px solid #9ca3af; font-size: 10px;">
-          ${new Date(sale.sale_dat).toLocaleDateString()}
+          ${new Date(sale.sale_dat).toLocaleDateString("en-GB").replace(/\//g, "-")}
         </td>
       </tr>
       ${productRows}
@@ -213,9 +213,9 @@ function generateReportHTML(salesData, startDate, endDate) {
         <h1>Sale Detail Report</h1>
         <p>From: <strong>${new Date(
           startDate
-        ).toLocaleDateString()}</strong> To: <strong>${new Date(
+        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong> To: <strong>${new Date(
     endDate
-  ).toLocaleDateString()}</strong></p>
+  ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong></p>
       </div>
       
       <table>

@@ -17,6 +17,7 @@ class SelfTransactionController {
       const searchParams =
         req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
+      const date = searchParams.get("date");
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "20");
       const skip = (page - 1) * limit;
@@ -24,13 +25,14 @@ class SelfTransactionController {
       // If getAll is true, fetch all self transactions without pagination
       let data, total;
       if (getAll) {
-        data = await SelfTransactionRepository.readAll();
+        data = await SelfTransactionRepository.readAll(date);
         total = data.length;
       } else {
         // Get total count and paginated self transactions
         const result = await SelfTransactionRepository.readAllWithPagination(
           skip,
           limit,
+          date
         );
         data = result.data;
         total = result.total;

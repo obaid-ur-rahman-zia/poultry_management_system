@@ -267,9 +267,9 @@ function generateSummaryHTML(salesData, startDate, endDate, includeProfitQty) {
         <h1>Summary of Sales</h1>
         <p>From: <strong>${new Date(
           startDate
-        ).toLocaleDateString()}</strong> To: <strong>${new Date(
+        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong> To: <strong>${new Date(
     endDate
-  ).toLocaleDateString()}</strong></p>
+  ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong></p>
       </div>
       
       <table>

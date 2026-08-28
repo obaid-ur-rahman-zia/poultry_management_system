@@ -1,7 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Printer, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { FileText } from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 
@@ -9,12 +8,11 @@ export default function BalanceSheetReport() {
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
-  const [transactions, setTransactions] = useState([]);
-  const [openingBalance, setOpeningBalance] = useState(0);
-  const [closingBalance, setClosingBalance] = useState(0);
+  const [rawTransactions, setRawTransactions] = useState([]);
+  const [globalOpeningBalance, setGlobalOpeningBalance] = useState(0);
+  const [globalClosingBalance, setGlobalClosingBalance] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const transactionsPerPage = 15;
 
   const fetchBalanceSheet = async () => {
     if (!startDate || !endDate) {
@@ -30,9 +28,9 @@ export default function BalanceSheetReport() {
       const data = await response.json();
 
       if (data.response_result) {
-        setOpeningBalance(data.response_result.openingBalance || 0);
-        setClosingBalance(data.response_result.closingBalance || 0);
-        setTransactions(data.response_result.transactions || []);
+        setGlobalOpeningBalance(data.response_result.openingBalance || 0);
+        setGlobalClosingBalance(data.response_result.closingBalance || 0);
+        setRawTransactions(data.response_result.transactions || []);
         setIsOpen(true);
         setCurrentPage(1);
       }
@@ -44,125 +42,202 @@ export default function BalanceSheetReport() {
     }
   };
 
-  // Pagination logic
-  const indexOfLastTransaction = currentPage * transactionsPerPage;
-  const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
-  const currentTransactions = transactions.slice(
-    indexOfFirstTransaction,
-    indexOfLastTransaction,
-  );
-  const totalPages = Math.ceil(transactions.length / transactionsPerPage);
+  // Process and group transactions
+  const processedDays = useMemo(() => {
+    if (!rawTransactions.length) return [];
 
-  // Calculate running balance
-  const calculateRunningBalance = (index) => {
-    let balance = openingBalance;
-    for (let i = 0; i <= index; i++) {
-      const trans = transactions[i];
-      if (trans.type === "opposite") {
-        // For opposite transactions, we need to check if cash in hand (acc_id=1) is receiving or paying
-        // If cash in hand is receiving, add to balance
-        // If cash in hand is paying, subtract from balance
-        if (trans.received_by === 1) {
-          balance += trans.amount;
-        } else if (trans.paid_by === 1) {
-          balance -= trans.amount;
+    const grouped = {};
+    rawTransactions.forEach((trans) => {
+      const dateVal = trans.type === 'local_sale' ? trans.local_sale_date : trans.transaction_date;
+      const dateStr = new Date(dateVal).toISOString().split("T")[0];
+      if (!grouped[dateStr]) grouped[dateStr] = [];
+      grouped[dateStr].push(trans);
+    });
+
+    const days = [];
+    let currentBalance = globalOpeningBalance;
+    let globalSrNo = 1;
+
+    Object.keys(grouped)
+      .sort()
+      .forEach((dateStr) => {
+        const dayTransactions = grouped[dateStr];
+        const dayOpeningBalance = currentBalance;
+
+        let selfTransactions = [];
+        let localSales = [];
+        let oppositeTransactions = [];
+
+        dayTransactions.forEach((trans) => {
+          if (trans.type === "self") selfTransactions.push(trans);
+          else if (trans.type === "local_sale") localSales.push(trans);
+          else if (trans.type === "opposite") oppositeTransactions.push(trans);
+        });
+
+        const dayProcessedTransactions = [];
+        let dayTotalReceived = 0;
+        let dayTotalPaid = 0;
+
+        // 1. Self Transactions (Affect Balance)
+        selfTransactions.forEach((trans) => {
+          if (trans.transaction_type === "receive") {
+            currentBalance += trans.amount;
+            dayTotalReceived += trans.amount;
+          } else if (trans.transaction_type === "pay") {
+            currentBalance -= trans.amount;
+            dayTotalPaid += trans.amount;
+          }
+          dayProcessedTransactions.push({
+            ...trans,
+            srNo: globalSrNo++,
+            runningBalance: currentBalance,
+          });
+        });
+
+        // 2. Local Sales (Consolidated, Affect Balance)
+        if (localSales.length > 0) {
+          const totalLocalSaleAmount = localSales.reduce(
+            (sum, ls) => sum + ls.received_amount,
+            0
+          );
+          currentBalance += totalLocalSaleAmount;
+          dayTotalReceived += totalLocalSaleAmount;
+
+          dayProcessedTransactions.push({
+            type: "local_sale_consolidated",
+            transaction_date: dateStr,
+            received_amount: totalLocalSaleAmount,
+            runningBalance: currentBalance,
+            description: `Local Sale`,
+            srNo: globalSrNo++,
+          });
         }
-      } else if (trans.type === "self") {
-        // For self transactions
-        if (trans.transaction_type === "receive") {
-          balance += trans.amount;
-        } else if (trans.transaction_type === "pay") {
-          balance -= trans.amount;
-        }
-      } else if (trans.type === "local_sale") {
-        balance += trans.received_amount;
+
+        // 3. Opposite Transactions (Do NOT Affect Balance)
+        oppositeTransactions.forEach((trans) => {
+          dayTotalReceived += trans.amount;
+          dayTotalPaid += trans.amount;
+
+          dayProcessedTransactions.push({
+            ...trans,
+            srNo: globalSrNo++,
+            runningBalance: currentBalance, // Stays unchanged
+          });
+        });
+
+        days.push({
+          date: dateStr,
+          displayDate: new Date(dateStr)
+            .toLocaleDateString("en-GB")
+            .replace(/\//g, "-"),
+          openingBalance: dayOpeningBalance,
+          closingBalance: currentBalance,
+          transactions: dayProcessedTransactions,
+          totalReceived: dayTotalReceived,
+          totalPaid: dayTotalPaid,
+        });
+      });
+
+    return days;
+  }, [rawTransactions, globalOpeningBalance]);
+
+  // Pagination Logic (Chunking days into pages of approx 60 rows to simulate 200vh height)
+  const paginatedPages = useMemo(() => {
+    const pages = [];
+    let currentPageDays = [];
+    let currentRowCount = 0;
+    const targetRowsPerPage = 60;
+
+    processedDays.forEach(day => {
+      currentPageDays.push(day);
+      currentRowCount += day.transactions.length + 2; // +2 for header and footer rows
+
+      if (currentRowCount >= targetRowsPerPage) {
+        pages.push(currentPageDays);
+        currentPageDays = [];
+        currentRowCount = 0;
       }
+    });
+
+    if (currentPageDays.length > 0) {
+      pages.push(currentPageDays);
     }
-    return balance;
-  };
+
+    return pages;
+  }, [processedDays]);
+
+  const totalPages = paginatedPages.length;
+  const currentPagesDays = paginatedPages[currentPage - 1] || [];
 
   const handleExport = () => {
-    if (!transactions.length) {
+    if (!processedDays.length) {
       toast.error("No data to export");
       return;
     }
 
     const headers = [
       "Sr No",
-      "Date",
-      "Name",
-      "Paid",
       "Name",
       "Received",
+      "Name",
+      "Paid",
       "Description",
-      "Running Balance",
+      "Balance",
     ];
 
     const rows = [];
 
-    // Opening Balance row
-    rows.push([
-      "",
-      new Date(startDate).toLocaleDateString(),
-      "",
-      "",
-      "",
-      "",
-      "Opening Balance",
-      openingBalance.toFixed(2),
-    ]);
+    // Overall Opening Balance
+    rows.push(["", "", "", "", "", "Overall Opening Balance:", globalOpeningBalance.toFixed(2)]);
+    rows.push(["", "", "", "", "", "", ""]);
 
-    // Transaction rows
-    transactions.forEach((trans, index) => {
-      const runningBalance = calculateRunningBalance(index);
-      let payerName = "";
-      let amountPaid = "";
-      let receiverName = "";
-      let amountReceived = "";
-      let description = trans.description || "-";
+    processedDays.forEach(day => {
+      // Day Header
+      rows.push(["", `Date: ${day.displayDate}`, "", "", "", "Opening Balance:", day.openingBalance.toFixed(2)]);
 
-      if (trans.type === "opposite") {
-        payerName = trans.paid_by_account?.account_nam || "-";
-        receiverName = trans.received_by_account?.account_nam || "-";
-        amountPaid = trans.amount.toFixed(2);
-        amountReceived = trans.amount.toFixed(2);
-      } else if (trans.type === "self") {
-        if (trans.transaction_type === "receive") {
-          payerName = trans.account?.account_nam || "-";
-          amountPaid = trans.amount.toFixed(2);
-        } else {
-          receiverName = trans.account?.account_nam || "-";
-          amountReceived = trans.amount.toFixed(2);
+      day.transactions.forEach(trans => {
+        let colReceivedBy = "-";
+        let colReceivedAmount = "";
+        let colPaidBy = "-";
+        let colPaidAmount = "";
+        let description = trans.description || "-";
+
+        if (trans.type === "opposite") {
+          colReceivedBy = trans.paid_by_account?.account_nam || "-";
+          colReceivedAmount = trans.amount.toFixed(2);
+          colPaidBy = trans.received_by_account?.account_nam || "-";
+          colPaidAmount = trans.amount.toFixed(2);
+        } else if (trans.type === "self") {
+          if (trans.transaction_type === "receive") {
+            colReceivedBy = trans.account?.account_nam || "-";
+            colReceivedAmount = trans.amount.toFixed(2);
+          } else {
+            colPaidBy = trans.account?.account_nam || "-";
+            colPaidAmount = trans.amount.toFixed(2);
+          }
+        } else if (trans.type === "local_sale_consolidated") {
+          colReceivedBy = "Local Sales";
+          colReceivedAmount = trans.received_amount.toFixed(2);
         }
-      } else if (trans.type === "local_sale") {
-        payerName = trans.purchaser_account_ref?.account_nam || "-";
-        amountPaid = trans.received_amount.toFixed(2);
-        description = "Local Sale";
-      }
 
-      rows.push([
-        index + 1,
-        new Date(trans.transaction_date).toLocaleDateString(),
-        receiverName,
-        amountReceived,
-        payerName,
-        amountPaid,
-        description,
-        runningBalance.toFixed(2),
-      ]);
+        rows.push([
+          trans.srNo,
+          colReceivedBy,
+          colReceivedAmount,
+          colPaidBy,
+          colPaidAmount,
+          description,
+          trans.runningBalance.toFixed(2)
+        ]);
+      });
+
+      // Day Footer
+      rows.push(["", "Day Total", day.totalReceived.toFixed(2), "", day.totalPaid.toFixed(2), "Closing Balance:", day.closingBalance.toFixed(2)]);
+      rows.push(["", "", "", "", "", "", ""]);
     });
 
-    // Closing Balance row
-    rows.push([
-      "",
-      new Date(endDate).toLocaleDateString(),
-      "",
-      "",
-      "",
-      "",
-      "Closing Balance",
-      closingBalance.toFixed(2),
-    ]);
+    // Overall Closing Balance
+    rows.push(["", "", "", "", "", "Overall Closing Balance:", globalClosingBalance.toFixed(2)]);
 
     exportToCSV(`Balance_Sheet_${startDate}_to_${endDate}.csv`, headers, rows);
   };
@@ -259,179 +334,178 @@ export default function BalanceSheetReport() {
                 <p className="text-gray-600 text-sm">
                   From:{" "}
                   <span className="font-semibold">
-                    {new Date(startDate).toLocaleDateString()}
+                    {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                   </span>{" "}
                   To:{" "}
                   <span className="font-semibold">
-                    {new Date(endDate).toLocaleDateString()}
+                    {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                   </span>
                 </p>
               </div>
 
-              {/* Opening Balance */}
-              <div className="bg-blue-50 rounded-lg p-3 mb-4 inline-block">
-                <div className="text-left">
-                  <span className="font-semibold text-gray-700">
-                    Opening Balance:{" "}
-                  </span>
-                  <span
-                    className={
-                      openingBalance < 0 ? "text-red-600" : "text-green-600"
-                    }
-                  >
-                    {openingBalance.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm border border-gray-300">
-                  <thead>
-                    <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Sr. No
-                      </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Date
-                      </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Name
-                      </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Paid
-                      </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Name
-                      </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Received
-                      </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Description
-                      </th>
-                      <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Balance
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* Transaction Rows */}
-                    {currentTransactions.map((trans, index) => {
-                      const actualIndex = indexOfFirstTransaction + index;
-                      const serialNumber = actualIndex + 1;
-                      const runningBalance =
-                        calculateRunningBalance(actualIndex);
-
-                      let payerName = "";
-                      let amountPaid = "";
-                      let receiverName = "";
-                      let amountReceived = "";
-                      let description = trans.description || "-";
-
-                      if (trans.type === "opposite") {
-                        payerName = trans.paid_by_account?.account_nam || "-";
-                        receiverName =
-                          trans.received_by_account?.account_nam || "-";
-                        amountPaid = trans.amount.toFixed(2);
-                        amountReceived = trans.amount.toFixed(2);
-                      } else if (trans.type === "self") {
-                        if (trans.transaction_type === "receive") {
-                          payerName = trans.account?.account_nam || "-";
-                          amountPaid = trans.amount.toFixed(2);
-                        } else {
-                          receiverName = trans.account?.account_nam || "-";
-                          amountReceived = trans.amount.toFixed(2);
-                        }
-                      } else if (trans.type === "local_sale") {
-                        payerName = trans.purchaser_account_ref?.account_nam || "-";
-                        amountPaid = trans.received_amount.toFixed(2);
-                        description = "Local Sale";
-                      }
-
-                      return (
-                        <tr
-                          key={`${trans.type}-${trans.transaction_id}`}
-                          className="border-b border-gray-200 hover:bg-gray-50"
-                        >
-                          <td className="px-3 py-2 border border-gray-300">{serialNumber}</td>
-                          <td className="px-3 py-2 border border-gray-300">
-                            {new Date(
-                              trans.transaction_date,
-                            ).toLocaleDateString()}
-                          </td>
-                          <td className="px-3 py-2 border border-gray-300">{receiverName}</td>
-                          <td className="px-3 py-2 border border-gray-300">{amountReceived || "-"}</td>
-                          <td className="px-3 py-2 border border-gray-300">{payerName}</td>
-                          <td className="px-3 py-2 border border-gray-300">{amountPaid || "-"}</td>
-                          <td className="px-3 py-2 border border-gray-300">{description}</td>
-                          <td className="px-3 py-2 font-medium border border-gray-300">
-                            <span
-                              className={
-                                runningBalance < 0
-                                  ? "text-red-600"
-                                  : "text-green-600"
-                              }
-                            >
-                              {runningBalance.toFixed(2)}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-
-                    {/* Closing Balance Row */}
-                    {transactions.length > 0 && (
-                      <tr className="bg-gray-200 border-t-2 border-gray-400 font-bold">
-                        <td className="px-3 py-2 border border-gray-300"></td>
-                        <td className="px-3 py-2 border border-gray-300" colSpan="6">
-                          Closing Balance
-                        </td>
-                        <td className="px-3 py-2 border border-gray-300">
+              {/* Tables per Day */}
+              <div className="pb-8">
+                {currentPagesDays.length === 0 ? (
+                  <div className="px-3 py-8 text-center text-gray-500 border border-gray-300 rounded-lg">
+                    No transactions found for the selected period.
+                  </div>
+                ) : (
+                  currentPagesDays.map((day) => (
+                    <div key={day.date} className="mb-8 overflow-x-auto">
+                      {/* Day Header (Outside Table) */}
+                      <div className="flex justify-start gap-8 items-center mb-2 px-1">
+                        <span className="font-bold text-gray-800 text-base">
+                          {day.displayDate}
+                        </span>
+                        <span className="font-bold text-gray-800 text-base">
+                          Opening Balance:{" "}
                           <span
                             className={
-                              closingBalance < 0
+                              day.openingBalance < 0
                                 ? "text-red-600"
                                 : "text-green-600"
                             }
                           >
-                            {closingBalance.toFixed(2)}
+                            {day.openingBalance.toFixed(2)}
                           </span>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                        </span>
+                      </div>
+
+                      <table className="w-full border-collapse text-sm border border-gray-300 table-fixed">
+                        <thead>
+                          <tr className="bg-gray-100 border-b-2 border-gray-300">
+                            <th className="px-3 py-2 text-center font-bold text-gray-700 border border-gray-300 w-16">
+                              Sr. No
+                            </th>
+                            <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300 w-[20%]">
+                              Name
+                            </th>
+                            <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
+                              Receive
+                            </th>
+                            <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300 w-[20%]">
+                              Name
+                            </th>
+                            <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
+                              Paid
+                            </th>
+                            <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
+                              Description
+                            </th>
+                            <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300 w-32">
+                              Balance
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Day Transactions */}
+                          {day.transactions.map((trans) => {
+                            let colReceivedBy = "-";
+                            let colReceivedAmount = "";
+                            let colPaidBy = "-";
+                            let colPaidAmount = "";
+                            let description = trans.description || "-";
+
+                            if (trans.type === "opposite") {
+                              colReceivedBy = trans.paid_by_account?.account_nam || "-";
+                              colReceivedAmount = trans.amount.toFixed(2);
+                              colPaidBy = trans.received_by_account?.account_nam || "-";
+                              colPaidAmount = trans.amount.toFixed(2);
+                            } else if (trans.type === "self") {
+                              if (trans.transaction_type === "receive") {
+                                colReceivedBy = trans.account?.account_nam || "-";
+                                colReceivedAmount = trans.amount.toFixed(2);
+                              } else {
+                                colPaidBy = trans.account?.account_nam || "-";
+                                colPaidAmount = trans.amount.toFixed(2);
+                              }
+                            } else if (trans.type === "local_sale_consolidated") {
+                              colReceivedBy = "Local Sales";
+                              colReceivedAmount = trans.received_amount.toFixed(2);
+                            }
+
+                            return (
+                              <tr
+                                key={`${trans.type}-${trans.transaction_id || trans.srNo}`}
+                                className="border-b border-gray-200 hover:bg-gray-50"
+                              >
+                                <td className="px-3 py-2 border border-gray-300 text-center">{trans.srNo}</td>
+                                <td className="px-3 py-2 border border-gray-300">{colReceivedBy}</td>
+                                <td className="px-3 py-2 border border-gray-300 text-right">{colReceivedAmount}</td>
+                                <td className="px-3 py-2 border border-gray-300">{colPaidBy}</td>
+                                <td className="px-3 py-2 border border-gray-300 text-right">{colPaidAmount}</td>
+                                <td className="px-3 py-2 border border-gray-300">{description}</td>
+                                <td className="px-3 py-2 border border-gray-300 font-medium text-right">
+                                  <span
+                                    className={
+                                      trans.runningBalance < 0
+                                        ? "text-red-600"
+                                        : "text-green-600"
+                                    }
+                                  >
+                                    {trans.runningBalance.toFixed(2)}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+
+                          {/* Day Footer */}
+                          <tr className="bg-gray-100 border-t-2 border-gray-300 font-bold">
+                            <td colSpan="2" className="px-3 py-2 border border-gray-300 text-right text-gray-700">
+                              Day Total:
+                            </td>
+                            <td className="px-3 py-2 border border-gray-300 text-right text-green-700">
+                              {day.totalReceived.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 border border-gray-300 text-right"></td>
+                            <td className="px-3 py-2 border border-gray-300 text-right text-red-700">
+                              {day.totalPaid.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 border border-gray-300 text-right text-gray-700">
+                              Closing Balance:
+                            </td>
+                            <td className="px-3 py-2 border border-gray-300 text-right">
+                              <span
+                                className={
+                                  day.closingBalance < 0
+                                    ? "text-red-600"
+                                    : "text-green-600"
+                                }
+                              >
+                                {day.closingBalance.toFixed(2)}
+                              </span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
             {/* Footer with Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between p-6 border-t print:hidden">
-                <div className="text-sm text-gray-600">
-                  Showing {indexOfFirstTransaction + 1} to{" "}
-                  {Math.min(indexOfLastTransaction, transactions.length)} of{" "}
-                  {transactions.length} transactions
+              <div className="flex items-center justify-between p-6 border-t print:hidden bg-gray-50 mt-auto">
+                <div className="text-sm text-gray-600 font-medium">
+                  Page {currentPage} of {totalPages}
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <div className="px-4 py-1 bg-blue-500 text-white rounded-lg font-medium">
-                    {currentPage} / {totalPages}
+                  <div className="px-4 py-1 bg-blue-600 text-white rounded-lg font-medium shadow-sm flex items-center justify-center min-w-[3rem]">
+                    {currentPage}
                   </div>
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>

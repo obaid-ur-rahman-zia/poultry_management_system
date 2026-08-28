@@ -43,20 +43,27 @@ export async function GET(req) {
   }
 }
 
-function formatCurrency(amount) {
-  return new Intl.NumberFormat("en-PK", {
+function formatCurrency(amount, type = 'none') {
+  const val = amount || 0;
+  const formatted = new Intl.NumberFormat("en-PK", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount || 0);
+  }).format(Math.abs(val));
+  
+  if (type === 'debit') return val !== 0 ? `${formatted} Dr` : formatted;
+  if (type === 'credit') return val !== 0 ? `${formatted} Cr` : formatted;
+  if (type === 'balance') return `${formatted} ${val >= 0 ? "Dr" : "Cr"}`;
+  
+  return formatted;
 }
 
 function getDateRangeText(startDate, endDate) {
   if (startDate && endDate)
-    return `From ${new Date(startDate).toLocaleDateString()} To ${new Date(endDate).toLocaleDateString()}`;
+    return `From ${new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} To ${new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}`;
   if (startDate)
-    return `From ${new Date(startDate).toLocaleDateString()} To ${new Date().toLocaleDateString()}`;
+    return `From ${new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} To ${new Date().toLocaleDateString("en-GB").replace(/\//g, "-")}`;
   if (endDate)
-    return `From Beginning To ${new Date(endDate).toLocaleDateString()}`;
+    return `From Beginning To ${new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}`;
   return "All Time Records";
 }
 
@@ -72,9 +79,9 @@ function buildReportHtml(data, startDate, endDate) {
         <tr>
           <td>${acc.name}</td>
           <td>${acc.contact || "-"}</td>
-          <td class="num">${formatCurrency(acc.total_debit)}</td>
-          <td class="num">${formatCurrency(acc.total_credit)}</td>
-          <td class="num bold">${formatCurrency(acc.balance)}</td>
+          <td class="num">${formatCurrency(acc.total_debit, 'debit')}</td>
+          <td class="num">${formatCurrency(acc.total_credit, 'credit')}</td>
+          <td class="num bold">${formatCurrency(acc.balance, 'balance')}</td>
         </tr>`,
         )
         .join("");
@@ -99,9 +106,9 @@ function buildReportHtml(data, startDate, endDate) {
         <div class="subtotal-row">
           <span>Total ${subhead.subhead_nam}</span>
           <span></span>
-          <span class="num green">${formatCurrency(subhead.total_debit)}</span>
-          <span class="num red">${formatCurrency(subhead.total_credit)}</span>
-          <span class="num blue bold">${formatCurrency(subhead.total_balance)}</span>
+          <span class="num green">${formatCurrency(subhead.total_debit, 'debit')}</span>
+          <span class="num red">${formatCurrency(subhead.total_credit, 'credit')}</span>
+          <span class="num blue bold">${formatCurrency(subhead.total_balance, 'balance')}</span>
         </div>
       </div>`;
     })
@@ -121,15 +128,15 @@ function buildReportHtml(data, startDate, endDate) {
         <tbody>
           <tr>
             <td>Balance of Income Acc under Income (Credit)</td>
-            <td class="num green bold">${formatCurrency(wholeSaleProfit.income_acc_credit)}</td>
+            <td class="num green bold">${formatCurrency(wholeSaleProfit.income_acc_credit, 'credit')}</td>
           </tr>
           <tr>
             <td>Total Expense Head Balance</td>
-            <td class="num red bold">${formatCurrency(wholeSaleProfit.expense_head_debit)}</td>
+            <td class="num red bold">${formatCurrency(wholeSaleProfit.expense_head_debit, 'debit')}</td>
           </tr>
           <tr class="total-row">
             <td class="bold">Whole Sale Profit</td>
-            <td class="num blue bold large">${formatCurrency(wholeSaleProfit.profit)}</td>
+            <td class="num blue bold large">${formatCurrency(wholeSaleProfit.profit, 'balance')}</td>
           </tr>
         </tbody>
       </table>
@@ -152,9 +159,9 @@ function buildReportHtml(data, startDate, endDate) {
         <tbody>
           <tr class="total-row">
             <td class="bold">Final Aggregates</td>
-            <td class="num green bold large">${formatCurrency(conclusion.total_debit)}</td>
-            <td class="num red bold large">${formatCurrency(conclusion.total_credit)}</td>
-            <td class="num blue bold large">${formatCurrency(conclusion.total_balance)}</td>
+            <td class="num green bold large">${formatCurrency(conclusion.total_debit, 'debit')}</td>
+            <td class="num red bold large">${formatCurrency(conclusion.total_credit, 'credit')}</td>
+            <td class="num blue bold large">${formatCurrency(conclusion.total_balance, 'balance')}</td>
           </tr>
         </tbody>
       </table>

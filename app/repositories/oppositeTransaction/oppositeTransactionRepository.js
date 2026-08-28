@@ -1,7 +1,20 @@
 import prisma from "@/lib/prisma";
 
 class OppositeTransactionRepository {
-  async readAll() {
+  async readAll(date) {
+    let whereCondition = { status: 1 };
+    
+    if (date) {
+      const selectedDate = new Date(date);
+      const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
+      
+      whereCondition.transaction_date = {
+        gte: startOfDay,
+        lte: endOfDay,
+      };
+    }
+
     return prisma.opposite_transaction.findMany({
       orderBy: { transaction_id: "desc" },
       include: {
@@ -9,13 +22,24 @@ class OppositeTransactionRepository {
         bank_account_ref: true,
         received_by_account: true,
       },
-      where: {
-        status: 1,
-      },
+      where: whereCondition,
     });
   }
 
-  async readAllWithPagination(skip = 0, take = 10) {
+  async readAllWithPagination(skip = 0, take = 10, date) {
+    let whereCondition = { status: 1 };
+    
+    if (date) {
+      const selectedDate = new Date(date);
+      const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
+      
+      whereCondition.transaction_date = {
+        gte: startOfDay,
+        lte: endOfDay,
+      };
+    }
+
     const [data, total] = await Promise.all([
       prisma.opposite_transaction.findMany({
         skip,
@@ -26,14 +50,10 @@ class OppositeTransactionRepository {
           bank_account_ref: true,
           received_by_account: true,
         },
-        where: {
-          status: 1,
-        },
+        where: whereCondition,
       }),
       prisma.opposite_transaction.count({
-        where: {
-          status: 1,
-        },
+        where: whereCondition,
       }),
     ]);
     return { data, total };

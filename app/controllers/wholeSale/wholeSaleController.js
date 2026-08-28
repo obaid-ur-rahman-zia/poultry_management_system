@@ -17,6 +17,7 @@ class WholeSaleController {
       const searchParams =
         req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
       const getAll = searchParams.get("all") === "true";
+      const dateStr = searchParams.get("date");
       const page = parseInt(searchParams.get("page") || "1");
       const limit = parseInt(searchParams.get("limit") || "20");
       const skip = (page - 1) * limit;
@@ -24,13 +25,14 @@ class WholeSaleController {
       // If getAll is true, fetch all whole sales without pagination
       let data, total;
       if (getAll) {
-        data = await WholeSaleRepository.readAll();
+        data = await WholeSaleRepository.readAll(dateStr);
         total = data.length;
       } else {
         // Get total count and paginated whole sales
         const result = await WholeSaleRepository.readAllWithPagination(
           skip,
           limit,
+          dateStr,
         );
         data = result.data;
         total = result.total;

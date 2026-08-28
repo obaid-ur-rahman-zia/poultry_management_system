@@ -67,7 +67,7 @@ class TransactionRepository {
   async readAccountLedger(req_object) {
     const { acc_id, start_dat, end } = req_object;
 
-    return prisma.transaction.findMany({
+    const ledgerData = await prisma.transaction.findMany({
       where: {
         acc_id: parseInt(acc_id),
         transaction_dat: {
@@ -79,6 +79,44 @@ class TransactionRepository {
       orderBy: {
         transaction_dat: "asc",
       },
+    });
+
+    // Fetch FS Rates for the date range efficiently
+    const fsRatesData = await prisma.whole_sale.findMany({
+      where: {
+        sale_date: {
+          gte: new Date(start_dat),
+          lte: end,
+        },
+        OR: [{ farm_rate: { not: null } }, { sale_rate: { not: null } }],
+        status: 1,
+      },
+      select: {
+        sale_date: true,
+        farm_rate: true,
+        sale_rate: true,
+      },
+      orderBy: {
+        sale_date: 'asc'
+      }
+    });
+
+    const fsRatesMap = {};
+    fsRatesData.forEach(rate => {
+      const d = new Date(rate.sale_date);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const farm = rate.farm_rate || '';
+      const sale = rate.sale_rate || '';
+      fsRatesMap[dateStr] = farm && sale ? `${farm}-${sale}` : (farm || sale || '-');
+    });
+
+    return ledgerData.map(trans => {
+      const d = new Date(trans.transaction_dat);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return {
+        ...trans,
+        fs_rate: fsRatesMap[dateStr] || '-',
+      };
     });
   }
 

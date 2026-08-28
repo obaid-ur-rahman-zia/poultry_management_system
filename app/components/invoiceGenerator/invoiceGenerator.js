@@ -37,7 +37,7 @@ const Invoice = ({ data, type = "sale", onClose }) => {
   });
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString("en-GB", {
       year: "numeric",
       month: "long",
       day: "numeric",

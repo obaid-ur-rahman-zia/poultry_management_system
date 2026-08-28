@@ -40,7 +40,7 @@ export default function WholeSaleReport() {
 
   // Group sales by Date then by Former
   const groupedByDate = reportData.reduce((acc, item) => {
-    const dateStr = new Date(item.sale_date).toLocaleDateString();
+    const dateStr = new Date(item.sale_date).toLocaleDateString("en-GB").replace(/\//g, "-");
 
     if (!acc[dateStr]) {
       acc[dateStr] = {
@@ -251,8 +251,8 @@ export default function WholeSaleReport() {
               <div>
                 <h1 className="text-xl font-bold ">Whole Sale Report</h1>
                 <p className="text-sm text-gray-600">
-                  {new Date(startDate).toLocaleDateString()} –{" "}
-                  {new Date(endDate).toLocaleDateString()}
+                  {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} –{" "}
+                  {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
                 </p>
               </div>
               <div className="flex gap-2">

@@ -81,17 +81,17 @@ export default function SubheadTrialBalanceModal() {
         rows.push([
           acc.name,
           acc.contact || "-",
-          acc.total_debit.toFixed(2),
-          acc.total_credit.toFixed(2),
-          acc.balance.toFixed(2),
+          acc.total_debit !== 0 ? `${acc.total_debit.toFixed(2)} Dr` : "0.00",
+          acc.total_credit !== 0 ? `${acc.total_credit.toFixed(2)} Cr` : "0.00",
+          `${Math.abs(acc.balance).toFixed(2)} ${acc.balance >= 0 ? "Dr" : "Cr"}`,
         ]);
       });
       rows.push([
         `TOTAL ${subhead.subhead_nam}`,
         "",
-        subhead.total_debit.toFixed(2),
-        subhead.total_credit.toFixed(2),
-        subhead.total_balance.toFixed(2),
+        subhead.total_debit !== 0 ? `${subhead.total_debit.toFixed(2)} Dr` : "0.00",
+        subhead.total_credit !== 0 ? `${subhead.total_credit.toFixed(2)} Cr` : "0.00",
+        `${Math.abs(subhead.total_balance).toFixed(2)} ${subhead.total_balance >= 0 ? "Dr" : "Cr"}`,
       ]);
       rows.push(["", "", "", "", ""]);
     });
@@ -99,9 +99,9 @@ export default function SubheadTrialBalanceModal() {
     rows.push([
       "GRAND TOTAL",
       "",
-      reportData.conclusion.total_debit.toFixed(2),
-      reportData.conclusion.total_credit.toFixed(2),
-      reportData.conclusion.total_balance.toFixed(2),
+      reportData.conclusion.total_debit !== 0 ? `${reportData.conclusion.total_debit.toFixed(2)} Dr` : "0.00",
+      reportData.conclusion.total_credit !== 0 ? `${reportData.conclusion.total_credit.toFixed(2)} Cr` : "0.00",
+      `${Math.abs(reportData.conclusion.total_balance).toFixed(2)} ${reportData.conclusion.total_balance >= 0 ? "Dr" : "Cr"}`,
     ]);
     exportToCSV(
       `Subhead_Trial_Balance_${new Date().toISOString().split("T")[0]}.csv`,
@@ -112,15 +112,22 @@ export default function SubheadTrialBalanceModal() {
 
   const getDateRangeText = () => {
     if (endDate)
-      return `As of ${new Date(endDate).toLocaleDateString()}`;
+      return `As of ${new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}`;
     return `All Time Records`;
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-PK", {
+  const formatCurrency = (amount, type = 'none') => {
+    const val = amount || 0;
+    const formatted = new Intl.NumberFormat("en-PK", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(amount || 0);
+    }).format(Math.abs(val));
+
+    if (type === 'debit') return val !== 0 ? `${formatted} Dr` : formatted;
+    if (type === 'credit') return val !== 0 ? `${formatted} Cr` : formatted;
+    if (type === 'balance') return `${formatted} ${val >= 0 ? "Dr" : "Cr"}`;
+
+    return formatted;
   };
 
   // Flatten the nested data into a linear list of "Render Blocks" for height-based pagination
@@ -232,7 +239,7 @@ export default function SubheadTrialBalanceModal() {
   const goToMatch = (flatIndex) => {
     const targetPage = Math.floor(flatIndex / itemsPerPage) + 1;
     setCurrentPage(targetPage);
-    
+
     setTimeout(() => {
       const el = document.getElementById(`item-${flatIndex}`);
       if (el) {
@@ -328,68 +335,68 @@ export default function SubheadTrialBalanceModal() {
         <div className="fixed inset-0 z-50 flex bg-black/50 items-center justify-center">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col">
             <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b bg-gray-50 gap-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* Pagination */}
-                  <div className="flex items-center gap-1 bg-white border rounded-md p-1 shadow-sm">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(1)} disabled={currentPage === 1} title="First Page">
-                      <ChevronsLeft className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} title="Previous Page">
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm font-medium px-2 text-gray-600">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} title="Next Page">
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} title="Last Page">
-                      <ChevronsRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Find */}
-                  <div className="flex items-center gap-1 bg-white border rounded-md p-1 shadow-sm">
-                    <div className="relative">
-                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
-                      <Input
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleFind()}
-                        placeholder="Find in report..."
-                        className="h-8 w-40 pl-7 text-xs border-none shadow-none focus-visible:ring-0"
-                      />
-                    </div>
-                    <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={handleFind}>
-                      Find
-                    </Button>
-                    <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={handleFindNext} disabled={searchResults.length === 0}>
-                      Next
-                    </Button>
-                    {searchResults.length > 0 && (
-                      <span className="text-xs text-gray-500 px-2 font-medium whitespace-nowrap">
-                        {currentSearchIndex + 1} / {searchResults.length}
-                      </span>
-                    )}
-                  </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Pagination */}
+                <div className="flex items-center gap-1 bg-white border rounded-md p-1 shadow-sm">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(1)} disabled={currentPage === 1} title="First Page">
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} title="Previous Page">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium px-2 text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} title="Next Page">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} title="Last Page">
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" className="h-9" onClick={handlePrint} disabled={isPrinting}>
-                    {isPrinting ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating PDF...</>
-                    ) : (
-                      <><Printer className="mr-2 h-4 w-4" /> Print</>
-                    )}
+                {/* Find */}
+                <div className="flex items-center gap-1 bg-white border rounded-md p-1 shadow-sm">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleFind()}
+                      placeholder="Find in report..."
+                      className="h-8 w-40 pl-7 text-xs border-none shadow-none focus-visible:ring-0"
+                    />
+                  </div>
+                  <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={handleFind}>
+                    Find
                   </Button>
-                  <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white h-9" onClick={handleExport}>
-                    <FileDown className="mr-2 h-4 w-4" /> Export CSV
+                  <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={handleFindNext} disabled={searchResults.length === 0}>
+                    Next
                   </Button>
-                  <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors ml-2">
-                    <X className="w-5 h-5 text-gray-600" />
-                  </button>
+                  {searchResults.length > 0 && (
+                    <span className="text-xs text-gray-500 px-2 font-medium whitespace-nowrap">
+                      {currentSearchIndex + 1} / {searchResults.length}
+                    </span>
+                  )}
                 </div>
               </div>
+
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="h-9" onClick={handlePrint} disabled={isPrinting}>
+                  {isPrinting ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating PDF...</>
+                  ) : (
+                    <><Printer className="mr-2 h-4 w-4" /> Print</>
+                  )}
+                </Button>
+                <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white h-9" onClick={handleExport}>
+                  <FileDown className="mr-2 h-4 w-4" /> Export CSV
+                </Button>
+                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors ml-2">
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+            </div>
 
             <div className="flex-1 overflow-auto sm:p-2 bg-white" id="report-scroll-area">
               <div className="mb-2 text-center">
@@ -424,7 +431,6 @@ export default function SubheadTrialBalanceModal() {
                             <col className="w-[15%]" />
                             <col className="w-[15%]" />
                             <col className="w-[15%]" />
-                            <col className="w-[15%]" />
                           </colgroup>
                           <thead>
                             <tr className="bg-gray-100 border-b-2 border-gray-300">
@@ -436,7 +442,7 @@ export default function SubheadTrialBalanceModal() {
                                   </span>
                                 )}
                               </th>
-                              <th className="px-3 py-2 text-left font-bold text-gray-700 w-[15%] border border-gray-300">
+                              <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
                                 Contact
                               </th>
                               <th className="px-3 py-2 text-right font-bold text-gray-700 border border-gray-300">
@@ -454,28 +460,29 @@ export default function SubheadTrialBalanceModal() {
                             {chunk.rows.map((row, rIdx) => {
                               const isMatch = searchResults[currentSearchIndex] === row.flatIndex;
                               return (
-                              <tr
-                                key={rIdx}
-                                id={`item-${row.flatIndex}`}
-                                className={`border-b border-gray-200 ${isMatch ? "bg-yellow-200 hover:bg-yellow-300" : "hover:bg-gray-50"}`}
-                              >
-                                <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
-                                  {row.name}
-                                </td>
-                                <td className="px-3 py-2 text-gray-600 border border-gray-300">
-                                  {row.contact || "-"}
-                                </td>
-                                <td className="px-3 py-2 text-right border border-gray-300">
-                                  {formatCurrency(row.total_debit)}
-                                </td>
-                                <td className="px-3 py-2 text-right border border-gray-300">
-                                  {formatCurrency(row.total_credit)}
-                                </td>
-                                <td className="px-3 py-2 text-right font-semibold border border-gray-300">
-                                  {formatCurrency(row.balance)}
-                                </td>
-                              </tr>
-                            )})}
+                                <tr
+                                  key={rIdx}
+                                  id={`item-${row.flatIndex}`}
+                                  className={`border-b border-gray-200 ${isMatch ? "bg-yellow-200 hover:bg-yellow-300" : "hover:bg-gray-50"}`}
+                                >
+                                  <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
+                                    {row.name}
+                                  </td>
+                                  <td className="px-3 py-2 text-right border border-gray-300">
+                                    {row.contact || "-"}
+                                  </td>
+                                  <td className="px-3 py-2 text-right border border-gray-300">
+                                    {formatCurrency(row.total_debit, 'debit')}
+                                  </td>
+                                  <td className="px-3 py-2 text-right border border-gray-300">
+                                    {formatCurrency(row.total_credit, 'credit')}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-semibold border border-gray-300">
+                                    {formatCurrency(row.balance, 'balance')}
+                                  </td>
+                                </tr>
+                              )
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -489,17 +496,17 @@ export default function SubheadTrialBalanceModal() {
                         className="bg-gray-100 border-2 border-gray-200 p-2 mb-4 font-bold grid grid-cols-[40%_15%_15%_15%_15%] text-sm"
                       >
                         <div className="text-left whitespace-nowrap">
-                          Total 
+                          Total
                         </div>
                         <div />
                         <div className="text-right text-green-700">
-                          {formatCurrency(chunk.debit)}
+                          {formatCurrency(chunk.debit, 'debit')}
                         </div>
                         <div className="text-right text-red-700">
-                          {formatCurrency(chunk.credit)}
+                          {formatCurrency(chunk.credit, 'credit')}
                         </div>
                         <div className="text-right text-blue-700">
-                          {formatCurrency(chunk.balance)}
+                          {formatCurrency(chunk.balance, 'balance')}
                         </div>
                       </div>
                     );
@@ -531,7 +538,7 @@ export default function SubheadTrialBalanceModal() {
                                 Balance of Income Acc under Income (Credit)
                               </td>
                               <td className="px-3 py-2 text-right font-bold text-green-700 border border-gray-300">
-                                {formatCurrency(chunk.income_acc_credit)}
+                                {formatCurrency(chunk.income_acc_credit, 'credit')}
                               </td>
                             </tr>
                             <tr className="bg-white border-b border-gray-300">
@@ -539,7 +546,7 @@ export default function SubheadTrialBalanceModal() {
                                 Total Expense Head Balance
                               </td>
                               <td className="px-3 py-2 text-right font-bold text-red-700 border border-gray-300">
-                                {formatCurrency(chunk.expense_head_debit)}
+                                {formatCurrency(chunk.expense_head_debit, 'debit')}
                               </td>
                             </tr>
                             <tr className="bg-gray-100">
@@ -547,7 +554,7 @@ export default function SubheadTrialBalanceModal() {
                                 Whole Sale Profit
                               </td>
                               <td className="px-3 py-3 text-right font-bold text-blue-700 text-lg border border-gray-300">
-                                {formatCurrency(chunk.profit)}
+                                {formatCurrency(chunk.profit, 'balance')}
                               </td>
                             </tr>
                           </tbody>
@@ -588,13 +595,13 @@ export default function SubheadTrialBalanceModal() {
                                 Final Aggregates
                               </td>
                               <td className="px-3 py-3 text-right font-bold text-green-700 text-lg border border-gray-300">
-                                {formatCurrency(chunk.total_debit)}
+                                {formatCurrency(chunk.total_debit, 'debit')}
                               </td>
                               <td className="px-3 py-3 text-right font-bold text-red-700 text-lg border border-gray-300">
-                                {formatCurrency(chunk.total_credit)}
+                                {formatCurrency(chunk.total_credit, 'credit')}
                               </td>
                               <td className="px-3 py-3 text-right font-bold text-blue-700 text-lg border border-gray-300">
-                                {formatCurrency(chunk.total_balance)}
+                                {formatCurrency(chunk.total_balance, 'balance')}
                               </td>
                             </tr>
                           </tbody>

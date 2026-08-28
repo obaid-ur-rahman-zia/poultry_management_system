@@ -63,17 +63,17 @@ export default function TrialBalanceModal() {
   // Get date range text
   const getDateRangeText = () => {
     if (startDate && endDate) {
-      return `From ${new Date(startDate).toLocaleDateString()} To ${new Date(
+      return `From ${new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} To ${new Date(
         endDate
-      ).toLocaleDateString()}`;
+      ).toLocaleDateString("en-GB").replace(/\//g, "-")}`;
     } else if (startDate) {
       return `From ${new Date(
         startDate
-      ).toLocaleDateString()} To ${new Date().toLocaleDateString()}`;
+      ).toLocaleDateString("en-GB").replace(/\//g, "-")} To ${new Date().toLocaleDateString("en-GB").replace(/\//g, "-")}`;
     } else if (endDate) {
-      return `From Beginning To ${new Date(endDate).toLocaleDateString()}`;
+      return `From Beginning To ${new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}`;
     } else {
-      return `From Beginning To ${new Date().toLocaleDateString()}`;
+      return `From Beginning To ${new Date().toLocaleDateString("en-GB").replace(/\//g, "-")}`;
     }
   };
 

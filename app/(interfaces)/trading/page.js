@@ -1455,7 +1455,7 @@ export default function TradingPage() {
                         <span className="text-xs text-gray-500">Date</span>
                         <span className="text-sm font-medium">
                           {trade.trading_date
-                            ? new Date(trade.trading_date).toLocaleDateString()
+                            ? new Date(trade.trading_date).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </span>
                       </div>
@@ -1614,7 +1614,7 @@ export default function TradingPage() {
                             {trade.trading_date
                               ? new Date(
                                   trade.trading_date,
-                                ).toLocaleDateString()
+                                ).toLocaleDateString("en-GB").replace(/\//g, "-")
                               : "N/A"}
                           </TableCell>
                           <TableCell className="hidden md:table-cell">

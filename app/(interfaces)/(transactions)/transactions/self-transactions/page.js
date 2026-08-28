@@ -32,6 +32,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
@@ -87,18 +88,18 @@ export default function SelfTransactionPage() {
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAccount, setFilterAccount] = useState("all");
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDate, setFilterDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [filterType, setFilterType] = useState("all");
   const [isMobile, setIsMobile] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingTransactionId, setDeletingTransactionId] = useState(null);
 
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  // Modal states
+  const [isGetDataModalOpen, setIsGetDataModalOpen] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
 
   const selectedAccount = watch("account_id");
   const isBank = watch("is_bank");
@@ -108,8 +109,8 @@ export default function SelfTransactionPage() {
     session?.user?.cashInHandAccountId?.toString();
   const selectableAccounts = userCashInHandAccountId
     ? accounts.filter(
-        (account) => account.acc_id?.toString() !== userCashInHandAccountId,
-      )
+      (account) => account.acc_id?.toString() !== userCashInHandAccountId,
+    )
     : accounts;
 
   useEffect(() => {
@@ -229,39 +230,27 @@ export default function SelfTransactionPage() {
     }
   };
 
-  const fetchTransactions = async (
-    page = currentPage,
-    limit = itemsPerPage,
-  ) => {
+  const fetchTransactions = async (dateFilter = filterDate) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/selfTransaction/readAll?page=${page}&limit=${limit}`,
-      );
+      const url = new URL("/api/selfTransaction/readAll", window.location.origin);
+      url.searchParams.append("all", "true");
+      if (dateFilter) {
+        url.searchParams.append("date", dateFilter);
+      }
+      
+      const response = await fetch(url);
       const result = await response.json();
       if (result.response_status === "success") {
         const responseData = result.response_result;
-
-        // Handle paginated response
-        if (responseData?.pagination) {
-          const transactionsData = responseData.data || [];
-          setTransactions(transactionsData);
-          setTotalPages(responseData.pagination.totalPages || 1);
-          setTotalItems(responseData.pagination.total || 0);
-          setCurrentPage(responseData.pagination.page || page);
-        } else {
-          // Fallback for non-paginated response
-          const transactionsData = responseData?.data || responseData || [];
-          setTransactions(transactionsData);
-          setTotalPages(1);
-          setTotalItems(transactionsData.length);
-        }
+        const transactionsData = responseData?.data || responseData || [];
+        setTransactions(Array.isArray(transactionsData) ? transactionsData : []);
       } else {
-        toast.error(result.response_message || "Failed to fetch transactions");
+        toast.error("Failed to fetch transactions");
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);
-      toast.error("Failed to fetch transactions");
+      toast.error("An error occurred while fetching transactions");
     } finally {
       setLoading(false);
     }
@@ -410,32 +399,36 @@ export default function SelfTransactionPage() {
       filterAccount === "all" ||
       transaction.account_id?.toString() === filterAccount;
 
-    const matchesDate =
-      filterDate === "" ||
-      (transaction.transaction_date &&
-        new Date(transaction.transaction_date).toISOString().split("T")[0] ===
-          filterDate);
-
     const matchesType =
       filterType === "all" || transaction.transaction_type === filterType;
 
-    return matchesSearch && matchesAccount && matchesDate && matchesType;
+    return matchesSearch && matchesAccount && matchesType;
   });
 
-  // Reset to page 1 when filters change and refetch
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchTransactions(1, itemsPerPage);
-    }
-  }, [searchQuery, filterAccount, filterDate, filterType]);
+  // Modal filtering
+  const modalFilteredTransactions = transactions.filter((transaction) => {
+    const query = modalSearchQuery.toLowerCase();
+    const accountName = accounts.find((a) => a.acc_id === transaction.account_id)?.account_nam?.toLowerCase() || "";
+    
+    return (
+      accountName.includes(query) ||
+      transaction.amount?.toString().includes(query) ||
+      (transaction.description && transaction.description.toLowerCase().includes(query)) ||
+      (transaction.transaction_type && transaction.transaction_type.toLowerCase().includes(query))
+    );
+  });
 
-  // Fetch transactions when page or itemsPerPage changes
+  // Calculate totals
+  const totalDebit = filteredTransactions.reduce((sum, transaction) => transaction.transaction_type === "receive" ? sum + (parseFloat(transaction.amount) || 0) : sum, 0);
+  const totalCredit = filteredTransactions.reduce((sum, transaction) => transaction.transaction_type === "pay" ? sum + (parseFloat(transaction.amount) || 0) : sum, 0);
+  
+  const modalTotalDebit = modalFilteredTransactions.reduce((sum, transaction) => transaction.transaction_type === "receive" ? sum + (parseFloat(transaction.amount) || 0) : sum, 0);
+  const modalTotalCredit = modalFilteredTransactions.reduce((sum, transaction) => transaction.transaction_type === "pay" ? sum + (parseFloat(transaction.amount) || 0) : sum, 0);
+
+  // Refetch when filterDate changes
   useEffect(() => {
-    fetchTransactions(currentPage, itemsPerPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage]);
+    fetchTransactions(filterDate);
+  }, [filterDate]);
 
   const netBalance = calculateNetBalance();
 
@@ -452,14 +445,27 @@ export default function SelfTransactionPage() {
             {/* Date */}
             <div className="space-y-2 w-full">
               <Label htmlFor="transaction_date">Date *</Label>
-              <Input
-                id="transaction_date"
-                type="date"
-                className="w-full"
-                {...register("transaction_date", {
-                  required: "Date is required",
-                })}
-              />
+              <div className="flex gap-2 w-full">
+                <Input
+                  id="transaction_date"
+                  type="date"
+                  className="w-full"
+                  {...register("transaction_date", {
+                    required: "Date is required",
+                  })}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setModalSearchQuery("");
+                    setIsGetDataModalOpen(true);
+                  }}
+                  className="whitespace-nowrap"
+                  variant="default"
+                >
+                  Get Data
+                </Button>
+              </div>
               {errors.transaction_date && (
                 <p className="text-sm text-destructive">
                   {errors.transaction_date.message}
@@ -532,15 +538,15 @@ export default function SelfTransactionPage() {
                               label: account.account_nam,
                             })),
                             ...(selectedAccount &&
-                            !defaultAccounts.find(
-                              (acc) => acc.acc_id === selectedAccount.acc_id,
-                            ) && (!userCashInHandAccountId || selectedAccount.acc_id?.toString() !== userCashInHandAccountId)
+                              !defaultAccounts.find(
+                                (acc) => acc.acc_id === selectedAccount.acc_id,
+                              ) && (!userCashInHandAccountId || selectedAccount.acc_id?.toString() !== userCashInHandAccountId)
                               ? [
-                                  {
-                                    value: selectedAccount.acc_id.toString(),
-                                    label: selectedAccount.account_nam,
-                                  },
-                                ]
+                                {
+                                  value: selectedAccount.acc_id.toString(),
+                                  label: selectedAccount.account_nam,
+                                },
+                              ]
                               : []),
                           ];
 
@@ -557,15 +563,15 @@ export default function SelfTransactionPage() {
                         }}
                       />
                     </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setAccountSearchType(getDefaultAccountSearchType());
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setAccountSearchType(getDefaultAccountSearchType());
                         setAccountSearchQuery("");
                         setIsAccountSearchDialogOpen(true);
-                    }}
+                      }}
                       className="h-8 w-8 p-0 font-bold"
                       title="Search Accounts"
                     >
@@ -703,6 +709,14 @@ export default function SelfTransactionPage() {
             </div>
 
             <div className="flex justify-end gap-2">
+
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Transaction"
+                    : "Create Transaction"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -721,13 +735,6 @@ export default function SelfTransactionPage() {
                 }}
               >
                 {isEditMode ? "Cancel Edit" : "Clear Form"}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Saving..."
-                  : isEditMode
-                    ? "Update Transaction"
-                    : "Create Transaction"}
               </Button>
               {isEditMode && (
                 <Button
@@ -772,12 +779,11 @@ export default function SelfTransactionPage() {
                       )
                       .map((subhead) => ({
                         value: subhead.sub_id.toString(),
-                        label: `${subhead.subhead_nam}${
-                          subhead.head?.head_nam &&
-                          subhead.head.head_nam !== "Main Head"
+                        label: `${subhead.subhead_nam}${subhead.head?.head_nam &&
+                            subhead.head.head_nam !== "Main Head"
                             ? ` (${subhead.head.head_nam})`
                             : ""
-                        }`,
+                          }`,
                       })),
                   ]}
                   value={accountSearchType}
@@ -940,19 +946,6 @@ export default function SelfTransactionPage() {
                   />
                 </div>
 
-                {/* <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="receive">Receive</SelectItem>
-                      <SelectItem value="pay">Pay</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div> */}
               </div>
             </div>
 
@@ -973,8 +966,8 @@ export default function SelfTransactionPage() {
                         <span className="text-sm font-medium">
                           {transaction.transaction_date
                             ? new Date(
-                                transaction.transaction_date,
-                              ).toLocaleDateString()
+                              transaction.transaction_date,
+                            ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </span>
                       </div>
@@ -1042,47 +1035,50 @@ export default function SelfTransactionPage() {
                 ))}
               </div>
             ) : (
-              <div className="relative max-h-[600px] overflow-auto">
-                <table className="w-full caption-bottom text-sm">
-                  <thead className="sticky top-0 bg-background z-20 border-b-2">
-                    <tr className="border-b">
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+              <div className="relative max-h-[600px] overflow-auto [&_[data-slot=table-container]]:overflow-visible">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-20 border-b-2">
+                    <TableRow className="border-b">
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Date
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Type
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Account
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Action
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
-                        Amount
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                        Debit
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                        Credit
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Description
-                      </th>
-                      <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
+                      </TableHead>
+                      <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                         Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filteredTransactions.map((transaction) => (
-                      <tr
+                      <TableRow
                         key={transaction.transaction_id}
                         className="hover:bg-muted/50 border-b transition-colors"
                       >
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           {transaction.transaction_date
                             ? new Date(
-                                transaction.transaction_date,
-                              ).toLocaleDateString()
+                              transaction.transaction_date,
+                            ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           <Badge
                             variant={
                               transaction.is_bank === 1
@@ -1092,13 +1088,13 @@ export default function SelfTransactionPage() {
                           >
                             {transaction.is_bank === 1 ? "Bank" : "Cash"}
                           </Badge>
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           {accounts.find(
                             (a) => a.acc_id === transaction.account_id,
                           )?.account_nam || "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           <Badge
                             variant={
                               transaction.transaction_type === "receive"
@@ -1110,17 +1106,23 @@ export default function SelfTransactionPage() {
                               ? "Receive"
                               : "Pay"}
                           </Badge>
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap font-medium">
-                          {transaction.amount?.toLocaleString(undefined, {
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap font-medium">
+                          {transaction.transaction_type === "receive" ? (transaction.amount?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }) || "0.00"}
-                        </td>
-                        <td className="p-2 align-middle">
+                          }) || "0.00") : ""}
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap font-medium">
+                          {transaction.transaction_type === "pay" ? (transaction.amount?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00") : ""}
+                        </TableCell>
+                        <TableCell className="p-2 align-middle">
                           {transaction.description || "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-2 align-middle whitespace-nowrap">
                           <div className="flex gap-2">
                             <Button
                               variant="ghost"
@@ -1130,103 +1132,23 @@ export default function SelfTransactionPage() {
                               <Edit2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                  <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                    <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                      <TableCell colSpan={4} className="text-right pr-4 text-foreground py-2">Grand Total:</TableCell>
+                      <TableCell className="text-foreground py-2">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-foreground py-2">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell colSpan={2} className="py-2"></TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
               </div>
             )}
 
-            {/* Pagination */}
-            {totalPages >= 1 && (
-              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm text-muted-foreground">
-                    Items per page:
-                  </Label>
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={(value) => {
-                      setItemsPerPage(Number(value));
-                      setCurrentPage(1);
-                      fetchTransactions(1, Number(value));
-                    }}
-                  >
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          setCurrentPage((prev) => Math.max(1, prev - 1))
-                        }
-                        className={
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-                      return (
-                        <PaginationItem key={pageNum}>
-                          <PaginationLink
-                            onClick={() => {
-                              setCurrentPage(pageNum);
-                              fetchTransactions(pageNum, itemsPerPage);
-                            }}
-                            isActive={currentPage === pageNum}
-                            className="cursor-pointer"
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    })}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => {
-                          const newPage = Math.min(totalPages, currentPage + 1);
-                          setCurrentPage(newPage);
-                          fetchTransactions(newPage, itemsPerPage);
-                        }}
-                        className={
-                          currentPage === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-                <div className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
-                  {totalItems} transactions
-                </div>
-              </div>
-            )}
+
           </MobileListToggle>
         </CardContent>
       </Card>
@@ -1260,6 +1182,122 @@ export default function SelfTransactionPage() {
               {isDeleting ? "Deleting..." : "Yes, Delete"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Get Data Modal */}
+      <Dialog open={isGetDataModalOpen} onOpenChange={setIsGetDataModalOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-6xl min-h-[100vh] overflow-hidden flex flex-col p-4">
+          <div className="flex flex-col gap-4 flex-1 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
+              <div className="space-y-2">
+                <Label>Search Everything</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search everywhere..."
+                    value={modalSearchQuery}
+                    onChange={(e) => setModalSearchQuery(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Date Filter</Label>
+                <Input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="relative flex-1 overflow-auto [&_[data-slot=table-container]]:overflow-visible min-h-0 border rounded-md">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-20 border-b-2 shadow-sm">
+                  <TableRow>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Date</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Type</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Account</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Action</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Debit</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Credit</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Description</TableHead>
+                    <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modalFilteredTransactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No data found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    modalFilteredTransactions.map((transaction, index) => (
+                      <TableRow key={transaction.transaction_id || index} className="py-1">
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          {transaction.transaction_date
+                            ? new Date(transaction.transaction_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          <Badge variant={transaction.is_bank === 1 ? "default" : "secondary"}>
+                            {transaction.is_bank === 1 ? "Bank" : "Cash"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          {accounts.find((a) => a.acc_id === transaction.account_id)?.account_nam || "N/A"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          <Badge variant={transaction.transaction_type === "receive" ? "default" : "destructive"}>
+                            {transaction.transaction_type === "receive" ? "Receive" : "Pay"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap font-medium">
+                          {transaction.transaction_type === "receive" ? (transaction.amount?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00") : ""}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap font-medium">
+                          {transaction.transaction_type === "pay" ? (transaction.amount?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) || "0.00") : ""}
+                        </TableCell>
+                        <TableCell className="py-1 px-3">
+                          {transaction.description || "N/A"}
+                        </TableCell>
+                        <TableCell className="py-1 px-3 whitespace-nowrap">
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => {
+                              handleEdit(transaction);
+                              setIsGetDataModalOpen(false);
+                              document.getElementById("self-transaction-form")?.scrollIntoView({ behavior: "smooth" });
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+                <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                  <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                    <TableCell colSpan={4} className="text-right pr-4 text-foreground py-2">Grand Total:</TableCell>
+                    <TableCell className="text-foreground py-2">{modalTotalDebit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="text-foreground py-2">{modalTotalCredit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell colSpan={2} className="py-2"></TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -149,27 +149,26 @@ function generateLedgerHTML(
 
   const transactionRows = transactions
     .map((trans, index) => {
-      const serialNumber = index + 1;
       const runningBalance = calculateRunningBalance(index);
 
       return `
       <tr style="border-bottom: 1px solid #e5e7eb; page-break-inside: avoid;">
-        <td style="padding: 6px; text-align: center; font-size: 10px;">${serialNumber}</td>
         <td style="padding: 6px; font-size: 10px;">${new Date(
           trans.transaction_dat,
-        ).toLocaleDateString()}</td>
+        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</td>
+        <td style="padding: 6px; font-size: 10px;">${trans.fs_rate || "-"}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.t_id}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.remarks || "-"}</td>
         <td style="padding: 6px; text-align: right; font-size: 10px;">${
-          trans.debit ? trans.debit.toFixed(2) : "-"
+          trans.debit ? `${trans.debit.toFixed(2)} Dr` : "-"
         }</td>
         <td style="padding: 6px; text-align: right; font-size: 10px;">${
-          trans.credit ? trans.credit.toFixed(2) : "-"
+          trans.credit ? `${trans.credit.toFixed(2)} Cr` : "-"
         }</td>
         <td style="padding: 6px; text-align: right; font-weight: 500; font-size: 10px; color: ${
           runningBalance < 0 ? "#dc2626" : "#16a34a"
         };">
-          ${runningBalance.toFixed(2)}
+          ${Math.abs(runningBalance).toFixed(2)} ${runningBalance >= 0 ? "Dr" : "Cr"}
         </td>
       </tr>
     `;
@@ -258,18 +257,15 @@ function generateLedgerHTML(
     </head>
     <body>
       <div class="header">
-        <h1>Account Ledger</h1>
-        <p>From: <strong>${new Date(
-          startDate,
-        ).toLocaleDateString()}</strong> To: <strong>${new Date(
-          endDate,
-        ).toLocaleDateString()}</strong></p>
+        <h1 style="font-size: 24px; margin-bottom: 2px;">BHAGTANWALA POULTRY NETWORK</h1>
+        <h1 style="font-size: 18px; margin-bottom: 2px;">TANVEER AHMAD</h1>
+        <h1 style="font-size: 18px; margin-bottom: 8px;">03218600026/03218600526</h1>
       </div>
       
       <!-- Account Details -->
       <div class="account-details">
-        <div>
-          <span class="label">Account Name: </span>
+        <div style="font-size: 14px; font-weight: bold;">
+          <span class="label">Name: </span>
           <span class="value">${accountData.account_nam || "N/A"}</span>
         </div>
         <div>
@@ -278,13 +274,18 @@ function generateLedgerHTML(
             ${formatAccountCode(accountData)}
           </span>
         </div>
+        <p style="margin-top: 5px;">From: <strong>${new Date(
+          startDate,
+        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong> To: <strong>${new Date(
+          endDate,
+        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong></p>
       </div>
       
       <table>
         <thead>
           <tr>
-            <th style="text-align: center;">Sr. No</th>
             <th>Date</th>
+            <th>Fs Rate</th>
             <th>T.No</th>
             <th>Description</th>
             <th style="text-align: right;">Debit</th>
@@ -295,14 +296,13 @@ function generateLedgerHTML(
         <tbody>
           <!-- Opening Balance Row -->
           <tr class="opening-balance">
-            <td style="padding: 6px;"></td>
-            <td colspan="3" style="padding: 6px; font-size: 10px;">Opening Balance</td>
+            <td colspan="4" style="padding: 6px; font-size: 10px;">Opening Balance</td>
             <td style="padding: 6px; text-align: right;"></td>
             <td style="padding: 6px; text-align: right;"></td>
             <td style="padding: 6px; text-align: right; font-size: 10px; color: ${
               openingBalance < 0 ? "#dc2626" : "#16a34a"
             };">
-              ${openingBalance.toFixed(2)}
+              ${Math.abs(openingBalance).toFixed(2)} ${openingBalance >= 0 ? "Dr" : "Cr"}
             </td>
           </tr>
           
@@ -312,16 +312,12 @@ function generateLedgerHTML(
           <!-- Closing Balance Row -->
           <tr class="closing-balance">
             <td colspan="4" style="padding: 8px; font-size: 11px;">Closing Balance</td>
-            <td style="padding: 8px; text-align: right; font-size: 11px;">${totalDebit.toFixed(
-              2,
-            )}</td>
-            <td style="padding: 8px; text-align: right; font-size: 11px;">${totalCredit.toFixed(
-              2,
-            )}</td>
+            <td style="padding: 8px; text-align: right; font-size: 11px;">${totalDebit.toFixed(2)} Dr</td>
+            <td style="padding: 8px; text-align: right; font-size: 11px;">${totalCredit.toFixed(2)} Cr</td>
             <td style="padding: 8px; text-align: right; font-size: 11px; color: ${
               closingBalance < 0 ? "#dc2626" : "#16a34a"
             };">
-              ${closingBalance.toFixed(2)}
+              ${Math.abs(closingBalance).toFixed(2)} ${closingBalance >= 0 ? "Dr" : "Cr"}
             </td>
           </tr>
         </tbody>

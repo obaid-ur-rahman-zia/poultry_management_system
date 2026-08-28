@@ -105,11 +105,11 @@ export default function ExpenseHeadTrialBalance() {
 
   const getDateRangeText = () => {
     if (startDate && endDate)
-      return `From ${new Date(startDate).toLocaleDateString()} To ${new Date(endDate).toLocaleDateString()}`;
+      return `From ${new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} To ${new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}`;
     if (startDate)
-      return `From ${new Date(startDate).toLocaleDateString()} To ${new Date().toLocaleDateString()}`;
+      return `From ${new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} To ${new Date().toLocaleDateString("en-GB").replace(/\//g, "-")}`;
     if (endDate)
-      return `From Beginning To ${new Date(endDate).toLocaleDateString()}`;
+      return `From Beginning To ${new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}`;
     return `All Time Records`;
   };
 

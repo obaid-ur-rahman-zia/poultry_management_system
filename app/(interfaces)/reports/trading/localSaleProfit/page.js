@@ -95,7 +95,7 @@ export default function LocalSaleProfitModal() {
   const formatPeriod = (period, groupType) => {
     if (groupType === "date") {
       const date = new Date(period);
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString("en-GB", {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -103,7 +103,7 @@ export default function LocalSaleProfitModal() {
     } else if (groupType === "month") {
       const [year, month] = period.split("-");
       const date = new Date(year, parseInt(month) - 1);
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString("en-GB", {
         month: "long",
         year: "numeric",
       });
@@ -365,8 +365,8 @@ export default function LocalSaleProfitModal() {
                   {selectedAccountName}
                 </p>
                 <p className="text-sm text-gray-600">
-                  From: {new Date(startDate).toLocaleDateString()} To:{" "}
-                  {new Date(endDate).toLocaleDateString()} | Grouped by:{" "}
+                  From: {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} To:{" "}
+                  {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")} | Grouped by:{" "}
                   {groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}
                 </p>
               </div>

@@ -1200,7 +1200,7 @@ export default function FlocManagementPage() {
                         </TableCell>
                         <TableCell>
                           {floc.starting_date
-                            ? new Date(floc.starting_date).toLocaleDateString()
+                            ? new Date(floc.starting_date).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </TableCell>
                         <TableCell>
@@ -1209,7 +1209,7 @@ export default function FlocManagementPage() {
                               {floc.ending_date
                                 ? new Date(
                                     floc.ending_date,
-                                  ).toLocaleDateString()
+                                  ).toLocaleDateString("en-GB").replace(/\//g, "-")
                                 : "Not set"}
                               {floc.ending_date &&
                                 !floc.clear_description &&
