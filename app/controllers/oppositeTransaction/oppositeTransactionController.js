@@ -423,7 +423,7 @@ class OppositeTransactionController {
       const { searchParams } = new URL(req.url);
       const start_date = searchParams.get("start_date");
       const end_date = searchParams.get("end_date");
-      const acc_id = 1; // Default to cash in hand account
+      const acc_id = 2; // Default to cash in hand account
 
       if (!start_date || !end_date) {
         const error = new Error("start_date and end_date are required");
