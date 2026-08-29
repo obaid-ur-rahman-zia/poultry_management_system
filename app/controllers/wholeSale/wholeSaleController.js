@@ -447,7 +447,10 @@ class WholeSaleController {
 
   async getPreviousFsRates(req) {
     try {
-      const rates = await WholeSaleRepository.getPreviousFsRates();
+      const { searchParams } = new URL(req.url);
+      const page = parseInt(searchParams.get("page")) || 1;
+      const limit = parseInt(searchParams.get("limit")) || 15;
+      const rates = await WholeSaleRepository.getPreviousFsRates(page, limit);
       return successResponse(rates, "Success");
     } catch (err) {
       ErrorLogger.log(

@@ -205,40 +205,45 @@ class WholeSaleRepository {
     return fsRate;
   }
 
-  async getPreviousFsRates() {
-    // Get distinct F.S Rates from whole_sale entries, ordered by date descending
-    const salesWithFsRate = await prisma.whole_sale.findMany({
-      where: {
-        OR: [{ farm_rate: { not: null } }, { sale_rate: { not: null } }],
-        status: 1,
-      },
-      select: {
-        sale_date: true,
-        farm_rate: true,
-        sale_rate: true,
-      },
-      orderBy: {
-        sale_date: "desc",
-      },
-      take: 30, // Get last 30 entries
-    });
+  async getPreviousFsRates(page = 1, limit = 15) {
+    const limitNum = parseInt(limit, 10);
+    const offset = (parseInt(page, 10) - 1) * limitNum;
 
-    // Group by date and get unique combinations
-    const rateMap = new Map();
-    salesWithFsRate.forEach((sale) => {
-      const dateKey = sale.sale_date.toISOString().split("T")[0];
-      if (!rateMap.has(dateKey)) {
-        rateMap.set(dateKey, {
-          date: sale.sale_date,
-          sale_date: sale.sale_date,
-          farm_rate: sale.farm_rate,
-          sale_rate: sale.sale_rate,
-        });
-      }
-    });
+    // Use queryRaw to group by DATE and paginate correctly
+    const rates = await prisma.$queryRaw`
+      SELECT 
+        DATE(sale_date) as sale_date,
+        MAX(farm_rate) as farm_rate,
+        MAX(sale_rate) as sale_rate
+      FROM whole_sale
+      WHERE (farm_rate IS NOT NULL OR sale_rate IS NOT NULL) AND status = 1
+      GROUP BY DATE(sale_date)
+      ORDER BY DATE(sale_date) DESC
+      LIMIT ${limitNum} OFFSET ${offset}
+    `;
 
-    // Format the data
-    return Array.from(rateMap.values());
+    const totalCountResult = await prisma.$queryRaw`
+      SELECT COUNT(DISTINCT DATE(sale_date)) as total
+      FROM whole_sale
+      WHERE (farm_rate IS NOT NULL OR sale_rate IS NOT NULL) AND status = 1
+    `;
+    
+    const total = Number(totalCountResult[0].total);
+
+    return {
+      data: rates.map((r) => ({
+        date: r.sale_date,
+        sale_date: r.sale_date,
+        farm_rate: r.farm_rate,
+        sale_rate: r.sale_rate,
+      })),
+      pagination: {
+        total,
+        page: parseInt(page, 10),
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   async updateFsRate(sale_date, farm_rate, sale_rate) {

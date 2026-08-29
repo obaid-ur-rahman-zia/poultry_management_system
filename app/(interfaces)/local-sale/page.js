@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -120,6 +120,7 @@ function LocalSaleTab() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const weightInputRef = useRef(null);
 
   // ─── computed: stock rows (read-only) ────────────────────────────────
   const stockRows = [0, 1, 2].map((index) => ({
@@ -399,6 +400,10 @@ function LocalSaleTab() {
         handleClear();
         await fetchAccounts();
         fetchSales();
+        
+        setTimeout(() => {
+          weightInputRef.current?.focus();
+        }, 100);
       } else {
         toast.error(data.response_message || "Operation failed");
       }
@@ -625,6 +630,7 @@ function LocalSaleTab() {
                   <div className="flex items-center gap-1">
                     <Label className="whitespace-nowrap text-l">Weight</Label>
                     <Input
+                      ref={weightInputRef}
                       type="number"
                       step="any"
                       placeholder="0.00"
@@ -761,7 +767,6 @@ function LocalSaleTab() {
                     <TableHeader className="sticky top-0 bg-background z-10">
                       <TableRow>
                         <TableHead>Sir</TableHead>
-                        <TableHead>Date</TableHead>
                         <TableHead>Purchaser</TableHead>
                         <TableHead>Weight</TableHead>
                         <TableHead>Rate</TableHead>
@@ -788,7 +793,6 @@ function LocalSaleTab() {
                           return (
                             <TableRow key={sale.local_sale_id}>
                               <TableCell>{index + 1}</TableCell>
-                              <TableCell>{fmtDate(sale.local_sale_date)}</TableCell>
                               <TableCell>{sale.purchaser_account_ref?.account_nam || "N/A"}</TableCell>
                               <TableCell>{sale.purchaser_weight || "0"}</TableCell>
                               <TableCell>{sale.purchaser_rate || "0"}</TableCell>
@@ -812,7 +816,7 @@ function LocalSaleTab() {
                     </TableBody>
                     <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
                       <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
-                        <TableCell colSpan={3} className="text-right pr-4 py-1">Grand Total:</TableCell>
+                        <TableCell colSpan={2} className="text-right pr-4 py-1">Grand Total:</TableCell>
                         <TableCell className="py-1">{totalListWeight.toFixed(2)}</TableCell>
                         <TableCell className="py-1"></TableCell>
                         <TableCell className="py-1">{totalListAmount.toFixed(2)}</TableCell>
@@ -885,7 +889,6 @@ function LocalSaleTab() {
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
                     <TableHead>Sir</TableHead>
-                    <TableHead>Date</TableHead>
                     <TableHead>Purchaser</TableHead>
                     <TableHead>Weight</TableHead>
                     <TableHead>Rate</TableHead>
@@ -902,7 +905,6 @@ function LocalSaleTab() {
                     return (
                       <TableRow key={sale.local_sale_id || index}>
                         <TableCell className="py-1">{index + 1}</TableCell>
-                        <TableCell className="py-1">{fmtDate(sale.local_sale_date)}</TableCell>
                         <TableCell className="py-1">{sale.purchaser_account_ref?.account_nam || "N/A"}</TableCell>
                         <TableCell className="py-1">{sale.purchaser_weight || "0"}</TableCell>
                         <TableCell className="py-1">{sale.purchaser_rate || "0"}</TableCell>
@@ -928,7 +930,7 @@ function LocalSaleTab() {
                 </TableBody>
                 <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
                   <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
-                    <TableCell colSpan={3} className="text-right pr-4 py-1">Grand Total:</TableCell>
+                    <TableCell colSpan={2} className="text-right pr-4 py-1">Grand Total:</TableCell>
                     <TableCell className="py-1">{modalTotalWeight.toFixed(2)}</TableCell>
                     <TableCell className="py-1"></TableCell>
                     <TableCell className="py-1">{modalTotalAmount.toFixed(2)}</TableCell>

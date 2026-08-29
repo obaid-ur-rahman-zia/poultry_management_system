@@ -144,6 +144,8 @@ function WholeSaleTab() {
   const [editFarmRate, setEditFarmRate] = useState("");
   const [editSaleRate, setEditSaleRate] = useState("");
   const [isSavingFsRate, setIsSavingFsRate] = useState(false);
+  const [fsRateCurrentPage, setFsRateCurrentPage] = useState(1);
+  const [fsRateTotalPages, setFsRateTotalPages] = useState(1);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -559,14 +561,17 @@ function WholeSaleTab() {
   }, [saleDate, setValue]);
 
   // Fetch previous F.S Rates
-  const fetchPreviousFsRates = async () => {
+  const fetchPreviousFsRates = async (page = 1) => {
     try {
-      const response = await fetch("/api/wholeSale/previousFsRates");
+      const response = await fetch(`/api/wholeSale/previousFsRates?page=${page}&limit=15`);
       const result = await response.json();
       if (result.response_status === "success") {
-        const ratesData =
-          result.response_result?.data || result.response_result || [];
-        setPreviousFsRates(ratesData);
+        const responseData = result.response_result;
+        setPreviousFsRates(responseData?.data || responseData || []);
+        if (responseData?.pagination) {
+          setFsRateCurrentPage(responseData.pagination.page);
+          setFsRateTotalPages(responseData.pagination.totalPages);
+        }
       }
     } catch (error) {
       console.error("Error fetching previous F.S Rates:", error);
@@ -574,7 +579,7 @@ function WholeSaleTab() {
   };
 
   const handleOpenFsRateHistory = () => {
-    fetchPreviousFsRates();
+    fetchPreviousFsRates(1);
     setIsFsRateHistoryOpen(true);
   };
 
@@ -602,7 +607,7 @@ function WholeSaleTab() {
       if (result.response_status === "success") {
         toast.success("F.S Rate updated successfully");
         setEditingFsRateDate(null);
-        fetchPreviousFsRates();
+        fetchPreviousFsRates(fsRateCurrentPage);
         fetchWholeSales();
         if (saleDate && new Date(date).toISOString().split('T')[0] === format(saleDate, "yyyy-MM-dd")) {
           checkFsRateForToday();
@@ -1749,7 +1754,28 @@ function WholeSaleTab() {
               </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex justify-between items-center w-full">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchPreviousFsRates(fsRateCurrentPage - 1)}
+                disabled={fsRateCurrentPage <= 1}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center px-2 text-sm">
+                Page {fsRateCurrentPage} of {fsRateTotalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchPreviousFsRates(fsRateCurrentPage + 1)}
+                disabled={fsRateCurrentPage >= fsRateTotalPages}
+              >
+                Next
+              </Button>
+            </div>
             <Button
               type="button"
               variant="outline"
