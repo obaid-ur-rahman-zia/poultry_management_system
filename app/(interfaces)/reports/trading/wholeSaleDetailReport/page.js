@@ -1,8 +1,19 @@
 "use client";
-import React, { useState } from "react";
-import { X, FileText } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import {
+  X,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Search,
+  FileDown
+} from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function WholeSaleReport() {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +21,13 @@ export default function WholeSaleReport() {
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [reportData, setReportData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+
+  const itemsPerPage = 80;
 
   const fetchReport = async () => {
     if (!startDate || !endDate) {
@@ -30,6 +48,7 @@ export default function WholeSaleReport() {
       const data = await res.json();
       setReportData(data.response_result || []);
       setIsOpen(true);
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching report:", error);
       toast.error("Failed to fetch report");
@@ -103,6 +122,106 @@ export default function WholeSaleReport() {
   const grandTotalFormerAmount = dates.reduce((s, d) => s + d.dateTotalFormerAmount, 0);
   const grandTotalPurchaserAmount = dates.reduce((s, d) => s + d.dateTotalPurchaserAmount, 0);
   const grandTotalProfit = dates.reduce((s, d) => s + d.dateTotalProfit, 0);
+
+  const flatItems = useMemo(() => {
+    if (!dates || dates.length === 0) return [];
+    const items = [];
+    dates.forEach((dateGroup, di) => {
+      items.push({ type: "DATE_HEADER", dateStr: dateGroup.dateStr });
+
+      dateGroup.formers.forEach((group, gi) => {
+        items.push({ type: "FORMER_HEADER", formerName: group.formerName });
+
+        group.sales.forEach((item, si) => {
+          items.push({ type: "SALE_ROW", ...item, rowIndex: si + 1, formerName: group.formerName });
+        });
+
+        items.push({
+          type: "FORMER_SUBTOTAL",
+          ...group,
+        });
+      });
+
+      items.push({
+        type: "DATE_SUBTOTAL",
+        ...dateGroup,
+      });
+
+      if (di < dates.length - 1) {
+        items.push({ type: "SPACER" });
+      }
+    });
+
+    items.push({
+      type: "GRAND_TOTAL",
+      grandTotalWeight,
+      grandTotalFormerAmount,
+      grandTotalPurchaserAmount,
+      grandTotalProfit,
+    });
+
+    return items.map((item, index) => ({ ...item, flatIndex: index }));
+  }, [dates, grandTotalWeight, grandTotalFormerAmount, grandTotalPurchaserAmount, grandTotalProfit]);
+
+  const totalPages = Math.ceil(flatItems.length / itemsPerPage) || 1;
+  const currentItems = flatItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  const goToMatch = (flatIndex) => {
+    const targetPage = Math.floor(flatIndex / itemsPerPage) + 1;
+    setCurrentPage(targetPage);
+
+    setTimeout(() => {
+      const el = document.getElementById(`item-${flatIndex}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+  };
+
+  const handleFind = () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const query = searchQuery.toLowerCase();
+    const results = [];
+    flatItems.forEach((item) => {
+      if (item.type === "SALE_ROW") {
+        const vanMatch = item.van_number && item.van_number.toString().toLowerCase().includes(query);
+        const purcherMatch = item.purcher_account_ref?.account_nam?.toLowerCase().includes(query);
+        if (vanMatch || purcherMatch) {
+          results.push(item.flatIndex);
+        }
+      } else if (item.type === "FORMER_HEADER" && item.formerName?.toLowerCase().includes(query)) {
+        results.push(item.flatIndex);
+      } else if (item.type === "DATE_HEADER" && item.dateStr?.toLowerCase().includes(query)) {
+        results.push(item.flatIndex);
+      }
+    });
+
+    setSearchResults(results);
+    if (results.length > 0) {
+      setCurrentSearchIndex(0);
+      goToMatch(results[0]);
+    } else {
+      toast.info("No matches found");
+    }
+  };
+
+  const handleFindNext = () => {
+    if (searchResults.length === 0) return;
+    const nextIndex = (currentSearchIndex + 1) % searchResults.length;
+    setCurrentSearchIndex(nextIndex);
+    goToMatch(searchResults[nextIndex]);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    document.getElementById("report-scroll-area")?.scrollTo(0, 0);
+  };
 
   const handleExport = () => {
     if (!reportData.length) {
@@ -247,24 +366,60 @@ export default function WholeSaleReport() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl h-[100vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-2 border-b border-gray-300">
-              <div>
-                <h1 className="text-xl font-bold ">Whole Sale Report</h1>
-                <p className="text-sm text-gray-600">
-                  {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} –{" "}
-                  {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
-                </p>
+            <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b bg-gray-50 gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Pagination */}
+                <div className="flex items-center gap-1 bg-white border rounded-md p-1 shadow-sm">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(1)} disabled={currentPage === 1} title="First Page">
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} title="Previous Page">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium px-2 text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} title="Next Page">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} title="Last Page">
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Find */}
+                <div className="flex items-center gap-1 bg-white border rounded-md p-1 shadow-sm">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleFind()}
+                      placeholder="Find..."
+                      className="h-8 w-40 pl-7 text-xs border-none shadow-none focus-visible:ring-0"
+                    />
+                  </div>
+                  <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={handleFind}>
+                    Find
+                  </Button>
+                  <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={handleFindNext} disabled={searchResults.length === 0}>
+                    Next
+                  </Button>
+                  {searchResults.length > 0 && (
+                    <span className="text-xs text-gray-500 px-2 font-medium whitespace-nowrap">
+                      {currentSearchIndex + 1} / {searchResults.length}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleExport}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                >
-                  Export CSV
-                </button>
+
+              <div className="flex items-center gap-2">
+                <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white h-9" onClick={handleExport}>
+                  <FileDown className="mr-2 h-4 w-4" /> Export CSV
+                </Button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-200 rounded-full transition-colors ml-2"
                 >
                   <X className="w-5 h-5 text-gray-600" />
                 </button>
@@ -272,7 +427,17 @@ export default function WholeSaleReport() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-auto p-4">
+            <div className="flex-1 overflow-auto p-4 bg-white" id="report-scroll-area">
+              <div className="mb-2 text-center">
+                <h1 className="text-xl font-bold text-gray-900 uppercase">
+                  Whole Sale Report
+                </h1>
+                <p className="text-gray-600 text-sm">
+                  {new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-")} –{" "}
+                  {new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
+                </p>
+              </div>
+
               {dates.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-gray-500 border border-gray-300 rounded">
                   No records found for this period
@@ -313,159 +478,174 @@ export default function WholeSaleReport() {
                   </thead>
 
                   <tbody>
-                    {dates.map((dateGroup, di) => (
-                      <React.Fragment key={`date-${di}`}>
-                        {/* Date Header Row */}
-                        <tr>
-                          <td
-                            colSpan={9}
-                            className="px-1 py-1 font-bold text-center  border border-black text-lg"
+                    {currentItems.map((item) => {
+                      const isMatch = searchResults[currentSearchIndex] === item.flatIndex;
+                      const matchClass = isMatch ? "bg-yellow-200" : "";
+
+                      if (item.type === "DATE_HEADER") {
+                        return (
+                          <tr key={`item-${item.flatIndex}`} id={`item-${item.flatIndex}`}>
+                            <td
+                              colSpan={9}
+                              className={`px-1 py-1 font-bold text-center border border-black text-lg bg-gray-200 ${matchClass}`}
+                            >
+                              Date: {item.dateStr}
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      if (item.type === "FORMER_HEADER") {
+                        return (
+                          <tr key={`item-${item.flatIndex}`} id={`item-${item.flatIndex}`}>
+                            <td
+                              colSpan={9}
+                              className={`px-1 py-1 font-bold bg-gray-50 border border-black text-lg ${matchClass}`}
+                            >
+                              {item.formerName}
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      if (item.type === "SALE_ROW") {
+                        return (
+                          <tr
+                            key={`item-${item.flatIndex}`}
+                            id={`item-${item.flatIndex}`}
+                            className={`transition-colors ${isMatch ? "bg-yellow-200" : "hover:bg-gray-100"}`}
                           >
-                            Date: {dateGroup.dateStr}
-                          </td>
-                        </tr>
+                            <td className="px-1 py-1 border border-black text-center">
+                              {item.rowIndex}
+                            </td>
+                            <td className="px-1 py-1 border border-black">
+                              {item.van_number}
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.weight, 0)}
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.former_rate)}
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.former_amount)}
+                            </td>
+                            <td className="px-1 py-1 border border-black">
+                              <div className="text-gray-900">
+                                {item.purcher_account_ref?.account_nam || "—"}
+                              </div>
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.purcher_rate || 0)}
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.purcher_amount)}
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono font-semibold border border-black">
+                              {fmt(item.profit)}
+                            </td>
+                          </tr>
+                        );
+                      }
 
-                        {dateGroup.formers.map((group, gi) => (
-                          <React.Fragment key={`former-${di}-${gi}`}>
-                            {/* Former Header Row */}
-                            <tr>
-                              <td
-                                colSpan={9}
-                                className="px-1 py-1 font-bold bg-gray-50 border border-black text-lg"
-                              >
-                                {group.formerName}
-                              </td>
-                            </tr>
+                      if (item.type === "FORMER_SUBTOTAL") {
+                        return (
+                          <tr key={`item-${item.flatIndex}`} id={`item-${item.flatIndex}`} className="bg-gray-100 font-semibold">
+                            <td
+                              colSpan={2}
+                              className="px-1 py-1 text-right text-gray-700 border border-black"
+                            >
+                              Total:
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
+                              {fmt(item.totalWeight, 0)}
+                            </td>
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
+                              {fmt(item.totalFormerAmount)}
+                            </td>
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
+                              {fmt(item.totalPurchaserAmount)}
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono font-bold text-gray-900 border border-black">
+                              {fmt(item.totalProfit)}
+                            </td>
+                          </tr>
+                        );
+                      }
 
-                            {/* Individual Sale Rows */}
-                            {group.sales.map((item, si) => (
-                              <tr
-                                key={item.sale_id}
-                                className="hover:bg-gray-100 transition-colors"
-                              >
-                                <td className="px-1 py-1 border border-black text-center">
-                                  {si + 1}
-                                </td>
-                                <td className="px-1 py-1 border border-black">
-                                  {item.van_number}
-                                </td>
-                                <td className="px-1 py-1 text-right font-mono border border-black">
-                                  {fmt(item.weight, 0)}
-                                </td>
-                                <td className="px-1 py-1 text-right font-mono border border-black">
-                                  {fmt(item.former_rate)}
-                                </td>
-                                <td className="px-1 py-1 text-right font-mono border border-black">
-                                  {fmt(item.former_amount)}
-                                </td>
-                                <td className="px-1 py-1 border border-black">
-                                  <div className="text-gray-900">
-                                    {item.purcher_account_ref?.account_nam || "—"}
-                                  </div>
-                                </td>
-                                <td className="px-1 py-1 text-right font-mono border border-black">
-                                  {fmt(item.purcher_rate || 0)}
-                                </td>
-                                <td className="px-1 py-1 text-right font-mono border border-black">
-                                  {fmt(item.purcher_amount)}
-                                </td>
-                                <td className="px-1 py-1 text-right font-mono font-semibold border border-black">
-                                  {fmt(item.profit)}
-                                </td>
-                              </tr>
-                            ))}
+                      if (item.type === "DATE_SUBTOTAL") {
+                        return (
+                          <tr key={`item-${item.flatIndex}`} id={`item-${item.flatIndex}`} className="font-bold">
+                            <td
+                              colSpan={2}
+                              className="px-1 py-1 text-right border border-black"
+                            >
+                              Date Total ({item.dateStr}):
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.dateTotalWeight, 0)}
+                            </td>
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.dateTotalFormerAmount)}
+                            </td>
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.dateTotalPurchaserAmount)}
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.dateTotalProfit)}
+                            </td>
+                          </tr>
+                        );
+                      }
 
-                            {/* Per-Former Subtotal Row */}
-                            <tr className="bg-gray-100 font-semibold">
-                              <td
-                                colSpan={2}
-                                className="px-1 py-1 text-right text-gray-700 border border-black"
-                              >
-                                Total:
-                              </td>
-                              <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
-                                {fmt(group.totalWeight, 0)}
-                              </td>
-                              <td className="px-1 py-1 border border-black" />
-                              <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
-                                {fmt(group.totalFormerAmount)}
-                              </td>
-                              <td className="px-1 py-1 border border-black" />
-                              <td className="px-1 py-1 border border-black" />
-                              <td className="px-1 py-1 text-right font-mono text-gray-800 border border-black">
-                                {fmt(group.totalPurchaserAmount)}
-                              </td>
-                              <td className="px-1 py-1 text-right font-mono font-bold text-gray-900 border border-black">
-                                {fmt(group.totalProfit)}
-                              </td>
-                            </tr>
-                          </React.Fragment>
-                        ))}
-
-                        {/* Per-Date Subtotal Row */}
-                        <tr className=" font-bold">
-                          <td
-                            colSpan={2}
-                            className="px-1 py-1 text-right border border-black"
-                          >
-                            Date Total ({dateGroup.dateStr}):
-                          </td>
-                          <td className="px-1 py-1 text-right font-mono border border-black">
-                            {fmt(dateGroup.dateTotalWeight, 0)}
-                          </td>
-                          <td className="px-1 py-1 border border-black" />
-                          <td className="px-1 py-1 text-right font-mono border border-black">
-                            {fmt(dateGroup.dateTotalFormerAmount)}
-                          </td>
-                          <td className="px-1 py-1 border border-black" />
-                          <td className="px-1 py-1 border border-black" />
-                          <td className="px-1 py-1 text-right font-mono border border-black">
-                            {fmt(dateGroup.dateTotalPurchaserAmount)}
-                          </td>
-                          <td className="px-1 py-1 text-right font-mono border border-black">
-                            {fmt(dateGroup.dateTotalProfit)}
-                          </td>
-                        </tr>
-
-                        {/* Spacer between dates */}
-                        {di < dates.length - 1 && (
-                          <tr>
+                      if (item.type === "SPACER") {
+                        return (
+                          <tr key={`item-${item.flatIndex}`} id={`item-${item.flatIndex}`}>
                             <td
                               colSpan={9}
                               className="py-2 border-0 bg-white"
                             />
                           </tr>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </tbody>
+                        );
+                      }
 
-                  {/* Grand Total Footer */}
-                  <tfoot>
-                    <tr className="bg-gray-800 text-white font-bold">
-                      <td
-                        colSpan={2}
-                        className="px-1 py-1 text-right border border-black"
-                      >
-                        Grand Total:
-                      </td>
-                      <td className="px-1 py-1 text-right font-mono border border-black">
-                        {fmt(grandTotalWeight, 0)}
-                      </td>
-                      <td className="px-1 py-1 border border-black" />
-                      <td className="px-1 py-1 text-right font-mono border border-black">
-                        {fmt(grandTotalFormerAmount)}
-                      </td>
-                      <td className="px-1 py-1 border border-black" />
-                      <td className="px-1 py-1 border border-black" />
-                      <td className="px-1 py-1 text-right font-mono border border-black">
-                        {fmt(grandTotalPurchaserAmount)}
-                      </td>
-                      <td className="px-1 py-1 text-right font-mono border border-black">
-                        {fmt(grandTotalProfit)}
-                      </td>
-                    </tr>
-                  </tfoot>
+                      if (item.type === "GRAND_TOTAL") {
+                        return (
+                          <tr key={`item-${item.flatIndex}`} id={`item-${item.flatIndex}`} className="bg-gray-800 text-white font-bold">
+                            <td
+                              colSpan={2}
+                              className="px-1 py-1 text-right border border-black"
+                            >
+                              Grand Total:
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.grandTotalWeight, 0)}
+                            </td>
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.grandTotalFormerAmount)}
+                            </td>
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 border border-black" />
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.grandTotalPurchaserAmount)}
+                            </td>
+                            <td className="px-1 py-1 text-right font-mono border border-black">
+                              {fmt(item.grandTotalProfit)}
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return null;
+                    })}
+                  </tbody>
                 </table>
               )}
             </div>
