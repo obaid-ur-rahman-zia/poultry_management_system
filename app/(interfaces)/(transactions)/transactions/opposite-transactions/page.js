@@ -711,7 +711,7 @@ export default function OppositeTransactionsPage() {
                         Loading...
                       </div>
                     ) : (
-                      <div className="text-sm">
+                      <div className="text-lg font-semibold">
                         Balance{" "}
                         {paidByBalance !== null
                           ? paidByBalance.toFixed(2)
@@ -851,7 +851,7 @@ export default function OppositeTransactionsPage() {
                         Loading...
                       </div>
                     ) : (
-                      <div className="text-sm">
+                      <div className="text-lg font-semibold">
                         Balance{" "}
                         {receivedByBalance !== null
                           ? receivedByBalance.toFixed(2)
@@ -1194,7 +1194,7 @@ export default function OppositeTransactionsPage() {
         open={isGetDataModalOpen}
         onOpenChange={setIsGetDataModalOpen}
       >
-        <DialogContent className="max-w-[95vw] sm:max-w-6xl min-h-[100vh] overflow-hidden flex flex-col p-4">
+        <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[100vh] overflow-hidden flex flex-col p-4">
           <div className="flex flex-col gap-4 flex-1 overflow-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
               <div className="space-y-2">

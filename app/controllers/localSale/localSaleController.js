@@ -27,7 +27,7 @@ class LocalSaleController {
 
       let data, total;
       if (getAll) {
-        data = await LocalSaleRepository.readAll();
+        data = await LocalSaleRepository.readAll(filterDate);
         total = data.length;
         return successResponse({ data }, "Success");
       } else {

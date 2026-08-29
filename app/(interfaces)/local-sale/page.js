@@ -16,6 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import {
   Pagination,
@@ -92,7 +93,7 @@ function LocalSaleTab() {
   const [localAccountDetail, setLocalAccountDetail] = useState(null);
   const [dateSources, setDateSources] = useState([]);
   const [sourceDisplayMode, setSourceDisplayMode] = useState("date");
-  
+
   // Balances
   const [purchaserBalance, setPurchaserBalance] = useState(null);
   const [localBalance, setLocalBalance] = useState(null);
@@ -106,10 +107,10 @@ function LocalSaleTab() {
   const [filterDate, setFilterDate] = useState(
     new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]
   );
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const itemsPerPage = 20;
+
+  // Modal state
+  const [isGetDataModalOpen, setIsGetDataModalOpen] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
 
   // Mobile list toggle state
   const [isMobile, setIsMobile] = useState(false);
@@ -144,7 +145,7 @@ function LocalSaleTab() {
       : 0;
 
   const previousBalance = purchaserBalance !== null ? purchaserBalance : 0;
-  
+
   const netBalance =
     previousBalance + purchaserAmount - Number(form.received_amount || 0);
 
@@ -223,30 +224,19 @@ function LocalSaleTab() {
   }, []);
 
   const fetchSales = useCallback(
-    async (page = currentPage) => {
+    async (dateOverride = null) => {
       setLoading(true);
       try {
         const queryParams = new URLSearchParams({
-          page,
-          limit: itemsPerPage,
-          ...(searchQuery && { searchQuery }),
-          ...(filterDate && { filterDate }),
+          all: "true",
+          filterDate: dateOverride || filterDate,
         });
         const res = await fetch(`/api/localSale/readAll?${queryParams.toString()}`);
         const data = await res.json();
         if (data.response_status === "success") {
           const result = data.response_result;
-          if (result?.pagination) {
-            setSales(result.data || []);
-            setTotalPages(result.pagination.totalPages || 1);
-            setTotalItems(result.pagination.total || 0);
-            setCurrentPage(result.pagination.page || page);
-          } else {
-            const list = result?.data || result || [];
-            setSales(Array.isArray(list) ? list : []);
-            setTotalPages(1);
-            setTotalItems(list.length);
-          }
+          const list = result?.data || result || [];
+          setSales(Array.isArray(list) ? list : []);
         } else {
           toast.error(data.response_message || "Failed to fetch local sales");
         }
@@ -257,7 +247,7 @@ function LocalSaleTab() {
         setLoading(false);
       }
     },
-    [currentPage]
+    [filterDate]
   );
 
   // ─── balance fetch ────────────────────────────────────────────────────
@@ -298,16 +288,8 @@ function LocalSaleTab() {
   }, [form.local_sale_date, form.local_account, fetchDateSources, sourceDisplayMode]);
 
   useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchSales(1);
-    }
-  }, [searchQuery, filterDate]); // When filters change, reset to page 1
-
-  useEffect(() => {
-    fetchSales(currentPage);
-  }, [currentPage, fetchSales]);
+    fetchSales();
+  }, [filterDate, fetchSales]);
 
   // When local account changes → load its detail & balance
   useEffect(() => {
@@ -357,7 +339,8 @@ function LocalSaleTab() {
   };
 
   const handleGetData = () => {
-    document.getElementById("local-sale-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setModalSearchQuery("");
+    setIsGetDataModalOpen(true);
   };
 
   const handleSubmit = async (e) => {
@@ -415,7 +398,7 @@ function LocalSaleTab() {
         );
         handleClear();
         await fetchAccounts();
-        fetchSales(currentPage);
+        fetchSales();
       } else {
         toast.error(data.response_message || "Operation failed");
       }
@@ -443,9 +426,9 @@ function LocalSaleTab() {
       received_amount: sale.received_amount?.toString() || "",
     });
     const snapshots = sale.source_snapshots?.map((snapshot) => ({
-        weight: snapshot.weight,
-        rate: snapshot.rate,
-      })) || [];
+      weight: snapshot.weight,
+      rate: snapshot.rate,
+    })) || [];
     setDateSources(snapshots);
     setSourceDisplayMode(snapshots.length ? "snapshot" : "date");
     document.getElementById("local-sale-form")?.scrollIntoView({ behavior: "smooth" });
@@ -470,7 +453,7 @@ function LocalSaleTab() {
         setIsDeleteDialogOpen(false);
         setDeletingId(null);
         if (editingId === deletingId) handleClear();
-        fetchSales(currentPage);
+        fetchSales();
       } else {
         toast.error(data.response_message || "Delete failed");
       }
@@ -482,6 +465,30 @@ function LocalSaleTab() {
     }
   };
 
+  // Calculate Totals for Main List
+  const totalListWeight = sales.reduce((sum, sale) => sum + (parseFloat(sale.purchaser_weight) || 0), 0);
+  const totalListAmount = sales.reduce((sum, sale) => sum + (parseFloat(sale.purchaser_amount) || 0), 0);
+  const totalListReceived = sales.reduce((sum, sale) => sum + (parseFloat(sale.received_amount) || 0), 0);
+  const totalListNetBalance = totalListAmount - totalListReceived;
+
+  // Filter for Modal
+  const modalFilteredSales = sales.filter((sale) => {
+    if (!modalSearchQuery) return true;
+    const query = modalSearchQuery.toLowerCase();
+    const purchaserName = sale.purchaser_account_ref?.account_nam?.toLowerCase() || "";
+    return (
+      purchaserName.includes(query) ||
+      sale.purchaser_weight?.toString().includes(query) ||
+      sale.purchaser_rate?.toString().includes(query) ||
+      sale.purchaser_amount?.toString().includes(query) ||
+      sale.received_amount?.toString().includes(query)
+    );
+  });
+
+  const modalTotalWeight = modalFilteredSales.reduce((sum, sale) => sum + (parseFloat(sale.purchaser_weight) || 0), 0);
+  const modalTotalAmount = modalFilteredSales.reduce((sum, sale) => sum + (parseFloat(sale.purchaser_amount) || 0), 0);
+  const modalTotalReceived = modalFilteredSales.reduce((sum, sale) => sum + (parseFloat(sale.received_amount) || 0), 0);
+  const modalTotalNetBalance = modalTotalAmount - modalTotalReceived;
 
 
   return (
@@ -568,7 +575,7 @@ function LocalSaleTab() {
               <div className="flex flex-wrap gap-4 pl-[90px]">
                 {stockRows.map((row, i) => (
                   <div key={i} className="flex items-center gap-2 bg-muted/20 px-2 py-1 rounded">
-                    <span className="text-xs text-muted-foreground">#(W/R)-{i+1}</span>
+                    <span className="text-xs text-muted-foreground">#(W/R)-{i + 1}</span>
                     <Input readOnly value={row.weight} className="h-8 w-16 text-l bg-muted" />
                     <Input readOnly value={row.rate} className="h-8 w-16 text-l bg-muted" />
                     <span className="text-l text-muted-foreground underline w-16 px-1">
@@ -579,9 +586,9 @@ function LocalSaleTab() {
               </div>
 
               <div className="flex justify-end pr-4">
-                 <span className="text-l underline font-semibold">
-                   Total Stock Amount {totalStockAmount.toFixed(2)}
-                 </span>
+                <span className="text-l underline font-semibold">
+                  Total Stock Amount {totalStockAmount.toFixed(2)}
+                </span>
               </div>
             </div>
 
@@ -664,15 +671,7 @@ function LocalSaleTab() {
 
             {/* ── Action Buttons ── */}
             <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
-                onClick={handleClear}
-                className="h-8 px-3 text-l"
-              >
-                New
-              </Button>
+
               {!isEditMode && (
                 <Button
                   type="submit"
@@ -685,7 +684,7 @@ function LocalSaleTab() {
                 </Button>
               )}
               {isEditMode && (
-                 <>
+                <>
                   <Button
                     type="submit"
                     variant="outline"
@@ -707,6 +706,15 @@ function LocalSaleTab() {
                   </Button>
                 </>
               )}
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={handleClear}
+                className="h-8 px-3 text-l"
+              >
+                New
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -724,7 +732,7 @@ function LocalSaleTab() {
               <>
                 <div className="space-y-4 mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                     <div className="space-y-4">
+                    <div className="space-y-4">
                       <Label>Search</Label>
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -736,7 +744,7 @@ function LocalSaleTab() {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <Label>Date</Label>
                       <Input
@@ -776,10 +784,10 @@ function LocalSaleTab() {
                         sales.map((sale, index) => {
                           const rowAmount = Number(sale.purchaser_amount || 0);
                           const rowNet = rowAmount - Number(sale.received_amount || 0);
-                          
+
                           return (
                             <TableRow key={sale.local_sale_id}>
-                              <TableCell>{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
+                              <TableCell>{index + 1}</TableCell>
                               <TableCell>{fmtDate(sale.local_sale_date)}</TableCell>
                               <TableCell>{sale.purchaser_account_ref?.account_nam || "N/A"}</TableCell>
                               <TableCell>{sale.purchaser_weight || "0"}</TableCell>
@@ -802,64 +810,19 @@ function LocalSaleTab() {
                         })
                       )}
                     </TableBody>
+                    <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                      <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                        <TableCell colSpan={3} className="text-right pr-4 py-1">Grand Total:</TableCell>
+                        <TableCell className="py-1">{totalListWeight.toFixed(2)}</TableCell>
+                        <TableCell className="py-1"></TableCell>
+                        <TableCell className="py-1">{totalListAmount.toFixed(2)}</TableCell>
+                        <TableCell className="text-green-600 py-1">{totalListReceived.toFixed(2)}</TableCell>
+                        <TableCell className={`py-1 ${totalListNetBalance < 0 ? "text-green-600" : totalListNetBalance > 0 ? "text-red-600" : ""}`}>{totalListNetBalance.toFixed(2)}</TableCell>
+                        <TableCell className="py-1"></TableCell>
+                      </TableRow>
+                    </TableFooter>
                   </Table>
                 </div>
-                
-                {totalPages > 1 && (
-                  <div className="mt-4 flex justify-center">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious 
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
-                        </PaginationItem>
-                        
-                        {[...Array(totalPages)].map((_, i) => {
-                          const pageNumber = i + 1;
-                          if (
-                            pageNumber === 1 ||
-                            pageNumber === totalPages ||
-                            (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
-                          ) {
-                            return (
-                              <PaginationItem key={pageNumber}>
-                                <PaginationLink
-                                  onClick={() => setCurrentPage(pageNumber)}
-                                  isActive={currentPage === pageNumber}
-                                  className="cursor-pointer"
-                                >
-                                  {pageNumber}
-                                </PaginationLink>
-                              </PaginationItem>
-                            );
-                          }
-                          if (
-                            pageNumber === currentPage - 2 ||
-                            pageNumber === currentPage + 2
-                          ) {
-                            return (
-                              <PaginationItem key={pageNumber}>
-                                <span className="px-2 text-muted-foreground">...</span>
-                              </PaginationItem>
-                            );
-                          }
-                          return null;
-                        })}
-
-                        <PaginationItem>
-                          <PaginationNext 
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
               </>
             )}
           </MobileListToggle>
@@ -885,6 +848,100 @@ function LocalSaleTab() {
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Get Data Modal */}
+      <Dialog open={isGetDataModalOpen} onOpenChange={setIsGetDataModalOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[100vh] overflow-hidden flex flex-col p-4">
+          <div className="flex flex-col gap-4 flex-1 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
+              <div className="space-y-2">
+                <Label>Search Everything</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by purchaser, amounts, rates..."
+                    value={modalSearchQuery}
+                    onChange={(e) => setModalSearchQuery(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Date Filter</Label>
+                <Input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto border rounded-md [&_[data-slot=table-container]]:overflow-visible">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead>Sir</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Purchaser</TableHead>
+                    <TableHead>Weight</TableHead>
+                    <TableHead>Rate</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Received</TableHead>
+                    <TableHead>Net Balance</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modalFilteredSales.map((sale, index) => {
+                    const rowAmount = Number(sale.purchaser_amount || 0);
+                    const rowNet = rowAmount - Number(sale.received_amount || 0);
+                    return (
+                      <TableRow key={sale.local_sale_id || index}>
+                        <TableCell className="py-1">{index + 1}</TableCell>
+                        <TableCell className="py-1">{fmtDate(sale.local_sale_date)}</TableCell>
+                        <TableCell className="py-1">{sale.purchaser_account_ref?.account_nam || "N/A"}</TableCell>
+                        <TableCell className="py-1">{sale.purchaser_weight || "0"}</TableCell>
+                        <TableCell className="py-1">{sale.purchaser_rate || "0"}</TableCell>
+                        <TableCell className="py-1">{sale.purchaser_amount || "0"}</TableCell>
+                        <TableCell className="text-green-600 py-1">{sale.received_amount || "0"}</TableCell>
+                        <TableCell className={`py-1 ${rowNet < 0 ? "text-green-600 font-semibold" : rowNet > 0 ? "text-red-600 font-semibold" : ""}`}>{rowNet}</TableCell>
+                        <TableCell className="py-1">
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => {
+                              handleEdit(sale);
+                              setIsGetDataModalOpen(false);
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+                <TableFooter className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                  <TableRow className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                    <TableCell colSpan={3} className="text-right pr-4 py-1">Grand Total:</TableCell>
+                    <TableCell className="py-1">{modalTotalWeight.toFixed(2)}</TableCell>
+                    <TableCell className="py-1"></TableCell>
+                    <TableCell className="py-1">{modalTotalAmount.toFixed(2)}</TableCell>
+                    <TableCell className="text-green-600 py-1">{modalTotalReceived.toFixed(2)}</TableCell>
+                    <TableCell className={`py-1 ${modalTotalNetBalance < 0 ? "text-green-600" : modalTotalNetBalance > 0 ? "text-red-600" : ""}`}>{modalTotalNetBalance.toFixed(2)}</TableCell>
+                    <TableCell className="py-1"></TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </div>
+          </div>
+          <DialogFooter className="shrink-0 mt-4">
+            <Button variant="outline" onClick={() => setIsGetDataModalOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

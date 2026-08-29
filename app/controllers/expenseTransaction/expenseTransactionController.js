@@ -9,20 +9,25 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 class ExpenseTransactionController {
-    // ─── READ ALL (paginated) ────────────────────────────────────────────────────
+    // ─── READ ALL (paginated / date-filtered) ────────────────────────────────────
     async readAll(req) {
         try {
             const searchParams =
                 req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
 
             const getAll = searchParams.get("all") === "true";
+            const dateParam = searchParams.get("date") || "";
             const page = parseInt(searchParams.get("page") || "1");
             const limit = parseInt(searchParams.get("limit") || "20");
             const skip = (page - 1) * limit;
 
             let data, total;
             if (getAll) {
-                data = await ExpenseTransactionRepository.readAll();
+                if (dateParam) {
+                    data = await ExpenseTransactionRepository.readAllByDate(dateParam);
+                } else {
+                    data = await ExpenseTransactionRepository.readAll();
+                }
                 total = data.length;
                 return successResponse({ data }, "Success");
             } else {
@@ -54,6 +59,7 @@ class ExpenseTransactionController {
             return errorResponse(err, 500);
         }
     }
+
 
     // ─── READ BY ID ──────────────────────────────────────────────────────────────
     async readById(req) {

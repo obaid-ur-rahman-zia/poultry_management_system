@@ -241,6 +241,27 @@ class WholeSaleRepository {
     return Array.from(rateMap.values());
   }
 
+  async updateFsRate(sale_date, farm_rate, sale_rate) {
+    const date = new Date(sale_date);
+    date.setHours(0, 0, 0, 0);
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    const updated = await prisma.whole_sale.updateMany({
+      where: {
+        sale_date: {
+          gte: date,
+          lt: nextDay,
+        },
+      },
+      data: {
+        farm_rate: farm_rate,
+        sale_rate: sale_rate,
+      },
+    });
+    return updated;
+  }
+
   async readReportDetail(req_object) {
     const { start_dat, end_dat } = req_object;
 

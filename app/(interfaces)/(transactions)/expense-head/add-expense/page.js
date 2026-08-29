@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Search, Edit2, Trash2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, ArrowUp, Calendar as CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,14 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Combobox } from "@/components/ui/combobox";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function ExpenseHeadPage() {
   const { data: session } = useSession();
@@ -70,18 +69,22 @@ export default function ExpenseHeadPage() {
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterAccount, setFilterAccount] = useState("all");
-  const [filterDate, setFilterDate] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingTransactionId, setDeletingTransactionId] = useState(null);
 
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  // Date filter — default to today
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
+
+  // Get Data modal
+  const [isGetDataModalOpen, setIsGetDataModalOpen] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
+  const [modalFilterDate, setModalFilterDate] = useState("");
+  const [allTransactions, setAllTransactions] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalCalendarOpen, setModalCalendarOpen] = useState(false);
+  const [modalSelectedDate, setModalSelectedDate] = useState(null);
 
   const selectedAccount = watch("account_id");
   const selectedSubId = watch("sub_id");
@@ -97,14 +100,14 @@ export default function ExpenseHeadPage() {
     : [];
   const selectableAccounts = userCashInHandAccountId
     ? accountsForSubHead.filter(
-        (account) => account.acc_id?.toString() !== userCashInHandAccountId,
-      )
+      (account) => account.acc_id?.toString() !== userCashInHandAccountId,
+    )
     : accountsForSubHead;
 
   useEffect(() => {
     fetchAccounts();
     fetchSubHeads();
-    fetchExpenseTransactions();
+    fetchExpenseTransactions(filterDate);
   }, []);
 
   useEffect(() => {
@@ -123,6 +126,11 @@ export default function ExpenseHeadPage() {
       setCurrentBalance(null);
     }
   }, [selectedAccount]);
+
+  // Refetch when filterDate changes
+  useEffect(() => {
+    fetchExpenseTransactions(filterDate);
+  }, [filterDate]);
 
   const fetchSubHeads = async () => {
     try {
@@ -179,33 +187,18 @@ export default function ExpenseHeadPage() {
     }
   };
 
-  const fetchExpenseTransactions = async (
-    page = currentPage,
-    limit = itemsPerPage,
-  ) => {
+  const fetchExpenseTransactions = async (date = filterDate) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/expenseTransaction/readAll?page=${page}&limit=${limit}`,
-      );
+      const url = date
+        ? `/api/expenseTransaction/readAll?all=true&date=${date}`
+        : `/api/expenseTransaction/readAll?all=true`;
+      const response = await fetch(url);
       const result = await response.json();
       if (result.response_status === "success") {
         const responseData = result.response_result;
-
-        // Handle paginated response
-        if (responseData?.pagination) {
-          const transactionsData = responseData.data || [];
-          setTransactions(transactionsData);
-          setTotalPages(responseData.pagination.totalPages || 1);
-          setTotalItems(responseData.pagination.total || 0);
-          setCurrentPage(responseData.pagination.page || page);
-        } else {
-          // Fallback for non-paginated response
-          const transactionsData = responseData?.data || responseData || [];
-          setTransactions(transactionsData);
-          setTotalPages(1);
-          setTotalItems(transactionsData.length);
-        }
+        const transactionsData = responseData?.data || responseData || [];
+        setTransactions(Array.isArray(transactionsData) ? transactionsData : []);
       } else {
         toast.error(result.response_message || "Failed to fetch transactions");
       }
@@ -215,6 +208,32 @@ export default function ExpenseHeadPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch ALL transactions for the Get Data modal
+  const fetchAllTransactionsForModal = async () => {
+    setModalLoading(true);
+    try {
+      const response = await fetch(`/api/expenseTransaction/readAll?all=true`);
+      const result = await response.json();
+      if (result.response_status === "success") {
+        const responseData = result.response_result;
+        const transactionsData = responseData?.data || responseData || [];
+        setAllTransactions(Array.isArray(transactionsData) ? transactionsData : []);
+      }
+    } catch (error) {
+      console.error("Error fetching all transactions:", error);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleGetData = () => {
+    setModalSearchQuery("");
+    setModalFilterDate("");
+    setModalSelectedDate(null);
+    fetchAllTransactionsForModal();
+    setIsGetDataModalOpen(true);
   };
 
   const onSubmit = async (data) => {
@@ -263,7 +282,7 @@ export default function ExpenseHeadPage() {
         setCurrentBalance(null);
         setIsEditMode(false);
         setEditingTransactionId(null);
-        fetchExpenseTransactions(currentPage, itemsPerPage);
+        fetchExpenseTransactions(filterDate);
       } else {
         // Show backend error message
         toast.error(result.response_message || "Failed to save transaction");
@@ -321,7 +340,7 @@ export default function ExpenseHeadPage() {
           setIsEditMode(false);
           setEditingTransactionId(null);
         }
-        fetchExpenseTransactions(currentPage, itemsPerPage);
+        fetchExpenseTransactions(filterDate);
       } else {
         toast.error(result.response_message || "Failed to delete transaction");
       }
@@ -333,49 +352,51 @@ export default function ExpenseHeadPage() {
     }
   };
 
-  // Filter transactions (client-side filtering on paginated data)
+  // Client-side search filter on the date-fetched list
   const filteredTransactions = transactions.filter((transaction) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
     const accountName = transaction.account?.account_nam || "";
     const expenseHeadName =
-      transaction.account?.subhead?.parent?.subhead_nam ||
-      transaction.account?.subhead?.subhead_nam ||
-      "";
-
-    const matchesSearch =
-      searchQuery === "" ||
-      transaction.description
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      accountName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      expenseHeadName.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesAccount =
-      filterAccount === "all" ||
-      transaction.account_id?.toString() === filterAccount;
-
-    const matchesDate =
-      filterDate === "" ||
-      (transaction.expense_t_date &&
-        new Date(transaction.expense_t_date).toISOString().split("T")[0] ===
-          filterDate);
-
-    return matchesSearch && matchesAccount && matchesDate;
+      transaction.account?.subhead?.subhead_nam || "";
+    return (
+      transaction.description?.toLowerCase().includes(query) ||
+      accountName.toLowerCase().includes(query) ||
+      expenseHeadName.toLowerCase().includes(query) ||
+      transaction.amount?.toString().includes(query)
+    );
   });
 
-  // Reset to page 1 when filters change and refetch
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchExpenseTransactions(1, itemsPerPage);
-    }
-  }, [searchQuery, filterAccount, filterDate]);
+  // Grand total of displayed transactions
+  const grandTotal = filteredTransactions.reduce(
+    (sum, t) => sum + (parseFloat(t.amount) || 0),
+    0,
+  );
 
-  // Fetch transactions when page or itemsPerPage changes
-  useEffect(() => {
-    fetchExpenseTransactions(currentPage, itemsPerPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage]);
+  // Modal filter — date + search
+  const modalFilteredTransactions = allTransactions.filter((transaction) => {
+    const accountName = transaction.account?.account_nam || "";
+    const expenseHeadName = transaction.account?.subhead?.subhead_nam || "";
+
+    const matchesSearch =
+      !modalSearchQuery ||
+      transaction.description?.toLowerCase().includes(modalSearchQuery.toLowerCase()) ||
+      accountName.toLowerCase().includes(modalSearchQuery.toLowerCase()) ||
+      expenseHeadName.toLowerCase().includes(modalSearchQuery.toLowerCase()) ||
+      transaction.amount?.toString().includes(modalSearchQuery);
+
+    const matchesDate =
+      !modalFilterDate ||
+      (transaction.expense_t_date &&
+        new Date(transaction.expense_t_date).toISOString().split("T")[0] === modalFilterDate);
+
+    return matchesSearch && matchesDate;
+  });
+
+  const modalGrandTotal = modalFilteredTransactions.reduce(
+    (sum, t) => sum + (parseFloat(t.amount) || 0),
+    0,
+  );
 
   return (
     <div className="p-6 space-y-6">
@@ -390,14 +411,25 @@ export default function ExpenseHeadPage() {
             {/* Date */}
             <div className="space-y-2 w-full">
               <Label htmlFor="transaction_date">Date *</Label>
-              <Input
-                id="transaction_date"
-                type="date"
-                className="w-full"
-                {...register("transaction_date", {
-                  required: "Date is required",
-                })}
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  id="transaction_date"
+                  type="date"
+                  className="w-full"
+                  {...register("transaction_date", {
+                    required: "Date is required",
+                  })}
+                />
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleGetData}
+                  className="whitespace-nowrap"
+                >
+                  <ArrowUp className="h-4 w-4 mr-1" />
+                  Get Data
+                </Button>
+              </div>
               {errors.transaction_date && (
                 <p className="text-sm text-destructive">
                   {errors.transaction_date.message}
@@ -405,7 +437,7 @@ export default function ExpenseHeadPage() {
               )}
             </div>
 
-            {/* Transaction Mode */}
+            {/* Transaction Mode (hidden) */}
             <div className="space-y-2 w-full hidden">
               <Label>Transaction Mode</Label>
               <div className="flex items-center gap-4">
@@ -437,12 +469,11 @@ export default function ExpenseHeadPage() {
                       <Combobox
                         options={subHeads.map((subHead) => ({
                           value: subHead.sub_id.toString(),
-                          label: `${subHead.subhead_nam}${
-                            subHead.head?.head_nam &&
+                          label: `${subHead.subhead_nam}${subHead.head?.head_nam &&
                             subHead.head.head_nam !== "Main Head"
-                              ? ` (${subHead.head.head_nam})`
-                              : ""
-                          }`,
+                            ? ` (${subHead.head.head_nam})`
+                            : ""
+                            }`,
                         }))}
                         value={field.value}
                         onValueChange={(value) => {
@@ -597,48 +628,26 @@ export default function ExpenseHeadPage() {
       <Card>
         <CardContent>
           <MobileListToggle title="Expense Transactions">
-            {/* Filters */}
-            <div className="space-y-4 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Search</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by account, head, description..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-
-                {/* <div className="space-y-2">
-                  <Label>Account</Label>
-                  <Combobox
-                    options={[
-                      { value: "all", label: "All Accounts" },
-                      ...accounts.map((account) => ({
-                        value: account.acc_id.toString(),
-                        label: account.account_nam,
-                      })),
-                    ]}
-                    value={filterAccount}
-                    onValueChange={setFilterAccount}
-                    placeholder="All Accounts"
-                    searchPlaceholder="Search accounts..."
-                    emptyText="No account found."
-                  />
-                </div> */}
-
-                <div className="space-y-2">
-                  <Label>Date</Label>
-                  <Input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                  />
-                </div>
+            {/* Top bar: date filter */}
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Label className="whitespace-nowrap text-sm">Date</Label>
+                <Input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="h-8 w-40 text-sm"
+                />
+              </div>
+              {/* Inline search */}
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search account, head, description..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-8 text-sm"
+                />
               </div>
             </div>
 
@@ -663,8 +672,8 @@ export default function ExpenseHeadPage() {
                         <span className="text-sm font-medium">
                           {transaction.expense_t_date
                             ? new Date(
-                                transaction.expense_t_date,
-                              ).toLocaleDateString("en-GB").replace(/\//g, "-")
+                              transaction.expense_t_date,
+                            ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </span>
                       </div>
@@ -712,6 +721,16 @@ export default function ExpenseHeadPage() {
                     </CardContent>
                   </Card>
                 ))}
+                {/* Mobile grand total */}
+                <div className="flex items-center justify-between border-t pt-3 font-semibold text-sm">
+                  <span>Grand Total</span>
+                  <span>
+                    {grandTotal.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
               </div>
             ) : (
               <div className="relative max-h-[600px] overflow-auto">
@@ -748,13 +767,13 @@ export default function ExpenseHeadPage() {
                         className="hover:bg-muted/50 border-b transition-colors"
                       >
                         <td className="p-2 align-middle text-muted-foreground">
-                          {(currentPage - 1) * itemsPerPage + idx + 1}
+                          {idx + 1}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
                           {transaction.expense_t_date
                             ? new Date(
-                                transaction.expense_t_date,
-                              ).toLocaleDateString("en-GB").replace(/\//g, "-")
+                              transaction.expense_t_date,
+                            ).toLocaleDateString("en-GB").replace(/\//g, "-")
                             : "N/A"}
                         </td>
                         <td className="p-2 align-middle whitespace-nowrap">
@@ -786,102 +805,140 @@ export default function ExpenseHeadPage() {
                       </tr>
                     ))}
                   </tbody>
+                  {/* Grand Total row */}
+                  <tfoot className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                    <tr className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                      <td colSpan={5} className="p-2 text-right align-middle pr-4">
+                        Grand Total:
+                      </td>
+                      <td className="p-2 align-middle text-right whitespace-nowrap">
+                        {grandTotal.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </td>
+                      <td />
+                    </tr>
+                  </tfoot>
                 </table>
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages >= 1 && (
-              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm text-muted-foreground">
-                    Items per page:
-                  </Label>
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={(value) => {
-                      setItemsPerPage(Number(value));
-                      setCurrentPage(1);
-                      fetchExpenseTransactions(1, Number(value));
-                    }}
-                  >
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          setCurrentPage((prev) => Math.max(1, prev - 1))
-                        }
-                        className={
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-                      return (
-                        <PaginationItem key={pageNum}>
-                          <PaginationLink
-                            onClick={() => {
-                              setCurrentPage(pageNum);
-                              fetchExpenseTransactions(pageNum, itemsPerPage);
-                            }}
-                            isActive={currentPage === pageNum}
-                            className="cursor-pointer"
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    })}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => {
-                          const newPage = Math.min(totalPages, currentPage + 1);
-                          setCurrentPage(newPage);
-                          fetchExpenseTransactions(newPage, itemsPerPage);
-                        }}
-                        className={
-                          currentPage === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-                <div className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
-                  {totalItems} expense transactions
-                </div>
               </div>
             )}
           </MobileListToggle>
         </CardContent>
       </Card>
+
+      {/* Get Data Modal */}
+      <Dialog open={isGetDataModalOpen} onOpenChange={setIsGetDataModalOpen}>
+        <DialogContent className="min-w-4xl max-h-[100vh] flex flex-col">
+
+          {/* Modal Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0 mb-4 mt-2">
+            <div className="space-y-2">
+              <Label>Search Everything</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search account, head, description..."
+                  value={modalSearchQuery}
+                  onChange={(e) => setModalSearchQuery(e.target.value)}
+                  className="pl-9"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Date Filter</Label>
+              <Input
+                type="date"
+                value={modalFilterDate}
+                onChange={(e) => setModalFilterDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Modal Table */}
+          <div className="flex-1 overflow-auto border rounded-md">
+            {modalLoading ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">Loading...</div>
+            ) : modalFilteredTransactions.length === 0 ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                No transactions found
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-background z-10 border-b">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium">Sr</th>
+                    <th className="px-3 py-2 text-left font-medium whitespace-nowrap">Date</th>
+                    <th className="px-3 py-2 text-left font-medium whitespace-nowrap">Expense Head</th>
+                    <th className="px-3 py-2 text-left font-medium whitespace-nowrap">Account</th>
+                    <th className="px-3 py-2 text-left font-medium">Description</th>
+                    <th className="px-3 py-2 text-right font-medium whitespace-nowrap">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {modalFilteredTransactions.map((transaction, idx) => (
+                    <tr
+                      key={transaction.expense_t_id}
+                      className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => {
+                        handleEdit(transaction);
+                        // Also update the date filter to show this transaction's date
+                        const txDate = transaction.expense_t_date
+                          ? new Date(transaction.expense_t_date).toISOString().split("T")[0]
+                          : null;
+                        if (txDate) setFilterDate(txDate);
+                        setIsGetDataModalOpen(false);
+                      }}
+                    >
+                      <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        {transaction.expense_t_date
+                          ? new Date(transaction.expense_t_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                          : "N/A"}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        {transaction.account?.subhead?.subhead_nam || "N/A"}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        {transaction.account?.account_nam || "N/A"}
+                      </td>
+                      <td className="px-3 py-2 max-w-[200px] truncate">
+                        {transaction.description || "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right font-medium whitespace-nowrap">
+                        {transaction.amount?.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }) || "0.00"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="sticky bottom-0 bg-gray-200 dark:bg-gray-800 z-10 font-bold border-t-2">
+                  <tr className="hover:bg-gray-200 dark:hover:bg-gray-800 text-base">
+                    <td colSpan={5} className="px-3 py-2 text-right pr-4">
+                      Grand Total:
+                    </td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap">
+                      {modalGrandTotal.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsGetDataModalOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

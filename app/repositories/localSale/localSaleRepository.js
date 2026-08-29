@@ -1,7 +1,18 @@
 import prisma from "@/lib/prisma";
 
 class LocalSaleRepository {
-  async readAll() {
+  async readAll(filterDate = "") {
+    const where = { status: 1 };
+    
+    if (filterDate) {
+      const startOfDay = new Date(`${filterDate}T00:00:00.000Z`);
+      const endOfDay = new Date(`${filterDate}T23:59:59.999Z`);
+      where.local_sale_date = {
+        gte: startOfDay,
+        lte: endOfDay
+      };
+    }
+
     return prisma.local_sale.findMany({
       orderBy: { local_sale_id: "desc" },
       include: {
@@ -9,7 +20,7 @@ class LocalSaleRepository {
         purchaser_account_ref: true,
         source_snapshots: { include: { source: true } },
       },
-      where: { status: 1 },
+      where,
     });
   }
 

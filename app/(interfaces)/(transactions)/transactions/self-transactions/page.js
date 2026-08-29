@@ -238,7 +238,7 @@ export default function SelfTransactionPage() {
       if (dateFilter) {
         url.searchParams.append("date", dateFilter);
       }
-      
+
       const response = await fetch(url);
       const result = await response.json();
       if (result.response_status === "success") {
@@ -409,7 +409,7 @@ export default function SelfTransactionPage() {
   const modalFilteredTransactions = transactions.filter((transaction) => {
     const query = modalSearchQuery.toLowerCase();
     const accountName = accounts.find((a) => a.acc_id === transaction.account_id)?.account_nam?.toLowerCase() || "";
-    
+
     return (
       accountName.includes(query) ||
       transaction.amount?.toString().includes(query) ||
@@ -421,7 +421,7 @@ export default function SelfTransactionPage() {
   // Calculate totals
   const totalDebit = filteredTransactions.reduce((sum, transaction) => transaction.transaction_type === "receive" ? sum + (parseFloat(transaction.amount) || 0) : sum, 0);
   const totalCredit = filteredTransactions.reduce((sum, transaction) => transaction.transaction_type === "pay" ? sum + (parseFloat(transaction.amount) || 0) : sum, 0);
-  
+
   const modalTotalDebit = modalFilteredTransactions.reduce((sum, transaction) => transaction.transaction_type === "receive" ? sum + (parseFloat(transaction.amount) || 0) : sum, 0);
   const modalTotalCredit = modalFilteredTransactions.reduce((sum, transaction) => transaction.transaction_type === "pay" ? sum + (parseFloat(transaction.amount) || 0) : sum, 0);
 
@@ -780,9 +780,9 @@ export default function SelfTransactionPage() {
                       .map((subhead) => ({
                         value: subhead.sub_id.toString(),
                         label: `${subhead.subhead_nam}${subhead.head?.head_nam &&
-                            subhead.head.head_nam !== "Main Head"
-                            ? ` (${subhead.head.head_nam})`
-                            : ""
+                          subhead.head.head_nam !== "Main Head"
+                          ? ` (${subhead.head.head_nam})`
+                          : ""
                           }`,
                       })),
                   ]}
@@ -1186,7 +1186,7 @@ export default function SelfTransactionPage() {
       </Dialog>
       {/* Get Data Modal */}
       <Dialog open={isGetDataModalOpen} onOpenChange={setIsGetDataModalOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-6xl min-h-[100vh] overflow-hidden flex flex-col p-4">
+        <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[100vh] overflow-hidden flex flex-col p-4">
           <div className="flex flex-col gap-4 flex-1 overflow-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
               <div className="space-y-2">

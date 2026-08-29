@@ -140,6 +140,10 @@ function WholeSaleTab() {
   const [fsRateEditable, setFsRateEditable] = useState(true);
   const [previousFsRates, setPreviousFsRates] = useState([]);
   const [isFsRateHistoryOpen, setIsFsRateHistoryOpen] = useState(false);
+  const [editingFsRateDate, setEditingFsRateDate] = useState(null);
+  const [editFarmRate, setEditFarmRate] = useState("");
+  const [editSaleRate, setEditSaleRate] = useState("");
+  const [isSavingFsRate, setIsSavingFsRate] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -580,6 +584,40 @@ function WholeSaleTab() {
     setIsFsRateHistoryOpen(false);
   };
 
+  const handleSaveFsRate = async (date) => {
+    setIsSavingFsRate(true);
+    try {
+      const response = await fetch("/api/wholeSale/updateFsRate", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          req_object: {
+            sale_date: date,
+            farm_rate: editFarmRate,
+            sale_rate: editSaleRate
+          }
+        }),
+      });
+      const result = await response.json();
+      if (result.response_status === "success") {
+        toast.success("F.S Rate updated successfully");
+        setEditingFsRateDate(null);
+        fetchPreviousFsRates();
+        fetchWholeSales();
+        if (saleDate && new Date(date).toISOString().split('T')[0] === format(saleDate, "yyyy-MM-dd")) {
+          checkFsRateForToday();
+        }
+      } else {
+        toast.error(result.response_message || "Failed to update F.S Rate");
+      }
+    } catch (error) {
+      console.error("Error updating F.S Rate:", error);
+      toast.error("Failed to update F.S Rate");
+    } finally {
+      setIsSavingFsRate(false);
+    }
+  };
+
   useEffect(() => {
     // Check if F.S Rate is already set for selected date
     if (saleDate) {
@@ -664,7 +702,7 @@ function WholeSaleTab() {
         setCustomerBalance(null);
         setIsEditMode(false);
         setEditingSaleId(null);
-        fetchWholeSales(currentPage, itemsPerPage);
+        fetchWholeSales();
         setTimeout(() => setFocus("van_number"), 0);
       } else {
         toast.error(result.response_message || "Failed to save whole sale");
@@ -704,7 +742,7 @@ function WholeSaleTab() {
         setCustomerBalance(null);
         setIsEditMode(false);
         setEditingSaleId(null);
-        fetchWholeSales(currentPage, itemsPerPage);
+        fetchWholeSales();
       } else {
         toast.error(result.response_message || "Failed to delete whole sale");
       }
@@ -1613,40 +1651,99 @@ function WholeSaleTab() {
                     </tr>
                   </thead>
                   <tbody>
-                    {previousFsRates.map((rate, index) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-muted/50 border-b transition-colors"
-                      >
-                        <td className="p-2 align-middle whitespace-nowrap">
-                          {rate.date
-                            ? new Date(rate.date).toLocaleDateString("en-GB").replace(/\//g, "-")
-                            : rate.sale_date
-                              ? new Date(rate.sale_date).toLocaleDateString("en-GB").replace(/\//g, "-")
-                              : "N/A"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
-                          {rate.farm_rate?.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }) || "0.00"}{" "}
-                          /{" "}
-                          {rate.sale_rate?.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }) || "0.00"}
-                        </td>
-                        <td className="p-2 align-middle whitespace-nowrap">
-                          <Button
-                            variant="outline"
-                            size="xs"
-                            onClick={() => handleSelectPreviousFsRate(rate)}
-                          >
-                            Select
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                    {previousFsRates.map((rate, index) => {
+                      const isEditing = editingFsRateDate === (rate.date || rate.sale_date);
+                      return (
+                        <tr
+                          key={index}
+                          className="hover:bg-muted/50 border-b transition-colors"
+                        >
+                          <td className="p-2 align-middle whitespace-nowrap">
+                            {rate.date
+                              ? new Date(rate.date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                              : rate.sale_date
+                                ? new Date(rate.sale_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                                : "N/A"}
+                          </td>
+                          <td className="p-2 align-middle whitespace-nowrap">
+                            {isEditing ? (
+                              <Input
+                                type="number"
+                                className="h-8 w-24"
+                                value={editFarmRate}
+                                onChange={(e) => setEditFarmRate(e.target.value)}
+                              />
+                            ) : (
+                              rate.farm_rate?.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }) || "0.00"
+                            )}
+                          </td>
+                          <td className="p-2 align-middle whitespace-nowrap">
+                            {isEditing ? (
+                              <Input
+                                type="number"
+                                className="h-8 w-24"
+                                value={editSaleRate}
+                                onChange={(e) => setEditSaleRate(e.target.value)}
+                              />
+                            ) : (
+                              rate.sale_rate?.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }) || "0.00"
+                            )}
+                          </td>
+                          <td className="p-2 align-middle whitespace-nowrap">
+                            <div className="flex gap-2">
+                              {isEditing ? (
+                                <>
+                                  <Button
+                                    variant="default"
+                                    size="xs"
+                                    onClick={() => handleSaveFsRate(rate.date || rate.sale_date)}
+                                    disabled={isSavingFsRate}
+                                  >
+                                    Save
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="xs"
+                                    onClick={() => setEditingFsRateDate(null)}
+                                    disabled={isSavingFsRate}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="xs"
+                                    onClick={() => handleSelectPreviousFsRate(rate)}
+                                  >
+                                    Select
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="xs"
+                                    className="h-7 w-7 p-0"
+                                    onClick={() => {
+                                      setEditingFsRateDate(rate.date || rate.sale_date);
+                                      setEditFarmRate(rate.farm_rate?.toString() || "");
+                                      setEditSaleRate(rate.sale_rate?.toString() || "");
+                                    }}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1696,7 +1793,7 @@ function WholeSaleTab() {
       </Dialog>
       {/* Get Data Modal */}
       <Dialog open={isGetDataModalOpen} onOpenChange={setIsGetDataModalOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-6xl min-h-[100vh] overflow-hidden flex flex-col p-4">
+        <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[100vh] overflow-hidden flex flex-col p-4">
           <div className="flex flex-col gap-4 flex-1 overflow-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
               <div className="space-y-2">

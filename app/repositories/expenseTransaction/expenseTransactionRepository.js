@@ -17,6 +17,29 @@ class expenseTransactionRepository {
         });
     }
 
+    async readAllByDate(date) {
+        const start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+        return prisma.expense_transaction.findMany({
+            orderBy: { expense_t_id: "desc" },
+            where: {
+                status: 1,
+                expense_t_date: { gte: start, lte: end },
+            },
+            include: {
+                account: {
+                    include: {
+                        subhead: {
+                            include: { parent: true },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     async readAllWithPagination(skip = 0, take = 10) {
         const [data, total] = await Promise.all([
             prisma.expense_transaction.findMany({

@@ -458,6 +458,28 @@ class WholeSaleController {
     }
   }
 
+  async updateFsRate(req) {
+    try {
+      const body = await req.json();
+      const req_object = body.req_object || body;
+      
+      const { sale_date, farm_rate, sale_rate } = req_object;
+      
+      if (!sale_date) {
+        throw new Error("sale_date is required");
+      }
+      
+      const result = await WholeSaleRepository.updateFsRate(sale_date, parseFloat(farm_rate) || null, parseFloat(sale_rate) || null);
+      return successResponse(result, "F.S Rate updated successfully");
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to update F.S Rate in Method: WholeSaleController.updateFsRate",
+        err,
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
   async readReportDetail(req) {
     try {
       const { searchParams } = new URL(req.url);
