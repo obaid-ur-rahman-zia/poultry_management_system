@@ -63,9 +63,14 @@ const Sidebar = ({
   isExpanded,
 }) => {
   const pathname = usePathname();
-  const [expandedSections, setExpandedSections] = useState({
-    productOps: false,
-    accountOps: false,
+  const [expandedSections, setExpandedSections] = useState(() => {
+    const initialState = {};
+    navigationItems.forEach(item => {
+      if (item.type === "group") {
+        initialState[item.id] = item.defaultOpen ?? false;
+      }
+    });
+    return initialState;
   });
 
   const toggleCollapse = () => {
@@ -390,7 +395,7 @@ const Sidebar = ({
               return (
                 <div key={item.id} className="space-y-1">
                   <GroupHeader item={item} sectionKey={item.id} />
-                  {isExpanded && !sectionExpanded && (
+                  {isExpanded && sectionExpanded && (
                     <div className="ml-4 space-y-1 border-l-2 border-border pl-2">
                       {item.children.map((child) => (
                         <SidebarLink key={child.id} item={child} />

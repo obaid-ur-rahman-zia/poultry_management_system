@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 const reportCategories = [
-  
+
   {
     id: "trading-reports",
     title: "WHOLESALE REPORTS",
@@ -18,15 +18,6 @@ const reportCategories = [
     buttonLabel: "WHOLESALE",
     href: "/reports/trading",
     icon: ShoppingCart,
-  },
-  {
-    id: "account-reports",
-    title: "LOCALSALE REPORTS",
-    description:
-      "View ledgers, trial balances, balance sheets, and full transaction history.",
-    buttonLabel: "LOCALSALE",
-    href: "/reports/accountReports",
-    icon: Wallet,
   },
   {
     id: "farming-reports",
