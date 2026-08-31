@@ -31,6 +31,7 @@ import {
 import Image from "next/image";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
+import { useSession } from "next-auth/react";
 
 // Custom Select Styles
 const selectStyles = {
@@ -65,6 +66,7 @@ const selectStyles = {
 };
 
 export default function AccountLedgerModal() {
+  const { data: session } = useSession();
   const { control, setValue, watch } = useForm();
   const [isOpen, setIsOpen] = useState(false);
   const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
@@ -108,8 +110,18 @@ export default function AccountLedgerModal() {
       const data = await response.json();
       if (data.response_result) {
         // Handle paginated response structure
-        const accountsData = data.response_result?.data || data.response_result;
-        setAccounts(Array.isArray(accountsData) ? accountsData : []);
+        let accountsData = data.response_result?.data || data.response_result;
+        accountsData = Array.isArray(accountsData) ? accountsData : [];
+        
+        if (session?.user?.role === "USER") {
+          accountsData = accountsData.filter((a) =>
+            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
+            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser") ||
+            a.account_nam?.toLowerCase() === "bhagtanwala"
+          );
+        }
+
+        setAccounts(accountsData);
       }
     } catch (error) {
       console.error("Error fetching accounts:", error);

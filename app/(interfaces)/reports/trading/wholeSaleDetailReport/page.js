@@ -8,7 +8,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Search,
-  FileDown
+  FileDown,
+  Printer
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
@@ -299,6 +300,39 @@ export default function WholeSaleReport() {
     );
   };
 
+  const handleDownloadPDF = async () => {
+    if (!startDate || !endDate) {
+      toast.error("Please select both start and end dates");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const res = await fetch(
+        `/api/wholeSale/read/downloadReportDetail?start_dat=${startDate}&end_dat=${endDate}`,
+      );
+
+      if (!res.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Whole_Sale_Report_${startDate}_to_${endDate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download PDF");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const fmt = (n, decimals = 2) =>
     Number(n).toLocaleString(undefined, { minimumFractionDigits: decimals });
 
@@ -417,6 +451,9 @@ export default function WholeSaleReport() {
                 <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white h-9" onClick={handleExport}>
                   <FileDown className="mr-2 h-4 w-4" /> Export CSV
                 </Button>
+                <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white h-9" onClick={handleDownloadPDF} disabled={isLoading}>
+                  <Printer className="mr-2 h-4 w-4" /> {isLoading ? "Loading..." : "Download PDF"}
+                </Button>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-gray-200 rounded-full transition-colors ml-2"
@@ -429,6 +466,9 @@ export default function WholeSaleReport() {
             {/* Content */}
             <div className="flex-1 overflow-auto p-4 bg-white" id="report-scroll-area">
               <div className="mb-2 text-center">
+                <h1 className="text-3xl font-bold text-gray-900 ">
+                  BHAGTANWALA POULTRY NETWORK
+                </h1>
                 <h1 className="text-xl font-bold text-gray-900 uppercase">
                   Whole Sale Report
                 </h1>
@@ -513,7 +553,7 @@ export default function WholeSaleReport() {
                           <tr
                             key={`item-${item.flatIndex}`}
                             id={`item-${item.flatIndex}`}
-                            className={`transition-colors ${isMatch ? "bg-yellow-200" : "hover:bg-gray-100"}`}
+                            className={`transition-colors ${isMatch ? "bg-yellow-200" : "hover:bg-gray-100"} text-sm`}
                           >
                             <td className="px-1 py-1 border border-black text-center">
                               {item.rowIndex}

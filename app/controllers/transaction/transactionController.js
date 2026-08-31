@@ -3,6 +3,8 @@ import ErrorLogger from "@/app/utils/errorLogger";
 import VoucherRepository from "@/app/repositories/voucher/voucherRepository";
 import transactionRepository from "@/app/repositories/transaction/transactionRepository";
 import RedisService from "@/app/utils/redis";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 class TransactionController {
   async readAll(req) {
@@ -152,7 +154,12 @@ class TransactionController {
 
   async create(req) {
     try {
+      const session = await getServerSession(authOptions);
+      const userId = session?.user?.id?.toString() || "user 1";
       const { req_object } = await req.json();
+      
+      req_object.insert_by = userId;
+      req_object.update_by = userId;
 
       const required = [
         "acc_id",

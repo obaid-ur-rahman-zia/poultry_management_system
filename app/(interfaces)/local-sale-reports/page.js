@@ -1,6 +1,7 @@
-
 import LocalSaleReport from "./localSaleDetailReport/page"
 import LocalSaleProfit from "./localSaleProfit/page"
+import AccountLedgerModal from "../reports/accountReports/accountLedger/page"
+import BalanceSheetReport from "../reports/trading/balanceSheet/page"
 
 export default function ReportPage() {
     return (
@@ -10,6 +11,8 @@ export default function ReportPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <LocalSaleReport />
                     <LocalSaleProfit />
+                    <AccountLedgerModal />
+                    <BalanceSheetReport />
                 </div>
             </div>
         </main>

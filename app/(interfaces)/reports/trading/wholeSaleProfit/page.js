@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { X, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, FileText, Printer } from "lucide-react";
 import { toast } from "react-toastify";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 
@@ -155,6 +155,52 @@ export default function WholeSaleProfitModal() {
     );
   };
 
+  const handleDownloadPDF = async () => {
+    if (!startDate || !endDate) {
+      toast.error("Please select both start and end dates");
+      return;
+    }
+
+    let start_dat = startDate;
+    let end_dat = endDate;
+
+    if (groupBy === "month") {
+      start_dat = `${startDate}-01`;
+      const [year, month] = endDate.split("-");
+      const lastDay = new Date(year, month, 0).getDate();
+      end_dat = `${endDate}-${lastDay}`;
+    } else if (groupBy === "year") {
+      start_dat = `${startDate}-01-01`;
+      end_dat = `${endDate}-12-31`;
+    }
+
+    try {
+      setIsLoading(true);
+      const res = await fetch(
+        `/api/wholeSale/read/downloadProfitReport?start_dat=${start_dat}&end_dat=${end_dat}&group_by=${groupBy}`,
+      );
+
+      if (!res.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Whole_Sale_Profit_Report_${groupBy}_${startDate}_to_${endDate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download PDF");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Helper to render date input based on groupBy
   const renderDateInput = (value, onChange) => {
     if (groupBy === "date") {
@@ -289,6 +335,15 @@ export default function WholeSaleProfitModal() {
                   Export
                 </button>
                 <button
+                  onClick={handleDownloadPDF}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  title="Download PDF"
+                >
+                  <Printer className="w-4 h-4" />
+                  {isLoading ? "Loading..." : "Download PDF"}
+                </button>
+                <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   title="Close"
@@ -302,6 +357,9 @@ export default function WholeSaleProfitModal() {
             <div className="flex-1 overflow-auto p-4">
               {/* Report Header */}
               <div className="text-center mb-4">
+                <h1 className="text-3xl font-bold text-gray-900 ">
+                  BHAGTANWALA POULTRY NETWORK
+                </h1>
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                   WHOLESALE REPORT
                 </h1>

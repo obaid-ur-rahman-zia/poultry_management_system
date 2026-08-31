@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -56,6 +57,7 @@ import {
 } from "@/components/ui/pagination";
 
 export default function OppositeTransactionsPage() {
+  const { data: session } = useSession();
   const {
     register,
     handleSubmit,
@@ -149,7 +151,15 @@ export default function OppositeTransactionsPage() {
           accountsData = responseData?.data || responseData || [];
         }
 
-        const filteredAccounts = Array.isArray(accountsData) ? accountsData.filter((a) => a.acc_id !== 1) : [];
+        let filteredAccounts = Array.isArray(accountsData) ? accountsData.filter((a) => a.acc_id !== 1) : [];
+        
+        if (session?.user?.role === "USER") {
+          filteredAccounts = filteredAccounts.filter((a) =>
+            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
+            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser")
+          );
+        }
+
         setAllAccounts(filteredAccounts);
         setAccounts(filteredAccounts);
       }
@@ -704,22 +714,24 @@ export default function OppositeTransactionsPage() {
                   </p>
                 )}
                 {/* Paid By Balance Display */}
-                <div className="flex gap-2 items-center">
-                  <div className="flex-1">
-                    {loadingPaidByBalance ? (
-                      <div className="text-sm text-muted-foreground">
-                        Loading...
-                      </div>
-                    ) : (
-                      <div className="text-lg font-semibold">
-                        Balance{" "}
-                        {paidByBalance !== null
-                          ? paidByBalance.toFixed(2)
-                          : "0"}
-                      </div>
-                    )}
+                {session?.user?.role !== "USER" && (
+                  <div className="flex gap-2 items-center">
+                    <div className="flex-1">
+                      {loadingPaidByBalance ? (
+                        <div className="text-sm text-muted-foreground">
+                          Loading...
+                        </div>
+                      ) : (
+                        <div className="text-lg font-semibold">
+                          Balance{" "}
+                          {paidByBalance !== null
+                            ? paidByBalance.toFixed(2)
+                            : "0"}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Bank Account */}
@@ -779,6 +791,9 @@ export default function OppositeTransactionsPage() {
                         const subhead = accountSubHeads.find(sh => sh.sub_id === acc.sub_id);
                         if (!subhead) return false;
                         const shName = subhead.subhead_nam?.toLowerCase() || "";
+                        if (session?.user?.role === "USER") {
+                          return shName.includes("purchaser") || shName.includes("purcher") || shName.includes("customer") || shName.includes("farmer") || shName.includes("former") || shName.includes("supplier");
+                        }
                         return shName.includes("farmer") || shName.includes("former") || shName.includes("supplier");
                       });
 
@@ -844,22 +859,24 @@ export default function OppositeTransactionsPage() {
                   </p>
                 )}
                 {/* Received By Balance Display */}
-                <div className="flex gap-2 items-center">
-                  <div className="flex-1">
-                    {loadingReceivedByBalance ? (
-                      <div className="text-sm text-muted-foreground">
-                        Loading...
-                      </div>
-                    ) : (
-                      <div className="text-lg font-semibold">
-                        Balance{" "}
-                        {receivedByBalance !== null
-                          ? receivedByBalance.toFixed(2)
-                          : "0"}
-                      </div>
-                    )}
+                {session?.user?.role !== "USER" && (
+                  <div className="flex gap-2 items-center">
+                    <div className="flex-1">
+                      {loadingReceivedByBalance ? (
+                        <div className="text-sm text-muted-foreground">
+                          Loading...
+                        </div>
+                      ) : (
+                        <div className="text-lg font-semibold">
+                          Balance{" "}
+                          {receivedByBalance !== null
+                            ? receivedByBalance.toFixed(2)
+                            : "0"}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Amount */}

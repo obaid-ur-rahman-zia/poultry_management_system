@@ -1,9 +1,10 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import React, { useState, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 // Context to share sidebar state with layout
 const SidebarContext = createContext({
@@ -63,15 +64,38 @@ const Sidebar = ({
   isExpanded,
 }) => {
   const pathname = usePathname();
-  const [expandedSections, setExpandedSections] = useState(() => {
+  const { data: session } = useSession();
+  const [expandedSections, setExpandedSections] = useState({});
+
+  // Filter items based on user role
+  const filteredNavigationItems = navigationItems.filter(item => {
+    if (item.roles && session?.user?.role) {
+      if (!item.roles.includes(session.user.role)) return false;
+    }
+    return true;
+  }).map(item => {
+    if (item.children) {
+      const filteredSubItems = item.children.filter(subItem => {
+        if (subItem.roles && session?.user?.role) {
+          if (!subItem.roles.includes(session.user.role)) return false;
+        }
+        return true;
+      });
+      return { ...item, children: filteredSubItems };
+    }
+    return item;
+  }).filter(item => item.type === "single" || (item.children && item.children.length > 0));
+
+  // Initialize expanded state based on defaultOpen
+  useEffect(() => {
     const initialState = {};
-    navigationItems.forEach(item => {
-      if (item.type === "group") {
-        initialState[item.id] = item.defaultOpen ?? false;
+    filteredNavigationItems.forEach((item) => {
+      if (item.type === "group" && item.defaultOpen) {
+        initialState[item.id] = true;
       }
     });
-    return initialState;
-  });
+    setExpandedSections(initialState);
+  }, [session]); // Add session as dependency so it re-runs when roles are loaded
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -238,7 +262,7 @@ const Sidebar = ({
               </div>
             </SheetHeader>
             <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-              {navigationItems.map((item) => {
+              {filteredNavigationItems.map((item) => {
                 if (item.type === "single") {
                   return (
                     <SidebarLink key={item.id} item={item} isExpanded={true} />
@@ -385,7 +409,7 @@ const Sidebar = ({
             isExpanded ? "px-3 py-3" : "px-2 py-3"
           } space-y-1`}
         >
-          {navigationItems.map((item) => {
+          {filteredNavigationItems.map((item) => {
             if (item.type === "single") {
               return <SidebarLink key={item.id} item={item} />;
             }

@@ -11,6 +11,9 @@ import {
 import transactionRepository from "@/app/repositories/transaction/transactionRepository";
 import prisma from "@/lib/prisma";
 import { calculateFinancialYear } from "@/app/components/calculateFinYear/financialYear";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import UserRepository from "@/app/repositories/user/userRepository";
 
 class LocalSaleController {
   async readAll(req) {
@@ -134,7 +137,33 @@ class LocalSaleController {
 
   async create(req) {
     try {
+      const session = await getServerSession(authOptions);
+      const sessionUser = session?.user;
+
+      if (!sessionUser) {
+        return errorResponse(new Error("Unauthorized"), 401);
+      }
+
+      const userId = sessionUser.id?.toString();
+      const user = await UserRepository.readById(userId);
+
+      if (!user) {
+        return errorResponse(new Error("User not found"), 404);
+      }
+
+      if (!user.cash_in_hand_account || !user.cash_in_hand_account_id) {
+        return errorResponse(
+          new Error("User does not have a cash in hand account configured"),
+          400,
+        );
+      }
+
+      const cashInHandAccountId = user.cash_in_hand_account_id;
+
       const { req_object } = await req.json();
+      
+      req_object.insert_by = req_object.insert_by || userId;
+      req_object.update_by = req_object.update_by || userId;
       const {
         local_sale_date,
         local_account,
@@ -173,7 +202,7 @@ class LocalSaleController {
 
           await snapshotSources(created.local_sale_id, local_sale_date, tx);
 
-          await createLocalSaleTransactions(created, tx);
+          await createLocalSaleTransactions(created, tx, cashInHandAccountId);
           return created;
         },
         { maxWait: 5000, timeout: 10000, isolationLevel: "Serializable" },
@@ -188,7 +217,32 @@ class LocalSaleController {
 
   async update(req) {
     try {
+      const session = await getServerSession(authOptions);
+      const sessionUser = session?.user;
+
+      if (!sessionUser) {
+        return errorResponse(new Error("Unauthorized"), 401);
+      }
+
+      const userId = sessionUser.id?.toString();
+      const user = await UserRepository.readById(userId);
+
+      if (!user) {
+        return errorResponse(new Error("User not found"), 404);
+      }
+
+      if (!user.cash_in_hand_account || !user.cash_in_hand_account_id) {
+        return errorResponse(
+          new Error("User does not have a cash in hand account configured"),
+          400,
+        );
+      }
+
+      const cashInHandAccountId = user.cash_in_hand_account_id;
+
       const { req_object } = await req.json();
+      
+      req_object.update_by = req_object.update_by || userId;
       const { local_sale_id } = req_object;
       if (!local_sale_id)
         return errorResponse(new Error("local_sale_id is required"), 400);
@@ -216,7 +270,7 @@ class LocalSaleController {
           if (!updated || !updated.local_sale_id)
             throw new Error("Failed to update local sale record");
           await snapshotSources(updated.local_sale_id, updated.local_sale_date, tx);
-          await createLocalSaleTransactions(updated, tx);
+          await createLocalSaleTransactions(updated, tx, cashInHandAccountId);
           return updated;
         },
         { maxWait: 5000, timeout: 10000, isolationLevel: "Serializable" },
@@ -271,12 +325,9 @@ function validateLocalSaleAmounts(data) {
   if (amount < 0 || received < 0 || weight <= 0 || rate < 0) {
     throw new Error("Local sale amounts must be nonnegative and weight must be greater than zero");
   }
-  if (received > amount) {
-    throw new Error("Received amount cannot be greater than purchaser amount");
-  }
 }
 
-async function createLocalSaleTransactions(localSale, tx) {
+async function createLocalSaleTransactions(localSale, tx, cash_account) {
   if (!localSale || !localSale.local_sale_id) {
     throw new Error(
       "Invalid localSale object provided to createLocalSaleTransactions",
@@ -297,12 +348,6 @@ async function createLocalSaleTransactions(localSale, tx) {
   };
 
   const transactionData = [];
-  const configService = new AccountConfigService();
-  const cashAccountConfig = await configService.getAccountConfig(
-    "Cash Account (Super Admin)",
-    tx,
-  );
-  const cash_account = cashAccountConfig?.acc_id;
 
   // Local account: credit (stock going out) for the total amount
   if (localSale.purchaser_amount > 0) {
@@ -325,7 +370,15 @@ async function createLocalSaleTransactions(localSale, tx) {
       acc_id: localSale.purchaser_account,
       debit: restAmount,
       credit: 0,
-      remarks: `Local Sale#${localSale.local_sale_id} Weight:${localSale.purchaser_weight} Rate@${localSale.purchaser_rate} - Balance Owed`,
+      remarks: `Local Sale#${localSale.local_sale_id} Weight:${localSale.purchaser_weight} Rate@${localSale.purchaser_rate}`,
+      ...constants,
+    });
+  } else if (restAmount < 0) {
+    transactionData.push({
+      acc_id: localSale.purchaser_account,
+      debit: 0,
+      credit: Math.abs(restAmount),
+      remarks: `Local Sale#${localSale.local_sale_id} Weight:${localSale.purchaser_weight} Rate@${localSale.purchaser_rate}`,
       ...constants,
     });
   }

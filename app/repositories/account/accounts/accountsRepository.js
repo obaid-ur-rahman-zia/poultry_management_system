@@ -112,6 +112,7 @@ class AccountsRepository {
           account_cnic: data.account_cnic || null,
           account_alter_nam: data.account_alter_nam || null,
           account_no: data.account_no || null,
+          credit_limit: data.credit_limit !== undefined ? Number(data.credit_limit) : 0,
           is_supplier: data.is_supplier !== undefined ? data.is_supplier : 0,
           is_customer: data.is_customer !== undefined ? data.is_customer : 0,
           is_employee: data.is_employee !== undefined ? data.is_employee : 0,
@@ -166,6 +167,10 @@ class AccountsRepository {
         account_no:
           req_object.account_no !== undefined
             ? req_object.account_no
+            : undefined,
+        credit_limit:
+          req_object.credit_limit !== undefined
+            ? Number(req_object.credit_limit)
             : undefined,
         head_id:
           req_object.head_id !== undefined ? req_object.head_id : undefined,

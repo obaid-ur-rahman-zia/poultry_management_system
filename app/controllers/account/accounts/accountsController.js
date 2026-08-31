@@ -333,6 +333,7 @@ class AccountsController {
             account_cnic: req_object.account_cnic,
             account_alter_nam: req_object.account_alter_nam,
             account_no: req_object.account_no,
+            credit_limit: req_object.credit_limit,
             is_supplier,
             is_customer,
             is_employee,

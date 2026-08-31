@@ -4,6 +4,9 @@ import ErrorLogger from "@/app/utils/errorLogger";
 import { createTransactions } from "./wholeSaleTransactions";
 import transactionRepository from "@/app/repositories/transaction/transactionRepository";
 import prisma from "@/lib/prisma";
+import { generateWholeSaleDetailReportPDF } from "@/app/utils/pdfGenerators/wholeSaleDetailReport";
+import { generateWholeSaleProfitReportPDF } from "@/app/utils/pdfGenerators/wholeSaleProfitReport";
+import { NextResponse } from "next/server";
 import {
   createSource,
   deactivateSource,
@@ -512,6 +515,51 @@ class WholeSaleController {
     }
   }
 
+  async downloadReportDetail(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+
+      if (!start_dat || !end_dat) {
+        return NextResponse.json(
+          { error: "start_dat and end_dat are required" },
+          { status: 400 }
+        );
+      }
+
+      const reportData = await WholeSaleRepository.readReportDetail({
+        start_dat: start_dat,
+        end_dat: end_dat,
+      });
+
+      // Generate PDF
+      const pdfBuffer = await generateWholeSaleDetailReportPDF(
+        reportData,
+        start_dat,
+        end_dat
+      );
+      
+      const uint8Array = new Uint8Array(pdfBuffer);
+
+      // Return PDF as download
+      return new NextResponse(uint8Array, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="Whole_Sale_Report_${start_dat}_to_${end_dat}.pdf"`,
+          "Content-Length": pdfBuffer.length.toString(),
+        },
+      });
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      return NextResponse.json(
+        { error: "Failed to generate PDF", details: error.message },
+        { status: 500 }
+      );
+    }
+  }
+
   async readProfitLossReport(req) {
     try {
       const { searchParams } = new URL(req.url);
@@ -541,6 +589,54 @@ class WholeSaleController {
         err,
       );
       return errorResponse(err, 500);
+    }
+  }
+
+  async downloadProfitReport(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const group_by = searchParams.get("group_by") || "date";
+
+      if (!start_dat || !end_dat) {
+        return NextResponse.json(
+          { error: "start_dat and end_dat are required" },
+          { status: 400 }
+        );
+      }
+
+      const report = await WholeSaleRepository.readProfitLossReport({
+        start_dat: start_dat,
+        end_dat: end_dat,
+        group_by: group_by,
+      });
+
+      // Generate PDF
+      const pdfBuffer = await generateWholeSaleProfitReportPDF(
+        report,
+        start_dat,
+        end_dat,
+        group_by
+      );
+      
+      const uint8Array = new Uint8Array(pdfBuffer);
+
+      // Return PDF as download
+      return new NextResponse(uint8Array, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="Whole_Sale_Profit_Report_${start_dat}_to_${end_dat}.pdf"`,
+          "Content-Length": pdfBuffer.length.toString(),
+        },
+      });
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      return NextResponse.json(
+        { error: "Failed to generate PDF", details: error.message },
+        { status: 500 }
+      );
     }
   }
 }

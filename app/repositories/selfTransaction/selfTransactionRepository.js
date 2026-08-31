@@ -1,8 +1,11 @@
 import prisma from "@/lib/prisma";
 
 class SelfTransactionRepository {
-  async readAll(date = null) {
+  async readAll(date = null, insertBy = null) {
     let dateFilter = {};
+    if (insertBy) {
+      dateFilter.insert_by = insertBy;
+    }
     if (date) {
       const startOfDay = new Date(date);
       startOfDay.setUTCHours(0, 0, 0, 0);
@@ -11,6 +14,7 @@ class SelfTransactionRepository {
       endOfDay.setUTCHours(23, 59, 59, 999);
 
       dateFilter = {
+        ...dateFilter,
         transaction_date: {
           gte: startOfDay,
           lte: endOfDay,
@@ -30,8 +34,11 @@ class SelfTransactionRepository {
     });
   }
 
-  async readAllWithPagination(skip = 0, take = 10, date = null) {
+  async readAllWithPagination(skip = 0, take = 10, date = null, insertBy = null) {
     let dateFilter = {};
+    if (insertBy) {
+      dateFilter.insert_by = insertBy;
+    }
     if (date) {
       const startOfDay = new Date(date);
       startOfDay.setUTCHours(0, 0, 0, 0);
@@ -40,6 +47,7 @@ class SelfTransactionRepository {
       endOfDay.setUTCHours(23, 59, 59, 999);
 
       dateFilter = {
+        ...dateFilter,
         transaction_date: {
           gte: startOfDay,
           lte: endOfDay,

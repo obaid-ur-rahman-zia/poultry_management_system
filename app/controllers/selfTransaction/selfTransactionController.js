@@ -13,6 +13,10 @@ import { authOptions } from "@/lib/auth";
 class SelfTransactionController {
   async readAll(req) {
     try {
+      const session = await getServerSession(authOptions);
+      const userId = session?.user?.id?.toString();
+      const role = session?.user?.role;
+
       // Extract pagination params
       const searchParams =
         req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
@@ -22,17 +26,20 @@ class SelfTransactionController {
       const limit = parseInt(searchParams.get("limit") || "20");
       const skip = (page - 1) * limit;
 
+      const insertBy = (role === "USER" && userId) ? userId : null;
+
       // If getAll is true, fetch all self transactions without pagination
       let data, total;
       if (getAll) {
-        data = await SelfTransactionRepository.readAll(date);
+        data = await SelfTransactionRepository.readAll(date, insertBy);
         total = data.length;
       } else {
         // Get total count and paginated self transactions
         const result = await SelfTransactionRepository.readAllWithPagination(
           skip,
           limit,
-          date
+          date,
+          insertBy
         );
         data = result.data;
         total = result.total;
@@ -127,6 +134,10 @@ class SelfTransactionController {
       }
 
       const { req_object } = await req.json();
+      
+      req_object.insert_by = req_object.insert_by || userId.toString();
+      req_object.update_by = req_object.update_by || userId.toString();
+
       const { transaction_date, account_id, amount, transaction_type } =
         req_object;
 
@@ -287,6 +298,8 @@ class SelfTransactionController {
 
       const { req_object } = await req.json();
       const { transaction_id } = req_object;
+      
+      req_object.update_by = req_object.update_by || userId.toString();
 
       if (!transaction_id) {
         const error = new Error(

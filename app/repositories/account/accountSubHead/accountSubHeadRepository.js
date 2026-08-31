@@ -164,6 +164,7 @@ class AccountSubHeadRepository {
             acc_id: true,
             account_nam: true,
             account_contact: true,
+            credit_limit: true,
           },
         },
       },
@@ -238,6 +239,7 @@ class AccountSubHeadRepository {
           total_debit: stats.debit,
           total_credit: stats.credit,
           balance: balance,
+          credit_limit: acc.credit_limit,
         };
       });
 

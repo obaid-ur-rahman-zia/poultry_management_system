@@ -514,3 +514,88 @@ custom-exception:  [Failed to create subhead - duplicate name in Method: Account
 system-exception:  [Error: A subhead with this name already exists]
 
 
+exception-time:       [2026-08-30T11:59:24.770Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-08-30T11:59:24.802Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:592:156    589 ;   590 class AccountSubHeadRepository {   591     async readAll() { → 592         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-08-30T11:59:35.618Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:35.852Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:35.905Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:35.959Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:36.035Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-08-30T11:59:36.073Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:592:156    589 ;   590 class AccountSubHeadRepository {   591     async readAll() { → 592         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-08-30T11:59:38.933Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:39.219Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:39.251Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:39.257Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:592:156    589 ;   590 class AccountSubHeadRepository {   591     async readAll() { → 592         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:39.269Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:39.280Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:39.915Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:324:148    321 ;   322 class AccountsRepository {   323     async readAll() { → 324         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-30T11:59:39.936Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in C:\Switch2iTech\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__adac50ae._.js:592:156    589 ;   590 class AccountSubHeadRepository {   591     async readAll() { → 592         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Can't reach database server at `72.61.125.68:5229`  Please make sure your database server is running at `72.61.125.68:5229`.]
+
+
+exception-time:       [2026-08-31T09:10:27.659Z]  
+custom-exception:  [LocalSaleController.create] | 
+system-exception:  [Error: Received amount cannot be greater than purchaser amount]
+
+

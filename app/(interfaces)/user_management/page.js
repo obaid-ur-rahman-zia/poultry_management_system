@@ -220,14 +220,8 @@ export default function UserManagement() {
     setIsEditMode(true);
     setEditingUserId(user.user_id);
     
-    // Extract username from email if company domain is set
+    // Use the raw email/username directly
     let emailUsername = user.email || "";
-    if (companyEmailDomain && emailUsername.includes(`@${companyEmailDomain}`)) {
-      emailUsername = emailUsername.replace(`@${companyEmailDomain}`, "");
-    } else if (emailUsername.includes("@")) {
-      // If it has a different domain, extract just the username part
-      emailUsername = emailUsername.split("@")[0];
-    }
     
     reset({
       user_nam: user.user_nam || "",
@@ -276,10 +270,8 @@ export default function UserManagement() {
         return;
       }
 
-      // Build full email with domain
-      const fullEmail = companyEmailDomain 
-        ? `${emailUsername}@${companyEmailDomain}`
-        : emailUsername; // Fallback if no domain is set
+      // Build full email
+      const fullEmail = emailUsername;
 
       const url = "/api/user";
       const method = isEditMode ? "PUT" : "POST";
@@ -745,43 +737,18 @@ export default function UserManagement() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  Email <span className="text-red-500">*</span>
+                  Username / Email <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex items-center gap-0">
                   <Input
                     id="email"
                     type="text"
                     {...register("email", {
-                      required: "Email is required",
-                      validate: (value) => {
-                        const emailValue = value.trim();
-                        if (!emailValue) {
-                          return "Email username is required";
-                        }
-                        // Validate username format (no @ symbol allowed)
-                        const usernamePattern = /^[A-Z0-9._%+-]+$/i;
-                        if (!usernamePattern.test(emailValue)) {
-                          return "Invalid username format";
-                        }
-                        return true;
-                      },
+                      required: "Username / Email is required",
                     })}
-                    placeholder="username"
-                    className="rounded-r-none border-r-0"
+                    placeholder="Enter username or email"
+                    className="w-full"
                   />
-                  {companyEmailDomain && (
-                    <Input
-                      type="text"
-                      value={`@${companyEmailDomain}`}
-                      disabled
-                      readOnly
-                      className="rounded-l-none bg-gray-100 text-gray-600 cursor-not-allowed flex-shrink-0 border-l-0"
-                      style={{ 
-                        minWidth: `${Math.max(companyEmailDomain.length + 3, 10)}ch`,
-                        maxWidth: `${companyEmailDomain.length + 3}ch`
-                      }}
-                    />
-                  )}
                 </div>
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>

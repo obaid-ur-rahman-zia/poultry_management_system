@@ -2,6 +2,8 @@ import AccountSubHeadRepository from "@/app/repositories/account/accountSubHead/
 import { successResponse, errorResponse } from "@/app/utils/response";
 import ErrorLogger from "@/app/utils/errorLogger";
 import RedisService from "@/app/utils/redis";
+import { NextResponse } from "next/server";
+import { generateSubheadTrialBalanceReportPDF } from "@/app/utils/pdfGenerators/subheadTrialBalanceReport";
 
 class AccountSubHeadController {
   async readAll() {
@@ -123,6 +125,40 @@ class AccountSubHeadController {
         err,
       );
       return errorResponse(err, 500);
+    }
+  }
+
+  // 📊 Download Subhead Trial Balance PDF
+  async downloadTrialBalance(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const endDate = searchParams.get("endDate");
+
+      const data = await AccountSubHeadRepository.readTrialBalance(
+        null,
+        endDate,
+      );
+
+      // Generate PDF
+      const pdfBuffer = await generateSubheadTrialBalanceReportPDF(data, endDate);
+      
+      const uint8Array = new Uint8Array(pdfBuffer);
+
+      // Return PDF as download
+      return new NextResponse(uint8Array, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="Overall_Business_Report_${endDate || 'All_Time'}.pdf"`,
+          "Content-Length": pdfBuffer.length.toString(),
+        },
+      });
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      return NextResponse.json(
+        { error: "Failed to generate PDF", details: error.message },
+        { status: 500 }
+      );
     }
   }
 

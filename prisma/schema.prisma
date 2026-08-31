@@ -564,6 +564,7 @@ model accounts {
   rate_one          Float?
   rate_two          Float?
   rate_three        Float?
+  credit_limit      Float? @default(0)
 
   // Account type flags
   is_employee     Int @default(0)

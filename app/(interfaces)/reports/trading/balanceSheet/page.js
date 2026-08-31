@@ -1,10 +1,29 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Printer, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
+import { useSession } from "next-auth/react";
+import Select from "react-select";
+
+const selectStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    borderColor: state.isFocused ? "#3B82F6" : "#E5E7EB",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+    borderWidth: "2px",
+    minHeight: "30px",
+    "&:hover": { borderColor: "#3B82F6" },
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected ? "#3B82F6" : state.isFocused ? "#EFF6FF" : "white",
+    color: state.isSelected ? "white" : "#374151",
+  }),
+};
 
 export default function BalanceSheetReport() {
+  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
@@ -14,16 +33,46 @@ export default function BalanceSheetReport() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [accounts, setAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
+  useEffect(() => {
+    if (session?.user?.role === "SUPER_ADMIN") {
+      fetch("/api/account/accounts/readAll?all=true")
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.response_status === "success") {
+            const data = result.response_result?.data || result.response_result || [];
+            // Filter for cash accounts - strictly those falling under "Cash In Hand" subhead
+            const cashAccounts = Array.isArray(data) ? data.filter(a =>
+              a.subhead?.subhead_nam?.toLowerCase() === "cash in hand"
+            ) : [];
+            setAccounts(cashAccounts);
+            // Default to account id 2 if it exists
+            const defaultAcc = cashAccounts.find(a => a.acc_id === 2);
+            if (defaultAcc) setSelectedAccount(2);
+          }
+        });
+    }
+  }, [session]);
+
   const fetchBalanceSheet = async () => {
     if (!startDate || !endDate) {
       toast.error("Please select both start and end dates");
       return;
     }
 
+    let accId = 2; // default
+    if (session?.user?.role === "USER" && session.user.cashInHandAccountId) {
+      accId = session.user.cashInHandAccountId;
+    } else if (selectedAccount) {
+      accId = selectedAccount;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/account/accounts/read/balanceSheet?start_date=${startDate}&end_date=${endDate}`,
+        `/api/account/accounts/read/balanceSheet?start_date=${startDate}&end_date=${endDate}&acc_id=${accId}`,
       );
       const data = await response.json();
 
@@ -242,6 +291,46 @@ export default function BalanceSheetReport() {
     exportToCSV(`Balance_Sheet_${startDate}_to_${endDate}.csv`, headers, rows);
   };
 
+  const handleDownloadPDF = async () => {
+    if (!startDate || !endDate) {
+      toast.error("Please select both start and end dates");
+      return;
+    }
+
+    let accId = 2;
+    if (session?.user?.role === "USER" && session.user.cashInHandAccountId) {
+      accId = session.user.cashInHandAccountId;
+    } else if (selectedAccount) {
+      accId = selectedAccount;
+    }
+
+    try {
+      setIsLoading(true);
+      const res = await fetch(
+        `/api/account/accounts/read/downloadBalanceSheet?start_date=${startDate}&end_date=${endDate}&acc_id=${accId}`,
+      );
+
+      if (!res.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Balance_Sheet_${startDate}_to_${endDate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download PDF");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
       {/* Card to trigger balance sheet */}
@@ -253,6 +342,21 @@ export default function BalanceSheetReport() {
             BALANCE SHEET/CASH IN HAND
           </h3>
           <div className="space-y-3 mb-4">
+            {session?.user?.role === "SUPER_ADMIN" && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Cash Account
+                </label>
+                <Select
+                  options={accounts.map(a => ({ value: a.acc_id, label: a.account_nam }))}
+                  value={accounts.find(a => a.acc_id === selectedAccount) ? { value: selectedAccount, label: accounts.find(a => a.acc_id === selectedAccount).account_nam } : null}
+                  onChange={(opt) => setSelectedAccount(opt ? opt.value : null)}
+                  placeholder="Select cash account..."
+                  styles={selectStyles}
+                  isClearable
+                />
+              </div>
+            )}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Start Date
@@ -313,6 +417,15 @@ export default function BalanceSheetReport() {
                 >
                   Export
                 </button>
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  title="Download PDF"
+                >
+                  <Printer className="w-4 h-4" />
+                  {isLoading ? "Loading..." : "Download PDF"}
+                </button>
 
                 <button
                   onClick={() => setIsOpen(false)}
@@ -328,6 +441,9 @@ export default function BalanceSheetReport() {
             <div className="flex-1 overflow-auto px-4 py-1">
               {/* Report Header */}
               <div className="text-center mb-4">
+                <h1 className="text-3xl font-bold text-gray-900 ">
+                  BHAGTANWALA POULTRY NETWORK
+                </h1>
                 <h1 className="text-xl font-bold text-gray-900">
                   Balance Sheet/Cash in Hand
                 </h1>

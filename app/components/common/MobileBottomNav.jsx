@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   ChartLine,
   Grid3x2,
@@ -28,14 +29,34 @@ import { navigationItems } from "@/lib/links";
 
 const MobileBottomNav = () => {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [groupSheetOpen, setGroupSheetOpen] = useState(null);
 
+  // Filter items based on user role
+  const filteredNavigationItems = navigationItems.filter(item => {
+    if (item.roles && session?.user?.role) {
+      if (!item.roles.includes(session.user.role)) return false;
+    }
+    return true;
+  }).map(item => {
+    if (item.children) {
+      const filteredSubItems = item.children.filter(subItem => {
+        if (subItem.roles && session?.user?.role) {
+          if (!subItem.roles.includes(session.user.role)) return false;
+        }
+        return true;
+      });
+      return { ...item, children: filteredSubItems };
+    }
+    return item;
+  }).filter(item => item.type === "single" || (item.children && item.children.length > 0));
+
   // Get single items (non-group items) for main navbar
-  const singleItems = navigationItems.filter((item) => item.type === "single");
+  const singleItems = filteredNavigationItems.filter((item) => item.type === "single");
 
   // Get group items for "More" sheet
-  const groupItems = navigationItems.filter((item) => item.type === "group");
+  const groupItems = filteredNavigationItems.filter((item) => item.type === "group");
 
   // Show first 4 single items in bottom nav, rest in "More" sheet
   const mainNavItems = singleItems.slice(0, 4);

@@ -5,10 +5,18 @@ import ErrorLogger from "@/app/utils/errorLogger";
 import prisma from "@/lib/prisma";
 import { calculateFinancialYear } from "@/app/components/calculateFinYear/financialYear";
 import RedisService from "@/app/utils/redis";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { generateBalanceSheetReportPDF } from "@/app/utils/pdfGenerators/balanceSheetReport";
 
 class OppositeTransactionController {
   async readAll(req) {
     try {
+      const session = await getServerSession(authOptions);
+      const userId = session?.user?.id?.toString();
+      const role = session?.user?.role;
+
       // Extract pagination params
       const searchParams =
         req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
@@ -18,10 +26,12 @@ class OppositeTransactionController {
       const date = searchParams.get("date");
       const skip = (page - 1) * limit;
 
+      const insertBy = (role === "USER" && userId) ? userId : null;
+
       // If getAll is true, fetch all opposite transactions without pagination
       let data, total;
       if (getAll) {
-        data = await OppositeTransactionRepository.readAll(date);
+        data = await OppositeTransactionRepository.readAll(date, insertBy);
         total = data.length;
       } else {
         // Get total count and paginated opposite transactions
@@ -29,7 +39,8 @@ class OppositeTransactionController {
           await OppositeTransactionRepository.readAllWithPagination(
             skip,
             limit,
-            date
+            date,
+            insertBy
           );
         data = result.data;
         total = result.total;
@@ -97,7 +108,14 @@ class OppositeTransactionController {
 
   async create(req) {
     try {
+      const session = await getServerSession(authOptions);
+      const userId = session?.user?.id?.toString() || "user 1";
+
       const { req_object } = await req.json();
+      
+      req_object.insert_by = req_object.insert_by || userId;
+      req_object.update_by = req_object.update_by || userId;
+
       const { transaction_date, paid_by, received_by, amount, bank_account } =
         req_object;
 
@@ -227,8 +245,13 @@ class OppositeTransactionController {
 
   async update(req) {
     try {
+      const session = await getServerSession(authOptions);
+      const userId = session?.user?.id?.toString() || "user 1";
+
       const { req_object } = await req.json();
       const { transaction_id } = req_object;
+      
+      req_object.update_by = req_object.update_by || userId;
 
       if (!transaction_id) {
         const error = new Error(
@@ -423,7 +446,7 @@ class OppositeTransactionController {
       const { searchParams } = new URL(req.url);
       const start_date = searchParams.get("start_date");
       const end_date = searchParams.get("end_date");
-      const acc_id = 2; // Default to cash in hand account
+      const acc_id = searchParams.get("acc_id");
 
       if (!start_date || !end_date) {
         const error = new Error("start_date and end_date are required");
@@ -434,22 +457,35 @@ class OppositeTransactionController {
         return errorResponse(error, 400);
       }
 
-      // Get opening balance (before start date)
+      // Find the user who owns this cash-in-hand account
+      // Each user has their own cash_in_hand_account_id, so we can look up who owns this account
+      // and filter all transactions by that user's insert_by
+      const ownerUser = await prisma.user.findFirst({
+        where: { cash_in_hand_account_id: parseInt(acc_id) },
+        select: { user_id: true },
+      });
+
+      // If no user owns this account, insertBy is null → repository returns all transactions unfiltered
+      const insertBy = ownerUser ? ownerUser.user_id.toString() : null;
+
+      // Get opening balance (before start date) for the specific cash account
       const openingBalance = await TransactionRepository.readOpeningBalance({
         acc_id: parseInt(acc_id),
         start_dat: start_date,
       });
 
-      // Get closing balance (up to and including end date)
+      // Get closing balance (up to and including end date) for the specific cash account
       const closingBalance = await TransactionRepository.readClosingBalance({
         acc_id: parseInt(acc_id),
         end_dat: end_date,
       });
 
-      // Get all transactions within the date range
+      // Get all transactions within the date range, filtered by the account owner
       const transactions = await OppositeTransactionRepository.readBalanceSheet(
         start_date,
         end_date,
+        parseInt(acc_id),
+        insertBy
       );
 
       return successResponse(
@@ -466,6 +502,77 @@ class OppositeTransactionController {
         err,
       );
       return errorResponse(err, 500);
+    }
+  }
+
+  async downloadBalanceSheet(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_date = searchParams.get("start_date");
+      const end_date = searchParams.get("end_date");
+      const acc_id = searchParams.get("acc_id");
+
+      if (!start_date || !end_date) {
+        return NextResponse.json(
+          { error: "start_date and end_date are required" },
+          { status: 400 }
+        );
+      }
+
+      // Find the user who owns this cash-in-hand account
+      const ownerUser = await prisma.user.findFirst({
+        where: { cash_in_hand_account_id: parseInt(acc_id) },
+        select: { user_id: true },
+      });
+
+      const insertBy = ownerUser ? ownerUser.user_id.toString() : null;
+
+      // Get opening balance
+      const openingBalance = await TransactionRepository.readOpeningBalance({
+        acc_id: parseInt(acc_id),
+        start_dat: start_date,
+      });
+
+      // Get closing balance
+      const closingBalance = await TransactionRepository.readClosingBalance({
+        acc_id: parseInt(acc_id),
+        end_dat: end_date,
+      });
+
+      // Get transactions
+      const transactions = await OppositeTransactionRepository.readBalanceSheet(
+        start_date,
+        end_date,
+        parseInt(acc_id),
+        insertBy
+      );
+
+      // Generate PDF
+      const pdfBuffer = await generateBalanceSheetReportPDF(
+        transactions,
+        openingBalance,
+        closingBalance,
+        start_date,
+        end_date
+      );
+      
+      const uint8Array = new Uint8Array(pdfBuffer);
+
+      // Return PDF as download
+      return new NextResponse(uint8Array, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="Balance_Sheet_${start_date}_to_${end_date}.pdf"`,
+          "Content-Length": pdfBuffer.length.toString(),
+        },
+      });
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      return NextResponse.json(
+        { error: "Failed to generate PDF", details: error.message },
+        { status: 500 }
+      );
     }
   }
 }

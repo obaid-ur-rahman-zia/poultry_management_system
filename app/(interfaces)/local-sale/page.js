@@ -397,7 +397,9 @@ function LocalSaleTab() {
             ? "Local sale updated successfully"
             : "Local sale saved successfully"
         );
+        const savedPurchaser = form.purchaser_account;
         handleClear();
+        setForm(prev => ({ ...prev, purchaser_account: savedPurchaser }));
         await fetchAccounts();
         fetchSales();
         

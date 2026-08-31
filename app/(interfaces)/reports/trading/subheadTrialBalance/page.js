@@ -213,24 +213,32 @@ export default function SubheadTrialBalanceModal() {
 
   const renderChunks = useMemo(() => getChunks(currentItems), [currentItems]);
 
-  const handlePrint = async () => {
+  const handleDownloadPDF = async () => {
     setIsPrinting(true);
     try {
       const params = new URLSearchParams();
       if (endDate) params.append("endDate", endDate);
 
       const response = await fetch(
-        `/api/reports/subheadTrialBalance/print?${params.toString()}`,
+        `/api/account/accountSubHead/read/downloadTrialBalance?${params.toString()}`,
       );
 
-      if (!response.ok) throw new Error("Print failed");
+      if (!response.ok) throw new Error("PDF generation failed");
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Overall_Business_Report_${endDate || 'All_Time'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("PDF downloaded successfully!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to generate print PDF");
+      toast.error("Failed to generate PDF");
     } finally {
       setIsPrinting(false);
     }
@@ -382,16 +390,21 @@ export default function SubheadTrialBalanceModal() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button variant="outline" className="h-9" onClick={handlePrint} disabled={isPrinting}>
-                  {isPrinting ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating PDF...</>
-                  ) : (
-                    <><Printer className="mr-2 h-4 w-4" /> Print</>
-                  )}
-                </Button>
                 <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white h-9" onClick={handleExport}>
                   <FileDown className="mr-2 h-4 w-4" /> Export CSV
                 </Button>
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isPrinting}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 h-9 text-sm font-medium shadow-sm"
+                  title="Download PDF"
+                >
+                  {isPrinting ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Generating...</>
+                  ) : (
+                    <><Printer className="h-4 w-4" /> Download PDF</>
+                  )}
+                </button>
                 <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors ml-2">
                   <X className="w-5 h-5 text-gray-600" />
                 </button>
@@ -400,6 +413,9 @@ export default function SubheadTrialBalanceModal() {
 
             <div className="flex-1 overflow-auto sm:p-2 bg-white" id="report-scroll-area">
               <div className="mb-2 text-center">
+                <h1 className="text-3xl font-bold text-gray-900 ">
+                  BHAGTANWALA POULTRY NETWORK
+                </h1>
                 <h1 className="text-xl font-bold text-gray-900 uppercase">
                   OVERALL BUSINESS REPORT
                 </h1>
@@ -459,14 +475,20 @@ export default function SubheadTrialBalanceModal() {
                           <tbody>
                             {chunk.rows.map((row, rIdx) => {
                               const isMatch = searchResults[currentSearchIndex] === row.flatIndex;
+                              const limitExceeded = row.credit_limit > 0 && row.balance > row.credit_limit;
                               return (
                                 <tr
                                   key={rIdx}
                                   id={`item-${row.flatIndex}`}
-                                  className={`border-b border-gray-200 ${isMatch ? "bg-yellow-200 hover:bg-yellow-300" : "hover:bg-gray-50"}`}
+                                  className={`border-b border-gray-200 ${isMatch ? "bg-yellow-200 hover:bg-yellow-300" : limitExceeded ? "bg-red-50 hover:bg-red-100" : "hover:bg-gray-50"}`}
                                 >
-                                  <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
+                                  <td className={`px-3 py-2 font-medium border border-gray-300 ${limitExceeded ? "text-red-700" : "text-gray-900"}`}>
                                     {row.name}
+                                    {limitExceeded && (
+                                      <span className="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded-sm border border-red-200" title={`Credit Limit: ${formatCurrency(row.credit_limit, 'credit')}`}>
+                                        LIMIT EXCEEDED
+                                      </span>
+                                    )}
                                   </td>
                                   <td className="px-3 py-2 text-right border border-gray-300">
                                     {row.contact || "-"}

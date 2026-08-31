@@ -60,13 +60,13 @@ class UserController {
 
         // Find or create "Cash In Hand" subhead
         let cashInHandSubhead = await AccountSubHeadRepository.findByName("Cash In Hand");
-        
+
         if (!cashInHandSubhead) {
           // Get the first head_id (usually 1 for "Main Head")
           const firstHead = await tx.account_head.findFirst({
             orderBy: { head_id: "asc" },
           });
-          
+
           if (firstHead) {
             // Get max subhead_id for this head
             const maxSubhead = await tx.account_sub_head.findFirst({
@@ -75,7 +75,7 @@ class UserController {
               select: { subhead_id: true },
             });
             const nextSubheadId = maxSubhead ? maxSubhead.subhead_id + 1 : 1;
-            
+
             // Create Cash In Hand subhead
             cashInHandSubhead = await tx.account_sub_head.create({
               data: {
@@ -91,15 +91,15 @@ class UserController {
             });
           }
         }
-        
+
         // Create Cash In Hand account if subhead exists (MANDATORY)
         if (!cashInHandSubhead) {
           throw new Error("Cash In Hand subhead not found. Cannot create user without Cash In Hand account.");
         }
 
         // Create Cash In Hand account with user's name (MANDATORY)
-        const accountName = `CIH Account (${req_object.user_nam})`;
-        
+        const accountName = `Cash Account (${req_object.user_nam})`;
+
         const cashInHandAccount = await AccountsRepository.create({
           head_id: cashInHandSubhead.head_id,
           sub_id: cashInHandSubhead.sub_id,
@@ -108,7 +108,7 @@ class UserController {
           update_by: "system",
           status: 1,
         }, tx);
-        
+
         // Link the account to the user (MANDATORY)
         await tx.user.update({
           where: { user_id: user.user_id },

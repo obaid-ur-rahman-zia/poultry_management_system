@@ -44,9 +44,15 @@ export async function middleware(req) {
       secret: process.env.NEXTAUTH_SECRET 
     });
 
-    // If user is authenticated and tries to access signin, redirect to home
+    // If user is authenticated and tries to access signin, redirect based on role
     if (token && pathname === "/auth/signin") {
-      return NextResponse.redirect(new URL("/", req.url));
+      const redirectPath = token.role === "USER" ? "/local-sale" : "/";
+      return NextResponse.redirect(new URL(redirectPath, req.url));
+    }
+
+    // If USER role tries to access the root dashboard, redirect to local-sale
+    if (token && token.role === "USER" && pathname === "/") {
+      return NextResponse.redirect(new URL("/local-sale", req.url));
     }
 
     // Always allow public routes to pass through

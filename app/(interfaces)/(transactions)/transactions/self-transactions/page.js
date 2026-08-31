@@ -142,8 +142,16 @@ export default function SelfTransactionPage() {
       const response = await fetch("/api/account/accounts/readAll?all=true");
       const result = await response.json();
       if (result.response_status === "success") {
-        const accountsData =
+        let accountsData =
           result.response_result?.data || result.response_result || [];
+        
+        if (session?.user?.role === "USER") {
+          accountsData = accountsData.filter((a) =>
+            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
+            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser")
+          );
+        }
+
         setAccounts(accountsData);
       }
     } catch (error) {
@@ -158,13 +166,22 @@ export default function SelfTransactionPage() {
       const result = await response.json();
       if (result.response_status === "success") {
         const responseData = result.response_result;
+        let accountsData = [];
         if (responseData?.pagination) {
-          const accountsData = responseData.data || [];
-          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+          accountsData = responseData.data || [];
         } else {
-          const accountsData = responseData?.data || responseData || [];
-          setAllAccounts(Array.isArray(accountsData) ? accountsData : []);
+          accountsData = responseData?.data || responseData || [];
         }
+        
+        accountsData = Array.isArray(accountsData) ? accountsData : [];
+
+        if (session?.user?.role === "USER") {
+          accountsData = accountsData.filter((a) =>
+            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
+            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser")
+          );
+        }
+        setAllAccounts(accountsData);
       }
     } catch (error) {
       console.error("Error fetching all accounts:", error);
@@ -314,7 +331,7 @@ export default function SelfTransactionPage() {
         setCurrentBalance(null);
         setIsEditMode(false);
         setEditingTransactionId(null);
-        fetchTransactions(currentPage, itemsPerPage);
+        fetchTransactions();
       } else {
         // Show backend error message
         toast.error(result.response_message || "Failed to save transaction");
@@ -371,7 +388,7 @@ export default function SelfTransactionPage() {
           setIsEditMode(false);
           setEditingTransactionId(null);
         }
-        fetchTransactions(currentPage, itemsPerPage);
+        fetchTransactions();
       } else {
         toast.error(result.response_message || "Failed to delete transaction");
       }
@@ -585,7 +602,7 @@ export default function SelfTransactionPage() {
                   )}
                 </div>
                 {/* Current Balance */}
-                {selectedAccount && (
+                {session?.user?.role !== "USER" && selectedAccount && (
                   <div className="space-y-2 flex items-center gap-2">
                     {balanceLoading ? (
                       <p className="text-sm text-muted-foreground">
@@ -674,7 +691,7 @@ export default function SelfTransactionPage() {
             </div>
 
             {/* Net Balance */}
-            {selectedAccount && amount && netBalance !== null && (
+            {session?.user?.role !== "USER" && selectedAccount && amount && netBalance !== null && (
               <div className="space-y-2 w-full">
                 <Label>Net Balance</Label>
                 <div className="p-2 bg-muted rounded-md">

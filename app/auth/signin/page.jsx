@@ -47,8 +47,14 @@ function SignInForm() {
       if (result?.error) {
         setError("Invalid email or password. Please try again.");
       } else if (result?.ok) {
-        await getSession();
-        router.push(callbackUrl);
+        const session = await getSession();
+        let targetUrl = callbackUrl;
+        
+        if (session?.user?.role === "USER" && callbackUrl === "/") {
+          targetUrl = "/local-sale";
+        }
+        
+        router.push(targetUrl);
         router.refresh();
       }
     } catch {
@@ -161,14 +167,14 @@ function SignInForm() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Username / Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="email"
                       name="email"
-                      type="email"
-                      placeholder="name@example.com"
+                      type="text"
+                      placeholder="Enter username or email"
                       value={formData.email}
                       onChange={handleInputChange}
                       disabled={isLoading}

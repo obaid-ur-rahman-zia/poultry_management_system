@@ -334,6 +334,7 @@ export default function AccountPage() {
         sub_id: parseInt(data.sub_id),
         account_no: accountNo,
         ...(finalBalance !== null && { opening_balance: finalBalance }),
+        ...(data.credit_limit && { credit_limit: Number(data.credit_limit) }),
         insert_by: "user",
         update_by: "user",
         status: 1,
@@ -376,6 +377,7 @@ export default function AccountPage() {
           opening_balance: "",
           balance_type: "credit",
           reference: "",
+          credit_limit: "",
         });
         setAccountOpeningDate(new Date());
         setIsEditMode(false);
@@ -404,6 +406,7 @@ export default function AccountPage() {
       opening_balance: "",
       balance_type: "credit",
       reference: "",
+      credit_limit: "",
     });
     setAccountOpeningDate(new Date());
     // Scroll to form
@@ -457,6 +460,7 @@ export default function AccountPage() {
       opening_balance: balanceValue.toString(),
       balance_type: balanceType,
       reference: account.account_reference || "",
+      credit_limit: account.credit_limit?.toString() || "",
     });
     setAccountOpeningDate(openingDate);
     // Scroll to form
@@ -788,6 +792,18 @@ export default function AccountPage() {
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+
+            {/* Credit Limit */}
+            <div className="space-y-2 flex gap-2">
+              <Label htmlFor="credit_limit">Credit Limit (Optional)</Label>
+              <Input
+                id="credit_limit"
+                type="number"
+                step="0.01"
+                {...register("credit_limit")}
+                placeholder="Enter credit limit"
+              />
             </div>
 
             {/* Opening Balance with Radio Buttons */}

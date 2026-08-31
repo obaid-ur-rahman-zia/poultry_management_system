@@ -1,8 +1,12 @@
 import prisma from "@/lib/prisma";
 
 class OppositeTransactionRepository {
-  async readAll(date) {
+  async readAll(date, insertBy = null) {
     let whereCondition = { status: 1 };
+    
+    if (insertBy) {
+      whereCondition.insert_by = insertBy;
+    }
     
     if (date) {
       const selectedDate = new Date(date);
@@ -26,8 +30,12 @@ class OppositeTransactionRepository {
     });
   }
 
-  async readAllWithPagination(skip = 0, take = 10, date) {
+  async readAllWithPagination(skip = 0, take = 10, date, insertBy = null) {
     let whereCondition = { status: 1 };
+    
+    if (insertBy) {
+      whereCondition.insert_by = insertBy;
+    }
     
     if (date) {
       const selectedDate = new Date(date);
@@ -133,15 +141,24 @@ class OppositeTransactionRepository {
     });
   }
 
-  async readBalanceSheet(start_date, end_date) {
-    // Fetch opposite transactions within date range
+  async readBalanceSheet(start_date, end_date, acc_id, insertBy = null) {
+    const startDate = new Date(start_date);
+    startDate.setUTCHours(0, 0, 0, 0);
+    const endDate = new Date(end_date);
+    endDate.setUTCHours(23, 59, 59, 999);
+
+    // Build the insertBy filter
+    const insertByFilter = insertBy ? { insert_by: insertBy } : {};
+
+    // Fetch opposite transactions within date range, filtered by creator
     const oppositeTransactions = await prisma.opposite_transaction.findMany({
       where: {
         transaction_date: {
-          gte: new Date(start_date),
-          lte: new Date(end_date),
+          gte: startDate,
+          lte: endDate,
         },
         status: 1,
+        ...insertByFilter,
       },
       include: {
         paid_by_account: {
@@ -160,14 +177,15 @@ class OppositeTransactionRepository {
       },
     });
 
-    // Fetch self transactions within date range
+    // Fetch self transactions within date range, filtered by creator
     const selfTransactions = await prisma.self_transaction.findMany({
       where: {
         transaction_date: {
-          gte: new Date(start_date),
-          lte: new Date(end_date),
+          gte: startDate,
+          lte: endDate,
         },
         status: 1,
+        ...insertByFilter,
       },
       include: {
         account: {
@@ -181,17 +199,18 @@ class OppositeTransactionRepository {
       },
     });
 
-    // Fetch local transactions within date range
+    // Fetch local sales within date range, filtered by creator
     const localSales = await prisma.local_sale.findMany({
       where: {
         local_sale_date: {
-          gte: new Date(start_date),
-          lte: new Date(end_date),
+          gte: startDate,
+          lte: endDate,
         },
         received_amount: {
           gt: 0,
         },
         status: 1,
+        ...insertByFilter,
       },
       include: {
         purchaser_account_ref: {
