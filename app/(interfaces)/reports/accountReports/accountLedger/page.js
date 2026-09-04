@@ -1,18 +1,15 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Printer, X, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import Select from "react-select";
-import { FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -21,14 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select as ShadcnSelect,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Image from "next/image";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 import { useSession } from "next-auth/react";
@@ -83,6 +72,30 @@ export default function AccountLedgerModal() {
   const [isLoading, setIsLoading] = useState(false);
   const transactionsPerPage = 15;
 
+  const accountRowRefs = useRef([]);
+  accountRowRefs.current = [];
+
+  const getDefaultAccountSearchType = () => {
+    const matchedSubhead = accountSubHeads.find((subhead) => {
+      const subheadName = subhead.subhead_nam?.toLowerCase() || "";
+      return (
+        subheadName.includes("farmer") ||
+        subheadName.includes("former") ||
+        subheadName.includes("supplier")
+      );
+    });
+    return matchedSubhead ? matchedSubhead.sub_id.toString() : "all";
+  };
+
+  const focusFirstAccountRow = () => {
+    const firstRow = accountRowRefs.current.find(Boolean);
+    if (firstRow) {
+      firstRow.focus();
+      return true;
+    }
+    return false;
+  };
+
   // Fetch all accounts on component mount
   useEffect(() => {
     fetchAccounts();
@@ -112,7 +125,7 @@ export default function AccountLedgerModal() {
         // Handle paginated response structure
         let accountsData = data.response_result?.data || data.response_result;
         accountsData = Array.isArray(accountsData) ? accountsData : [];
-        
+
         if (session?.user?.role === "USER") {
           accountsData = accountsData.filter((a) =>
             a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
@@ -324,8 +337,9 @@ export default function AccountLedgerModal() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsAccountSearchDialogOpen(true)}
-                  className="h-10 px-3 border border-gray-300 rounded-lg text-sm font-bold bg-white hover:bg-gray-50 flex items-center justify-center transition-colors shadow-sm"
+                  disabled={accountSubHeads.length === 0 || accounts.length === 0}
+                  onClick={() => { setAccountSearchQuery(""); setAccountSearchType(getDefaultAccountSearchType()); setIsAccountSearchDialogOpen(true); }}
+                  className="h-10 px-3 border border-gray-300 rounded-lg text-sm font-bold bg-white hover:bg-gray-50 flex items-center justify-center transition-colors shadow-sm disabled:opacity-50"
                   title="Search Accounts"
                 >
                   =
@@ -632,89 +646,140 @@ export default function AccountLedgerModal() {
         onOpenChange={setIsAccountSearchDialogOpen}
       >
         <DialogContent className="max-w-[95vw] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Search Accounts</DialogTitle>
-            <DialogDescription>
-              Search and select an account from all available accounts
-            </DialogDescription>
-          </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4">
               <div className="flex-1 space-y-2">
-                <Label>Account Type</Label>
-                <ShadcnSelect
-                  value={accountSearchType}
-                  onValueChange={setAccountSearchType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {accountSubHeads.map((subhead) => (
-                      <SelectItem
-                        key={subhead.sub_id}
-                        value={subhead.sub_id.toString()}
-                      >
-                        {subhead.subhead_nam}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </ShadcnSelect>
-              </div>
-              <div className="flex-1 space-y-2">
-                <Label>Search</Label>
+                <Label>Search Account</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search accounts..."
+                    placeholder="Search accounts by name, cnic, contact..."
                     value={accountSearchQuery}
                     onChange={(e) => setAccountSearchQuery(e.target.value)}
                     className="pl-9"
+                    autoFocus
                   />
                 </div>
               </div>
+              <div
+                className="flex-1 space-y-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Tab" && !e.shiftKey) {
+                    const moved = focusFirstAccountRow();
+                    if (moved) e.preventDefault();
+                  }
+                }}
+              >
+                <Label>Account Type (Head)</Label>
+                <Combobox
+                  options={[
+                    { value: "all", label: "All Types" },
+                    ...accountSubHeads
+                      .filter(
+                        (subhead) =>
+                          subhead.subhead_nam !== "Expense Head" &&
+                          subhead.parent?.subhead_nam !== "Expense Head",
+                      )
+                      .map((subhead) => ({
+                        value: subhead.sub_id.toString(),
+                        label: `${subhead.subhead_nam}${subhead.head?.head_nam &&
+                          subhead.head.head_nam !== "Main Head"
+                          ? ` (${subhead.head.head_nam})`
+                          : ""
+                          }`,
+                      })),
+                  ]}
+                  value={accountSearchType}
+                  onValueChange={setAccountSearchType}
+                  placeholder="Select account type"
+                  searchPlaceholder="Search account types..."
+                  emptyText="No account type found."
+                />
+              </div>
             </div>
-            <div className="relative max-h-[400px] overflow-auto">
+            <div className="relative max-h-[400px] overflow-auto border rounded-md">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
+                    <TableHead>Sr. No</TableHead>
                     <TableHead>Account Name</TableHead>
-                    <TableHead>Account No</TableHead>
+                    <TableHead>Account Type</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {accounts
                     .filter((acc) => {
-                      // Filter by account sub-head (account type)
                       if (accountSearchType !== "all") {
                         if (acc.sub_id?.toString() !== accountSearchType) {
                           return false;
                         }
                       }
-
-                      if (!accountSearchQuery) return true;
-                      const query = accountSearchQuery.toLowerCase();
-                      return (
-                        acc.account_nam?.toLowerCase().includes(query) ||
-                        acc.account_no?.toLowerCase().includes(query)
-                      );
+                      if (accountSearchQuery) {
+                        const query = accountSearchQuery.toLowerCase();
+                        return (
+                          acc.account_nam?.toLowerCase().includes(query) ||
+                          acc.account_cnic?.toLowerCase().includes(query) ||
+                          acc.account_contact?.toLowerCase().includes(query)
+                        );
+                      }
+                      return true;
                     })
-                    .map((acc) => (
+                    .map((acc, index) => (
                       <TableRow
                         key={acc.acc_id}
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        tabIndex={0}
+                        ref={(el) => {
+                          accountRowRefs.current[index] = el;
+                        }}
                         onClick={() => {
                           setValue("selectedAccount", acc.acc_id);
                           setIsAccountSearchDialogOpen(false);
                           setAccountSearchQuery("");
-                          setAccountSearchType("all");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setValue("selectedAccount", acc.acc_id);
+                            setIsAccountSearchDialogOpen(false);
+                            setAccountSearchQuery("");
+                          }
                         }}
                       >
-                        <TableCell className="font-medium">{acc.account_nam}</TableCell>
-                        <TableCell>{acc.account_no || "N/A"}</TableCell>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell className="font-medium">
+                          {acc.account_nam}
+                        </TableCell>
+                        <TableCell>
+                          {accountSubHeads.find(
+                            (sh) =>
+                              sh.sub_id?.toString() === acc.sub_id?.toString(),
+                          )?.subhead_nam || "N/A"}
+                        </TableCell>
                       </TableRow>
                     ))}
+                  {accounts.filter((acc) => {
+                    if (accountSearchType !== "all") {
+                      if (acc.sub_id?.toString() !== accountSearchType) {
+                        return false;
+                      }
+                    }
+                    if (accountSearchQuery) {
+                      const query = accountSearchQuery.toLowerCase();
+                      return (
+                        acc.account_nam?.toLowerCase().includes(query) ||
+                        acc.account_cnic?.toLowerCase().includes(query) ||
+                        acc.account_contact?.toLowerCase().includes(query)
+                      );
+                    }
+                    return true;
+                  }).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                          No accounts found
+                        </TableCell>
+                      </TableRow>
+                    )}
                 </TableBody>
               </Table>
             </div>

@@ -3,6 +3,21 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, Printer, Search } from "lucide-react";
 import { toast } from "react-toastify";
 import { exportToCSV } from "@/app/utils/exportToCsv";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/ui/combobox";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function WholeSaleProfitFormer() {
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
@@ -31,6 +46,27 @@ export default function WholeSaleProfitFormer() {
   const [accountSubHeads, setAccountSubHeads] = useState([]);
   const accountRowRefs = useRef([]);
   accountRowRefs.current = [];
+
+  const getDefaultAccountSearchType = () => {
+    const matchedSubhead = accountSubHeads.find((subhead) => {
+      const subheadName = subhead.subhead_nam?.toLowerCase() || "";
+      return (
+        subheadName.includes("farmer") ||
+        subheadName.includes("former") ||
+        subheadName.includes("supplier")
+      );
+    });
+    return matchedSubhead ? matchedSubhead.sub_id.toString() : "all";
+  };
+
+  const focusFirstAccountRow = () => {
+    const firstRow = accountRowRefs.current.find(Boolean);
+    if (firstRow) {
+      firstRow.focus();
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     fetchAllAccounts();
@@ -64,12 +100,6 @@ export default function WholeSaleProfitFormer() {
     }
   };
 
-  const focusFirstAccountRow = () => {
-    const first = accountRowRefs.current.find(Boolean);
-    if (!first) return false;
-    first.focus();
-    return true;
-  };
 
   const filteredAccounts = allAccounts.filter((acc) => {
     if (accountSearchType !== "all" && acc.sub_id?.toString() !== accountSearchType) return false;
@@ -236,8 +266,9 @@ export default function WholeSaleProfitFormer() {
                 </select>
                 <button
                   type="button"
-                  onClick={() => { setAccountSearchQuery(""); setAccountSearchType("all"); setIsAccountSearchDialogOpen(true); }}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors"
+                  disabled={accountSubHeads.length === 0 || allAccounts.length === 0}
+                  onClick={() => { setAccountSearchQuery(""); setAccountSearchType(getDefaultAccountSearchType()); setIsAccountSearchDialogOpen(true); }}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
                   title="Search Accounts"
                 >=</button>
               </div>
@@ -387,64 +418,81 @@ export default function WholeSaleProfitFormer() {
         </div>
       )}
 
-      {/* Account Search Modal */}
-      {isAccountSearchDialogOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b">
-              <h2 className="text-lg font-semibold">Search Accounts</h2>
-              <p className="text-sm text-gray-500">Search and select an account for this report</p>
-            </div>
-            <div className="p-4 space-y-3">
-              {/* Search field first (autofocus) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Search Account</label>
+      {/* Account Search Dialog */}
+      <Dialog
+        open={isAccountSearchDialogOpen}
+        onOpenChange={setIsAccountSearchDialogOpen}
+      >
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+          <div className="space-y-4 py-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex-1 space-y-2">
+                <Label>Search Account</Label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by name, cnic, contact..."
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search accounts by name, cnic, contact..."
                     value={accountSearchQuery}
                     onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    className="pl-9"
                     autoFocus
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
               </div>
-              {/* Account type second */}
-              <div onKeyDown={(e) => { if (e.key === "Tab" && !e.shiftKey) { const moved = focusFirstAccountRow(); if (moved) e.preventDefault(); } }}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Account Type (Head)</label>
-                <select
+              <div
+                className="flex-1 space-y-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Tab" && !e.shiftKey) {
+                    const moved = focusFirstAccountRow();
+                    if (moved) e.preventDefault();
+                  }
+                }}
+              >
+                <Label>Account Type (Head)</Label>
+                <Combobox
+                  options={[
+                    { value: "all", label: "All Types" },
+                    ...accountSubHeads
+                      .filter(
+                        (subhead) =>
+                          subhead.subhead_nam !== "Expense Head" &&
+                          subhead.parent?.subhead_nam !== "Expense Head",
+                      )
+                      .map((subhead) => ({
+                        value: subhead.sub_id.toString(),
+                        label: `${subhead.subhead_nam}${subhead.head?.head_nam &&
+                          subhead.head.head_nam !== "Main Head"
+                          ? ` (${subhead.head.head_nam})`
+                          : ""
+                          }`,
+                      })),
+                  ]}
                   value={accountSearchType}
-                  onChange={(e) => setAccountSearchType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                >
-                  <option value="all">All Types</option>
-                  {accountSubHeads
-                    .filter((sh) => sh.subhead_nam !== "Expense Head" && sh.parent?.subhead_nam !== "Expense Head")
-                    .map((sh) => (
-                      <option key={sh.sub_id} value={sh.sub_id.toString()}>{sh.subhead_nam}{sh.head?.head_nam && sh.head.head_nam !== "Main Head" ? ` (${sh.head.head_nam})` : ""}</option>
-                    ))}
-                </select>
+                  onValueChange={setAccountSearchType}
+                  placeholder="Select account type"
+                  searchPlaceholder="Search account types..."
+                  emptyText="No account type found."
+                />
               </div>
             </div>
-            {/* Account list */}
-            <div className="flex-1 overflow-auto border-t border-gray-200 max-h-[400px]">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-gray-50">
-                  <tr className="border-b">
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Sr.</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Account Name</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Account Type</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <div className="relative max-h-[400px] overflow-auto border rounded-md">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead>Sr. No</TableHead>
+                    <TableHead>Account Name</TableHead>
+                    <TableHead>Account Type</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {filteredAccounts.map((acc, index) => (
-                    <tr
+                    <TableRow
                       key={acc.acc_id}
-                      ref={(el) => { accountRowRefs.current[index] = el; }}
+                      className="cursor-pointer hover:bg-muted/50"
                       tabIndex={0}
-                      className="border-b cursor-pointer hover:bg-orange-50 focus:bg-orange-50 outline-none"
+                      ref={(el) => {
+                        accountRowRefs.current[index] = el;
+                      }}
                       onClick={() => {
                         setSelectedAccount(acc.acc_id.toString());
                         setSelectedAccountName(acc.account_nam);
@@ -461,26 +509,31 @@ export default function WholeSaleProfitFormer() {
                         }
                       }}
                     >
-                      <td className="px-3 py-2">{index + 1}</td>
-                      <td className="px-3 py-2 font-medium">{acc.account_nam}</td>
-                      <td className="px-3 py-2 text-gray-500">
-                        {accountSubHeads.find((sh) => sh.sub_id?.toString() === acc.sub_id?.toString())?.subhead_nam || "N/A"}
-                      </td>
-                    </tr>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell className="font-medium">
+                        {acc.account_nam}
+                      </TableCell>
+                      <TableCell>
+                        {accountSubHeads.find(
+                          (sh) =>
+                            sh.sub_id?.toString() === acc.sub_id?.toString(),
+                        )?.subhead_nam || "N/A"}
+                      </TableCell>
+                    </TableRow>
                   ))}
                   {filteredAccounts.length === 0 && (
-                    <tr><td colSpan="3" className="px-3 py-6 text-center text-gray-500">No accounts found</td></tr>
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                        No accounts found
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
-            </div>
-            <div className="p-4 border-t flex justify-end">
-              <button onClick={() => { setIsAccountSearchDialogOpen(false); setAccountSearchQuery(""); }}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Close</button>
+                </TableBody>
+              </Table>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

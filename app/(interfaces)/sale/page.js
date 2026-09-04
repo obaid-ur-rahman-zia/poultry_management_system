@@ -975,6 +975,7 @@ function WholeSaleTab() {
                     type="button"
                     variant="outline"
                     size="xs"
+                    disabled={accountSubHeads.length === 0 || allAccounts.length === 0}
                     onClick={() => {
                       setAccountSearchField("former");
                       setAccountSearchType(getDefaultAccountSearchType("former"));
@@ -1105,6 +1106,7 @@ function WholeSaleTab() {
                     type="button"
                     variant="outline"
                     size="xs"
+                    disabled={accountSubHeads.length === 0 || allAccounts.length === 0}
                     onClick={() => {
                       setAccountSearchField("purcher");
                       setAccountSearchType(getDefaultAccountSearchType("purcher"));
@@ -1465,12 +1467,7 @@ function WholeSaleTab() {
         onOpenChange={setIsAccountSearchDialogOpen}
       >
         <DialogContent className="max-w-[95vw] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Search Accounts</DialogTitle>
-            <DialogDescription>
-              Search and select an account to use in this sale
-            </DialogDescription>
-          </DialogHeader>
+
           <div className="space-y-4 py-4">
             <div className="flex flex-col gap-4">
               <div className="flex-1 space-y-2">
@@ -1486,7 +1483,7 @@ function WholeSaleTab() {
                   />
                 </div>
               </div>
-              <div 
+              <div
                 className="flex-1 space-y-2"
                 onKeyDown={(e) => {
                   if (e.key === "Tab" && !e.shiftKey) {

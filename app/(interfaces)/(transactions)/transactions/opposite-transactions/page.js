@@ -687,6 +687,7 @@ export default function OppositeTransactionsPage() {
                     type="button"
                     variant="outline"
                     size="icon"
+                    disabled={accountSubHeads.length === 0 || allAccounts.length === 0}
                     onClick={() => {
                       setAccountSearchField("paid_by");
                       setAccountSearchType(
@@ -831,6 +832,7 @@ export default function OppositeTransactionsPage() {
                     type="button"
                     variant="outline"
                     size="icon"
+                    disabled={accountSubHeads.length === 0 || allAccounts.length === 0}
                     onClick={() => {
                       setAccountSearchField("received_by");
                       setAccountSearchType(
@@ -1318,12 +1320,7 @@ export default function OppositeTransactionsPage() {
         onOpenChange={setIsAccountSearchDialogOpen}
       >
         <DialogContent className="max-w-[95vw] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Search Accounts</DialogTitle>
-            <DialogDescription>
-              Search and select an account for this transaction
-            </DialogDescription>
-          </DialogHeader>
+
           <div className="space-y-4 py-4">
             <div className="flex flex-col gap-4">
               <div className="flex-1 space-y-2">
