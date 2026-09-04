@@ -212,8 +212,8 @@ export default function WholeSaleProfitFormer() {
       <div className="group relative bg-white rounded-xl border border-gray-200 hover:border-orange-300 hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative p-6">
-          <h3 className="text-lg ml-20 font-semibold text-gray-900">WHOLESALE</h3>
-          <h3 className="text-lg font-semibold mb-4 text-gray-900">ACCOUNT REPORT</h3>
+          <h3 className="text-lg text-center  font-semibold text-gray-900">ACCOUNTWISE</h3>
+          <h3 className="text-lg text-center  font-semibold text-gray-900">PROFIT/LOSS REPORT</h3>
 
           <div className="space-y-3 mb-4">
             {/* Account Selector */}
