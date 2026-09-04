@@ -590,7 +590,7 @@ export default function OppositeTransactionsPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Form Section */}
-      <Card className={"max-w-xl mx-auto"}>
+      <Card className={"max-w-3xl mx-auto"}>
         <CardContent>
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -701,7 +701,7 @@ export default function OppositeTransactionsPage() {
                     =
                   </Button>
                   {/* Paid By Balance Display */}
-                  <div className="w-10  text-right">
+                  <div className="w-32 shrink-0 text-right">
                     {session?.user?.role !== "USER" && (
                       loadingPaidByBalance ? (
                         <div className="text-sm text-muted-foreground">
@@ -765,7 +765,7 @@ export default function OppositeTransactionsPage() {
                   >
                     <PlusCircle className="h-4 w-4" />
                   </Button>
-                  <div className="w-10 shrink-0"></div>
+                  <div className="w-32 shrink-0"></div>
                 </div>
               </div>
 
@@ -845,7 +845,7 @@ export default function OppositeTransactionsPage() {
                     =
                   </Button>
                   {/* Received By Balance Display */}
-                  <div className="w-10 shrink-0 text-right">
+                  <div className="w-32 shrink-0 text-right">
                     {session?.user?.role !== "USER" && (
                       loadingReceivedByBalance ? (
                         <div className="text-sm text-muted-foreground">
@@ -1339,7 +1339,7 @@ export default function OppositeTransactionsPage() {
                   />
                 </div>
               </div>
-              <div 
+              <div
                 className="flex-1 space-y-2"
                 onKeyDown={(e) => {
                   if (e.key === "Tab" && !e.shiftKey) {
