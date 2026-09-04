@@ -144,13 +144,6 @@ export default function SelfTransactionPage() {
       if (result.response_status === "success") {
         let accountsData =
           result.response_result?.data || result.response_result || [];
-        
-        if (session?.user?.role === "USER") {
-          accountsData = accountsData.filter((a) =>
-            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
-            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser")
-          );
-        }
 
         setAccounts(accountsData);
       }
@@ -175,12 +168,6 @@ export default function SelfTransactionPage() {
         
         accountsData = Array.isArray(accountsData) ? accountsData : [];
 
-        if (session?.user?.role === "USER") {
-          accountsData = accountsData.filter((a) =>
-            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
-            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser")
-          );
-        }
         setAllAccounts(accountsData);
       }
     } catch (error) {
@@ -784,6 +771,27 @@ export default function SelfTransactionPage() {
           <div className="space-y-4 py-4">
             <div className="flex flex-col gap-4">
               <div className="flex-1 space-y-2">
+                <Label>Search Account</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search accounts by name, cnic, contact..."
+                    value={accountSearchQuery}
+                    onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div 
+                className="flex-1 space-y-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Tab" && !e.shiftKey) {
+                    const moved = focusFirstAccountRow();
+                    if (moved) e.preventDefault();
+                  }
+                }}
+              >
                 <Label>Account Type (Head)</Label>
                 <Combobox
                   options={[
@@ -809,25 +817,6 @@ export default function SelfTransactionPage() {
                   searchPlaceholder="Search account types..."
                   emptyText="No account type found."
                 />
-              </div>
-              <div className="flex-1 space-y-2">
-                <Label>Search Account</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search accounts by name, cnic, contact..."
-                    value={accountSearchQuery}
-                    onChange={(e) => setAccountSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Tab") {
-                        const moved = focusFirstAccountRow();
-                        if (moved) e.preventDefault();
-                      }
-                    }}
-                    className="pl-9"
-                    autoFocus
-                  />
-                </div>
               </div>
             </div>
             <div className="relative max-h-[400px] overflow-auto border rounded-md">

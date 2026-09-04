@@ -639,6 +639,57 @@ class WholeSaleController {
       );
     }
   }
+  async readAccountReport(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const acc_id = searchParams.get("acc_id");
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const group_by = searchParams.get("group_by") || "date";
+
+      if (!acc_id || !start_dat || !end_dat) {
+        return errorResponse(new Error("acc_id, start_dat and end_dat are required"), 400);
+      }
+
+      const report = await WholeSaleRepository.readAccountReport({ acc_id, start_dat, end_dat, group_by });
+      return successResponse(report, "Success");
+    } catch (err) {
+      ErrorLogger.log("Failed in WholeSaleController.readAccountReport", err);
+      return errorResponse(err, 500);
+    }
+  }
+
+  async downloadAccountReport(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const acc_id = searchParams.get("acc_id");
+      const start_dat = searchParams.get("start_dat");
+      const end_dat = searchParams.get("end_dat");
+      const group_by = searchParams.get("group_by") || "date";
+      const account_name = searchParams.get("account_name") || "Account";
+
+      if (!acc_id || !start_dat || !end_dat) {
+        return NextResponse.json({ error: "acc_id, start_dat and end_dat are required" }, { status: 400 });
+      }
+
+      const report = await WholeSaleRepository.readAccountReport({ acc_id, start_dat, end_dat, group_by });
+      const { generateWholeSaleAccountReportPDF } = await import("@/app/utils/pdfGenerators/wholeSaleAccountReport");
+      const pdfBuffer = await generateWholeSaleAccountReportPDF(report, start_dat, end_dat, group_by, account_name);
+      const uint8Array = new Uint8Array(pdfBuffer);
+
+      return new NextResponse(uint8Array, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="Account_Report_${account_name}_${start_dat}_to_${end_dat}.pdf"`,
+          "Content-Length": pdfBuffer.length.toString(),
+        },
+      });
+    } catch (error) {
+      console.error("Account Report PDF Error:", error);
+      return NextResponse.json({ error: "Failed to generate PDF", details: error.message }, { status: 500 });
+    }
+  }
 }
 
 export default new WholeSaleController();

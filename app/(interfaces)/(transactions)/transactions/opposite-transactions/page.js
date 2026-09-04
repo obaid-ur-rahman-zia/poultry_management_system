@@ -152,13 +152,6 @@ export default function OppositeTransactionsPage() {
         }
 
         let filteredAccounts = Array.isArray(accountsData) ? accountsData.filter((a) => a.acc_id !== 1) : [];
-        
-        if (session?.user?.role === "USER") {
-          filteredAccounts = filteredAccounts.filter((a) =>
-            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
-            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser")
-          );
-        }
 
         setAllAccounts(filteredAccounts);
         setAccounts(filteredAccounts);
@@ -636,9 +629,9 @@ export default function OppositeTransactionsPage() {
               </div>
 
               {/* Paid By */}
-              <div className="space-y-2">
-                <Label htmlFor="paid_by">Paid By *</Label>
-                <div className="flex gap-2">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="paid_by" className="w-32 shrink-0">Paid By *</Label>
                   <Controller
                     name="paid_by"
                     control={control}
@@ -702,42 +695,39 @@ export default function OppositeTransactionsPage() {
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
-                    className="font-bold"
+                    className="font-bold shrink-0"
                     title="Search Accounts"
                   >
                     =
                   </Button>
-                </div>
-                {errors.paid_by && (
-                  <p className="text-sm text-destructive">
-                    {errors.paid_by.message}
-                  </p>
-                )}
-                {/* Paid By Balance Display */}
-                {session?.user?.role !== "USER" && (
-                  <div className="flex gap-2 items-center">
-                    <div className="flex-1">
-                      {loadingPaidByBalance ? (
+                  {/* Paid By Balance Display */}
+                  <div className="w-10  text-right">
+                    {session?.user?.role !== "USER" && (
+                      loadingPaidByBalance ? (
                         <div className="text-sm text-muted-foreground">
                           Loading...
                         </div>
                       ) : (
                         <div className="text-lg font-semibold">
-                          Balance{" "}
                           {paidByBalance !== null
                             ? paidByBalance.toFixed(2)
                             : "0"}
                         </div>
-                      )}
-                    </div>
+                      )
+                    )}
                   </div>
+                </div>
+                {errors.paid_by && (
+                  <p className="text-sm text-destructive pl-[136px]">
+                    {errors.paid_by.message}
+                  </p>
                 )}
               </div>
 
               {/* Bank Account */}
-              <div className="space-y-2">
-                <Label htmlFor="bank_account">Bank Account</Label>
-                <div className="flex gap-2">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="bank_account" className="w-32 shrink-0">Bank Account</Label>
                   <Controller
                     name="bank_account"
                     control={control}
@@ -771,16 +761,18 @@ export default function OppositeTransactionsPage() {
                       setIsBankAccountDialogOpen(true);
                     }}
                     title="Add Bank Account"
+                    className="shrink-0"
                   >
                     <PlusCircle className="h-4 w-4" />
                   </Button>
+                  <div className="w-10 shrink-0"></div>
                 </div>
               </div>
 
               {/* Received By */}
-              <div className="space-y-2">
-                <Label htmlFor="received_by">Received By *</Label>
-                <div className="flex gap-2">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="received_by" className="w-32 shrink-0">Received By *</Label>
                   <Controller
                     name="received_by"
                     control={control}
@@ -847,35 +839,32 @@ export default function OppositeTransactionsPage() {
                       setAccountSearchQuery("");
                       setIsAccountSearchDialogOpen(true);
                     }}
-                    className="font-bold"
+                    className="font-bold shrink-0"
                     title="Search Accounts"
                   >
                     =
                   </Button>
-                </div>
-                {errors.received_by && (
-                  <p className="text-sm text-destructive">
-                    {errors.received_by.message}
-                  </p>
-                )}
-                {/* Received By Balance Display */}
-                {session?.user?.role !== "USER" && (
-                  <div className="flex gap-2 items-center">
-                    <div className="flex-1">
-                      {loadingReceivedByBalance ? (
+                  {/* Received By Balance Display */}
+                  <div className="w-10 shrink-0 text-right">
+                    {session?.user?.role !== "USER" && (
+                      loadingReceivedByBalance ? (
                         <div className="text-sm text-muted-foreground">
                           Loading...
                         </div>
                       ) : (
                         <div className="text-lg font-semibold">
-                          Balance{" "}
                           {receivedByBalance !== null
                             ? receivedByBalance.toFixed(2)
                             : "0"}
                         </div>
-                      )}
-                    </div>
+                      )
+                    )}
                   </div>
+                </div>
+                {errors.received_by && (
+                  <p className="text-sm text-destructive pl-[136px]">
+                    {errors.received_by.message}
+                  </p>
                 )}
               </div>
 
@@ -1338,6 +1327,27 @@ export default function OppositeTransactionsPage() {
           <div className="space-y-4 py-4">
             <div className="flex flex-col gap-4">
               <div className="flex-1 space-y-2">
+                <Label>Search Account</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search accounts by name, cnic, contact..."
+                    value={accountSearchQuery}
+                    onChange={(e) => setAccountSearchQuery(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div 
+                className="flex-1 space-y-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Tab" && !e.shiftKey) {
+                    const moved = focusFirstAccountRow();
+                    if (moved) e.preventDefault();
+                  }
+                }}
+              >
                 <Label>Account Type (Head)</Label>
                 <Combobox
                   options={[
@@ -1363,25 +1373,6 @@ export default function OppositeTransactionsPage() {
                   searchPlaceholder="Search account types..."
                   emptyText="No account type found."
                 />
-              </div>
-              <div className="flex-1 space-y-2">
-                <Label>Search Account</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search accounts by name, cnic, contact..."
-                    value={accountSearchQuery}
-                    onChange={(e) => setAccountSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Tab") {
-                        const moved = focusFirstAccountRow();
-                        if (moved) e.preventDefault();
-                      }
-                    }}
-                    className="pl-9"
-                    autoFocus
-                  />
-                </div>
               </div>
             </div>
             <div className="relative max-h-[400px] overflow-auto border rounded-md">

@@ -319,15 +319,9 @@ export default function ExpensePage() {
   };
 
   const onSubmit = async (data) => {
-    // Validate at least one contact number
     const validContacts = (data.contact_numbers || [])
       .map((c) => c?.trim())
       .filter((c) => c && c.trim());
-
-    if (validContacts.length === 0) {
-      toast.error("At least one contact number is required");
-      return;
-    }
 
     if (!data.sub_id || !data.head_id) {
       toast.error("Please select an account type (subhead)");
@@ -680,196 +674,7 @@ export default function ExpensePage() {
               )}
             </div>
 
-            {/* Dynamic Contact Numbers - Two Column Grid */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <Label>Contact Numbers</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddContactNumber}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Contact
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {contactNumbers.map((contact, index) => (
-                  <div key={index} className="space-y-2">
-                    {/* <Label htmlFor={`contact_numbers.${index}`}>
-                      {index === 0 ? "Mobile" : "Contact No"}
-                    </Label> */}
-                    <div className="flex gap-2">
-                      <Input
-                        id={`contact_numbers.${index}`}
-                        {...register(`contact_numbers.${index}`, {
-                          required:
-                            index === 0
-                              ? "At least one contact number is required"
-                              : false,
-                        })}
-                        placeholder={
-                          index === 0
-                            ? "Enter mobile number"
-                            : "Enter contact number"
-                        }
-                        type="tel"
-                        className={
-                          errors.contact_numbers?.[index]
-                            ? "border-destructive flex-1"
-                            : "flex-1"
-                        }
-                      />
-                      {contactNumbers.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleRemoveContactNumber(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    {errors.contact_numbers?.[index] && (
-                      <p className="text-sm text-destructive">
-                        {errors.contact_numbers[index].message}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Dynamic Bank Account Numbers */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <Label>Bank Account Numbers</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddBankAccount}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Bank Account
-                </Button>
-              </div>
-              <div className="space-y-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {bankAccountNumbers.map((bankAccount, index) => (
-                  <div key={index} className="space-y-2">
-                    {/* <Label htmlFor={`bank_account_numbers.${index}`}>
-                      {index === bankAccountNumbers.length - 1 && index > 0
-                        ? "Bank Account No."
-                        : "Bank Account No"}
-                    </Label> */}
-                    <div className="flex gap-2">
-                      <Input
-                        id={`bank_account_numbers.${index}`}
-                        {...register(`bank_account_numbers.${index}`)}
-                        placeholder="Enter bank account number"
-                        className="flex-1"
-                      />
-                      {bankAccountNumbers.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleRemoveBankAccount(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Address - Full Width */}
-            <div className="space-y-2 flex gap-2">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                {...register("address")}
-                placeholder="Enter address"
-              />
-            </div>
-
-            {/* Account Opening Date */}
-            <div className="space-y-2 flex gap-2">
-              <Label>Account Opening Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w- justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {accountOpeningDate ? (
-                      format(accountOpeningDate, "dd MMMM yyyy")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={accountOpeningDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        setAccountOpeningDate(date);
-                        setValue("account_opening_date", date);
-                      }
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Opening Balance with Radio Buttons */}
-            {!isEditMode && (
-              <div className="space-y-2">
-                <div className="flex gap-4 items-center">
-                  <Label htmlFor="opening_balance">Opening Balance</Label>
-                  <Input
-                    id="opening_balance"
-                    type="number"
-                    step="0.01"
-                    {...register("opening_balance")}
-                    placeholder="0"
-                    className="w-32"
-                  />
-                  <Controller
-                    name="balance_type"
-                    control={control}
-                    render={({ field }) => (
-                      <RadioGroup
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="credit" id="credit" />
-                          <Label htmlFor="credit" className="cursor-pointer">
-                            Credit
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="debit" id="debit" />
-                          <Label htmlFor="debit" className="cursor-pointer">
-                            Debit
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-4">
@@ -973,39 +778,12 @@ export default function ExpensePage() {
                                                             </Button> */}
                             </div>
 
-                            {contacts.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {contacts.map((contact, idx) => (
-                                  <Badge
-                                    key={idx}
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    <Phone className="h-3 w-3 inline mr-1" />
-                                    {contact}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                              <div>
-                                <p className="font-semibold text-foreground text-xs">
-                                  Account No
-                                </p>
-                                <p>{account.account_no || "N/A"}</p>
-                              </div>
+                            <div className="grid grid-cols-1 gap-2 text-xs text-muted-foreground mt-2">
                               <div>
                                 <p className="font-semibold text-foreground text-xs">
                                   Reference
                                 </p>
                                 <p>{account.account_reference || "N/A"}</p>
-                              </div>
-                              <div className="col-span-2">
-                                <p className="font-semibold text-foreground text-xs">
-                                  Address
-                                </p>
-                                <p>{account.account_address || "N/A"}</p>
                               </div>
                             </div>
                           </CardContent>
@@ -1182,15 +960,7 @@ export default function ExpensePage() {
                             <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background">
                               Name
                             </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden md:table-cell">
-                              Contact Numbers
-                            </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden lg:table-cell">
-                              Account No
-                            </th>
-                            <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">
-                              Address
-                            </th>
+
                             <th className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap bg-background hidden xl:table-cell">
                               Reference
                             </th>
@@ -1231,36 +1001,7 @@ export default function ExpensePage() {
                                       )
                                     : account.account_nam || "N/A"}
                                 </td>
-                                <td className="p-2 align-middle hidden md:table-cell">
-                                  <div className="flex flex-wrap gap-1">
-                                    {contacts.map((contact, idx) => (
-                                      <Badge
-                                        key={idx}
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        <Phone className="h-3 w-3 inline mr-1" />
-                                        {filterContact
-                                          ? highlightText(
-                                              contact,
-                                              filterContact,
-                                            )
-                                          : contact}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </td>
-                                <td className="p-2 align-middle whitespace-nowrap hidden lg:table-cell">
-                                  {searchQuery
-                                    ? highlightText(
-                                        account.account_no || "N/A",
-                                        searchQuery,
-                                      )
-                                    : account.account_no || "N/A"}
-                                </td>
-                                <td className="p-2 align-middle max-w-xs truncate hidden xl:table-cell">
-                                  {account.account_address || "N/A"}
-                                </td>
+
                                 <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
                                   {searchQuery
                                     ? highlightText(

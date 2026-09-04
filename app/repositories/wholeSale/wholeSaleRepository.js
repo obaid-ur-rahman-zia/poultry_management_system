@@ -446,6 +446,69 @@ class WholeSaleRepository {
       grandTotalRecovery,
     };
   }
+
+  async readAccountReport({ acc_id, start_dat, end_dat, group_by }) {
+    const accIdInt = parseInt(acc_id);
+    const startDate = new Date(start_dat);
+    const endDate = new Date(end_dat);
+    endDate.setUTCHours(23, 59, 59, 999);
+
+    const sales = await prisma.whole_sale.findMany({
+      where: {
+        OR: [
+          { former_account: accIdInt },
+          { purcher_account: accIdInt },
+        ],
+        sale_date: { gte: startDate, lte: endDate },
+        status: 1,
+      },
+      select: {
+        sale_date: true,
+        weight: true,
+        former_amount: true,
+        purcher_amount: true,
+        profit: true,
+      },
+    });
+
+    const groupedData = new Map();
+
+    sales.forEach((sale) => {
+      const key = getGroupKey(sale.sale_date, group_by);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, {
+          weight: 0,
+          purchase: 0,
+          sale: 0,
+          profit: 0,
+          date: sale.sale_date,
+        });
+      }
+      const group = groupedData.get(key);
+      group.weight += sale.weight || 0;
+      group.purchase += sale.former_amount || 0;
+      group.sale += sale.purcher_amount || 0;
+      group.profit += sale.profit || 0;
+    });
+
+    const results = Array.from(groupedData.entries())
+      .map(([key, data]) => ({
+        period: key,
+        date: data.date,
+        weight: data.weight,
+        purchase_amount: data.purchase,
+        sale_amount: data.sale,
+        profit_loss: data.profit,
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const grandTotalWeight = results.reduce((sum, r) => sum + r.weight, 0);
+    const grandTotalPurchase = results.reduce((sum, r) => sum + r.purchase_amount, 0);
+    const grandTotalSale = results.reduce((sum, r) => sum + r.sale_amount, 0);
+    const netProfit = results.reduce((sum, r) => sum + r.profit_loss, 0);
+
+    return { results, grandTotalWeight, grandTotalPurchase, grandTotalSale, netProfit };
+  }
 }
 
 function getGroupKey(date, groupBy) {
