@@ -264,6 +264,36 @@ class TransactionRepository {
     return closingBalance;
   }
 
+  async readAllCashOpeningBalance(req_object) {
+    const { start_dat } = req_object;
+    const result = await prisma.transaction.aggregate({
+      where: {
+        account: { subhead: { subhead_nam: "Cash In Hand" } },
+        transaction_dat: { lt: new Date(start_dat) },
+        isDeleted: false,
+      },
+      _sum: { debit: true, credit: true },
+    });
+    const totalDebit = Number(result._sum.debit) || 0;
+    const totalCredit = Number(result._sum.credit) || 0;
+    return totalDebit - totalCredit;
+  }
+
+  async readAllCashClosingBalance(req_object) {
+    const { end_dat } = req_object;
+    const result = await prisma.transaction.aggregate({
+      where: {
+        account: { subhead: { subhead_nam: "Cash In Hand" } },
+        transaction_dat: { lte: new Date(end_dat) },
+        isDeleted: false,
+      },
+      _sum: { debit: true, credit: true },
+    });
+    const totalDebit = Number(result._sum.debit) || 0;
+    const totalCredit = Number(result._sum.credit) || 0;
+    return totalDebit - totalCredit;
+  }
+
   async readLastTransaction(req_object) {
     const { acc_id } = req_object;
 

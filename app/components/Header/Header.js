@@ -145,7 +145,8 @@ const Header = () => {
           {/* Quick Access Buttons - Desktop */}
           <TooltipProvider>
             <div className="hidden md:flex items-center gap-1.5">
-              {quickAccessLinks.map((link) => {
+              {(user?.role === "SUPER_ADMIN" || user?.role === "ADMIN") &&
+                quickAccessLinks.map((link) => {
                 const Icon = link.icon;
                 return (
                   <Tooltip key={link.href}>

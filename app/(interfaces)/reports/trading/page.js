@@ -1,6 +1,7 @@
 import SubheadTrialBalance from "./subheadTrialBalance/page";
 import ExpenseHeadTrialBalance from "./expenseHeadTrialBalance/page";
 import BalanceSheet from "./balanceSheet/page";
+import BalanceSheetAll from "./balanceSheetAll/page";
 import WholeSaleReport from "./wholeSaleDetailReport/page";
 import WholeSaleProfit from "./wholeSaleProfit/page";
 import WholeSaleProfitAccount from './wholeSaleProfitFormer/page'
@@ -18,6 +19,7 @@ export default function ReportPage() {
           <WholeSaleProfit />
           <WholeSaleProfitAccount />
           <BalanceSheet />
+          <BalanceSheetAll />
           <AccountLedger />
 
           <SubheadTrialBalance />

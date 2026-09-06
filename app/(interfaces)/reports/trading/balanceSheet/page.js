@@ -30,6 +30,7 @@ export default function BalanceSheetReport() {
   const [rawTransactions, setRawTransactions] = useState([]);
   const [globalOpeningBalance, setGlobalOpeningBalance] = useState(0);
   const [globalClosingBalance, setGlobalClosingBalance] = useState(0);
+  const [cashAccId, setCashAccId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -80,6 +81,7 @@ export default function BalanceSheetReport() {
         setGlobalOpeningBalance(data.response_result.openingBalance || 0);
         setGlobalClosingBalance(data.response_result.closingBalance || 0);
         setRawTransactions(data.response_result.transactions || []);
+        setCashAccId(data.response_result.cashAccId || null);
         setIsOpen(true);
         setCurrentPage(1);
       }
@@ -162,15 +164,23 @@ export default function BalanceSheetReport() {
           });
         }
 
-        // 3. Opposite Transactions (Do NOT Affect Balance)
+        // 3. Opposite Transactions
         oppositeTransactions.forEach((trans) => {
-          dayTotalReceived += trans.amount;
-          dayTotalPaid += trans.amount;
+          if (trans.received_by === cashAccId) {
+            currentBalance += trans.amount;
+            dayTotalReceived += trans.amount;
+          } else if (trans.paid_by === cashAccId) {
+            currentBalance -= trans.amount;
+            dayTotalPaid += trans.amount;
+          } else {
+            dayTotalReceived += trans.amount;
+            dayTotalPaid += trans.amount;
+          }
 
           dayProcessedTransactions.push({
             ...trans,
             srNo: globalSrNo++,
-            runningBalance: currentBalance, // Stays unchanged
+            runningBalance: currentBalance,
           });
         });
 
@@ -188,7 +198,7 @@ export default function BalanceSheetReport() {
       });
 
     return days;
-  }, [rawTransactions, globalOpeningBalance]);
+  }, [rawTransactions, globalOpeningBalance, cashAccId]);
 
   // Pagination Logic (Chunking days into pages of approx 60 rows to simulate 200vh height)
   const paginatedPages = useMemo(() => {

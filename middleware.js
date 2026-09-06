@@ -60,8 +60,8 @@ export async function middleware(req) {
       return NextResponse.next();
     }
 
-    // If no token and not a public route, redirect to signin
-    if (!token) {
+    // If no token, token has an error, and not a public route, redirect to signin
+    if (!token || token.error === "UserDeactivated") {
       // Prevent redirect loop - don't set callbackUrl if it would be signin
       const callbackUrl = pathname === "/auth/signin" ? "/" : pathname;
       const signInUrl = new URL(`/auth/signin`, req.url);

@@ -1,12 +1,12 @@
 import puppeteer from "puppeteer";
 
-export async function generateBalanceSheetReportPDF(
+export async function generateBalanceSheetAllReportPDF(
   rawTransactions,
   globalOpeningBalance,
   globalClosingBalance,
   startDate,
   endDate,
-  cashAccId
+  cashAccIds
 ) {
   let browser;
 
@@ -32,7 +32,7 @@ export async function generateBalanceSheetReportPDF(
       globalClosingBalance,
       startDate,
       endDate,
-      cashAccId
+      cashAccIds
     );
 
     await page.setContent(htmlContent, {
@@ -70,7 +70,7 @@ export async function generateBalanceSheetReportPDF(
   }
 }
 
-function processTransactions(rawTransactions, globalOpeningBalance, cashAccId) {
+function processTransactions(rawTransactions, globalOpeningBalance, cashAccIds) {
   if (!rawTransactions || !rawTransactions.length) return [];
 
   const grouped = {};
@@ -142,13 +142,13 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccId) {
 
       // 3. Opposite Transactions
       oppositeTransactions.forEach((trans) => {
-        if (trans.received_by === cashAccId) {
+        if (cashAccIds.includes(trans.received_by)) { // Cash received this → balance UP
           currentBalance += trans.amount;
           dayTotalReceived += trans.amount;
-        } else if (trans.paid_by === cashAccId) {
+        } else if (cashAccIds.includes(trans.paid_by)) { // Cash paid this → balance DOWN
           currentBalance -= trans.amount;
           dayTotalPaid += trans.amount;
-        } else {
+        } else { // Pass-through
           dayTotalReceived += trans.amount;
           dayTotalPaid += trans.amount;
         }
@@ -182,9 +182,9 @@ function generateReportHTML(
   globalClosingBalance,
   startDate,
   endDate,
-  cashAccId
+  cashAccIds
 ) {
-  const processedDays = processTransactions(rawTransactions, globalOpeningBalance, cashAccId);
+  const processedDays = processTransactions(rawTransactions, globalOpeningBalance, cashAccIds);
   
   const formattedStartDate = new Date(startDate).toLocaleDateString("en-GB").replace(/\//g, "-");
   const formattedEndDate = new Date(endDate).toLocaleDateString("en-GB").replace(/\//g, "-");
@@ -301,7 +301,7 @@ function generateReportHTML(
     <body>
       <div class="header">
         <h1>BHAGTANWALA POULTRY NETWORK</h1>
-        <h2>Balance Sheet/Cash in Hand</h2>
+        <h2>CONSOLIDATED BALANCE SHEET / ALL CASH IN HAND</h2>
         <p>From: <strong>${formattedStartDate}</strong> To: <strong>${formattedEndDate}</strong></p>
       </div>
       

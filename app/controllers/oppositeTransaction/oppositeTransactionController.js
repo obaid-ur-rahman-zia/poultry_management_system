@@ -493,6 +493,7 @@ class OppositeTransactionController {
           openingBalance,
           closingBalance,
           transactions,
+          cashAccId: parseInt(acc_id),
         },
         "Balance sheet retrieved successfully",
       );
@@ -553,7 +554,8 @@ class OppositeTransactionController {
         openingBalance,
         closingBalance,
         start_date,
-        end_date
+        end_date,
+        parseInt(acc_id)
       );
       
       const uint8Array = new Uint8Array(pdfBuffer);
@@ -564,6 +566,108 @@ class OppositeTransactionController {
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="Balance_Sheet_${start_date}_to_${end_date}.pdf"`,
+          "Content-Length": pdfBuffer.length.toString(),
+        },
+      });
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      return NextResponse.json(
+        { error: "Failed to generate PDF", details: error.message },
+        { status: 500 }
+      );
+    }
+  }
+
+  async readAllCashBalanceSheet(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_date = searchParams.get("start_date");
+      const end_date = searchParams.get("end_date");
+
+      if (!start_date || !end_date) {
+        const error = new Error("start_date and end_date are required");
+        ErrorLogger.log(
+          "Failed to get balance sheet in Method: OppositeTransactionController.readAllCashBalanceSheet",
+          error,
+        );
+        return errorResponse(error, 400);
+      }
+
+      const openingBalance = await TransactionRepository.readAllCashOpeningBalance({
+        start_dat: start_date,
+      });
+
+      const closingBalance = await TransactionRepository.readAllCashClosingBalance({
+        end_dat: end_date,
+      });
+
+      const { transactions, cashAccIds } = await OppositeTransactionRepository.readAllCashBalanceSheet(
+        start_date,
+        end_date
+      );
+
+      return successResponse(
+        {
+          openingBalance,
+          closingBalance,
+          transactions,
+          cashAccIds,
+        },
+        "Balance sheet retrieved successfully",
+      );
+    } catch (err) {
+      ErrorLogger.log(
+        "Failed to get balance sheet in Method: OppositeTransactionController.readAllCashBalanceSheet",
+        err,
+      );
+      return errorResponse(err, 500);
+    }
+  }
+
+  async downloadAllCashBalanceSheet(req) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const start_date = searchParams.get("start_date");
+      const end_date = searchParams.get("end_date");
+
+      if (!start_date || !end_date) {
+        return NextResponse.json(
+          { error: "start_date and end_date are required" },
+          { status: 400 }
+        );
+      }
+
+      const openingBalance = await TransactionRepository.readAllCashOpeningBalance({
+        start_dat: start_date,
+      });
+
+      const closingBalance = await TransactionRepository.readAllCashClosingBalance({
+        end_dat: end_date,
+      });
+
+      const { transactions, cashAccIds } = await OppositeTransactionRepository.readAllCashBalanceSheet(
+        start_date,
+        end_date
+      );
+
+      // We'll create this generator next
+      const { generateBalanceSheetAllReportPDF } = await import("@/app/utils/pdfGenerators/balanceSheetAllReport");
+      const pdfBuffer = await generateBalanceSheetAllReportPDF(
+        transactions,
+        openingBalance,
+        closingBalance,
+        start_date,
+        end_date,
+        cashAccIds
+      );
+      
+      const uint8Array = new Uint8Array(pdfBuffer);
+
+      return new NextResponse(uint8Array, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="Balance_Sheet_All_Cash_${start_date}_to_${end_date}.pdf"`,
           "Content-Length": pdfBuffer.length.toString(),
         },
       });

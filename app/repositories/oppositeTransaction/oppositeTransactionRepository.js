@@ -246,6 +246,69 @@ class OppositeTransactionRepository {
     return combinedTransactions;
   }
 
+  async readAllCashBalanceSheet(start_date, end_date) {
+    const startDate = new Date(start_date);
+    startDate.setUTCHours(0, 0, 0, 0);
+    const endDate = new Date(end_date);
+    endDate.setUTCHours(23, 59, 59, 999);
+
+    const cashAccounts = await prisma.accounts.findMany({
+      where: {
+        subhead: { subhead_nam: "Cash In Hand" },
+        status: 1,
+      },
+      select: { acc_id: true },
+    });
+    const cashAccIds = cashAccounts.map((a) => a.acc_id);
+
+    const oppositeTransactions = await prisma.opposite_transaction.findMany({
+      where: {
+        transaction_date: { gte: startDate, lte: endDate },
+        status: 1,
+      },
+      include: {
+        paid_by_account: { select: { account_nam: true } },
+        received_by_account: { select: { account_nam: true } },
+      },
+      orderBy: { transaction_date: "asc" },
+    });
+
+    const selfTransactions = await prisma.self_transaction.findMany({
+      where: {
+        transaction_date: { gte: startDate, lte: endDate },
+        status: 1,
+      },
+      include: {
+        account: { select: { account_nam: true } },
+      },
+      orderBy: { transaction_date: "asc" },
+    });
+
+    const localSales = await prisma.local_sale.findMany({
+      where: {
+        local_sale_date: { gte: startDate, lte: endDate },
+        received_amount: { gt: 0 },
+        status: 1,
+      },
+      include: {
+        purchaser_account_ref: { select: { account_nam: true } },
+      },
+      orderBy: { local_sale_date: "asc" },
+    });
+
+    const combinedTransactions = [
+      ...oppositeTransactions.map((t) => ({ ...t, type: "opposite" })),
+      ...selfTransactions.map((t) => ({ ...t, type: "self" })),
+      ...localSales.map((t) => ({
+        ...t,
+        type: "local_sale",
+        transaction_date: t.local_sale_date,
+      })),
+    ].sort((a, b) => new Date(a.transaction_date) - new Date(b.transaction_date));
+
+    return { transactions: combinedTransactions, cashAccIds };
+  }
+
   async delete(transaction_id) {
     return prisma.opposite_transaction.update({
       where: {
