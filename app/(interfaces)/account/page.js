@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -85,6 +86,7 @@ export default function AccountPage() {
       opening_balance: "",
       balance_type: "credit",
       reference: "",
+      shop_enable: false,
     },
   });
 
@@ -333,6 +335,7 @@ export default function AccountPage() {
         head_id: parseInt(data.head_id),
         sub_id: parseInt(data.sub_id),
         account_no: accountNo,
+        shop_enable: !!data.shop_enable,
         ...(finalBalance !== null && { opening_balance: finalBalance }),
         ...(data.credit_limit && { credit_limit: Number(data.credit_limit) }),
         insert_by: "user",
@@ -378,6 +381,7 @@ export default function AccountPage() {
           balance_type: "credit",
           reference: "",
           credit_limit: "",
+          shop_enable: false,
         });
         setAccountOpeningDate(new Date());
         setIsEditMode(false);
@@ -407,6 +411,7 @@ export default function AccountPage() {
       balance_type: "credit",
       reference: "",
       credit_limit: "",
+      shop_enable: false,
     });
     setAccountOpeningDate(new Date());
     // Scroll to form
@@ -461,6 +466,7 @@ export default function AccountPage() {
       balance_type: balanceType,
       reference: account.account_reference || "",
       credit_limit: account.credit_limit?.toString() || "",
+      shop_enable: Boolean(account.shop_enable),
     });
     setAccountOpeningDate(openingDate);
     // Scroll to form
@@ -794,15 +800,34 @@ export default function AccountPage() {
               </Popover>
             </div>
 
-            {/* Credit Limit */}
-            <div className="space-y-2 flex gap-2">
-              <Label htmlFor="credit_limit">Credit Limit (Optional)</Label>
-              <Input
-                id="credit_limit"
-                type="number"
-                step="0.01"
-                {...register("credit_limit")}
-                placeholder="Enter credit limit"
+            {/* Credit Limit & Shop Enable */}
+            <div className="space-y-2 flex flex-row items-center gap-6">
+              <div className="flex gap-2 items-center flex-1">
+                <Label htmlFor="credit_limit" className="whitespace-nowrap">Credit Limit (Optional)</Label>
+                <Input
+                  id="credit_limit"
+                  type="number"
+                  step="0.01"
+                  {...register("credit_limit")}
+                  placeholder="Enter credit limit"
+                  className="max-w-[200px]"
+                />
+              </div>
+              <Controller
+                name="shop_enable"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="shop_enable"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <Label htmlFor="shop_enable" className="cursor-pointer">
+                      Shop Enable
+                    </Label>
+                  </div>
+                )}
               />
             </div>
 

@@ -565,6 +565,7 @@ model accounts {
   rate_two          Float?
   rate_three        Float?
   credit_limit      Float? @default(0)
+  shop_enable       Int    @default(0)
 
   // Account type flags
   is_employee     Int @default(0)
@@ -628,6 +629,8 @@ model accounts {
   local_sale_purchaser  local_sale[]           @relation("LocalSalePurchaser")
   local_stock_lots      stock_lot[]            @relation("LocalStockLots")
   bhagtanwala_sources   bhagtanwala_source[]
+  shop_sales             shop_sale[]          @relation("ShopSaleAccount")
+  shop_closing_stocks    shop_closing_stock[] @relation("ShopClosingStock")
 
   // Unique constraint to ensure account_id is unique within each sub_id
   @@unique([sub_id, account_id], name: "uq_sub_account")
@@ -1129,4 +1132,65 @@ model local_sale_stock_allocation {
 
   @@index([local_sale_id])
   @@index([stock_lot_id])
+}
+
+// ─── Shop Module ──────────────────────────────────────────────────────────────
+
+model shop_customer {
+  customer_id      Int      @id @default(autoincrement())
+  customer_nam     String   @db.VarChar(100)
+  customer_contact String?  @db.VarChar(50)
+  insert_dat       DateTime @default(now())
+  update_dat       DateTime @updatedAt
+  insert_by        String   @default("user 1")
+  update_by        String   @default("user 1")
+  status           Int      @default(1)
+
+  shop_sales shop_sale[]
+
+  @@index([status])
+}
+
+model shop_sale {
+  shop_sale_id     Int      @id @default(autoincrement())
+  sale_date        DateTime
+  shop_acc_id      Int
+  customer_id      Int
+  qty              Float
+  rate             Float
+  amount           Float
+  previous_balance Float    @default(0)
+  received_amount  Float    @default(0)
+  net_balance      Float    @default(0)
+  insert_dat       DateTime @default(now())
+  update_dat       DateTime @updatedAt
+  insert_by        String   @default("user 1")
+  update_by        String   @default("user 1")
+  status           Int      @default(1)
+
+  shop_account accounts      @relation("ShopSaleAccount", fields: [shop_acc_id], references: [acc_id])
+  customer     shop_customer @relation(fields: [customer_id], references: [customer_id])
+
+  @@index([sale_date])
+  @@index([shop_acc_id])
+  @@index([customer_id])
+  @@index([status])
+}
+
+model shop_closing_stock {
+  closing_id     Int      @id @default(autoincrement())
+  closing_date   DateTime
+  shop_acc_id    Int
+  closing_weight Float
+  insert_dat     DateTime @default(now())
+  update_dat     DateTime @updatedAt
+  insert_by      String   @default("user 1")
+  update_by      String   @default("user 1")
+  status         Int      @default(1)
+
+  shop_account accounts @relation("ShopClosingStock", fields: [shop_acc_id], references: [acc_id])
+
+  @@index([shop_acc_id])
+  @@index([closing_date])
+  @@index([status])
 }

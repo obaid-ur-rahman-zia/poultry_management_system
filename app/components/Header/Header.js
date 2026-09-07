@@ -28,6 +28,7 @@ import {
   Activity,
   DollarSign,
   Users,
+  Store,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -76,6 +77,7 @@ const quickAccessLinks = [
     color: "bg-teal-500",
   },
   { href: "/local-sale", name: "Local Sale", icon: ShoppingCart, color: "bg-pink-500" },
+  { href: "/shop", name: "Shop", icon: Store, color: "bg-emerald-500" },
   { href: "/reports", name: "Reports", icon: FileText, color: "bg-orange-500" },
   
 ];
