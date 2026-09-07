@@ -1,5 +1,5 @@
-import ShopReportRepository from "../../repositories/shop/shopReportRepository";
-import { successResponse, errorResponse } from "../../utils/responseHandler";
+import ShopReportRepository from "@/app/repositories/shop/shopReportRepository";
+import { successResponse, errorResponse } from "@/app/utils/response";
 
 export default class ShopReportController {
   static async getTrialBalance(req) {

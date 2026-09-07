@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import ShopReportController from "../../../../controllers/shop/shopReportController";
+import ShopReportController from "@/app/controllers/shop/shopReportController";
 
 export async function GET(req) {
   return await ShopReportController.getSaleDetail(req);
