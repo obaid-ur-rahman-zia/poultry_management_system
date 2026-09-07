@@ -133,11 +133,31 @@ class AccountSubHeadController {
     try {
       const { searchParams } = new URL(req.url);
       const endDate = searchParams.get("endDate");
+      const subheadNam = searchParams.get("subheadNam");
 
-      const data = await AccountSubHeadRepository.readTrialBalance(
+      let data = await AccountSubHeadRepository.readTrialBalance(
         null,
         endDate,
       );
+
+      if (subheadNam && data) {
+        const filteredDetails = data.details.filter(
+          s => s.subhead_nam.trim().toUpperCase() === subheadNam.trim().toUpperCase()
+        );
+        let total_debit = 0, total_credit = 0;
+        filteredDetails.forEach(s => {
+          total_debit += s.total_debit;
+          total_credit += s.total_credit;
+        });
+        data = {
+          details: filteredDetails,
+          conclusion: {
+            total_debit,
+            total_credit,
+            total_balance: total_debit - total_credit
+          }
+        };
+      }
 
       // Generate PDF
       const pdfBuffer = await generateSubheadTrialBalanceReportPDF(data, endDate);

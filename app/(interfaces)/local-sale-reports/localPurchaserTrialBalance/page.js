@@ -235,6 +235,7 @@ export default function LocalPurchaserTrialBalanceModal() {
     try {
       const params = new URLSearchParams();
       if (endDate) params.append("endDate", endDate);
+      params.append("subheadNam", "LOCAL PURCHASER");
 
       const response = await fetch(
         `/api/account/accountSubHead/read/downloadTrialBalance?${params.toString()}`,
@@ -246,7 +247,7 @@ export default function LocalPurchaserTrialBalanceModal() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Overall_Business_Report_${endDate || 'All_Time'}.pdf`;
+      a.download = `Local_Purchaser_Report_${endDate || 'All_Time'}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
