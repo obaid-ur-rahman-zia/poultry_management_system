@@ -367,6 +367,42 @@ function LocalSaleTab() {
       return;
     }
 
+    // Check for duplicate entry for shop-enabled purchaser
+    const purchaserObj = allAccounts.find(a => a.acc_id === Number(purchaser_account));
+    const isShopPurchaser = purchaserObj && purchaserObj.shop_enable === 1;
+
+    if (isShopPurchaser) {
+      let duplicate = null;
+      if (filterDate === local_sale_date) {
+        duplicate = sales.find(s => 
+          s.purchaser_account === Number(purchaser_account) &&
+          new Date(s.local_sale_date).toISOString().split('T')[0] === local_sale_date &&
+          (!isEditMode || s.local_sale_id !== editingId)
+        );
+      } else {
+        try {
+          setIsSubmitting(true);
+          const checkRes = await fetch(`/api/localSale/readAll?filterDate=${local_sale_date}&all=true`);
+          const checkData = await checkRes.json();
+          const dateSales = checkData.response_result?.data || checkData.response_result || [];
+          duplicate = dateSales.find(s => 
+            s.purchaser_account === Number(purchaser_account) &&
+            new Date(s.local_sale_date).toISOString().split('T')[0] === local_sale_date &&
+            (!isEditMode || s.local_sale_id !== editingId)
+          );
+        } catch (e) {
+          console.error("Failed to verify duplicate entry:", e);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+
+      if (duplicate) {
+        toast.error("Only one local sale allowed per day for shop accounts.");
+        return;
+      }
+    }
+
     const payload = {
       req_object: {
         local_sale_date,

@@ -230,6 +230,7 @@ export default function UserManagement() {
       role: user.role || "USER",
       phone: user.phone || "",
       address: user.address || "",
+      status: user.status ?? 1,
     });
     setIsDialogOpen(true);
     setIsDirty(false);

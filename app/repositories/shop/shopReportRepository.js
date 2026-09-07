@@ -91,14 +91,16 @@ export default class ShopReportRepository {
     const localSales = await prisma.local_sale.findMany({
       where: {
         purchaser_account: parsedShopId,
-        local_sale_dat: {
+        local_sale_date: {
           gte: startDate,
           lte: endDate,
         },
       },
       select: {
-        local_sale_dat: true,
+        local_sale_date: true,
         purchaser_weight: true,
+        purchaser_rate: true,
+        received_amount: true,
       },
     });
 
@@ -155,7 +157,7 @@ export default class ShopReportRepository {
 
       // 2. Purchase Stock (sum of local sales that day)
       const purchasesThatDay = localSales.filter(ls => {
-        const lsDate = new Date(ls.local_sale_dat);
+        const lsDate = new Date(ls.local_sale_date);
         return lsDate >= startOfDay && lsDate <= endOfDay;
       });
       const purchaseStock = purchasesThatDay.reduce((sum, ls) => sum + Number(ls.purchaser_weight || 0), 0);
@@ -186,6 +188,10 @@ export default class ShopReportRepository {
       const dateTotalAmount = salesThatDay.reduce((sum, sale) => sum + Number(sale.amount || 0), 0);
       const dateTotalReceived = salesThatDay.reduce((sum, sale) => sum + Number(sale.received_amount || 0), 0);
 
+      // 6. Local sale info (rate and received amount for financial summary)
+      const localSaleRate = purchasesThatDay.length > 0 ? Number(purchasesThatDay[0].purchaser_rate || 0) : 0;
+      const localSaleNetReceived = purchasesThatDay.length > 0 ? Number(purchasesThatDay[0].received_amount || 0) : 0;
+
       report.push({
         dateStr,
         stockSummary: {
@@ -207,6 +213,10 @@ export default class ShopReportRepository {
           qty: saledStock,
           amount: dateTotalAmount,
           received: dateTotalReceived,
+        },
+        financialSummary: {
+          localSaleRate,
+          localSaleNetReceived,
         }
       });
     }
@@ -219,5 +229,212 @@ export default class ShopReportRepository {
     );
 
     return filteredReport;
+  }
+
+  /**
+   * Customer Ledger: Fetches opening balance and all transactions for a specific customer.
+   */
+  static async readCustomerLedger({ customer_id, start_dat, end_dat }) {
+    if (!customer_id || !start_dat || !end_dat) {
+      throw new Error("customer_id, start_dat, and end_dat are required");
+    }
+
+    const parsedCustomerId = Number(customer_id);
+    const startDate = new Date(start_dat);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(end_dat);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Get the most recent transaction BEFORE the start date
+    const lastTransaction = await prisma.shop_sale.findFirst({
+      where: {
+        customer_id: parsedCustomerId,
+        sale_date: { lt: startDate },
+        status: 1,
+      },
+      orderBy: [
+        { sale_date: "desc" },
+        { shop_sale_id: "desc" }
+      ],
+    });
+
+    const openingBalance = lastTransaction ? Number(lastTransaction.net_balance) : 0;
+
+    const transactions = await prisma.shop_sale.findMany({
+      where: {
+        customer_id: parsedCustomerId,
+        sale_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: 1,
+      },
+      orderBy: [
+        { sale_date: "asc" },
+        { shop_sale_id: "asc" }
+      ],
+    });
+
+    // Fetch FS Rates for the date range efficiently
+    const fsRatesData = await prisma.whole_sale.findMany({
+      where: {
+        sale_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        OR: [{ farm_rate: { not: null } }, { sale_rate: { not: null } }],
+        status: 1,
+      },
+      select: {
+        sale_date: true,
+        farm_rate: true,
+        sale_rate: true,
+      },
+      orderBy: {
+        sale_date: "asc"
+      }
+    });
+
+    const fsRatesMap = {};
+    fsRatesData.forEach(rate => {
+      const d = new Date(rate.sale_date);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const farm = rate.farm_rate || "";
+      const sale = rate.sale_rate || "";
+      fsRatesMap[dateStr] = farm && sale ? `${farm}-${sale}` : (farm || sale || "-");
+    });
+
+    // We can also calculate running balance on the fly to ensure accuracy,
+    // though the DB net_balance should be correct if inserted sequentially.
+    const reportTransactions = [];
+    let currentBalance = openingBalance;
+
+    for (const t of transactions) {
+      currentBalance = currentBalance + Number(t.amount || 0) - Number(t.received_amount || 0);
+      
+      const d = new Date(t.sale_date);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      reportTransactions.push({
+        shop_sale_id: t.shop_sale_id,
+        sale_date: t.sale_date,
+        fs_rate: fsRatesMap[dateStr] || "-",
+        qty: Number(t.qty || 0),
+        rate: Number(t.rate || 0),
+        amount: Number(t.amount || 0),
+        received_amount: Number(t.received_amount || 0),
+        balance: currentBalance,
+      });
+    }
+
+    return {
+      openingBalance,
+      transactions: reportTransactions,
+    };
+  }
+
+  /**
+   * Shop Sale Profit Report: Groups purchases and sales by date/month/year to calculate profit.
+   */
+  static async readShopProfitReport({ shop_acc_id, start_dat, end_dat, group_by }) {
+    if (!shop_acc_id || !start_dat || !end_dat) {
+      throw new Error("shop_acc_id, start_dat, and end_dat are required");
+    }
+
+    const parsedShopId = Number(shop_acc_id);
+    const startDate = new Date(start_dat);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(end_dat);
+    endDate.setHours(23, 59, 59, 999);
+    const groupBy = group_by || "date";
+
+    const getGroupKey = (dateStr) => {
+      const d = new Date(dateStr);
+      if (groupBy === 'year') return `${d.getFullYear()}`;
+      if (groupBy === 'month') {
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        return `${d.getFullYear()}-${m}`;
+      }
+      return d.toISOString().split('T')[0]; // date
+    };
+
+    // 1. Fetch Purchases (local_sale where purchaser_account = shop_acc_id)
+    const localSales = await prisma.local_sale.findMany({
+      where: {
+        purchaser_account: parsedShopId,
+        local_sale_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: 1,
+      },
+      select: {
+        local_sale_date: true,
+        purchaser_amount: true,
+      },
+    });
+
+    // 2. Fetch Sales & Recovery (shop_sale where shop_acc_id = shop_acc_id)
+    const shopSales = await prisma.shop_sale.findMany({
+      where: {
+        shop_acc_id: parsedShopId,
+        sale_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: 1,
+      },
+      select: {
+        sale_date: true,
+        amount: true,
+        received_amount: true,
+      },
+    });
+
+    const groupedData = new Map();
+
+    localSales.forEach((ls) => {
+      const key = getGroupKey(ls.local_sale_date);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, { period: key, purchase_amount: 0, sale_amount: 0, recovery: 0 });
+      }
+      const group = groupedData.get(key);
+      group.purchase_amount += Number(ls.purchaser_amount || 0);
+    });
+
+    shopSales.forEach((ss) => {
+      const key = getGroupKey(ss.sale_date);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, { period: key, purchase_amount: 0, sale_amount: 0, recovery: 0 });
+      }
+      const group = groupedData.get(key);
+      group.sale_amount += Number(ss.amount || 0);
+      group.recovery += Number(ss.received_amount || 0);
+    });
+
+    const results = Array.from(groupedData.values()).map(row => {
+      return {
+        ...row,
+        profit: row.sale_amount - row.purchase_amount,
+      };
+    });
+
+    // Sort chronologically
+    results.sort((a, b) => a.period.localeCompare(b.period));
+
+    const grandTotalPurchase = results.reduce((sum, row) => sum + row.purchase_amount, 0);
+    const grandTotalSale = results.reduce((sum, row) => sum + row.sale_amount, 0);
+    const grandTotalRecovery = results.reduce((sum, row) => sum + row.recovery, 0);
+    const netProfit = grandTotalSale - grandTotalPurchase;
+
+    return {
+      results,
+      grandTotals: {
+        purchase_amount: grandTotalPurchase,
+        sale_amount: grandTotalSale,
+        recovery: grandTotalRecovery,
+        profit: netProfit,
+      }
+    };
   }
 }

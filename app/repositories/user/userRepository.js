@@ -78,7 +78,7 @@ class UserRepository {
         }
 
         return prisma.user.update({
-            where: { user_id },
+            where: { user_id: Number(user_id) },
             data: updateData,
         });
     }

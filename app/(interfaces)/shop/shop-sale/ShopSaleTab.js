@@ -261,8 +261,11 @@ export default function ShopSaleTab() {
     if (isSubmitting) return;
 
     const { sale_date, shop_acc_id, customer_id, qty, rate } = form;
-    if (!sale_date || !shop_acc_id || !customer_id || qty === "" || rate === "") {
-      toast.error("Please fill in all required fields");
+    const hasQtyRate = qty !== "" && rate !== "";
+    const hasReceived = Number(form.received_amount || 0) > 0;
+
+    if (!sale_date || !shop_acc_id || !customer_id || (!hasQtyRate && !hasReceived)) {
+      toast.error("Enter qty+rate or a received amount");
       return;
     }
 
@@ -271,9 +274,9 @@ export default function ShopSaleTab() {
         sale_date,
         shop_acc_id: Number(shop_acc_id),
         customer_id: Number(customer_id),
-        qty: Number(qty),
-        rate: Number(rate),
-        amount,
+        qty: hasQtyRate ? Number(qty) : 0,
+        rate: hasQtyRate ? Number(rate) : 0,
+        amount: hasQtyRate ? amount : 0,
         previous_balance: custPrevBalance,
         received_amount: Number(form.received_amount || 0),
         net_balance: netBalance,
@@ -451,7 +454,10 @@ export default function ShopSaleTab() {
                       label: s.account_nam,
                     }))}
                     value={form.shop_acc_id}
-                    onValueChange={(v) => handleChange("shop_acc_id", v)}
+                    onValueChange={(v) => {
+                      handleChange("shop_acc_id", v);
+                      setFilterShop(v);
+                    }}
                     placeholder="Select Shop"
                     searchPlaceholder="Search shops..."
                     emptyText="No shop found."
@@ -509,7 +515,7 @@ export default function ShopSaleTab() {
               {/* Qty */}
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1">
-                  <Label className="whitespace-nowrap text-sm">Qty</Label>
+                  <Label className="whitespace-nowrap text-sm">Qty (Optional)</Label>
                   <Input
                     ref={qtyRef}
                     type="number"
@@ -518,7 +524,6 @@ export default function ShopSaleTab() {
                     value={form.qty}
                     onChange={(e) => handleChange("qty", e.target.value)}
                     className="h-8 w-24 text-sm"
-                    required
                   />
                 </div>
                 <span className="text-sm underline">
@@ -529,7 +534,7 @@ export default function ShopSaleTab() {
               {/* Rate */}
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1">
-                  <Label className="whitespace-nowrap text-sm">Rate</Label>
+                  <Label className="whitespace-nowrap text-sm">Rate (Optional)</Label>
                   <Input
                     type="number"
                     step="any"
@@ -537,7 +542,6 @@ export default function ShopSaleTab() {
                     value={form.rate}
                     onChange={(e) => handleChange("rate", e.target.value)}
                     className="h-8 w-24 text-sm"
-                    required
                   />
                 </div>
                 {!isEditMode && (
@@ -644,16 +648,16 @@ export default function ShopSaleTab() {
               <div className="space-y-2">
                 <Label>Shop</Label>
                 <Combobox
-                  options={[
-                    { value: "", label: "All Shops" },
-                    ...shops.map((s) => ({
-                      value: s.acc_id.toString(),
-                      label: s.account_nam,
-                    })),
-                  ]}
+                  options={shops.map((s) => ({
+                    value: s.acc_id.toString(),
+                    label: s.account_nam,
+                  }))}
                   value={filterShop}
-                  onValueChange={setFilterShop}
-                  placeholder="All Shops"
+                  onValueChange={(v) => {
+                    setFilterShop(v);
+                    handleChange("shop_acc_id", v);
+                  }}
+                  placeholder="Select Shop"
                   searchPlaceholder="Search shops..."
                   emptyText="No shop found."
                 />

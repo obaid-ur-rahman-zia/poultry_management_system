@@ -109,7 +109,7 @@ export default function SaleDetailReport() {
   const flatItems = useMemo(() => {
     if (!reportData || reportData.length === 0) return [];
     const items = [];
-    
+
     reportData.forEach((dateGroup, di) => {
       // 1. Date Header + Stock Summary
       items.push({
@@ -135,6 +135,15 @@ export default function SaleDetailReport() {
           ...dateGroup.dateTotals,
         });
       }
+
+      // 3.5 Financial Summary
+      items.push({
+        type: "DATE_FINANCIAL_SUMMARY",
+        dateStr: dateGroup.dateStr,
+        stockSummary: dateGroup.stockSummary,
+        financialSummary: dateGroup.financialSummary,
+        dateTotals: dateGroup.dateTotals,
+      });
 
       if (di < reportData.length - 1) {
         items.push({ type: "SPACER" });
@@ -233,7 +242,7 @@ export default function SaleDetailReport() {
     const rows = [];
     reportData.forEach((dateGroup) => {
       const s = dateGroup.stockSummary;
-      
+
       // Stock Summary Header
       rows.push([
         `Date: ${dateGroup.dateStr}`,
@@ -274,7 +283,7 @@ export default function SaleDetailReport() {
             Number(item.received).toFixed(2),
           ]);
         });
-        
+
         // Date Total
         const t = dateGroup.dateTotals;
         rows.push([
@@ -285,8 +294,30 @@ export default function SaleDetailReport() {
           t.amount.toFixed(2),
           t.received.toFixed(2),
         ]);
+
+        // Financial Summary
+        const f = dateGroup.financialSummary;
+        const rate = f.localSaleRate;
+        const totalStockAmt = s.totalStock * rate;
+        const saleStockAmt = s.saledStock * rate;
+        const closingStockAmt = s.closingStock !== null ? s.closingStock * rate : "N/A";
+        const netSale = f.localSaleNetReceived;
+        const dueSale = t.amount;
+        const recovery = t.received;
+        const saleAmount = (netSale + dueSale) - recovery;
+        const profit = saleAmount - saleStockAmt;
+
+        rows.push([]);
+        rows.push(["", "Financial Summary", "Total Stock Amt", totalStockAmt.toFixed(2)]);
+        rows.push(["", "", "Sale Stock Amt", saleStockAmt.toFixed(2)]);
+        rows.push(["", "", "Closing Stock Amt", closingStockAmt !== "N/A" ? closingStockAmt.toFixed(2) : "N/A"]);
+        rows.push(["", "", "Net Sale", netSale.toFixed(2)]);
+        rows.push(["", "", "Due Sale", dueSale.toFixed(2)]);
+        rows.push(["", "", "Recovery", recovery.toFixed(2)]);
+        rows.push(["", "", "Sale Amount", saleAmount.toFixed(2)]);
+        rows.push(["", "", "Profit", profit.toFixed(2)]);
       }
-      
+
       rows.push([]); // Spacer
     });
 
@@ -569,42 +600,42 @@ export default function SaleDetailReport() {
                               className={`p-0 border border-gray-400 ${matchClass}`}
                             >
                               <div className="flex flex-col bg-slate-100">
-                                <div className="px-3 py-2 font-bold text-lg border-b border-gray-300 text-slate-800">
+                                <div className="px-3 py-2 font-bold text-lg border-b border-gray-300 ">
                                   Date: {dStr}
                                 </div>
-                                <div className="flex flex-wrap gap-4 px-3 py-2 text-xs font-medium text-slate-600 bg-slate-50">
+                                <div className="flex flex-wrap gap-4 px-3 py-2 text-lg font-medium bg-slate-50">
                                   <div className="flex items-center gap-1">
-                                    <span className="uppercase text-[10px] tracking-wider text-slate-500">
-                                      Opening
+                                    <span className="uppercase text-[10px] tracking-wider ">
+                                      Opening Stock
                                     </span>
-                                    <span className="text-slate-800 font-bold">
+                                    <span className=" font-bold">
                                       {fmt(s.openingStock, 0)}
                                     </span>
                                   </div>
                                   <span className="text-slate-300">|</span>
                                   <div className="flex items-center gap-1">
-                                    <span className="uppercase text-[10px] tracking-wider text-slate-500">
-                                      Purchase
+                                    <span className="uppercase text-[10px] tracking-wider ">
+                                      Purchase Stock
                                     </span>
-                                    <span className="text-blue-600 font-bold">
+                                    <span className="font-bold">
                                       {fmt(s.purchaseStock, 0)}
                                     </span>
                                   </div>
                                   <span className="text-slate-300">|</span>
                                   <div className="flex items-center gap-1">
-                                    <span className="uppercase text-[10px] tracking-wider text-slate-500">
-                                      Total
+                                    <span className="uppercase text-[10px] tracking-wider ">
+                                      Total Stock
                                     </span>
-                                    <span className="text-indigo-600 font-bold">
+                                    <span className="font-bold">
                                       {fmt(s.totalStock, 0)}
                                     </span>
                                   </div>
                                   <span className="text-slate-300">|</span>
                                   <div className="flex items-center gap-1">
-                                    <span className="uppercase text-[10px] tracking-wider text-slate-500">
-                                      Closing
+                                    <span className="uppercase text-[10px] tracking-wider ">
+                                      Closing Stock
                                     </span>
-                                    <span className="text-orange-600 font-bold">
+                                    <span className="font-bold">
                                       {s.closingStock !== null
                                         ? fmt(s.closingStock, 0)
                                         : "Not Set"}
@@ -612,10 +643,10 @@ export default function SaleDetailReport() {
                                   </div>
                                   <span className="text-slate-300">|</span>
                                   <div className="flex items-center gap-1">
-                                    <span className="uppercase text-[10px] tracking-wider text-slate-500">
-                                      Sold
+                                    <span className="uppercase text-[10px] tracking-wider ">
+                                      Sale Stock
                                     </span>
-                                    <span className="text-emerald-600 font-bold">
+                                    <span className="font-bold">
                                       {fmt(s.saledStock, 0)}
                                     </span>
                                   </div>
@@ -631,9 +662,8 @@ export default function SaleDetailReport() {
                           <tr
                             key={`item-${item.flatIndex}`}
                             id={`item-${item.flatIndex}`}
-                            className={`border-b border-gray-200 transition-colors ${
-                              isMatch ? "bg-yellow-200" : "hover:bg-gray-50"
-                            }`}
+                            className={`border-b border-gray-200 transition-colors ${isMatch ? "bg-yellow-200" : "hover:bg-gray-50"
+                              }`}
                           >
                             <td className="px-2 py-2 border-r border-gray-200 text-center">
                               {item.rowIndex}
@@ -650,7 +680,7 @@ export default function SaleDetailReport() {
                             <td className="px-2 py-2 text-right border-r border-gray-200">
                               {fmt(item.amount)}
                             </td>
-                            <td className="px-2 py-2 text-right text-green-700">
+                            <td className="px-2 py-2 text-right ">
                               {fmt(item.received)}
                             </td>
                           </tr>
@@ -668,11 +698,7 @@ export default function SaleDetailReport() {
                               colSpan={2}
                               className="px-2 py-2 text-right text-gray-700 border-r border-gray-300"
                             >
-                              Date Total (
-                              {new Date(item.dateStr)
-                                .toLocaleDateString("en-GB")
-                                .replace(/\//g, "-")}
-                              ):
+                              Total :
                             </td>
                             <td className="px-2 py-2 text-right text-gray-900 border-r border-gray-300">
                               {fmt(item.qty, 0)}
@@ -681,8 +707,113 @@ export default function SaleDetailReport() {
                             <td className="px-2 py-2 text-right text-gray-900 border-r border-gray-300">
                               {fmt(item.amount)}
                             </td>
-                            <td className="px-2 py-2 text-right text-green-800">
+                            <td className="px-2 py-2 text-right">
                               {fmt(item.received)}
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      if (item.type === "DATE_FINANCIAL_SUMMARY") {
+                        const s = item.stockSummary;
+                        const f = item.financialSummary;
+                        const t = item.dateTotals;
+
+                        const rate = f.localSaleRate;
+                        const totalStockAmt = s.totalStock * rate;
+                        const saleStockAmt = s.saledStock * rate;
+                        const closingStockAmt = s.closingStock !== null ? s.closingStock * rate : "N/A";
+
+                        const netSale = f.localSaleNetReceived;
+                        const dueSale = t.amount;
+                        const recovery = t.received;
+                        const saleAmount = (netSale + dueSale) - recovery;
+                        const profit = saleAmount - saleStockAmt;
+
+                        return (
+                          <tr
+                            key={`item-${item.flatIndex}`}
+                            id={`item-${item.flatIndex}`}
+                          >
+                            <td
+                              colSpan={6}
+                              className="p-0 border-b-2 border-gray-400"
+                            >
+                              <div className="flex flex-col bg-blue-50">
+                                <div className="flex flex-wrap gap-4 px-3 py-2 text-lg font-medium">
+                                  <div className="flex items-center gap-1">
+                                    <span className="uppercase text-[10px] tracking-wider">
+                                      Total Stock Amt:
+                                    </span>
+                                    <span className="font-bold">
+                                      {fmt(totalStockAmt)}
+                                    </span>
+                                  </div>
+                                  <span className="text-slate-300">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="uppercase text-[10px] tracking-wider">
+                                      Sale Stock Amt:
+                                    </span>
+                                    <span className="font-bold">
+                                      {fmt(saleStockAmt)}
+                                    </span>
+                                  </div>
+                                  <span className="text-slate-300">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="uppercase text-[10px] tracking-wider">
+                                      Closing Stock Amt:
+                                    </span>
+                                    <span className=" font-bold">
+                                      {closingStockAmt === "N/A" ? "N/A" : fmt(closingStockAmt)}
+                                    </span>
+                                  </div>
+                                  <span className="text-slate-300">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="uppercase text-[10px] tracking-wider">
+                                      Net Sale:
+                                    </span>
+                                    <span className="font-bold">
+                                      {fmt(netSale)}
+                                    </span>
+                                  </div>
+                                  <span className="text-slate-300">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="uppercase text-[10px] tracking-wider">
+                                      Due Sale:
+                                    </span>
+                                    <span className="font-bold">
+                                      {fmt(dueSale)}
+                                    </span>
+                                  </div>
+                                  <span className="text-slate-300">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="uppercase text-[10px] tracking-wider">
+                                      Recovery:
+                                    </span>
+                                    <span className=" font-bold">
+                                      {fmt(recovery)}
+                                    </span>
+                                  </div>
+                                  <span className="text-slate-300">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="uppercase text-[10px] tracking-wider">
+                                      Sale Amount:
+                                    </span>
+                                    <span className="font-bold">
+                                      {fmt(saleAmount)}
+                                    </span>
+                                  </div>
+                                  <span className="text-slate-300">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="uppercase text-[10px] tracking-wider ">
+                                      Profit:
+                                    </span>
+                                    <span className={`font-bold `}>
+                                      {fmt(profit)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -719,7 +850,7 @@ export default function SaleDetailReport() {
                             <td className="px-2 py-3 text-right border-r border-gray-600">
                               {fmt(item.grandTotalAmount)}
                             </td>
-                            <td className="px-2 py-3 text-right text-green-400">
+                            <td className="px-2 py-3 text-right">
                               {fmt(item.grandTotalReceived)}
                             </td>
                           </tr>
