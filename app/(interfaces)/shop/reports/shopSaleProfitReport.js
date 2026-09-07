@@ -149,6 +149,8 @@ export default function ShopSaleProfitReport() {
       "Date",
       "Purchased Amount",
       "Sale Amount",
+      "Net Sale",
+      "Due Sale",
       "Recovery",
       "Profit / Loss",
     ];
@@ -157,6 +159,8 @@ export default function ShopSaleProfitReport() {
       formatPeriod(t.period, groupBy),
       t.purchase_amount > 0 ? fmt(t.purchase_amount) : "-",
       t.sale_amount > 0 ? fmt(t.sale_amount) : "-",
+      t.net_sale > 0 ? fmt(t.net_sale) : "-",
+      t.due_sale > 0 ? fmt(t.due_sale) : "-",
       t.recovery > 0 ? fmt(t.recovery) : "-",
       fmt(t.profit),
     ]);
@@ -167,6 +171,8 @@ export default function ShopSaleProfitReport() {
         "Grand Total",
         fmt(grandTotals.purchase_amount),
         fmt(grandTotals.sale_amount),
+        fmt(grandTotals.net_sale),
+        fmt(grandTotals.due_sale),
         fmt(grandTotals.recovery),
         fmt(grandTotals.profit),
       ]);
@@ -401,7 +407,13 @@ export default function ShopSaleProfitReport() {
                       <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-32">
                         Sale Amount
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-32">
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
+                        Net Sale
+                      </th>
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
+                        Due Sale
+                      </th>
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
                         Recovery
                       </th>
                       <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-36">
@@ -426,6 +438,12 @@ export default function ShopSaleProfitReport() {
                           <td className="px-4 py-2 text-right border border-gray-300">
                             {item.sale_amount > 0 ? fmt(item.sale_amount) : "-"}
                           </td>
+                          <td className="px-4 py-2 text-right border border-gray-300">
+                            {item.net_sale > 0 ? fmt(item.net_sale) : "-"}
+                          </td>
+                          <td className="px-4 py-2 text-right border border-gray-300">
+                            {item.due_sale > 0 ? fmt(item.due_sale) : "-"}
+                          </td>
                           <td className="px-4 py-2 text-right text-blue-700 font-semibold border border-gray-300">
                             {item.recovery > 0 ? fmt(item.recovery) : "-"}
                           </td>
@@ -446,6 +464,12 @@ export default function ShopSaleProfitReport() {
                         </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
                           {fmt(grandTotals.sale_amount)}
+                        </td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
+                          {fmt(grandTotals.net_sale)}
+                        </td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
+                          {fmt(grandTotals.due_sale)}
                         </td>
                         <td className="px-4 py-3 text-right text-blue-700 border border-gray-300">
                           {fmt(grandTotals.recovery)}

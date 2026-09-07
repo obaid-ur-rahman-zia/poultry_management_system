@@ -358,7 +358,7 @@ export default class ShopReportRepository {
       return d.toISOString().split('T')[0]; // date
     };
 
-    // 1. Fetch Purchases (local_sale where purchaser_account = shop_acc_id)
+    // 1. Fetch Purchases & Net Sale (local_sale where purchaser_account = shop_acc_id)
     const localSales = await prisma.local_sale.findMany({
       where: {
         purchaser_account: parsedShopId,
@@ -371,6 +371,7 @@ export default class ShopReportRepository {
       select: {
         local_sale_date: true,
         purchaser_amount: true,
+        received_amount: true, // Net Sale: cash paid to us when stock was transferred to the shop
       },
     });
 
@@ -396,16 +397,17 @@ export default class ShopReportRepository {
     localSales.forEach((ls) => {
       const key = getGroupKey(ls.local_sale_date);
       if (!groupedData.has(key)) {
-        groupedData.set(key, { period: key, purchase_amount: 0, sale_amount: 0, recovery: 0 });
+        groupedData.set(key, { period: key, purchase_amount: 0, net_sale: 0, sale_amount: 0, recovery: 0 });
       }
       const group = groupedData.get(key);
       group.purchase_amount += Number(ls.purchaser_amount || 0);
+      group.net_sale += Number(ls.received_amount || 0); // cash received from shop on that entry
     });
 
     shopSales.forEach((ss) => {
       const key = getGroupKey(ss.sale_date);
       if (!groupedData.has(key)) {
-        groupedData.set(key, { period: key, purchase_amount: 0, sale_amount: 0, recovery: 0 });
+        groupedData.set(key, { period: key, purchase_amount: 0, net_sale: 0, sale_amount: 0, recovery: 0 });
       }
       const group = groupedData.get(key);
       group.sale_amount += Number(ss.amount || 0);
@@ -415,6 +417,7 @@ export default class ShopReportRepository {
     const results = Array.from(groupedData.values()).map(row => {
       return {
         ...row,
+        due_sale: row.sale_amount, // alias: total shop sale amount in this period
         profit: row.sale_amount - row.purchase_amount,
       };
     });
@@ -424,6 +427,8 @@ export default class ShopReportRepository {
 
     const grandTotalPurchase = results.reduce((sum, row) => sum + row.purchase_amount, 0);
     const grandTotalSale = results.reduce((sum, row) => sum + row.sale_amount, 0);
+    const grandTotalNetSale = results.reduce((sum, row) => sum + row.net_sale, 0);
+    const grandTotalDueSale = grandTotalSale;
     const grandTotalRecovery = results.reduce((sum, row) => sum + row.recovery, 0);
     const netProfit = grandTotalSale - grandTotalPurchase;
 
@@ -432,6 +437,8 @@ export default class ShopReportRepository {
       grandTotals: {
         purchase_amount: grandTotalPurchase,
         sale_amount: grandTotalSale,
+        net_sale: grandTotalNetSale,
+        due_sale: grandTotalDueSale,
         recovery: grandTotalRecovery,
         profit: netProfit,
       }
