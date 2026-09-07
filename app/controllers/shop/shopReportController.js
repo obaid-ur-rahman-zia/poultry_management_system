@@ -1,4 +1,4 @@
-import ShopReportRepository from "../../../repositories/shop/shopReportRepository";
+import ShopReportRepository from "../../repositories/shop/shopReportRepository";
 import { successResponse, errorResponse } from "../../utils/responseHandler";
 
 export default class ShopReportController {
