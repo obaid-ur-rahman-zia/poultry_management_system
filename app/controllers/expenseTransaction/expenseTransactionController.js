@@ -279,7 +279,16 @@ class ExpenseTransactionController {
                 ? parseFloat(req_object.amount)
                 : existing.amount;
             const financialYear = calculateFinancialYear(transactionDate);
-            const cashInHandAccountId = user.cash_in_hand_account_id;
+            
+            // Get original cash account and insert_by
+            let originalCashAccountId = user.cash_in_hand_account_id;
+            const originalCreatorId = parseInt(existing.insert_by);
+            if (!isNaN(originalCreatorId)) {
+                const originalUser = await UserRepository.readById(originalCreatorId);
+                if (originalUser && originalUser.cash_in_hand_account_id) {
+                    originalCashAccountId = originalUser.cash_in_hand_account_id;
+                }
+            }
             const updateBy = req_object.update_by || session.user?.id?.toString() || "1";
 
             const result = await prisma.$transaction(async (tx) => {
@@ -319,7 +328,8 @@ class ExpenseTransactionController {
                         financial_year: financialYear,
                         voucher_type: "ET",
                         transaction_dat: new Date(transactionDate),
-                        insert_by: updateBy,
+                        insert_dat: existing.insert_dat,
+                        insert_by: existing.insert_by,
                         update_by: updateBy,
                     },
                     tx,
@@ -328,7 +338,7 @@ class ExpenseTransactionController {
                 // 4. Recreate CREDIT on the cash-in-hand account
                 await TransactionRepository.create(
                     {
-                        acc_id: cashInHandAccountId,
+                        acc_id: originalCashAccountId,
                         reference_id: updated.expense_t_id,
                         reference: "Expense Transaction",
                         debit: 0,
@@ -337,7 +347,8 @@ class ExpenseTransactionController {
                         financial_year: financialYear,
                         voucher_type: "ET",
                         transaction_dat: new Date(transactionDate),
-                        insert_by: updateBy,
+                        insert_dat: existing.insert_dat,
+                        insert_by: existing.insert_by,
                         update_by: updateBy,
                     },
                     tx,

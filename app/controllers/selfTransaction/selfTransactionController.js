@@ -338,7 +338,17 @@ class SelfTransactionController {
         : existingTransaction.account_id;
       const transactionDate =
         req_object.transaction_date || existingTransaction.transaction_date;
-      const cashInHandAccountId = user.cash_in_hand_account_id;
+      
+      // Get original cash account and insert_by
+      let originalCashAccountId = user.cash_in_hand_account_id;
+      const originalCreatorId = parseInt(existingTransaction.insert_by);
+      if (!isNaN(originalCreatorId)) {
+        const originalUser = await UserRepository.readById(originalCreatorId);
+        if (originalUser && originalUser.cash_in_hand_account_id) {
+          originalCashAccountId = originalUser.cash_in_hand_account_id;
+        }
+      }
+      const updateBy = req_object.update_by || session.user?.id?.toString() || "1";
 
       // Use transaction to ensure both self_transaction and transactions are updated together
       const result = await prisma.$transaction(async (tx) => {
@@ -378,8 +388,9 @@ class SelfTransactionController {
             financial_year: financialYear,
             voucher_type: "Self Transaction",
             transaction_dat: new Date(transactionDate),
-            insert_by: req_object.update_by || "user 1",
-            update_by: req_object.update_by || "user 1",
+            insert_dat: existingTransaction.insert_dat,
+            insert_by: existingTransaction.insert_by,
+            update_by: updateBy,
           },
           tx,
         );
@@ -387,7 +398,7 @@ class SelfTransactionController {
         // Create opposite transaction in user's cash in hand account
         await TransactionRepository.create(
           {
-            acc_id: cashInHandAccountId,
+            acc_id: originalCashAccountId,
             reference_id: updatedTransaction.transaction_id,
             reference: "Self Transaction",
             debit: isReceive ? amount : 0,
@@ -398,8 +409,9 @@ class SelfTransactionController {
             financial_year: financialYear,
             voucher_type: "Self Transaction",
             transaction_dat: new Date(transactionDate),
-            insert_by: req_object.update_by || "user 1",
-            update_by: req_object.update_by || "user 1",
+            insert_dat: existingTransaction.insert_dat,
+            insert_by: existingTransaction.insert_by,
+            update_by: updateBy,
           },
           tx,
         );

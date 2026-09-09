@@ -270,7 +270,16 @@ class LocalSaleController {
           if (!updated || !updated.local_sale_id)
             throw new Error("Failed to update local sale record");
           await snapshotSources(updated.local_sale_id, updated.local_sale_date, tx);
-          await createLocalSaleTransactions(updated, tx, cashInHandAccountId);
+          
+          let originalCashAccountId = cashInHandAccountId;
+          const originalCreatorId = parseInt(existing.insert_by);
+          if (!isNaN(originalCreatorId)) {
+            const originalUser = await UserRepository.readById(originalCreatorId);
+            if (originalUser && originalUser.cash_in_hand_account_id) {
+              originalCashAccountId = originalUser.cash_in_hand_account_id;
+            }
+          }
+          await createLocalSaleTransactions(updated, tx, originalCashAccountId);
           return updated;
         },
         { maxWait: 5000, timeout: 10000, isolationLevel: "Serializable" },
@@ -345,6 +354,10 @@ async function createLocalSaleTransactions(localSale, tx, cash_account) {
     financial_year: financialYear,
     reference: "Local Sale",
     voucher_type: "LS",
+    transaction_dat: new Date(localSale.local_sale_date),
+    insert_dat: localSale.insert_dat,
+    insert_by: localSale.insert_by,
+    update_by: localSale.update_by,
   };
 
   const transactionData = [];

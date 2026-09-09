@@ -323,6 +323,7 @@ class TransactionRepository {
         remarks: data.remarks || null,
         manual_voucher_no: data.manual_voucher_no || null,
         transaction_dat: data.transaction_dat || new Date(),
+        insert_dat: data.insert_dat || undefined,
         insert_by: data.insert_by || "user 1",
         update_by: data.update_by || "user 1",
         account: {
