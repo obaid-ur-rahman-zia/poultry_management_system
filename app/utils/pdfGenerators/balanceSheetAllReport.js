@@ -91,29 +91,30 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccIds) 
       const dayTransactions = grouped[dateStr];
       const dayOpeningBalance = currentBalance;
 
-      let selfTransactions = [];
+      let selfReceiveTransactions = [];
+      let selfPayTransactions = [];
       let localSales = [];
       let oppositeTransactions = [];
 
       dayTransactions.forEach((trans) => {
-        if (trans.type === "self") selfTransactions.push(trans);
-        else if (trans.type === "local_sale") localSales.push(trans);
-        else if (trans.type === "opposite") oppositeTransactions.push(trans);
+        if (trans.type === "self") {
+          if (trans.transaction_type === "receive") selfReceiveTransactions.push(trans);
+          else if (trans.transaction_type === "pay") selfPayTransactions.push(trans);
+        } else if (trans.type === "local_sale") {
+          localSales.push(trans);
+        } else if (trans.type === "opposite") {
+          oppositeTransactions.push(trans);
+        }
       });
 
       const dayProcessedTransactions = [];
       let dayTotalReceived = 0;
       let dayTotalPaid = 0;
 
-      // 1. Self Transactions
-      selfTransactions.forEach((trans) => {
-        if (trans.transaction_type === "receive") {
-          currentBalance += trans.amount;
-          dayTotalReceived += trans.amount;
-        } else if (trans.transaction_type === "pay") {
-          currentBalance -= trans.amount;
-          dayTotalPaid += trans.amount;
-        }
+      // 1. Self Transactions (Receive)
+      selfReceiveTransactions.forEach((trans) => {
+        currentBalance += trans.amount;
+        dayTotalReceived += trans.amount;
         dayProcessedTransactions.push({
           ...trans,
           srNo: globalSrNo++,
@@ -121,7 +122,7 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccIds) 
         });
       });
 
-      // 2. Local Sales
+      // 2. Local Sales (Consolidated)
       if (localSales.length > 0) {
         const totalLocalSaleAmount = localSales.reduce(
           (sum, ls) => sum + ls.received_amount,
@@ -140,7 +141,18 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccIds) 
         });
       }
 
-      // 3. Opposite Transactions
+      // 3. Self Transactions (Pay)
+      selfPayTransactions.forEach((trans) => {
+        currentBalance -= trans.amount;
+        dayTotalPaid += trans.amount;
+        dayProcessedTransactions.push({
+          ...trans,
+          srNo: globalSrNo++,
+          runningBalance: currentBalance,
+        });
+      });
+
+      // 4. Opposite Transactions
       oppositeTransactions.forEach((trans) => {
         if (cashAccIds.includes(trans.received_by)) { // Cash received this → balance UP
           currentBalance += trans.amount;
@@ -247,7 +259,7 @@ function generateReportHTML(
       const dayClosingColor = day.closingBalance < 0 ? "#dc2626" : "#16a34a";
 
       contentHtml += `
-        <div style="margin-bottom: 25px; page-break-inside: avoid;">
+        <div style="margin-bottom: 25px;">
           <div style="margin-bottom: 8px; padding: 0 4px; display: flex; align-items: center; justify-content: flex-start; gap: 30px;">
             <span style="font-weight: bold; font-size: 14px;">${day.displayDate}</span>
             <span style="font-weight: bold; font-size: 14px;">

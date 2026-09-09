@@ -115,29 +115,30 @@ export default function BalanceSheetReport() {
         const dayTransactions = grouped[dateStr];
         const dayOpeningBalance = currentBalance;
 
-        let selfTransactions = [];
+        let selfReceiveTransactions = [];
+        let selfPayTransactions = [];
         let localSales = [];
         let oppositeTransactions = [];
 
         dayTransactions.forEach((trans) => {
-          if (trans.type === "self") selfTransactions.push(trans);
-          else if (trans.type === "local_sale") localSales.push(trans);
-          else if (trans.type === "opposite") oppositeTransactions.push(trans);
+          if (trans.type === "self") {
+            if (trans.transaction_type === "receive") selfReceiveTransactions.push(trans);
+            else if (trans.transaction_type === "pay") selfPayTransactions.push(trans);
+          } else if (trans.type === "local_sale") {
+            localSales.push(trans);
+          } else if (trans.type === "opposite") {
+            oppositeTransactions.push(trans);
+          }
         });
 
         const dayProcessedTransactions = [];
         let dayTotalReceived = 0;
         let dayTotalPaid = 0;
 
-        // 1. Self Transactions (Affect Balance)
-        selfTransactions.forEach((trans) => {
-          if (trans.transaction_type === "receive") {
-            currentBalance += trans.amount;
-            dayTotalReceived += trans.amount;
-          } else if (trans.transaction_type === "pay") {
-            currentBalance -= trans.amount;
-            dayTotalPaid += trans.amount;
-          }
+        // 1. Self Transactions (Receive)
+        selfReceiveTransactions.forEach((trans) => {
+          currentBalance += trans.amount;
+          dayTotalReceived += trans.amount;
           dayProcessedTransactions.push({
             ...trans,
             srNo: globalSrNo++,
@@ -145,7 +146,7 @@ export default function BalanceSheetReport() {
           });
         });
 
-        // 2. Local Sales (Consolidated, Affect Balance)
+        // 2. Local Sales (Consolidated)
         if (localSales.length > 0) {
           const totalLocalSaleAmount = localSales.reduce(
             (sum, ls) => sum + ls.received_amount,
@@ -164,7 +165,18 @@ export default function BalanceSheetReport() {
           });
         }
 
-        // 3. Opposite Transactions
+        // 3. Self Transactions (Pay)
+        selfPayTransactions.forEach((trans) => {
+          currentBalance -= trans.amount;
+          dayTotalPaid += trans.amount;
+          dayProcessedTransactions.push({
+            ...trans,
+            srNo: globalSrNo++,
+            runningBalance: currentBalance,
+          });
+        });
+
+        // 4. Opposite Transactions
         oppositeTransactions.forEach((trans) => {
           if (trans.received_by === cashAccId) {
             currentBalance += trans.amount;
