@@ -95,6 +95,7 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccId) {
       let selfPayTransactions = [];
       let localSales = [];
       let oppositeTransactions = [];
+      let expenseTransactions = [];
 
       dayTransactions.forEach((trans) => {
         if (trans.type === "self") {
@@ -104,6 +105,8 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccId) {
           localSales.push(trans);
         } else if (trans.type === "opposite") {
           oppositeTransactions.push(trans);
+        } else if (trans.type === "expense") {
+          expenseTransactions.push(trans);
         }
       });
 
@@ -143,6 +146,17 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccId) {
 
       // 3. Self Transactions (Pay)
       selfPayTransactions.forEach((trans) => {
+        currentBalance -= trans.amount;
+        dayTotalPaid += trans.amount;
+        dayProcessedTransactions.push({
+          ...trans,
+          srNo: globalSrNo++,
+          runningBalance: currentBalance,
+        });
+      });
+
+      // 3.5. Expense Transactions (Pay)
+      expenseTransactions.forEach((trans) => {
         currentBalance -= trans.amount;
         dayTotalPaid += trans.amount;
         dayProcessedTransactions.push({
@@ -236,6 +250,9 @@ function generateReportHTML(
         } else if (trans.type === "local_sale_consolidated") {
           colReceivedBy = "Local Sales";
           colReceivedAmount = trans.received_amount.toFixed(2);
+        } else if (trans.type === "expense") {
+          colPaidBy = trans.account?.account_nam || "-";
+          colPaidAmount = trans.amount.toFixed(2);
         }
 
         const balanceColor = trans.runningBalance < 0 ? "#dc2626" : "#16a34a";

@@ -224,6 +224,28 @@ class OppositeTransactionRepository {
       },
     });
 
+    // Fetch expense transactions within date range, filtered by creator
+    const expenseTransactions = await prisma.expense_transaction.findMany({
+      where: {
+        expense_t_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: 1,
+        ...insertByFilter,
+      },
+      include: {
+        account: {
+          select: {
+            account_nam: true,
+          },
+        },
+      },
+      orderBy: {
+        expense_t_date: "asc",
+      },
+    });
+
     // Combine and sort by date
     const combinedTransactions = [
       ...oppositeTransactions.map((t) => ({
@@ -238,6 +260,11 @@ class OppositeTransactionRepository {
         ...t,
         type: "local_sale",
         transaction_date: t.local_sale_date,
+      })),
+      ...expenseTransactions.map((t) => ({
+        ...t,
+        type: "expense",
+        transaction_date: t.expense_t_date,
       })),
     ].sort(
       (a, b) => new Date(a.transaction_date) - new Date(b.transaction_date),

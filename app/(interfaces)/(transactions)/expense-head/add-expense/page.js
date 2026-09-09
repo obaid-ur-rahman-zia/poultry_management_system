@@ -581,6 +581,13 @@ export default function ExpenseHeadPage() {
             </div>
 
             <div className="flex justify-end gap-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Expense"
+                    : "Create Expense"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -601,13 +608,7 @@ export default function ExpenseHeadPage() {
               >
                 {isEditMode ? "Cancel Edit" : "Clear Form"}
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Saving..."
-                  : isEditMode
-                    ? "Update Expense"
-                    : "Create Expense"}
-              </Button>
+
               {isEditMode && (
                 <Button
                   type="button"

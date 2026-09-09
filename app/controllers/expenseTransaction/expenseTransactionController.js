@@ -146,8 +146,8 @@ class ExpenseTransactionController {
 
             const financialYear = calculateFinancialYear(transaction_date);
             const cashInHandAccountId = user.cash_in_hand_account_id;
-            const insertBy = req_object.insert_by || session.user?.name || "user 1";
-            const updateBy = req_object.update_by || session.user?.name || "user 1";
+            const insertBy = req_object.insert_by || session.user?.id?.toString() || "1";
+            const updateBy = req_object.update_by || session.user?.id?.toString() || "1";
 
             // Prisma transaction — keep expense record + ledger entries atomic
             const result = await prisma.$transaction(async (tx) => {
@@ -280,7 +280,7 @@ class ExpenseTransactionController {
                 : existing.amount;
             const financialYear = calculateFinancialYear(transactionDate);
             const cashInHandAccountId = user.cash_in_hand_account_id;
-            const updateBy = req_object.update_by || session.user?.name || "user 1";
+            const updateBy = req_object.update_by || session.user?.id?.toString() || "1";
 
             const result = await prisma.$transaction(async (tx) => {
                 // 1. Update the expense_transaction record

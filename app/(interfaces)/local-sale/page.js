@@ -356,14 +356,13 @@ function LocalSaleTab() {
       received_amount,
     } = form;
 
-    if (
-      !local_sale_date ||
-      !local_account ||
-      !purchaser_account ||
-      purchaser_weight === "" ||
-      purchaser_rate === ""
-    ) {
-      toast.error("Please fill in all required fields");
+    if (!local_sale_date || !local_account || !purchaser_account) {
+      toast.error("Please fill in all required fields (Date, Local Account, Purchaser)");
+      return;
+    }
+
+    if (!purchaser_weight && !purchaser_rate && !received_amount) {
+      toast.error("Please enter weight/rate or received amount");
       return;
     }
 
@@ -374,7 +373,7 @@ function LocalSaleTab() {
     if (isShopPurchaser) {
       let duplicate = null;
       if (filterDate === local_sale_date) {
-        duplicate = sales.find(s => 
+        duplicate = sales.find(s =>
           s.purchaser_account === Number(purchaser_account) &&
           new Date(s.local_sale_date).toISOString().split('T')[0] === local_sale_date &&
           (!isEditMode || s.local_sale_id !== editingId)
@@ -385,7 +384,7 @@ function LocalSaleTab() {
           const checkRes = await fetch(`/api/localSale/readAll?filterDate=${local_sale_date}&all=true`);
           const checkData = await checkRes.json();
           const dateSales = checkData.response_result?.data || checkData.response_result || [];
-          duplicate = dateSales.find(s => 
+          duplicate = dateSales.find(s =>
             s.purchaser_account === Number(purchaser_account) &&
             new Date(s.local_sale_date).toISOString().split('T')[0] === local_sale_date &&
             (!isEditMode || s.local_sale_id !== editingId)
@@ -438,7 +437,7 @@ function LocalSaleTab() {
         setForm(prev => ({ ...prev, purchaser_account: savedPurchaser }));
         await fetchAccounts();
         fetchSales();
-        
+
         setTimeout(() => {
           weightInputRef.current?.focus();
         }, 100);
@@ -675,7 +674,6 @@ function LocalSaleTab() {
                       value={form.purchaser_weight}
                       onChange={(e) => handleChange("purchaser_weight", e.target.value)}
                       className="h-8 w-24 text-l"
-                      required
                     />
                   </div>
                   <span className="text-l underline">Amount {purchaserAmount.toFixed(2)}</span>
@@ -691,7 +689,6 @@ function LocalSaleTab() {
                       value={form.purchaser_rate}
                       onChange={(e) => handleChange("purchaser_rate", e.target.value)}
                       className="h-8 w-24 text-l"
-                      required
                     />
                   </div>
                   {!isEditMode && <span className="text-l underline">Net Balance {netBalance.toFixed(2)}</span>}
@@ -810,7 +807,6 @@ function LocalSaleTab() {
                         <TableHead>Rate</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Received</TableHead>
-                        <TableHead>Net Balance</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -836,7 +832,6 @@ function LocalSaleTab() {
                               <TableCell>{sale.purchaser_rate || "0"}</TableCell>
                               <TableCell>{sale.purchaser_amount || "0"}</TableCell>
                               <TableCell className="text-green-600">{sale.received_amount || "0"}</TableCell>
-                              <TableCell className={rowNet < 0 ? "text-green-600 font-semibold" : rowNet > 0 ? "text-red-600 font-semibold" : ""}>{rowNet}</TableCell>
                               <TableCell>
                                 <Button
                                   variant="ghost"
@@ -859,7 +854,7 @@ function LocalSaleTab() {
                         <TableCell className="py-1"></TableCell>
                         <TableCell className="py-1">{totalListAmount.toFixed(2)}</TableCell>
                         <TableCell className="text-green-600 py-1">{totalListReceived.toFixed(2)}</TableCell>
-                        <TableCell className={`py-1 ${totalListNetBalance < 0 ? "text-green-600" : totalListNetBalance > 0 ? "text-red-600" : ""}`}>{totalListNetBalance.toFixed(2)}</TableCell>
+                        {/* <TableCell className={`py-1 ${totalListNetBalance < 0 ? "text-green-600" : totalListNetBalance > 0 ? "text-red-600" : ""}`}>{totalListNetBalance.toFixed(2)}</TableCell> */}
                         <TableCell className="py-1"></TableCell>
                       </TableRow>
                     </TableFooter>
@@ -932,7 +927,6 @@ function LocalSaleTab() {
                     <TableHead>Rate</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Received</TableHead>
-                    <TableHead>Net Balance</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -948,7 +942,6 @@ function LocalSaleTab() {
                         <TableCell className="py-1">{sale.purchaser_rate || "0"}</TableCell>
                         <TableCell className="py-1">{sale.purchaser_amount || "0"}</TableCell>
                         <TableCell className="text-green-600 py-1">{sale.received_amount || "0"}</TableCell>
-                        <TableCell className={`py-1 ${rowNet < 0 ? "text-green-600 font-semibold" : rowNet > 0 ? "text-red-600 font-semibold" : ""}`}>{rowNet}</TableCell>
                         <TableCell className="py-1">
                           <Button
                             variant="ghost"
@@ -973,7 +966,7 @@ function LocalSaleTab() {
                     <TableCell className="py-1"></TableCell>
                     <TableCell className="py-1">{modalTotalAmount.toFixed(2)}</TableCell>
                     <TableCell className="text-green-600 py-1">{modalTotalReceived.toFixed(2)}</TableCell>
-                    <TableCell className={`py-1 ${modalTotalNetBalance < 0 ? "text-green-600" : modalTotalNetBalance > 0 ? "text-red-600" : ""}`}>{modalTotalNetBalance.toFixed(2)}</TableCell>
+                    {/* <TableCell className={`py-1 ${modalTotalNetBalance < 0 ? "text-green-600" : modalTotalNetBalance > 0 ? "text-red-600" : ""}`}>{modalTotalNetBalance.toFixed(2)}</TableCell> */}
                     <TableCell className="py-1"></TableCell>
                   </TableRow>
                 </TableFooter>

@@ -119,6 +119,7 @@ export default function BalanceSheetReport() {
         let selfPayTransactions = [];
         let localSales = [];
         let oppositeTransactions = [];
+        let expenseTransactions = [];
 
         dayTransactions.forEach((trans) => {
           if (trans.type === "self") {
@@ -128,6 +129,8 @@ export default function BalanceSheetReport() {
             localSales.push(trans);
           } else if (trans.type === "opposite") {
             oppositeTransactions.push(trans);
+          } else if (trans.type === "expense") {
+            expenseTransactions.push(trans);
           }
         });
 
@@ -167,6 +170,17 @@ export default function BalanceSheetReport() {
 
         // 3. Self Transactions (Pay)
         selfPayTransactions.forEach((trans) => {
+          currentBalance -= trans.amount;
+          dayTotalPaid += trans.amount;
+          dayProcessedTransactions.push({
+            ...trans,
+            srNo: globalSrNo++,
+            runningBalance: currentBalance,
+          });
+        });
+
+        // 3.5. Expense Transactions (Pay)
+        expenseTransactions.forEach((trans) => {
           currentBalance -= trans.amount;
           dayTotalPaid += trans.amount;
           dayProcessedTransactions.push({
@@ -560,6 +574,9 @@ export default function BalanceSheetReport() {
                             } else if (trans.type === "local_sale_consolidated") {
                               colReceivedBy = "Local Sales";
                               colReceivedAmount = trans.received_amount.toFixed(2);
+                            } else if (trans.type === "expense") {
+                              colPaidBy = trans.account?.account_nam || "-";
+                              colPaidAmount = trans.amount.toFixed(2);
                             }
 
                             return (

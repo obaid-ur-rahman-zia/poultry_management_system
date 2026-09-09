@@ -322,8 +322,8 @@ function validateLocalSaleAmounts(data) {
   if (![amount, received, weight, rate].every(Number.isFinite)) {
     throw new Error("Local sale amounts must be valid numbers");
   }
-  if (amount < 0 || received < 0 || weight <= 0 || rate < 0) {
-    throw new Error("Local sale amounts must be nonnegative and weight must be greater than zero");
+  if (amount < 0 || received < 0 || weight < 0 || rate < 0) {
+    throw new Error("Local sale amounts must be nonnegative");
   }
 }
 
