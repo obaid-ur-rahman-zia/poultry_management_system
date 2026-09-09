@@ -130,11 +130,13 @@ export default function WholeSaleReport() {
     dates.forEach((dateGroup, di) => {
       items.push({ type: "DATE_HEADER", dateStr: dateGroup.dateStr });
 
+      let srNo = 1;
+
       dateGroup.formers.forEach((group, gi) => {
         items.push({ type: "FORMER_HEADER", formerName: group.formerName });
 
         group.sales.forEach((item, si) => {
-          items.push({ type: "SALE_ROW", ...item, rowIndex: si + 1, formerName: group.formerName });
+          items.push({ type: "SALE_ROW", ...item, rowIndex: srNo++, formerName: group.formerName });
         });
 
         items.push({
@@ -248,10 +250,12 @@ export default function WholeSaleReport() {
     dates.forEach((dateGroup) => {
       rows.push([`Date: ${dateGroup.dateStr}`, "", "", "", "", "", "", "", "", "", ""]);
 
+      let srNo = 1;
+
       dateGroup.formers.forEach((group) => {
         group.sales.forEach((item, index) => {
           rows.push([
-            index + 1,
+            srNo++,
             group.formerName,
             item.sale_id,
             item.van_number,
