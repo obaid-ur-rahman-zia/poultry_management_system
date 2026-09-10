@@ -7,7 +7,7 @@ export const roleBasedRoutes = {
     "/sale": [Role.SUPER_ADMIN, Role.ADMIN],
     "/purchase": [Role.SUPER_ADMIN, Role.ADMIN],
     "/expense": [Role.SUPER_ADMIN, Role.ADMIN],
-    "/expense-head": [Role.SUPER_ADMIN, Role.ADMIN],
+    "/expense-head": [Role.SUPER_ADMIN, Role.ADMIN, Role.USER],
     "/reports": [Role.SUPER_ADMIN, Role.ADMIN],
     "/flock": [Role.SUPER_ADMIN, Role.ADMIN],
     "/farm-reports": [Role.SUPER_ADMIN, Role.ADMIN],

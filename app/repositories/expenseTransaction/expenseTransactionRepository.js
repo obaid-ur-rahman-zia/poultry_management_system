@@ -1,10 +1,14 @@
 import prisma from "@/lib/prisma";
 
 class expenseTransactionRepository {
-    async readAll() {
+    async readAll(insertByFilter = null) {
+        const where = { status: 1 };
+        if (insertByFilter) {
+            where.insert_by = insertByFilter;
+        }
         return prisma.expense_transaction.findMany({
             orderBy: { expense_t_id: "desc" },
-            where: { status: 1 },
+            where,
             include: {
                 account: {
                     include: {
@@ -17,17 +21,21 @@ class expenseTransactionRepository {
         });
     }
 
-    async readAllByDate(date) {
+    async readAllByDate(date, insertByFilter = null) {
         const start = new Date(date);
         start.setHours(0, 0, 0, 0);
         const end = new Date(date);
         end.setHours(23, 59, 59, 999);
+        const where = {
+            status: 1,
+            expense_t_date: { gte: start, lte: end },
+        };
+        if (insertByFilter) {
+            where.insert_by = insertByFilter;
+        }
         return prisma.expense_transaction.findMany({
             orderBy: { expense_t_id: "desc" },
-            where: {
-                status: 1,
-                expense_t_date: { gte: start, lte: end },
-            },
+            where,
             include: {
                 account: {
                     include: {
@@ -40,13 +48,17 @@ class expenseTransactionRepository {
         });
     }
 
-    async readAllWithPagination(skip = 0, take = 10) {
+    async readAllWithPagination(skip = 0, take = 10, insertByFilter = null) {
+        const where = { status: 1 };
+        if (insertByFilter) {
+            where.insert_by = insertByFilter;
+        }
         const [data, total] = await Promise.all([
             prisma.expense_transaction.findMany({
                 skip,
                 take,
                 orderBy: { expense_t_id: "desc" },
-                where: { status: 1 },
+                where,
                 include: {
                     account: {
                         include: {
@@ -58,9 +70,7 @@ class expenseTransactionRepository {
                 },
             }),
             prisma.expense_transaction.count({
-                where: {
-                    status: 1,
-                },
+                where,
             }),
         ]);
         return { data, total };

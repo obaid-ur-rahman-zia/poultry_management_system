@@ -182,9 +182,9 @@ export default function ExpensePage() {
         result.response_result?.data || result.response_result || [];
       const expenseHead = Array.isArray(subHeadsData)
         ? subHeadsData.find(
-            (subHead) =>
-              subHead.subhead_nam?.trim().toLowerCase() === "expense head",
-          )
+          (subHead) =>
+            subHead.subhead_nam?.trim().toLowerCase() === "expense head",
+        )
         : null;
 
       setExpenseHeadParentId(expenseHead?.sub_id || null);
@@ -605,12 +605,11 @@ export default function ExpensePage() {
                       <Combobox
                         options={subHeads.map((subHead) => ({
                           value: subHead.sub_id.toString(),
-                          label: `${subHead.subhead_nam}${
-                            subHead.head?.head_nam &&
-                            subHead.head.head_nam !== "Main Head"
+                          label: `${subHead.subhead_nam}${subHead.head?.head_nam &&
+                              subHead.head.head_nam !== "Main Head"
                               ? ` (${subHead.head.head_nam})`
                               : ""
-                          }`,
+                            }`,
                         }))}
                         value={field.value}
                         onValueChange={(value) => {
@@ -678,9 +677,6 @@ export default function ExpensePage() {
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={handleCreateNew}>
-                New
-              </Button>
               {!isEditMode && (
                 <Button type="submit" disabled={isSubmitting} variant="outline">
                   {isSubmitting ? "Saving..." : "Save"}
@@ -691,6 +687,10 @@ export default function ExpensePage() {
                   {isSubmitting ? "Updating..." : "Update"}
                 </Button>
               )}
+              <Button type="button" variant="outline" onClick={handleCreateNew}>
+                New
+              </Button>
+
               <Button
                 type="button"
                 variant="outline"
@@ -996,18 +996,18 @@ export default function ExpensePage() {
                                 <td className="p-2 align-middle whitespace-nowrap font-medium">
                                   {searchQuery || filterName
                                     ? highlightText(
-                                        account.account_nam || "N/A",
-                                        searchQuery || filterName,
-                                      )
+                                      account.account_nam || "N/A",
+                                      searchQuery || filterName,
+                                    )
                                     : account.account_nam || "N/A"}
                                 </td>
 
                                 <td className="p-2 align-middle whitespace-nowrap hidden xl:table-cell">
                                   {searchQuery
                                     ? highlightText(
-                                        account.account_reference || "N/A",
-                                        searchQuery,
-                                      )
+                                      account.account_reference || "N/A",
+                                      searchQuery,
+                                    )
                                     : account.account_reference || "N/A"}
                                 </td>
                                 <td className="p-2 align-middle whitespace-nowrap">

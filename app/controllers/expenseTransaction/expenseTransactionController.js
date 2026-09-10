@@ -12,6 +12,9 @@ class ExpenseTransactionController {
     // ─── READ ALL (paginated / date-filtered) ────────────────────────────────────
     async readAll(req) {
         try {
+            const session = await getServerSession(authOptions);
+            const insertByFilter = session?.user?.role === "USER" ? session.user.id.toString() : null;
+
             const searchParams =
                 req?.nextUrl?.searchParams || new URL(req?.url || "").searchParams;
 
@@ -24,9 +27,9 @@ class ExpenseTransactionController {
             let data, total;
             if (getAll) {
                 if (dateParam) {
-                    data = await ExpenseTransactionRepository.readAllByDate(dateParam);
+                    data = await ExpenseTransactionRepository.readAllByDate(dateParam, insertByFilter);
                 } else {
-                    data = await ExpenseTransactionRepository.readAll();
+                    data = await ExpenseTransactionRepository.readAll(insertByFilter);
                 }
                 total = data.length;
                 return successResponse({ data }, "Success");
@@ -34,6 +37,7 @@ class ExpenseTransactionController {
                 const result = await ExpenseTransactionRepository.readAllWithPagination(
                     skip,
                     limit,
+                    insertByFilter
                 );
                 data = result.data;
                 total = result.total;
