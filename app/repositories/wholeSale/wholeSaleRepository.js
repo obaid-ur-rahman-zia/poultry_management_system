@@ -361,6 +361,21 @@ class WholeSaleRepository {
       },
     });
 
+    // Fetch local sales where cash is received in the same date range
+    const localSales = await prisma.local_sale.findMany({
+      where: {
+        local_sale_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: 1,
+      },
+      select: {
+        local_sale_date: true,
+        received_amount: true,
+      },
+    });
+
     const groupedData = new Map();
 
     sales.forEach((sale) => {
@@ -409,6 +424,21 @@ class WholeSaleRepository {
         });
       }
       groupedData.get(key).recovery += self.amount;
+    });
+
+    // Group local sales received amounts into the same period buckets
+    localSales.forEach((localSale) => {
+      const key = getGroupKey(localSale.local_sale_date, group_by);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, {
+          purchase: 0,
+          sale: 0,
+          profit: 0,
+          recovery: 0,
+          date: localSale.local_sale_date,
+        });
+      }
+      groupedData.get(key).recovery += localSale.received_amount || 0;
     });
 
     // Convert to array
