@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
+import LocalSaleExpenseTab from "./expenses/LocalSaleExpenseTab";
 
 const fmtDate = (d) => {
   if (!d) return "-";
@@ -64,12 +65,16 @@ export default function LocalSalePageWrapper() {
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-1">
+        <TabsList className="grid grid-cols-2">
           <TabsTrigger value="local-sale">Local Sale</TabsTrigger>
+          <TabsTrigger value="expenses">Expenses</TabsTrigger>
         </TabsList>
 
         <TabsContent value="local-sale" className="space-y-4">
           <LocalSaleTab />
+        </TabsContent>
+        <TabsContent value="expenses" className="space-y-4">
+          <LocalSaleExpenseTab />
         </TabsContent>
       </Tabs>
     </div>

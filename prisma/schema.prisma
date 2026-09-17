@@ -1194,3 +1194,99 @@ model shop_closing_stock {
   @@index([closing_date])
   @@index([status])
 }
+
+// ─── LOCAL SALE EXPENSE SYSTEM ───────────────────────────────────────────────
+
+model local_sale_expense_subhead {
+  ls_subhead_id  Int      @id @default(autoincrement())
+  subhead_nam    String   @db.VarChar(100)
+  insert_dat     DateTime @default(now()) @db.Timestamp(0)
+  update_dat     DateTime @default(now()) @db.Timestamp(0)
+  insert_by      String   @default("user 1") @db.VarChar(50)
+  update_by      String   @default("user 1") @db.VarChar(50)
+  status         Int      @default(1)
+
+  accounts local_sale_expense_account[]
+}
+
+model local_sale_expense_account {
+  ls_account_id  Int      @id @default(autoincrement())
+  ls_subhead_id  Int
+  account_nam    String   @db.VarChar(100)
+  insert_dat     DateTime @default(now()) @db.Timestamp(0)
+  update_dat     DateTime @default(now()) @db.Timestamp(0)
+  insert_by      String   @default("user 1") @db.VarChar(50)
+  update_by      String   @default("user 1") @db.VarChar(50)
+  status         Int      @default(1)
+
+  subhead  local_sale_expense_subhead @relation(fields: [ls_subhead_id], references: [ls_subhead_id])
+  expenses local_sale_expense[]
+
+  @@index([ls_subhead_id])
+}
+
+model local_sale_expense {
+  ls_expense_id   Int      @id @default(autoincrement())
+  ls_expense_date DateTime
+  ls_account_id   Int
+  amount          Float
+  description     String?  @db.VarChar(500)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
+
+  account local_sale_expense_account @relation(fields: [ls_account_id], references: [ls_account_id])
+
+  @@index([ls_account_id])
+  @@index([ls_expense_date])
+}
+
+// ─── SHOP EXPENSE SYSTEM ─────────────────────────────────────────────────────
+
+model shop_expense_subhead {
+  shop_subhead_id Int      @id @default(autoincrement())
+  subhead_nam     String   @db.VarChar(100)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
+
+  accounts shop_expense_account[]
+}
+
+model shop_expense_account {
+  shop_account_id Int      @id @default(autoincrement())
+  shop_subhead_id Int
+  account_nam     String   @db.VarChar(100)
+  insert_dat      DateTime @default(now()) @db.Timestamp(0)
+  update_dat      DateTime @default(now()) @db.Timestamp(0)
+  insert_by       String   @default("user 1") @db.VarChar(50)
+  update_by       String   @default("user 1") @db.VarChar(50)
+  status          Int      @default(1)
+
+  subhead  shop_expense_subhead @relation(fields: [shop_subhead_id], references: [shop_subhead_id])
+  expenses shop_expense[]
+
+  @@index([shop_subhead_id])
+}
+
+model shop_expense {
+  shop_expense_id   Int      @id @default(autoincrement())
+  shop_expense_date DateTime
+  shop_account_id   Int
+  amount            Float
+  description       String?  @db.VarChar(500)
+  insert_dat        DateTime @default(now()) @db.Timestamp(0)
+  update_dat        DateTime @default(now()) @db.Timestamp(0)
+  insert_by         String   @default("user 1") @db.VarChar(50)
+  update_by         String   @default("user 1") @db.VarChar(50)
+  status            Int      @default(1)
+
+  account shop_expense_account @relation(fields: [shop_account_id], references: [shop_account_id])
+
+  @@index([shop_account_id])
+  @@index([shop_expense_date])
+}

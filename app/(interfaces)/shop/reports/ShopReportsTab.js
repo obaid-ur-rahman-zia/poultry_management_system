@@ -5,6 +5,7 @@ import TrialBalanceReport from "./TrialBalanceReport";
 import SaleDetailReport from "./SaleDetailReport";
 import CustomerLedgerReport from "./CustomerLedgerReport";
 import ShopProfitReport from "./shopSaleProfitReport"
+import ShopExpenseReport from "./shopExpenseReport"
 
 export default function ShopReportsTab() {
   return (
@@ -27,6 +28,11 @@ export default function ShopReportsTab() {
       {/* Shop Sale Profit Report Card & Modal */}
       <div className="h-full">
         <ShopProfitReport />
+      </div>
+
+      {/* Shop Expense Report Card & Modal */}
+      <div className="h-full">
+        <ShopExpenseReport />
       </div>
     </div>
   );

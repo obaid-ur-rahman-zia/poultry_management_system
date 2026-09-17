@@ -599,3 +599,148 @@ custom-exception:  [LocalSaleController.create] |
 system-exception:  [Error: Received amount cannot be greater than purchaser amount]
 
 
+exception-time:       [2026-09-16T15:41:12.567Z]  
+custom-exception:  [Failed to get local sale expenses] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:12.626Z]  
+custom-exception:  [Failed to get local sale expense accounts] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:12.684Z]  
+custom-exception:  [Failed to get local sale expense subheads] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:13.598Z]  
+custom-exception:  [Failed to get local sale expenses] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:13.673Z]  
+custom-exception:  [Failed to get local sale expense accounts] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:13.700Z]  
+custom-exception:  [Failed to get local sale expense subheads] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:14.260Z]  
+custom-exception:  [Failed to get local sale expenses] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:14.971Z]  
+custom-exception:  [Failed to get local sale expenses] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:20.473Z]  
+custom-exception:  [Failed to get local sale expense subheads] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:20.491Z]  
+custom-exception:  [Failed to get local sale expense accounts] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:21.208Z]  
+custom-exception:  [Failed to get local sale expense accounts] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:21.227Z]  
+custom-exception:  [Failed to get local sale expense subheads] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:22.276Z]  
+custom-exception:  [Failed to get local sale expenses] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:22.312Z]  
+custom-exception:  [Failed to get local sale expense subheads] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:22.338Z]  
+custom-exception:  [Failed to get local sale expense accounts] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:23.599Z]  
+custom-exception:  [Failed to get local sale expense accounts] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:23.636Z]  
+custom-exception:  [Failed to get local sale expenses] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:23.678Z]  
+custom-exception:  [Failed to get local sale expense subheads] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:24.774Z]  
+custom-exception:  [Failed to get local sale expense accounts] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:24.823Z]  
+custom-exception:  [Failed to get local sale expenses] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:24.861Z]  
+custom-exception:  [Failed to get local sale expense subheads] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:25.745Z]  
+custom-exception:  [Failed to get local sale expense accounts] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:25.838Z]  
+custom-exception:  [Failed to get local sale expenses] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:25.892Z]  
+custom-exception:  [Failed to get local sale expense subheads] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'findMany')]
+
+
+exception-time:       [2026-09-16T15:41:39.377Z]  
+custom-exception:  [Failed to create local sale expense subhead] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'create')]
+
+
+exception-time:       [2026-09-16T15:41:45.223Z]  
+custom-exception:  [Failed to create local sale expense subhead] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'create')]
+
+
+exception-time:       [2026-09-16T15:42:14.526Z]  
+custom-exception:  [Failed to create local sale expense subhead] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'create')]
+
+
+exception-time:       [2026-09-16T15:42:30.910Z]  
+custom-exception:  [Failed to create local sale expense subhead] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'create')]
+
+
+exception-time:       [2026-09-16T15:43:06.857Z]  
+custom-exception:  [Failed to create local sale expense subhead] | 
+system-exception:  [TypeError: Cannot read properties of undefined (reading 'create')]
+
+

@@ -3,6 +3,7 @@ import LocalSaleProfit from "./localSaleProfit/page"
 import AccountLedgerModal from "../reports/accountReports/accountLedger/page"
 import BalanceSheetReport from "../reports/trading/balanceSheet/page"
 import LocalPurchaserTrialBalanceModal from "./localPurchaserTrialBalance/page"
+import LocalSaleExpenseReport from "./localSaleExpenseReport/page"
 
 export default function ReportPage() {
     return (
@@ -15,6 +16,7 @@ export default function ReportPage() {
                     <AccountLedgerModal />
                     <LocalPurchaserTrialBalanceModal />
                     <BalanceSheetReport />
+                    <LocalSaleExpenseReport />
                 </div>
             </div>
         </main>
