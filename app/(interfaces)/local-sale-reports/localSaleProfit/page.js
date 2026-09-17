@@ -50,6 +50,8 @@ export default function LocalSaleProfitModal() {
   const [grandTotalReceived, setGrandTotalReceived] = useState(0);
   const [grandTotalWeightLoss, setGrandTotalWeightLoss] = useState(0);
   const [netProfit, setNetProfit] = useState(0);
+  const [grandTotalExpense, setGrandTotalExpense] = useState(0);
+  const [grandTotalFinalNetProfit, setGrandTotalFinalNetProfit] = useState(0);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -152,6 +154,8 @@ export default function LocalSaleProfitModal() {
         setGrandTotalReceived(result.grandTotalReceived || 0);
         setGrandTotalWeightLoss(result.grandTotalWeightLoss || 0);
         setNetProfit(result.netProfit || 0);
+        setGrandTotalExpense(result.grandTotalExpense || 0);
+        setGrandTotalFinalNetProfit(result.grandTotalFinalNetProfit || 0);
         setIsOpen(true);
         setCurrentPage(1);
       } else {
@@ -191,6 +195,8 @@ export default function LocalSaleProfitModal() {
       "Weight Loss",
       "Profit",
       "Loss",
+      "Expense",
+      "Final Net Profit"
     ];
 
     const rows = reportData.map((row) => {
@@ -205,6 +211,8 @@ export default function LocalSaleProfitModal() {
         (row.weight_loss || 0).toFixed(2),
         profit.toFixed(2),
         loss.toFixed(2),
+        (row.expense_amount || 0).toFixed(2),
+        (row.final_net_profit || 0).toFixed(2),
       ];
     });
 
@@ -216,6 +224,8 @@ export default function LocalSaleProfitModal() {
       grandTotalWeightLoss.toFixed(2),
       netProfit > 0 ? netProfit.toFixed(2) : "0.00",
       netProfit < 0 ? Math.abs(netProfit).toFixed(2) : "0.00",
+      grandTotalExpense.toFixed(2),
+      grandTotalFinalNetProfit.toFixed(2)
     ]);
 
     exportToCSV(
@@ -412,6 +422,12 @@ export default function LocalSaleProfitModal() {
                       <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
                         Loss
                       </th>
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                        Expense
+                      </th>
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                        Final Net Profit
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -443,6 +459,14 @@ export default function LocalSaleProfitModal() {
                             ? Math.abs(row.profit_loss).toFixed(2)
                             : 0}
                         </td>
+                        <td className="px-4 py-2 text-right font-semibold border border-gray-300 text-red-600">
+                          {(row.expense_amount || 0).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-2 text-right font-bold border border-gray-300">
+                          <span className={row.final_net_profit >= 0 ? "text-green-600" : "text-red-600"}>
+                            {(row.final_net_profit || 0).toFixed(2)}
+                          </span>
+                        </td>
                       </tr>
                     ))}
 
@@ -467,24 +491,31 @@ export default function LocalSaleProfitModal() {
                         <td className="px-4 py-3 text-right border border-gray-300">
                           {netProfit < 0 ? Math.abs(netProfit).toFixed(2) : 0}
                         </td>
+                        <td className="px-4 py-3 text-right border border-gray-300 text-red-600">
+                          {grandTotalExpense.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
+                          <span className={grandTotalFinalNetProfit >= 0 ? "text-green-600" : "text-red-600"}>
+                            {grandTotalFinalNetProfit.toFixed(2)}
+                          </span>
+                        </td>
                       </tr>
                     )}
 
                     {reportData.length > 0 && (
                       <tr className="bg-gray-100 border-t border-gray-300 font-bold">
-                        <td colSpan="5" className="px-4 py-3 text-right border border-gray-300">
-                          Net Profit:
+                        <td colSpan="7" className="px-4 py-3 text-right border border-gray-300">
+                          Final Net Profit:
                         </td>
-                        <td className="px-4 py-3 text-right text-lg border border-gray-300">
+                        <td colSpan="2" className="px-4 py-3 text-right text-lg border border-gray-300">
                           <span
                             className={
-                              netProfit >= 0 ? "text-green-600" : "text-red-600"
+                              grandTotalFinalNetProfit >= 0 ? "text-green-600" : "text-red-600"
                             }
                           >
-                            {netProfit.toFixed(2)}
+                            {grandTotalFinalNetProfit.toFixed(2)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold border border-gray-300"></td>
                       </tr>
                     )}
                   </tbody>

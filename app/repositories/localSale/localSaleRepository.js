@@ -236,6 +236,22 @@ class LocalSaleRepository {
         })
       : [];
 
+    const expenses = await prisma.local_sale_expense.findMany({
+      where: {
+        status: 1,
+        ...(startDate && endDate ? {
+          ls_expense_date: {
+            gte: start,
+            lte: end,
+          }
+        } : {}),
+      },
+      select: {
+        ls_expense_date: true,
+        amount: true,
+      }
+    });
+
     const groupedData = new Map();
 
     localSales.forEach((sale) => {
@@ -248,6 +264,7 @@ class LocalSaleRepository {
           sold_weight: 0,
           purchase_amount: 0,
           source_weight: 0,
+          expense_amount: 0,
         });
       }
       const group = groupedData.get(key);
@@ -266,6 +283,7 @@ class LocalSaleRepository {
           sold_weight: 0,
           purchase_amount: 0,
           source_weight: 0,
+          expense_amount: 0,
         });
       }
       const group = groupedData.get(key);
@@ -273,10 +291,28 @@ class LocalSaleRepository {
       group.purchase_amount += (Number(source.weight) || 0) * (Number(source.rate) || 0);
     });
 
+    expenses.forEach((expense) => {
+      const key = getGroupKey(expense.ls_expense_date, groupBy);
+      if (!groupedData.has(key)) {
+        groupedData.set(key, {
+          date: expense.ls_expense_date,
+          sale_amount: 0,
+          received_amount: 0,
+          sold_weight: 0,
+          purchase_amount: 0,
+          source_weight: 0,
+          expense_amount: 0,
+        });
+      }
+      const group = groupedData.get(key);
+      group.expense_amount += Number(expense.amount) || 0;
+    });
+
     const results = Array.from(groupedData.entries())
       .map(([key, data]) => {
         const weight_loss = data.source_weight - data.sold_weight;
         const profit_loss = data.sale_amount - data.purchase_amount;
+        const final_net_profit = profit_loss - data.expense_amount;
         return {
           period: key,
           date: data.date,
@@ -285,6 +321,8 @@ class LocalSaleRepository {
           received_amount: data.received_amount,
           weight_loss: weight_loss,
           profit_loss: profit_loss,
+          expense_amount: data.expense_amount,
+          final_net_profit: final_net_profit,
           source_weight: data.source_weight,
           sold_weight: data.sold_weight
         };
@@ -295,7 +333,9 @@ class LocalSaleRepository {
     const grandTotalSale = results.reduce((sum, row) => sum + row.sale_amount, 0);
     const grandTotalReceived = results.reduce((sum, row) => sum + row.received_amount, 0);
     const grandTotalWeightLoss = results.reduce((sum, row) => sum + row.weight_loss, 0);
+    const grandTotalExpense = results.reduce((sum, row) => sum + row.expense_amount, 0);
     const netProfit = grandTotalSale - grandTotalPurchase;
+    const grandTotalFinalNetProfit = netProfit - grandTotalExpense;
 
     return {
       results,
@@ -304,6 +344,8 @@ class LocalSaleRepository {
       grandTotalReceived,
       grandTotalWeightLoss,
       netProfit,
+      grandTotalExpense,
+      grandTotalFinalNetProfit,
     };
   }
 }
