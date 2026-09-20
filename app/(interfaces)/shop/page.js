@@ -18,18 +18,19 @@ export default function ShopPage() {
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="shop-sale" className="p-3 sm:p-4 md:p-6 space-y-4">
+        <TabsContent value="shop-sale" forceMount className="p-3 sm:p-4 md:p-6 space-y-4 data-[state=inactive]:hidden">
           <ShopSaleTab />
         </TabsContent>
 
         <TabsContent
           value="closing-stock"
-          className="p-3 sm:p-4 md:p-6 space-y-4"
+          forceMount 
+          className="p-3 sm:p-4 md:p-6 space-y-4 data-[state=inactive]:hidden"
         >
           <ClosingStockTab />
         </TabsContent>
 
-        <TabsContent value="expenses" className="p-3 sm:p-4 md:p-6 space-y-4">
+        <TabsContent value="expenses" forceMount className="p-3 sm:p-4 md:p-6 space-y-4 data-[state=inactive]:hidden">
           <ShopExpenseTab />
         </TabsContent>
       </Tabs>

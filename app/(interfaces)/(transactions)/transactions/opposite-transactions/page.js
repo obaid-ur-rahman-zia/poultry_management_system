@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useAccounts, useSubHeads, useAccountHeads } from "@/app/utils/hooks";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -81,10 +82,18 @@ export default function OppositeTransactionsPage() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTransactionId, setEditingTransactionId] = useState(null);
-  const [accounts, setAccounts] = useState([]);
+  
+  const { accounts: rawAccounts } = useAccounts();
+  const allAccounts = React.useMemo(() => {
+    return (rawAccounts || []).filter((a) => a.acc_id !== 1);
+  }, [rawAccounts]);
+  const accounts = allAccounts;
+  
   const [bankAccounts, setBankAccounts] = useState([]);
-  const [subHeads, setSubHeads] = useState([]);
-  const [accountHeads, setAccountHeads] = useState([]);
+  const { subHeads: rawSubHeads } = useSubHeads();
+  const subHeads = React.useMemo(() => rawSubHeads || [], [rawSubHeads]);
+  const { accountHeads: rawAccountHeads } = useAccountHeads();
+  const accountHeads = React.useMemo(() => rawAccountHeads || [], [rawAccountHeads]);
   const [isBankAccountDialogOpen, setIsBankAccountDialogOpen] = useState(false);
   const [newBankAccountName, setNewBankAccountName] = useState("");
   const [newBankAccountNo, setNewBankAccountNo] = useState("");
@@ -102,8 +111,7 @@ export default function OppositeTransactionsPage() {
   const [accountSearchField, setAccountSearchField] = useState("paid_by"); // Track which field opened the dialog: "paid_by" or "received_by"
   const [accountSearchType, setAccountSearchType] = useState("all");
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
-  const [allAccounts, setAllAccounts] = useState([]);
-  const [accountSubHeads, setAccountSubHeads] = useState([]);
+  const accountSubHeads = subHeads;
   const accountRowRefs = useRef([]);
   accountRowRefs.current = [];
 
@@ -127,57 +135,8 @@ export default function OppositeTransactionsPage() {
   const selectedReceivedBy = watch("received_by");
 
   useEffect(() => {
-    fetchSubHeads();
-    fetchAccountHeads();
     fetchTransactions(filterDate);
-    fetchAllAccounts();
-    fetchAccountSubHeads();
   }, []);
-
-  // Fetch all accounts for search dialog (fetch all without pagination for search)
-  const fetchAllAccounts = async () => {
-    try {
-      // Fetch all accounts without pagination using all=true parameter
-      const response = await fetch("/api/account/accounts/readAll?all=true");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const responseData = result.response_result;
-        // Handle response (with or without pagination)
-        let accountsData = [];
-        if (responseData?.pagination) {
-          accountsData = responseData.data || [];
-        } else {
-          // Non-paginated response (all accounts)
-          accountsData = responseData?.data || responseData || [];
-        }
-
-        let filteredAccounts = Array.isArray(accountsData) ? accountsData.filter((a) => a.acc_id !== 1) : [];
-
-        setAllAccounts(filteredAccounts);
-        setAccounts(filteredAccounts);
-      }
-    } catch (error) {
-      console.error("Error fetching all accounts:", error);
-      setAllAccounts([]);
-      setAccounts([]);
-    }
-  };
-
-  // Fetch account sub-heads for account type dropdown
-  const fetchAccountSubHeads = async () => {
-    try {
-      const response = await fetch("/api/account/accountSubHead/readAll");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const subHeadsData =
-          result.response_result?.data || result.response_result || [];
-        setAccountSubHeads(Array.isArray(subHeadsData) ? subHeadsData : []);
-      }
-    } catch (error) {
-      console.error("Error fetching account sub-heads:", error);
-      setAccountSubHeads([]);
-    }
-  };
 
   const getDefaultAccountSearchType = (field) => {
     const matchedSubhead = accountSubHeads.find((subhead) => {
@@ -216,37 +175,6 @@ export default function OppositeTransactionsPage() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const fetchAccountHeads = async () => {
-    try {
-      const response = await fetch("/api/account/accountHead/readAll");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const headsData =
-          result.response_result?.data || result.response_result || [];
-        setAccountHeads(headsData);
-      }
-    } catch (error) {
-      console.error("Error fetching account heads:", error);
-    }
-  };
-
-  const fetchSubHeads = async () => {
-    try {
-      const response = await fetch("/api/account/accountSubHead/readAll");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const subHeadsData =
-          result.response_result?.data || result.response_result || [];
-        setSubHeads(subHeadsData);
-      }
-    } catch (error) {
-      console.error("Error fetching subheads:", error);
-    }
-  };
-
-
-
   useEffect(() => {
     if (subHeads.length > 0 && accounts.length > 0) {
       // Filter bank accounts by subhead name containing "bank"

@@ -38,3 +38,22 @@ export function useSubHeads() {
     mutate
   };
 }
+
+export function useAccountHeads() {
+  const { data, error, isLoading, mutate } = useSWR('/api/account/accountHead/readAll', fetcher);
+
+  let accountHeads = [];
+  if (data?.response_status === "success" || data?.response_code === 200 || data?.success) {
+    if (data?.response_result?.data) accountHeads = data.response_result.data;
+    else if (data?.response_result) accountHeads = data.response_result;
+    else if (data?.data) accountHeads = data.data;
+  }
+  if (!Array.isArray(accountHeads)) accountHeads = [];
+
+  return {
+    accountHeads,
+    isLoading,
+    isError: error,
+    mutate
+  };
+}

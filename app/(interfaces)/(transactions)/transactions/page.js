@@ -12,10 +12,10 @@ const TransactionHeader = () => {
                 <TabsTrigger value="opposite" >Opposite Transactions</TabsTrigger>
                 <TabsTrigger value="self">Self Transactions</TabsTrigger>
             </TabsList>
-            <TabsContent value="opposite">
+            <TabsContent value="opposite" forceMount className="data-[state=inactive]:hidden">
                 <OppositeTransactionsPage />
             </TabsContent>
-            <TabsContent value="self">
+            <TabsContent value="self" forceMount className="data-[state=inactive]:hidden">
                 <SelfTransactionPage />
             </TabsContent>
         </Tabs>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useAccounts, useSubHeads } from "@/app/utils/hooks";
+import React from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Plus, Search, Edit2, Trash2 } from "lucide-react";
@@ -71,7 +73,8 @@ export default function SelfTransactionPage() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTransactionId, setEditingTransactionId] = useState(null);
-  const [accounts, setAccounts] = useState([]);
+  const { accounts: allAccounts } = useAccounts();
+  const accounts = allAccounts || [];
   const [currentBalance, setCurrentBalance] = useState(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
@@ -80,8 +83,8 @@ export default function SelfTransactionPage() {
     useState(false);
   const [accountSearchType, setAccountSearchType] = useState("all");
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
-  const [allAccounts, setAllAccounts] = useState([]);
-  const [accountSubHeads, setAccountSubHeads] = useState([]);
+  const { subHeads: rawSubHeads } = useSubHeads();
+  const accountSubHeads = React.useMemo(() => rawSubHeads || [], [rawSubHeads]);
   const accountRowRefs = useRef([]);
   accountRowRefs.current = [];
 
@@ -114,10 +117,7 @@ export default function SelfTransactionPage() {
     : accounts;
 
   useEffect(() => {
-    fetchAccounts();
     fetchTransactions();
-    fetchAllAccounts();
-    fetchAccountSubHeads();
   }, []);
 
   useEffect(() => {
@@ -137,60 +137,8 @@ export default function SelfTransactionPage() {
     }
   }, [selectedAccount]);
 
-  const fetchAccounts = async () => {
-    try {
-      const response = await fetch("/api/account/accounts/readAll?all=true");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        let accountsData =
-          result.response_result?.data || result.response_result || [];
 
-        setAccounts(accountsData);
-      }
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-    }
-  };
 
-  // Fetch all accounts for search dialog
-  const fetchAllAccounts = async () => {
-    try {
-      const response = await fetch("/api/account/accounts/readAll?all=true");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const responseData = result.response_result;
-        let accountsData = [];
-        if (responseData?.pagination) {
-          accountsData = responseData.data || [];
-        } else {
-          accountsData = responseData?.data || responseData || [];
-        }
-
-        accountsData = Array.isArray(accountsData) ? accountsData : [];
-
-        setAllAccounts(accountsData);
-      }
-    } catch (error) {
-      console.error("Error fetching all accounts:", error);
-      setAllAccounts([]);
-    }
-  };
-
-  // Fetch account sub-heads for the account type dropdown
-  const fetchAccountSubHeads = async () => {
-    try {
-      const response = await fetch("/api/account/accountSubHead/readAll");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const subHeadsData =
-          result.response_result?.data || result.response_result || [];
-        setAccountSubHeads(Array.isArray(subHeadsData) ? subHeadsData : []);
-      }
-    } catch (error) {
-      console.error("Error fetching account sub-heads:", error);
-      setAccountSubHeads([]);
-    }
-  };
 
   const getDefaultAccountSearchType = () => {
     const matchedSubhead = accountSubHeads.find((subhead) => {

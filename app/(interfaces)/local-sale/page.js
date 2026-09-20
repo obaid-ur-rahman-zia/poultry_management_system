@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useAccounts } from "@/app/utils/hooks";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,10 +71,10 @@ export default function LocalSalePageWrapper() {
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="local-sale" className="space-y-4">
+        <TabsContent value="local-sale" forceMount className="space-y-4 data-[state=inactive]:hidden">
           <LocalSaleTab />
         </TabsContent>
-        <TabsContent value="expenses" className="space-y-4">
+        <TabsContent value="expenses" forceMount className="space-y-4 data-[state=inactive]:hidden">
           <LocalSaleExpenseTab />
         </TabsContent>
       </Tabs>
@@ -87,9 +88,33 @@ function LocalSaleTab() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  const [allAccounts, setAllAccounts] = useState([]);
-  const [localAccounts, setLocalAccounts] = useState([]);
-  const [purchaserAccounts, setPurchaserAccounts] = useState([]);
+  const { accounts: rawAccounts } = useAccounts();
+  const allAccounts = React.useMemo(() => rawAccounts || [], [rawAccounts]);
+  
+  const localAccounts = React.useMemo(() => {
+    return allAccounts.filter(
+      (a) =>
+        a.account_nam?.toLowerCase() === "bhagtanwala" &&
+        a.subhead?.subhead_nam?.toLowerCase() === "purchaser"
+    );
+  }, [allAccounts]);
+
+  const purchaserAccounts = React.useMemo(() => {
+    return allAccounts.filter(
+      (a) =>
+        a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
+        a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser")
+    );
+  }, [allAccounts]);
+
+  useEffect(() => {
+    if (!form.local_account && localAccounts.length > 0 && !isEditMode) {
+      setForm((prev) => ({
+        ...prev,
+        local_account: localAccounts[0].acc_id.toString(),
+      }));
+    }
+  }, [localAccounts, form.local_account, isEditMode]);
 
   // FS Rate for today
   const [fsRate, setFsRate] = useState({ farm_rate: null, sale_rate: null });
@@ -163,37 +188,7 @@ function LocalSaleTab() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const fetchAccounts = useCallback(async () => {
-    try {
-      const res = await fetch("/api/account/accounts/readAll?all=true");
-      const data = await res.json();
-      if (data.response_status === "success") {
-        const list = data.response_result?.data || data.response_result || [];
-        setAllAccounts(Array.isArray(list) ? list : []);
 
-        const locals = list.filter(
-          (a) =>
-            a.account_nam?.toLowerCase() === "bhagtanwala" &&
-            a.subhead?.subhead_nam?.toLowerCase() === "purchaser"
-        );
-        const purchasers = list.filter(
-          (a) =>
-            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
-            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser")
-        );
-        setLocalAccounts(locals);
-        setPurchaserAccounts(purchasers);
-        if (locals.length > 0) {
-          setForm((prev) => ({
-            ...prev,
-            local_account: locals[0].acc_id.toString(),
-          }));
-        }
-      }
-    } catch (e) {
-      console.error("Error fetching accounts:", e);
-    }
-  }, []);
 
   const fetchFsRate = useCallback(async () => {
     try {
@@ -277,9 +272,7 @@ function LocalSaleTab() {
   };
 
   // ─── effects ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    fetchAccounts();
-  }, [fetchAccounts]);
+
 
   useEffect(() => {
     fetchFsRate();

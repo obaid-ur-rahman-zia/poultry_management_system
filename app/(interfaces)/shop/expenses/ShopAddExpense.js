@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useAccounts } from "@/app/utils/hooks";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Search, Edit2, Trash2, ArrowUp } from "lucide-react";
@@ -44,6 +45,7 @@ export default function ShopAddExpense() {
     const [editingTransactionId, setEditingTransactionId] = useState(null);
     const [accounts, setAccounts] = useState([]);
     const [subHeads, setSubHeads] = useState([]);
+    const { accounts: allAccounts } = useAccounts();
     const [shops, setShops] = useState([]);
     const [selectedShopId, setSelectedShopId] = useState("");
 
@@ -67,22 +69,16 @@ export default function ShopAddExpense() {
         ? accounts.filter((account) => account.shop_subhead_id?.toString() === selectedSubId)
         : [];
 
-    const fetchShops = useCallback(async () => {
-        try {
-            const res = await fetch("/api/account/accounts/readAll?all=true");
-            const data = await res.json();
-            if (data.response_status === "success") {
-                const list = data.response_result?.data || data.response_result || [];
-                const shopList = Array.isArray(list) ? list.filter((a) => a.shop_enable === 1) : [];
-                setShops(shopList);
-                if (shopList.length > 0) {
-                    setSelectedShopId(shopList[0].acc_id.toString());
-                }
-            }
-        } catch (e) {
-            console.error("fetchShops:", e);
+    const shopsList = useMemo(() => {
+        return (allAccounts || []).filter((a) => a.shop_enable === 1);
+    }, [allAccounts]);
+
+    useEffect(() => {
+        setShops(shopsList);
+        if (shopsList.length > 0 && !selectedShopId) {
+            setSelectedShopId(shopsList[0].acc_id.toString());
         }
-    }, []);
+    }, [shopsList, selectedShopId]);
 
     useEffect(() => {
         const mq = window.matchMedia("(max-width: 768px)");
@@ -90,12 +86,11 @@ export default function ShopAddExpense() {
         handleResize();
         mq.addEventListener("change", handleResize);
 
-        fetchShops();
         fetchAccounts();
         fetchSubHeads();
 
         return () => mq.removeEventListener("change", handleResize);
-    }, [fetchShops]);
+    }, []);
 
     useEffect(() => {
         if (selectedShopId) {

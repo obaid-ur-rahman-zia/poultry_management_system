@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useAccounts, useSubHeads } from "@/app/utils/hooks";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -129,8 +131,15 @@ function WholeSaleTab() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingSaleId, setEditingSaleId] = useState(null);
-  const [supplierAccounts, setSupplierAccounts] = useState([]);
-  const [customerAccounts, setCustomerAccounts] = useState([]);
+
+  const { accounts: rawAccounts, mutate } = useAccounts();
+  const allAccounts = React.useMemo(() => rawAccounts || [], [rawAccounts]);
+  const supplierAccounts = React.useMemo(() => {
+    return allAccounts.filter((account) => isRoleAccount(account, "supplier"));
+  }, [allAccounts]);
+  const customerAccounts = React.useMemo(() => {
+    return allAccounts.filter((account) => isRoleAccount(account, "customer"));
+  }, [allAccounts]);
   const [supplierBalance, setSupplierBalance] = useState(null);
   const [customerBalance, setCustomerBalance] = useState(null);
   const [loadingSupplierBalance, setLoadingSupplierBalance] = useState(false);
@@ -153,9 +162,9 @@ function WholeSaleTab() {
     useState(false);
   const [accountSearchType, setAccountSearchType] = useState("all"); // "all" or sub_id (e.g., "1", "2", "3")
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
-  const [allAccounts, setAllAccounts] = useState([]);
   const [accountSearchField, setAccountSearchField] = useState("former"); // Track which field opened the dialog: "former" or "purcher"
-  const [accountSubHeads, setAccountSubHeads] = useState([]); // Store account sub-heads for account type dropdown
+  const { subHeads: rawSubHeads } = useSubHeads();
+  const accountSubHeads = React.useMemo(() => rawSubHeads || [], [rawSubHeads]);
   const accountRowRefs = useRef([]);
   accountRowRefs.current = [];
   const [supplierFormData, setSupplierFormData] = useState({
@@ -186,59 +195,11 @@ function WholeSaleTab() {
   const [filterDate, setFilterDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   useEffect(() => {
-    fetchAllAccounts();
     fetchCompanies();
     fetchWholeSales();
-    fetchAccountSubHeads();
     const currentDate = format(new Date(), "yyyy-MM-dd");
     setValue("sale_date", currentDate);
   }, []);
-
-  // Fetch all accounts for search dialog, and filter for suppliers/customers
-  const fetchAllAccounts = async () => {
-    try {
-      // Fetch all accounts without pagination using all=true parameter
-      const response = await fetch("/api/account/accounts/readAll?all=true");
-      const result = await response.json();
-      if (result.success || result.response_status === "success") {
-        const responseData = result.response_result;
-        // Handle response (with or without pagination)
-        let accountsData = [];
-        if (responseData?.pagination) {
-          accountsData = responseData.data || [];
-        } else {
-          // Non-paginated response (all accounts)
-          accountsData = responseData?.data || responseData || [];
-        }
-
-        accountsData = Array.isArray(accountsData) ? accountsData : [];
-        setAllAccounts(accountsData);
-        setSupplierAccounts(accountsData.filter((account) => isRoleAccount(account, "supplier")));
-        setCustomerAccounts(accountsData.filter((account) => isRoleAccount(account, "customer")));
-      }
-    } catch (error) {
-      console.error("Error fetching all accounts:", error);
-      setAllAccounts([]);
-      setSupplierAccounts([]);
-      setCustomerAccounts([]);
-    }
-  };
-
-  // Fetch account sub-heads for account type dropdown
-  const fetchAccountSubHeads = async () => {
-    try {
-      const response = await fetch("/api/account/accountSubHead/readAll");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const subHeadsData =
-          result.response_result?.data || result.response_result || [];
-        setAccountSubHeads(subHeadsData);
-      }
-    } catch (error) {
-      console.error("Error fetching account sub-heads:", error);
-      setAccountSubHeads([]);
-    }
-  };
 
   const getDefaultAccountSearchType = (field) => {
     const matchedSubhead = accountSubHeads.find((subhead) => {
@@ -344,7 +305,7 @@ function WholeSaleTab() {
           supplier_contact: "",
           supplier_company_id: "",
         });
-        await fetchSupplierAccounts();
+        await mutate();
       } else {
         toast.error(result.response_message || "Failed to create farmer");
       }
@@ -396,7 +357,7 @@ function WholeSaleTab() {
           customer_address: "",
           customer_contact: "",
         });
-        await fetchCustomerAccounts();
+        await mutate();
       } else {
         toast.error(result.response_message || "Failed to create purchaser");
       }

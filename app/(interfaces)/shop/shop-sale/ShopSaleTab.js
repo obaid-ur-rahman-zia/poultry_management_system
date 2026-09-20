@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useAccounts } from "@/app/utils/hooks";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,11 @@ export default function ShopSaleTab() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Master lists
-  const [shops, setShops] = useState([]);
+  const { accounts: allAccounts } = useAccounts();
+  const shops = useMemo(() => {
+    return (allAccounts || []).filter((a) => a.shop_enable === 1);
+  }, [allAccounts]);
+
   const [customers, setCustomers] = useState([]);
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -92,29 +97,15 @@ export default function ShopSaleTab() {
     custPrevBalance + amount - Number(form.received_amount || 0);
 
   // ── Fetchers ────────────────────────────────────────────────────────
-  const fetchShops = useCallback(async () => {
-    try {
-      const res = await fetch("/api/account/accounts/readAll?all=true");
-      const data = await res.json();
-      if (data.response_status === "success") {
-        const list =
-          data.response_result?.data || data.response_result || [];
-        const shopList = Array.isArray(list)
-          ? list.filter((a) => a.shop_enable === 1)
-          : [];
-        setShops(shopList);
-        if (shopList.length > 0) {
-          const firstId = shopList[0].acc_id.toString();
-          setForm((prev) =>
-            prev.shop_acc_id ? prev : { ...prev, shop_acc_id: firstId }
-          );
-          setFilterShop((prev) => prev || firstId);
-        }
-      }
-    } catch (e) {
-      console.error("fetchShops:", e);
+  useEffect(() => {
+    if (shops.length > 0 && !form.shop_acc_id) {
+      const firstId = shops[0].acc_id.toString();
+      setForm((prev) =>
+        prev.shop_acc_id ? prev : { ...prev, shop_acc_id: firstId }
+      );
+      setFilterShop((prev) => prev || firstId);
     }
-  }, []);
+  }, [shops, form.shop_acc_id]);
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -220,9 +211,8 @@ export default function ShopSaleTab() {
 
   // ── Effects ─────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchShops();
     fetchCustomers();
-  }, [fetchShops, fetchCustomers]);
+  }, [fetchCustomers]);
 
   useEffect(() => {
     fetchStock(form.shop_acc_id, form.sale_date);
