@@ -16,7 +16,7 @@ import { exportToCSV } from "@/app/utils/exportToCsv";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function SaleDetailReport() {
+export default function SaleDetailReport({ initialAccounts = null }) {
   const [isOpen, setIsOpen] = useState(false);
   const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState("");
@@ -38,6 +38,15 @@ export default function SaleDetailReport() {
 
   // Fetch shops
   const fetchShops = useCallback(async () => {
+    if (initialAccounts !== null) {
+      const list = Array.isArray(initialAccounts) ? initialAccounts : [];
+      const shopList = list.filter((a) => a.shop_enable === 1);
+      setShops(shopList);
+      if (shopList.length > 0 && !selectedShop) {
+        setSelectedShop(shopList[0].acc_id.toString());
+      }
+      return;
+    }
     try {
       const res = await fetch("/api/account/accounts/readAll?all=true");
       const data = await res.json();
@@ -47,14 +56,14 @@ export default function SaleDetailReport() {
           ? list.filter((a) => a.shop_enable === 1)
           : [];
         setShops(shopList);
-        if (shopList.length > 0) {
+        if (shopList.length > 0 && !selectedShop) {
           setSelectedShop(shopList[0].acc_id.toString());
         }
       }
     } catch (e) {
       console.error("fetchShops:", e);
     }
-  }, []);
+  }, [initialAccounts, selectedShop]);
 
   useEffect(() => {
     fetchShops();

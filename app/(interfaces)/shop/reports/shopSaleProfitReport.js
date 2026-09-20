@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 import { Button } from "@/components/ui/button";
 
-export default function ShopSaleProfitReport() {
+export default function ShopSaleProfitReport({ initialAccounts = null }) {
   const [isOpen, setIsOpen] = useState(false);
   const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState("");
@@ -34,6 +34,15 @@ export default function ShopSaleProfitReport() {
 
   // Fetch shops
   const fetchShops = useCallback(async () => {
+    if (initialAccounts !== null) {
+      const list = Array.isArray(initialAccounts) ? initialAccounts : [];
+      const shopList = list.filter((a) => a.shop_enable === 1);
+      setShops(shopList);
+      if (shopList.length > 0 && !selectedShop) {
+        setSelectedShop(shopList[0].acc_id.toString());
+      }
+      return;
+    }
     try {
       const res = await fetch("/api/account/accounts/readAll?all=true");
       const data = await res.json();
@@ -43,14 +52,14 @@ export default function ShopSaleProfitReport() {
           ? list.filter((a) => a.shop_enable === 1)
           : [];
         setShops(shopList);
-        if (shopList.length > 0) {
+        if (shopList.length > 0 && !selectedShop) {
           setSelectedShop(shopList[0].acc_id.toString());
         }
       }
     } catch (e) {
       console.error("fetchShops:", e);
     }
-  }, []);
+  }, [initialAccounts, selectedShop]);
 
   useEffect(() => {
     fetchShops();
