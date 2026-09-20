@@ -109,46 +109,46 @@ export default function LocalSaleReport() {
   const summarizeDate = (date, sales) => {
     const purchaserRows = Object.values(
       sales.reduce((groups, item) => {
-      const key = item.purchaser_account;
-      const row = groups[key] || {
-        purchaser_account: key,
-        account: item.purchaser_account_ref,
-        totalWeight: 0,
-        totalAmount: 0,
-        totalPreviousBalance: 0,
-        totalReceived: 0,
-        totalNetBalance: 0,
-        cost: 0,
-        hasCostData: true,
-      };
+        const key = item.purchaser_account;
+        const row = groups[key] || {
+          purchaser_account: key,
+          account: item.purchaser_account_ref,
+          totalWeight: 0,
+          totalAmount: 0,
+          totalPreviousBalance: 0,
+          totalReceived: 0,
+          totalNetBalance: 0,
+          cost: 0,
+          hasCostData: true,
+        };
 
-      row.totalWeight += Number(item.purchaser_weight) || 0;
-      row.totalAmount += Number(item.purchaser_amount) || 0;
-      row.totalPreviousBalance += Number(item.previous_balance) || 0;
-      row.totalReceived += Number(item.received_amount) || 0;
-      row.totalNetBalance += Number(item.net_balance) || 0;
+        row.totalWeight += Number(item.purchaser_weight) || 0;
+        row.totalAmount += Number(item.purchaser_amount) || 0;
+        row.totalPreviousBalance += Number(item.previous_balance) || 0;
+        row.totalReceived += Number(item.received_amount) || 0;
+        row.totalNetBalance += Number(item.net_balance) || 0;
 
-      if (!item.source_snapshots?.length) {
-        row.hasCostData = false;
-      } else {
-        const sourceWeight = item.source_snapshots.reduce(
-          (sum, snapshot) => sum + (Number(snapshot.weight) || 0),
-          0,
-        );
-        const sourceCost = item.source_snapshots.reduce(
-          (sum, snapshot) =>
-            sum +
-            (Number(snapshot.weight) || 0) *
+        if (!item.source_snapshots?.length) {
+          row.hasCostData = false;
+        } else {
+          const sourceWeight = item.source_snapshots.reduce(
+            (sum, snapshot) => sum + (Number(snapshot.weight) || 0),
+            0,
+          );
+          const sourceCost = item.source_snapshots.reduce(
+            (sum, snapshot) =>
+              sum +
+              (Number(snapshot.weight) || 0) *
               (Number(snapshot.rate ?? snapshot.source?.rate) || 0),
-          0,
-        );
-        row.cost += sourceWeight
-          ? ((Number(item.purchaser_weight) || 0) * sourceCost) / sourceWeight
-          : 0;
-      }
+            0,
+          );
+          row.cost += sourceWeight
+            ? ((Number(item.purchaser_weight) || 0) * sourceCost) / sourceWeight
+            : 0;
+        }
 
-      groups[key] = row;
-      return groups;
+        groups[key] = row;
+        return groups;
       }, {}),
     ).sort((a, b) =>
       (a.account?.account_nam || "").localeCompare(b.account?.account_nam || ""),
@@ -159,12 +159,18 @@ export default function LocalSaleReport() {
     const totalReceived = purchaserRows.reduce((sum, row) => sum + row.totalReceived, 0);
     const totalNetBalance = purchaserRows.reduce((sum, row) => sum + row.totalNetBalance, 0);
     const source = dailySources.find((entry) => entry.date === date);
-    
-    // FIX applied here:
+
     const purchaseCost = source ? source.totalCost : null;
     const averagePurchaseRate = purchaseCost !== null && source?.totalWeight > 0
       ? purchaseCost / source.totalWeight
       : null;
+
+    const sourceEntries = source ? source.entries : [];
+    const dailyExpense = reportData.dailyExpenses ? (reportData.dailyExpenses[date] || 0) : 0;
+
+    const netReceiving = totalReceived - dailyExpense;
+    const profit = purchaseCost !== null ? totalAmount - purchaseCost : null;
+    const netProfit = profit !== null ? profit - dailyExpense : null;
 
     return {
       date,
@@ -177,8 +183,12 @@ export default function LocalSaleReport() {
       sourceWeight: source?.totalWeight || 0,
       purchaseCost,
       averagePurchaseRate,
-      profit: purchaseCost !== null ? totalAmount - purchaseCost : null,
+      profit,
       weightDifference: (source?.totalWeight || 0) - totalWeight,
+      sourceEntries,
+      dailyExpense,
+      netReceiving,
+      netProfit,
     };
   };
 
@@ -202,6 +212,10 @@ export default function LocalSaleReport() {
     ? dateSections.reduce((sum, day) => sum + day.purchaseCost, 0)
     : null;
   const totalProfit = totalPurchaseCost !== null ? grandTotalAmount - totalPurchaseCost : null;
+
+  const grandTotalExpense = dateSections.reduce((sum, day) => sum + day.dailyExpense, 0);
+  const grandTotalNetReceiving = grandTotalReceived - grandTotalExpense;
+  const grandTotalNetProfit = totalProfit !== null ? totalProfit - grandTotalExpense : null;
 
   const selectedAccountName = accounts.find((a) => a.acc_id === (localAccountId ? parseInt(localAccountId) : null))?.account_nam || "Unknown Account";
 
@@ -229,6 +243,16 @@ export default function LocalSaleReport() {
 
     const rows = [];
     dateSections.forEach((day) => {
+      // Add source details if available
+      if (day.sourceEntries && day.sourceEntries.length > 0) {
+        rows.push([day.date, "--- Source Purchase Details ---", "", "", "", "", "", ""]);
+        day.sourceEntries.forEach(entry => {
+          rows.push([day.date, "Source Entry", entry.weight.toFixed(2), entry.rate.toFixed(2), entry.total.toFixed(2), "", "", ""]);
+        });
+        rows.push([day.date, "Total Source Purchase", day.sourceWeight.toFixed(2), "", day.purchaseCost.toFixed(2), "", "", ""]);
+        rows.push(["", "", "", "", "", "", "", ""]);
+      }
+
       day.purchaserRows.forEach((row) => rows.push([
         day.date,
         row.account?.account_nam || "-",
@@ -240,12 +264,20 @@ export default function LocalSaleReport() {
         row.totalNetBalance.toFixed(2),
       ]));
       rows.push([day.date, "Daily Total", day.totalWeight.toFixed(2), "", day.totalAmount.toFixed(2), day.totalPreviousBalance.toFixed(2), day.totalReceived.toFixed(2), day.totalNetBalance.toFixed(2)]);
-      rows.push([day.date, "Purchase Cost", "", "", day.purchaseCost === null ? "Unavailable" : day.purchaseCost.toFixed(2), "", "", ""]);
-      rows.push([day.date, "Profit", "", "", day.profit === null ? "Unavailable" : `${day.totalAmount.toFixed(2)} - ${day.purchaseCost.toFixed(2)} = ${day.profit.toFixed(2)}`, "", "", ""]);
-      rows.push([day.date, "Weight Difference", `${day.sourceWeight.toFixed(2)} - ${day.totalWeight.toFixed(2)} = ${day.weightDifference.toFixed(2)}`, "", "", "", "", ""]);
+
+      rows.push([day.date, "Net Receiving", "", "", day.netReceiving.toFixed(2), "", "", ""]);
+      rows.push([day.date, "Weight Loss", day.weightDifference.toFixed(2), "", "", "", "", ""]);
+      rows.push([day.date, "Profit", "", "", day.profit === null ? "Unavailable" : day.profit.toFixed(2), "", "", ""]);
+      rows.push([day.date, "Net Profit", "", "", day.netProfit === null ? "Unavailable" : day.netProfit.toFixed(2), "", "", ""]);
+      rows.push(["", "", "", "", "", "", "", ""]);
     });
+
+    rows.push(["", "--- Grand Totals ---", "", "", "", "", "", ""]);
     rows.push(["", "Grand Total", grandTotalWeight.toFixed(2), "", grandTotalAmount.toFixed(2), grandTotalPreviousBalance.toFixed(2), grandTotalReceived.toFixed(2), grandTotalNetBalance.toFixed(2)]);
-    rows.push(["", "Grand Weight Loss", `${grandTotalSourceWeight.toFixed(2)} - ${grandTotalWeight.toFixed(2)} = ${grandTotalWeightDifference.toFixed(2)}`, "", "", "", "", ""]);
+    rows.push(["", "Grand Net Receiving", "", "", grandTotalNetReceiving.toFixed(2), "", "", ""]);
+    rows.push(["", "Grand Weight Loss", grandTotalWeightDifference.toFixed(2), "", "", "", "", ""]);
+    rows.push(["", "Grand Profit", "", "", totalProfit === null ? "Unavailable" : totalProfit.toFixed(2), "", "", ""]);
+    rows.push(["", "Grand Net Profit", "", "", grandTotalNetProfit === null ? "Unavailable" : grandTotalNetProfit.toFixed(2), "", "", ""]);
 
     exportToCSV(`Local_Sale_Report_${startDate}_to_${endDate}.csv`, headers, rows);
   };
@@ -370,6 +402,30 @@ export default function LocalSaleReport() {
                   {dateSections.map((day) => (
                     <section key={day.date} className="mb-8">
                       <h2 className="mb-2 text-lg font-bold">Date: {day.date}</h2>
+
+                      {/* Source details box */}
+                      {day.sourceEntries && day.sourceEntries.length > 0 ? (
+                        <div className="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 text-sm w-full max-w-2xl">
+                          <div className="space-y-1 text-gray-600">
+                            {day.sourceEntries.map((entry, idx) => (
+                              <div key={idx} className="flex justify-between border-b border-gray-200 pb-1">
+                                <span>Weight: {fmt(entry.weight, 0)}</span>
+                                <span>Rate: {fmt(entry.rate)}</span>
+                                <span className="font-medium text-gray-900">Total: {fmt(entry.total)}</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between pt-1 font-bold text-gray-800">
+                              <span>Total Weight: {fmt(day.sourceWeight, 0)}</span>
+                              <span>Total Purchase Cost: {fmt(day.purchaseCost)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mb-4 text-sm italic text-gray-500">
+                          No source purchase data available for this date.
+                        </div>
+                      )}
+
                       <table className="w-full border-collapse text-sm border border-gray-400">
                         <thead className="bg-gray-100">
                           <tr>
@@ -407,18 +463,43 @@ export default function LocalSaleReport() {
                           </tr>
                         </tfoot>
                       </table>
-                      <div className="mt-4 space-y-2 text-center font-semibold">
-                        <p>Purchase Cost: {day.purchaseCost === null ? "Unavailable" : fmt(day.purchaseCost)}</p>
-                        <p>Profit: {fmt(day.totalAmount)} - {day.purchaseCost === null ? "Unavailable" : fmt(day.purchaseCost)} = {day.profit === null ? "Unavailable" : fmt(day.profit)}</p>
-                        <p>Weight Loss: {fmt(day.sourceWeight, 0)} - {fmt(day.totalWeight, 0)} = {fmt(day.weightDifference, 0)}</p>
+                      <div className="mt-4 grid grid-cols-4 gap-4 text-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div>
+                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Net Receiving</p>
+                          <p className="text-gray-900 font-semibold text-sm">{fmt(day.totalReceived)} - {fmt(day.dailyExpense)} = {fmt(day.netReceiving)}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Weight Loss</p>
+                          <p className="text-gray-900 font-semibold text-sm">{fmt(day.sourceWeight, 0)} - {fmt(day.totalWeight, 0)} = {fmt(day.weightDifference, 0)}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Profit</p>
+                          <p className="text-gray-900 font-semibold text-sm">{day.profit === null ? "Unavailable" : `${fmt(day.totalAmount)} - ${fmt(day.purchaseCost)} = ${fmt(day.profit)}`}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Net Profit</p>
+                          <p className="text-gray-900 font-semibold text-sm">{day.netProfit === null ? "Unavailable" : `${fmt(day.profit)} - ${fmt(day.dailyExpense)} = ${fmt(day.netProfit)}`}</p>
+                        </div>
                       </div>
                     </section>
                   ))}
-                  <div className="mt-8 space-y-2 text-center font-bold">
-                    <p>Grand Total Weight: {fmt(grandTotalWeight, 0)}</p>
-                    <p>Grand Total Amount: {fmt(grandTotalAmount)}</p>
-                    <p>Grand Total Profit: {totalProfit === null ? "Unavailable" : fmt(totalProfit)}</p>
-                    <p>Grand Weight Loss: {fmt(grandTotalSourceWeight, 0)} - {fmt(grandTotalWeight, 0)} = {fmt(grandTotalWeightDifference, 0)}</p>
+                  <div className="mt-8 grid grid-cols-4 gap-4 text-center bg-purple-50 p-4 rounded-xl border border-purple-200">
+                    <div>
+                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">Grand Net Receiving</p>
+                      <p className="text-gray-900 font-bold text-sm">{fmt(grandTotalReceived)} - {fmt(grandTotalExpense)} = {fmt(grandTotalNetReceiving)}</p>
+                    </div>
+                    <div>
+                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">Grand Weight Loss</p>
+                      <p className="text-gray-900 font-bold text-sm">{fmt(grandTotalSourceWeight, 0)} - {fmt(grandTotalWeight, 0)} = {fmt(grandTotalWeightDifference, 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">Grand Profit</p>
+                      <p className="text-gray-900 font-bold text-sm">{totalProfit === null ? "Unavailable" : `${fmt(grandTotalAmount)} - ${fmt(totalPurchaseCost)} = ${fmt(totalProfit)}`}</p>
+                    </div>
+                    <div>
+                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">Grand Net Profit</p>
+                      <p className="text-gray-900 font-bold text-sm">{grandTotalNetProfit === null ? "Unavailable" : `${fmt(totalProfit)} - ${fmt(grandTotalExpense)} = ${fmt(grandTotalNetProfit)}`}</p>
+                    </div>
                   </div>
                 </>
               )}

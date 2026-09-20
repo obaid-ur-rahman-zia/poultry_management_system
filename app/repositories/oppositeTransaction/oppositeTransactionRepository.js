@@ -246,6 +246,28 @@ class OppositeTransactionRepository {
       },
     });
 
+    // Fetch local sale expenses within date range, filtered by creator
+    const localSaleExpenses = await prisma.local_sale_expense.findMany({
+      where: {
+        ls_expense_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: 1,
+        ...insertByFilter,
+      },
+      include: {
+        account: {
+          select: {
+            account_nam: true,
+          },
+        },
+      },
+      orderBy: {
+        ls_expense_date: "asc",
+      },
+    });
+
     // Combine and sort by date
     const combinedTransactions = [
       ...oppositeTransactions.map((t) => ({
@@ -265,6 +287,11 @@ class OppositeTransactionRepository {
         ...t,
         type: "expense",
         transaction_date: t.expense_t_date,
+      })),
+      ...localSaleExpenses.map((t) => ({
+        ...t,
+        type: "local_sale_expense",
+        transaction_date: t.ls_expense_date,
       })),
     ].sort(
       (a, b) => new Date(a.transaction_date) - new Date(b.transaction_date),
@@ -323,6 +350,17 @@ class OppositeTransactionRepository {
       orderBy: { local_sale_date: "asc" },
     });
 
+    const localSaleExpenses = await prisma.local_sale_expense.findMany({
+      where: {
+        ls_expense_date: { gte: startDate, lte: endDate },
+        status: 1,
+      },
+      include: {
+        account: { select: { account_nam: true } },
+      },
+      orderBy: { ls_expense_date: "asc" },
+    });
+
     const combinedTransactions = [
       ...oppositeTransactions.map((t) => ({ ...t, type: "opposite" })),
       ...selfTransactions.map((t) => ({ ...t, type: "self" })),
@@ -330,6 +368,11 @@ class OppositeTransactionRepository {
         ...t,
         type: "local_sale",
         transaction_date: t.local_sale_date,
+      })),
+      ...localSaleExpenses.map((t) => ({
+        ...t,
+        type: "local_sale_expense",
+        transaction_date: t.ls_expense_date,
       })),
     ].sort((a, b) => new Date(a.transaction_date) - new Date(b.transaction_date));
 

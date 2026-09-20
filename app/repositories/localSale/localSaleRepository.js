@@ -123,16 +123,46 @@ class LocalSaleRepository {
 
     const dailySources = sourceRows.reduce((groups, source) => {
       const date = source.source_date.toISOString().slice(0, 10);
-      const day = groups[date] || { date, totalWeight: 0, totalCost: 0 };
-      day.totalWeight += Number(source.weight) || 0;
-      day.totalCost += (Number(source.weight) || 0) * (Number(source.rate) || 0);
+      const day = groups[date] || { date, totalWeight: 0, totalCost: 0, entries: [] };
+      const weight = Number(source.weight) || 0;
+      const rate = Number(source.rate) || 0;
+      day.totalWeight += weight;
+      day.totalCost += weight * rate;
+      day.entries.push({
+          weight,
+          rate,
+          total: weight * rate
+      });
       groups[date] = day;
       return groups;
+    }, {});
+
+    const expenses = await prisma.local_sale_expense.findMany({
+      where: {
+        status: 1,
+        ...(startDate && endDate ? {
+          ls_expense_date: {
+            gte: start,
+            lte: end,
+          }
+        } : {}),
+      },
+      select: {
+        ls_expense_date: true,
+        amount: true,
+      }
+    });
+    
+    const dailyExpenses = expenses.reduce((groups, expense) => {
+        const date = expense.ls_expense_date.toISOString().slice(0, 10);
+        groups[date] = (groups[date] || 0) + (Number(expense.amount) || 0);
+        return groups;
     }, {});
 
     return {
       localSales,
       dailySources: Object.values(dailySources),
+      dailyExpenses,
     };
   }
 
@@ -190,6 +220,29 @@ class LocalSaleRepository {
       where: { local_sale_id: Number(local_sale_id) },
       data: { status: 0, update_dat: new Date() },
     });
+  }
+
+  async sumReceivedByDate(dateStr, tx) {
+    const prismaClient = tx || prisma;
+    const dateStart = new Date(dateStr);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(dateStr);
+    dateEnd.setHours(23, 59, 59, 999);
+
+    const result = await prismaClient.local_sale.aggregate({
+      _sum: {
+        received_amount: true,
+      },
+      where: {
+        status: 1,
+        local_sale_date: {
+          gte: dateStart,
+          lte: dateEnd,
+        },
+      },
+    });
+
+    return result._sum.received_amount || 0;
   }
 
   async readProfitReport(startDate, endDate, localAccount, groupBy) {

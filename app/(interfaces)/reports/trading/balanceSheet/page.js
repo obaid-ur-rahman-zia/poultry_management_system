@@ -99,7 +99,10 @@ export default function BalanceSheetReport() {
 
     const grouped = {};
     rawTransactions.forEach((trans) => {
-      const dateVal = trans.type === 'local_sale' ? trans.local_sale_date : trans.transaction_date;
+      let dateVal = trans.transaction_date;
+      if (trans.type === 'local_sale') dateVal = trans.local_sale_date;
+      if (trans.type === 'local_sale_expense') dateVal = trans.ls_expense_date;
+      
       const dateStr = new Date(dateVal).toISOString().split("T")[0];
       if (!grouped[dateStr]) grouped[dateStr] = [];
       grouped[dateStr].push(trans);
@@ -127,6 +130,8 @@ export default function BalanceSheetReport() {
             else if (trans.transaction_type === "pay") selfPayTransactions.push(trans);
           } else if (trans.type === "local_sale") {
             localSales.push(trans);
+          } else if (trans.type === "local_sale_expense") {
+            localSales.push(trans); // Push to localSales array to aggregate net cash
           } else if (trans.type === "opposite") {
             oppositeTransactions.push(trans);
           } else if (trans.type === "expense") {
@@ -151,21 +156,29 @@ export default function BalanceSheetReport() {
 
         // 2. Local Sales (Consolidated)
         if (localSales.length > 0) {
-          const totalLocalSaleAmount = localSales.reduce(
-            (sum, ls) => sum + ls.received_amount,
-            0
-          );
-          currentBalance += totalLocalSaleAmount;
-          dayTotalReceived += totalLocalSaleAmount;
-
-          dayProcessedTransactions.push({
-            type: "local_sale_consolidated",
-            transaction_date: dateStr,
-            received_amount: totalLocalSaleAmount,
-            runningBalance: currentBalance,
-            description: `Local Sale`,
-            srNo: globalSrNo++,
-          });
+          const totalLocalSaleReceived = localSales
+            .filter(ls => ls.type === 'local_sale')
+            .reduce((sum, ls) => sum + ls.received_amount, 0);
+            
+          const totalLocalSaleExpense = localSales
+            .filter(ls => ls.type === 'local_sale_expense')
+            .reduce((sum, ls) => sum + ls.amount, 0);
+            
+          const netLocalSaleAmount = totalLocalSaleReceived - totalLocalSaleExpense;
+          
+          if (netLocalSaleAmount > 0) {
+            currentBalance += netLocalSaleAmount;
+            dayTotalReceived += netLocalSaleAmount;
+  
+            dayProcessedTransactions.push({
+              type: "local_sale_consolidated",
+              transaction_date: dateStr,
+              received_amount: netLocalSaleAmount,
+              runningBalance: currentBalance,
+              description: `Local Sale Cash - Consolidated Net of Expenses (${totalLocalSaleReceived} received, ${totalLocalSaleExpense} expenses)`,
+              srNo: globalSrNo++,
+            });
+          }
         }
 
         // 3. Self Transactions (Pay)

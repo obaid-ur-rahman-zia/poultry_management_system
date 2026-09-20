@@ -14,6 +14,7 @@ import { calculateFinancialYear } from "@/app/components/calculateFinYear/financ
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import UserRepository from "@/app/repositories/user/userRepository";
+import { recalculateAndWriteLocalSaleCash } from "@/app/services/localSale/localSaleCashService";
 
 class LocalSaleController {
   async readAll(req) {
@@ -151,19 +152,30 @@ class LocalSaleController {
         return errorResponse(new Error("User not found"), 404);
       }
 
-      if (!user.cash_in_hand_account || !user.cash_in_hand_account_id) {
+      const bhagtanwalaCashAccount = await prisma.accounts.findFirst({
+        where: { account_nam: "Cash Account (Bhagtanwala User)" },
+      });
+
+      if (!bhagtanwalaCashAccount) {
         return errorResponse(
-          new Error("User does not have a cash in hand account configured"),
-          400,
+          new Error('Account "Cash Account (Bhagtanwala User)" not found'),
+          404,
         );
       }
+      const cashInHandAccountId = bhagtanwalaCashAccount.acc_id;
 
-      const cashInHandAccountId = user.cash_in_hand_account_id;
+      const bhagtanwalaUser = await prisma.user.findFirst({
+        where: { email: "user@bhagtanwala.com" },
+      });
+      if (!bhagtanwalaUser) {
+        return errorResponse(new Error('User "user@bhagtanwala.com" not found'), 404);
+      }
+      const bhagtanwalaUserId = bhagtanwalaUser.user_id.toString();
 
       const { req_object } = await req.json();
       
-      req_object.insert_by = req_object.insert_by || userId;
-      req_object.update_by = req_object.update_by || userId;
+      req_object.insert_by = req_object.insert_by || bhagtanwalaUserId;
+      req_object.update_by = req_object.update_by || bhagtanwalaUserId;
       const {
         local_sale_date,
         local_account,
@@ -202,7 +214,8 @@ class LocalSaleController {
 
           await snapshotSources(created.local_sale_id, local_sale_date, tx);
 
-          await createLocalSaleTransactions(created, tx, cashInHandAccountId);
+          await createLocalSaleTransactions(created, tx);
+          await recalculateAndWriteLocalSaleCash(local_sale_date, cashInHandAccountId, tx);
           return created;
         },
         { maxWait: 5000, timeout: 10000, isolationLevel: "Serializable" },
@@ -231,18 +244,29 @@ class LocalSaleController {
         return errorResponse(new Error("User not found"), 404);
       }
 
-      if (!user.cash_in_hand_account || !user.cash_in_hand_account_id) {
+      const bhagtanwalaCashAccount = await prisma.accounts.findFirst({
+        where: { account_nam: "Cash Account (Bhagtanwala User)" },
+      });
+
+      if (!bhagtanwalaCashAccount) {
         return errorResponse(
-          new Error("User does not have a cash in hand account configured"),
-          400,
+          new Error('Account "Cash Account (Bhagtanwala User)" not found'),
+          404,
         );
       }
+      const cashInHandAccountId = bhagtanwalaCashAccount.acc_id;
 
-      const cashInHandAccountId = user.cash_in_hand_account_id;
+      const bhagtanwalaUser = await prisma.user.findFirst({
+        where: { email: "user@bhagtanwala.com" },
+      });
+      if (!bhagtanwalaUser) {
+        return errorResponse(new Error('User "user@bhagtanwala.com" not found'), 404);
+      }
+      const bhagtanwalaUserId = bhagtanwalaUser.user_id.toString();
 
       const { req_object } = await req.json();
       
-      req_object.update_by = req_object.update_by || userId;
+      req_object.update_by = req_object.update_by || bhagtanwalaUserId;
       const { local_sale_id } = req_object;
       if (!local_sale_id)
         return errorResponse(new Error("local_sale_id is required"), 400);
@@ -271,15 +295,14 @@ class LocalSaleController {
             throw new Error("Failed to update local sale record");
           await snapshotSources(updated.local_sale_id, updated.local_sale_date, tx);
           
-          let originalCashAccountId = cashInHandAccountId;
-          const originalCreatorId = parseInt(existing.insert_by);
-          if (!isNaN(originalCreatorId)) {
-            const originalUser = await UserRepository.readById(originalCreatorId);
-            if (originalUser && originalUser.cash_in_hand_account_id) {
-              originalCashAccountId = originalUser.cash_in_hand_account_id;
-            }
+          await createLocalSaleTransactions(updated, tx);
+          await recalculateAndWriteLocalSaleCash(updated.local_sale_date, cashInHandAccountId, tx);
+
+          const oldDate = new Date(existing.local_sale_date).toISOString().split("T")[0];
+          const newDate = new Date(updated.local_sale_date).toISOString().split("T")[0];
+          if (oldDate !== newDate) {
+              await recalculateAndWriteLocalSaleCash(oldDate, cashInHandAccountId, tx);
           }
-          await createLocalSaleTransactions(updated, tx, originalCashAccountId);
           return updated;
         },
         { maxWait: 5000, timeout: 10000, isolationLevel: "Serializable" },
@@ -303,6 +326,32 @@ class LocalSaleController {
       if (!existing || existing.status === 0)
         return errorResponse(new Error("Local sale not found"), 404);
 
+      const session = await getServerSession(authOptions);
+      const sessionUser = session?.user;
+
+      if (!sessionUser) {
+        return errorResponse(new Error("Unauthorized"), 401);
+      }
+
+      const userId = sessionUser.id?.toString();
+      const user = await UserRepository.readById(userId);
+
+      if (!user) {
+        return errorResponse(new Error("User not found"), 404);
+      }
+
+      const bhagtanwalaCashAccount = await prisma.accounts.findFirst({
+        where: { account_nam: "Cash Account (Bhagtanwala User)" },
+      });
+
+      if (!bhagtanwalaCashAccount) {
+        return errorResponse(
+          new Error('Account "Cash Account (Bhagtanwala User)" not found'),
+          404,
+        );
+      }
+      const cashInHandAccountId = bhagtanwalaCashAccount.acc_id;
+
       await prisma.$transaction(
         async (tx) => {
           await transactionRepository.softDeleteByReferenceId(
@@ -311,6 +360,7 @@ class LocalSaleController {
             tx,
           );
           await LocalSaleRepository.delete(local_sale_id, tx);
+          await recalculateAndWriteLocalSaleCash(existing.local_sale_date, cashInHandAccountId, tx);
         },
         { maxWait: 5000, timeout: 10000, isolationLevel: "Serializable" },
       );
@@ -336,7 +386,7 @@ function validateLocalSaleAmounts(data) {
   }
 }
 
-async function createLocalSaleTransactions(localSale, tx, cash_account) {
+async function createLocalSaleTransactions(localSale, tx) {
   if (!localSale || !localSale.local_sale_id) {
     throw new Error(
       "Invalid localSale object provided to createLocalSaleTransactions",
@@ -396,22 +446,8 @@ async function createLocalSaleTransactions(localSale, tx, cash_account) {
     });
   }
 
-  // Cash In Hand account: debit the "received amount" (money we got)
-  if (received > 0) {
-    if (!cash_account) {
-      throw new Error(
-        "Cash In Hand account is not configured in settings. Cannot process received amount.",
-      );
-    }
-
-    transactionData.push({
-      acc_id: cash_account,
-      debit: received,
-      credit: 0,
-      remarks: `Local Sale#${localSale.local_sale_id} Received Amount`,
-      ...constants,
-    });
-  }
+  // Cash in Hand is handled collectively via recalculateAndWriteLocalSaleCash
+  // so no debit is inserted here anymore.
 
   for (const data of transactionData) {
     const result = await transactionRepository.create(data, tx);

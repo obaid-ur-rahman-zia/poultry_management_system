@@ -367,6 +367,28 @@ class TransactionRepository {
     });
   }
 
+  async softDeleteLocalSaleCashByDate(dateStr, tx) {
+    const prismaClient = tx ? tx : prisma;
+    const dateStart = new Date(dateStr);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(dateStr);
+    dateEnd.setHours(23, 59, 59, 999);
+
+    console.log(`Soft deleting 'Local Sale Cash' transactions for date: ${dateStr}`);
+    return prismaClient.transaction.updateMany({
+      where: {
+        reference: "Local Sale Cash",
+        transaction_dat: {
+          gte: dateStart,
+          lte: dateEnd
+        }
+      },
+      data: {
+        isDeleted: true,
+      },
+    });
+  }
+
   async restoreByReferenceId(reference_id) {
     return prisma.transaction.updateMany({
       where: {

@@ -156,8 +156,9 @@ class LocalSaleExpenseRepository {
         });
     }
 
-    async delete(ls_expense_id) {
-        return prisma.local_sale_expense.update({
+    async delete(ls_expense_id, tx) {
+        const prismaClient = tx || prisma;
+        return prismaClient.local_sale_expense.update({
             where: {
                 ls_expense_id: Number(ls_expense_id),
             },
@@ -167,6 +168,28 @@ class LocalSaleExpenseRepository {
         });
     }
 
+    async sumAmountByDate(dateStr, tx) {
+        const prismaClient = tx || prisma;
+        const dateStart = new Date(dateStr);
+        dateStart.setHours(0, 0, 0, 0);
+        const dateEnd = new Date(dateStr);
+        dateEnd.setHours(23, 59, 59, 999);
+    
+        const result = await prismaClient.local_sale_expense.aggregate({
+            _sum: {
+                amount: true,
+            },
+            where: {
+                status: 1,
+                ls_expense_date: {
+                    gte: dateStart,
+                    lte: dateEnd,
+                },
+            },
+        });
+    
+        return result._sum.amount || 0;
+    }
 }
 
 export default new LocalSaleExpenseRepository();

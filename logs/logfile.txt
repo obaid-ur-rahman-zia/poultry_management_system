@@ -744,3 +744,8 @@ custom-exception:  [Failed to create local sale expense subhead] |
 system-exception:  [TypeError: Cannot read properties of undefined (reading 'create')]
 
 
+exception-time:       [2026-09-19T17:23:35.737Z]  
+custom-exception:  [Failed to create subhead - duplicate name in Method: AccountSubHeadController.create] | 
+system-exception:  [Error: A subhead with this name already exists]
+
+

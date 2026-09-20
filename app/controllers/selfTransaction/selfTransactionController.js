@@ -219,7 +219,7 @@ class SelfTransactionController {
             credit: isReceive ? amountValue : 0,
             remarks:
               req_object.description ||
-              `${transaction_type === "receive" ? "Received" : "Paid"} ${isReceive ? "in" : "from"} own account`,
+              `Self transaction: ${isReceive ? "Paid to" : "Received from"} cash in hand`,
             financial_year: financialYear,
             voucher_type: "ST",
             transaction_dat: new Date(transaction_date),
@@ -241,7 +241,7 @@ class SelfTransactionController {
             credit: isReceive ? 0 : amountValue,
             remarks:
               req_object.description ||
-              `Opposite transaction: ${transaction_type === "receive" ? "Paid from" : "Received in"} cash in hand`,
+              `Self transaction: ${isReceive ? "Received from" : "Paid to"} selected account`,
             financial_year: financialYear,
             voucher_type: "ST",
             transaction_dat: new Date(transaction_date),
@@ -384,7 +384,7 @@ class SelfTransactionController {
             credit: isReceive ? amount : 0,
             remarks:
               req_object.description ||
-              `${transactionType === "receive" ? "Received" : "Paid"} ${isReceive ? "in" : "from"} own account`,
+              `Self transaction: ${isReceive ? "Paid to" : "Received from"} cash in hand`,
             financial_year: financialYear,
             voucher_type: "Self Transaction",
             transaction_dat: new Date(transactionDate),
@@ -405,7 +405,7 @@ class SelfTransactionController {
             credit: isReceive ? 0 : amount,
             remarks:
               req_object.description ||
-              `Opposite transaction: ${transactionType === "receive" ? "Paid from" : "Received in"} cash in hand`,
+              `Self transaction: ${isReceive ? "Received from" : "Paid to"} selected account`,
             financial_year: financialYear,
             voucher_type: "Self Transaction",
             transaction_dat: new Date(transactionDate),
