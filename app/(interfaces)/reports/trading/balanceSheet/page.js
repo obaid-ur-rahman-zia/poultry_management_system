@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 import { useSession } from "next-auth/react";
 import Select from "react-select";
+import { useAccounts } from "@/app/utils/hooks";
 
 const selectStyles = {
   control: (provided, state) => ({
@@ -22,7 +23,7 @@ const selectStyles = {
   }),
 };
 
-export default function BalanceSheetReport({ initialAccounts = null }) {
+export default function BalanceSheetReport() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
@@ -34,37 +35,26 @@ export default function BalanceSheetReport({ initialAccounts = null }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { accounts: allAccounts } = useAccounts();
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
 
   useEffect(() => {
     if (session?.user?.role === "SUPER_ADMIN") {
-      if (initialAccounts !== null) {
-        // Use provided accounts
-        const cashAccounts = Array.isArray(initialAccounts) ? initialAccounts.filter(a =>
-          a.subhead?.subhead_nam?.toLowerCase() === "cash in hand"
-        ) : [];
-        setAccounts(cashAccounts);
-        const defaultAcc = cashAccounts.find(a => a.acc_id === 2);
-        if (defaultAcc) setSelectedAccount(2);
-      } else {
-        // Fallback to fetch
-        fetch("/api/account/accounts/readAll?all=true")
-          .then((res) => res.json())
-          .then((result) => {
-            if (result.response_status === "success") {
-              const data = result.response_result?.data || result.response_result || [];
-              const cashAccounts = Array.isArray(data) ? data.filter(a =>
-                a.subhead?.subhead_nam?.toLowerCase() === "cash in hand"
-              ) : [];
-              setAccounts(cashAccounts);
-              const defaultAcc = cashAccounts.find(a => a.acc_id === 2);
-              if (defaultAcc) setSelectedAccount(2);
-            }
-          });
+      const cashAccounts = allAccounts.filter(a =>
+        a.subhead?.subhead_nam?.toLowerCase() === "cash in hand"
+      );
+      setAccounts(cashAccounts);
+      const defaultAcc = cashAccounts.find(a => a.acc_id === 2);
+      if (defaultAcc && !selectedAccount) {
+        setSelectedAccount(2);
+      } else if (cashAccounts.length > 0 && !selectedAccount) {
+        setSelectedAccount(cashAccounts[0].acc_id);
       }
+    } else {
+      setCashAccId(session?.user?.acc_id || null);
     }
-  }, [session, initialAccounts]);
+  }, [session, allAccounts, selectedAccount]);
 
   const fetchBalanceSheet = async () => {
     if (!startDate || !endDate) {

@@ -4,6 +4,7 @@ import { X, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 import Select from "react-select";
+import { useAccounts } from "@/app/utils/hooks";
 
 const selectStyles = {
   control: (provided, state) => ({
@@ -36,55 +37,23 @@ const selectStyles = {
   }),
 };
 
-export default function LocalSaleReport({ initialAccounts = null }) {
+export default function LocalSaleReport() {
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [localAccountId, setLocalAccountId] = useState("");
-  const [accounts, setAccounts] = useState([]);
+  
+  const { accounts: allAccounts } = useAccounts();
+  const accounts = React.useMemo(() => {
+    return (allAccounts || []).filter(
+      (acc) =>
+        acc.account_nam?.toLowerCase() === "bhagtanwala" &&
+        acc.subhead?.subhead_nam?.toLowerCase() === "purchaser"
+    );
+  }, [allAccounts]);
+
   const [reportData, setReportData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  const fetchAccounts = async () => {
-    if (initialAccounts !== null) {
-      let accountsData = Array.isArray(initialAccounts) ? initialAccounts : [];
-      setAccounts(
-        accountsData.filter(
-          (acc) =>
-            acc.account_nam?.toLowerCase() === "bhagtanwala" &&
-            acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
-        ),
-      );
-      return;
-    }
-    try {
-      const res = await fetch("/api/account/accounts/readAll?all=true");
-      if (res.ok) {
-        const result = await res.json();
-        let accountsData = [];
-        if (result.response_result) {
-          accountsData = result.response_result?.data || result.response_result;
-        } else if (result.data) {
-          accountsData = result.data;
-        }
-        if (!Array.isArray(accountsData)) accountsData = [];
-
-        setAccounts(
-          accountsData.filter(
-            (acc) =>
-              acc.account_nam?.toLowerCase() === "bhagtanwala" &&
-              acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
-          ),
-        );
-      }
-    } catch (err) {
-      console.error("Error fetching accounts:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchAccounts();
-  }, [initialAccounts]);
 
   useEffect(() => {
     if (accounts.length > 0 && !localAccountId) {

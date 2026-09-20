@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 import { useSession } from "next-auth/react";
+import { useAccounts, useSubHeads } from "@/app/utils/hooks";
 
 // Custom Select Styles
 const selectStyles = {
@@ -54,18 +55,32 @@ const selectStyles = {
   }),
 };
 
-export default function AccountLedgerModal({ initialAccounts = null, initialSubHeads = null }) {
+export default function AccountLedgerModal() {
   const { data: session } = useSession();
   const { control, setValue, watch } = useForm();
   const [isOpen, setIsOpen] = useState(false);
   const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [accountSearchType, setAccountSearchType] = useState("all");
-  const [accountSubHeads, setAccountSubHeads] = useState([]);
+  const { subHeads: accountSubHeads } = useSubHeads();
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const selectedAccount = watch("selectedAccount");
-  const [accounts, setAccounts] = useState([]);
+  
+  const { accounts: allAccounts } = useAccounts();
+  
+  // Apply filtering logic based on session
+  const accounts = React.useMemo(() => {
+    let accountsData = allAccounts || [];
+    if (session?.user?.role === "USER") {
+      accountsData = accountsData.filter((a) =>
+        a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
+        a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser") ||
+        a.account_nam?.toLowerCase() === "bhagtanwala"
+      );
+    }
+    return accountsData;
+  }, [allAccounts, session]);
   const [transactions, setTransactions] = useState([]);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,69 +109,6 @@ export default function AccountLedgerModal({ initialAccounts = null, initialSubH
       return true;
     }
     return false;
-  };
-
-  // Fetch all accounts on component mount
-  useEffect(() => {
-    fetchAccounts();
-    fetchSubHeads();
-  }, [initialAccounts, initialSubHeads, session]);
-
-  const fetchSubHeads = async () => {
-    if (initialSubHeads !== null) {
-      setAccountSubHeads(Array.isArray(initialSubHeads) ? initialSubHeads : []);
-      return;
-    }
-    try {
-      const response = await fetch("/api/account/accountSubHead/readAll");
-      const result = await response.json();
-      if (result.response_status === "success") {
-        const subHeadsData =
-          result.response_result?.data || result.response_result || [];
-        setAccountSubHeads(subHeadsData);
-      }
-    } catch (error) {
-      console.error("Error fetching subheads:", error);
-    }
-  };
-
-  const fetchAccounts = async () => {
-    if (initialAccounts !== null) {
-      let accountsData = Array.isArray(initialAccounts) ? initialAccounts : [];
-      if (session?.user?.role === "USER") {
-        accountsData = accountsData.filter((a) =>
-          a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
-          a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser") ||
-          a.account_nam?.toLowerCase() === "bhagtanwala"
-        );
-      }
-      setAccounts(accountsData);
-      return;
-    }
-
-    try {
-      // Fetch all accounts without pagination using all=true parameter
-      const response = await fetch("/api/account/accounts/readAll?all=true");
-      const data = await response.json();
-      if (data.response_result) {
-        // Handle paginated response structure
-        let accountsData = data.response_result?.data || data.response_result;
-        accountsData = Array.isArray(accountsData) ? accountsData : [];
-
-        if (session?.user?.role === "USER") {
-          accountsData = accountsData.filter((a) =>
-            a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
-            a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser") ||
-            a.account_nam?.toLowerCase() === "bhagtanwala"
-          );
-        }
-
-        setAccounts(accountsData);
-      }
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-      setAccounts([]);
-    }
   };
 
   // Format account code as 01-003-00002

@@ -12,31 +12,6 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 
 export default function ReportPage() {
-  const [initialAccounts, setInitialAccounts] = useState(null);
-  const [initialSubHeads, setInitialSubHeads] = useState(null);
-
-  useEffect(() => {
-    // Fetch accounts
-    fetch("/api/account/accounts/readAll?all=true")
-      .then(res => res.json())
-      .then(result => {
-        if (result.response_status === "success" || result.response_code === 200) {
-          setInitialAccounts(result.response_result?.data || result.response_result || []);
-        }
-      })
-      .catch(err => console.error("Failed to fetch accounts in ReportPage:", err));
-
-    // Fetch account subheads
-    fetch("/api/account/accountSubHead/readAll")
-      .then(res => res.json())
-      .then(result => {
-        if (result.response_status === "success" || result.response_code === 200) {
-          setInitialSubHeads(result.response_result?.data || result.response_result || []);
-        }
-      })
-      .catch(err => console.error("Failed to fetch account subheads in ReportPage:", err));
-  }, []);
-
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -44,10 +19,10 @@ export default function ReportPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <WholeSaleReport />
           <WholeSaleProfit />
-          <WholeSaleProfitAccount initialAccounts={initialAccounts} initialSubHeads={initialSubHeads} />
-          <BalanceSheet initialAccounts={initialAccounts} />
+          <WholeSaleProfitAccount />
+          <BalanceSheet />
           <BalanceSheetAll />
-          <AccountLedger initialAccounts={initialAccounts} initialSubHeads={initialSubHeads} />
+          <AccountLedger />
 
           <SubheadTrialBalance />
           <ExpenseHeadTrialBalance />

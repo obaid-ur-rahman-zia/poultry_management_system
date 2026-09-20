@@ -15,10 +15,10 @@ import { toast } from "sonner";
 import { exportToCSV } from "@/app/utils/exportToCsv";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAccounts } from "@/app/utils/hooks";
 
-export default function SaleDetailReport({ initialAccounts = null }) {
+export default function SaleDetailReport() {
   const [isOpen, setIsOpen] = useState(false);
-  const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState("");
   const [startDate, setStartDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -36,38 +36,16 @@ export default function SaleDetailReport({ initialAccounts = null }) {
 
   const itemsPerPage = 80;
 
-  // Fetch shops
-  const fetchShops = useCallback(async () => {
-    if (initialAccounts !== null) {
-      const list = Array.isArray(initialAccounts) ? initialAccounts : [];
-      const shopList = list.filter((a) => a.shop_enable === 1);
-      setShops(shopList);
-      if (shopList.length > 0 && !selectedShop) {
-        setSelectedShop(shopList[0].acc_id.toString());
-      }
-      return;
-    }
-    try {
-      const res = await fetch("/api/account/accounts/readAll?all=true");
-      const data = await res.json();
-      if (data.response_status === "success") {
-        const list = data.response_result?.data || data.response_result || [];
-        const shopList = Array.isArray(list)
-          ? list.filter((a) => a.shop_enable === 1)
-          : [];
-        setShops(shopList);
-        if (shopList.length > 0 && !selectedShop) {
-          setSelectedShop(shopList[0].acc_id.toString());
-        }
-      }
-    } catch (e) {
-      console.error("fetchShops:", e);
-    }
-  }, [initialAccounts, selectedShop]);
+  const { accounts: allAccounts } = useAccounts();
+  const shops = React.useMemo(() => {
+    return (allAccounts || []).filter((a) => a.shop_enable === 1);
+  }, [allAccounts]);
 
   useEffect(() => {
-    fetchShops();
-  }, [fetchShops]);
+    if (shops.length > 0 && !selectedShop) {
+      setSelectedShop(shops[0].acc_id.toString());
+    }
+  }, [shops, selectedShop]);
 
   const fetchReport = async () => {
     if (!selectedShop || !startDate || !endDate) {

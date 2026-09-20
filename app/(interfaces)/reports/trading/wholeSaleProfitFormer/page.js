@@ -6,6 +6,7 @@ import { exportToCSV } from "@/app/utils/exportToCsv";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
+import { useAccounts, useSubHeads } from "@/app/utils/hooks";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export default function WholeSaleProfitFormer({ initialAccounts = null, initialSubHeads = null }) {
+export default function WholeSaleProfitFormer() {
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [groupBy, setGroupBy] = useState("date");
@@ -42,8 +43,8 @@ export default function WholeSaleProfitFormer({ initialAccounts = null, initialS
   const [isAccountSearchDialogOpen, setIsAccountSearchDialogOpen] = useState(false);
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [accountSearchType, setAccountSearchType] = useState("all");
-  const [allAccounts, setAllAccounts] = useState([]);
-  const [accountSubHeads, setAccountSubHeads] = useState([]);
+  const { accounts: allAccounts } = useAccounts();
+  const { subHeads: accountSubHeads } = useSubHeads();
   const accountRowRefs = useRef([]);
   accountRowRefs.current = [];
 
@@ -66,46 +67,6 @@ export default function WholeSaleProfitFormer({ initialAccounts = null, initialS
       return true;
     }
     return false;
-  };
-
-  useEffect(() => {
-    fetchAllAccounts();
-    fetchAccountSubHeads();
-  }, [initialAccounts, initialSubHeads]);
-
-  const fetchAllAccounts = async () => {
-    if (initialAccounts !== null) {
-      setAllAccounts(Array.isArray(initialAccounts) ? initialAccounts : []);
-      return;
-    }
-    try {
-      const res = await fetch("/api/account/accounts/readAll?all=true");
-      const data = await res.json();
-      if (data.success || data.response_status === "success") {
-        const raw = data.response_result;
-        let list = raw?.pagination ? raw.data || [] : raw?.data || raw || [];
-        setAllAccounts(Array.isArray(list) ? list : []);
-      }
-    } catch (e) {
-      console.error(e);
-      setAllAccounts([]);
-    }
-  };
-
-  const fetchAccountSubHeads = async () => {
-    if (initialSubHeads !== null) {
-      setAccountSubHeads(Array.isArray(initialSubHeads) ? initialSubHeads : []);
-      return;
-    }
-    try {
-      const res = await fetch("/api/account/accountSubHead/readAll");
-      const data = await res.json();
-      if (data.response_status === "success") {
-        setAccountSubHeads(data.response_result?.data || data.response_result || []);
-      }
-    } catch (e) {
-      setAccountSubHeads([]);
-    }
   };
 
 
