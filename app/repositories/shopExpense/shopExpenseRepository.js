@@ -1,10 +1,13 @@
 import prisma from "@/lib/prisma";
 
 class ShopExpenseRepository {
-    async readAll(insertByFilter = null) {
+    async readAll(insertByFilter = null, shopAccId = null) {
         const where = { status: 1 };
         if (insertByFilter) {
             where.insert_by = insertByFilter;
+        }
+        if (shopAccId) {
+            where.shop_acc_id = Number(shopAccId);
         }
         return prisma.shop_expense.findMany({
             orderBy: { shop_expense_id: "desc" },
@@ -19,7 +22,7 @@ class ShopExpenseRepository {
         });
     }
 
-    async readAllByDate(date, insertByFilter = null) {
+    async readAllByDate(date, insertByFilter = null, shopAccId = null) {
         const start = new Date(date);
         start.setHours(0, 0, 0, 0);
         const end = new Date(date);
@@ -31,6 +34,9 @@ class ShopExpenseRepository {
         if (insertByFilter) {
             where.insert_by = insertByFilter;
         }
+        if (shopAccId) {
+            where.shop_acc_id = Number(shopAccId);
+        }
         return prisma.shop_expense.findMany({
             orderBy: { shop_expense_id: "desc" },
             where,
@@ -44,7 +50,7 @@ class ShopExpenseRepository {
         });
     }
 
-    async readAllByDateRange(startDate, endDate, insertByFilter = null) {
+    async readAllByDateRange(startDate, endDate, insertByFilter = null, shopAccId = null) {
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
         const end = new Date(endDate);
@@ -55,6 +61,9 @@ class ShopExpenseRepository {
         };
         if (insertByFilter) {
             where.insert_by = insertByFilter;
+        }
+        if (shopAccId) {
+            where.shop_acc_id = Number(shopAccId);
         }
         return prisma.shop_expense.findMany({
             orderBy: { shop_expense_date: "asc" },
@@ -69,10 +78,13 @@ class ShopExpenseRepository {
         });
     }
 
-    async readAllWithPagination(skip = 0, take = 10, insertByFilter = null) {
+    async readAllWithPagination(skip = 0, take = 10, insertByFilter = null, shopAccId = null) {
         const where = { status: 1 };
         if (insertByFilter) {
             where.insert_by = insertByFilter;
+        }
+        if (shopAccId) {
+            where.shop_acc_id = Number(shopAccId);
         }
         const [data, total] = await Promise.all([
             prisma.shop_expense.findMany({
@@ -115,6 +127,7 @@ class ShopExpenseRepository {
         return prismaClient.shop_expense.create({
             data: {
                 shop_expense_date: new Date(data.shop_expense_date),
+                shop_acc_id: Number(data.shop_acc_id),
                 shop_account_id: Number(data.shop_account_id),
                 amount: Number(data.amount),
                 description: data.description || null,
@@ -140,6 +153,7 @@ class ShopExpenseRepository {
             },
             data: {
                 shop_expense_date: req_object.shop_expense_date ? new Date(req_object.shop_expense_date) : undefined,
+                shop_acc_id: req_object.shop_acc_id !== undefined ? Number(req_object.shop_acc_id) : undefined,
                 shop_account_id: req_object.shop_account_id !== undefined ? Number(req_object.shop_account_id) : undefined,
                 amount: req_object.amount !== undefined ? Number(req_object.amount) : undefined,
                 description: req_object.description !== undefined ? req_object.description : undefined,

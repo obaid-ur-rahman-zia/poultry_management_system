@@ -36,7 +36,7 @@ const selectStyles = {
   }),
 };
 
-export default function LocalSaleReport() {
+export default function LocalSaleReport({ initialAccounts = null }) {
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
@@ -45,34 +45,52 @@ export default function LocalSaleReport() {
   const [reportData, setReportData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const res = await fetch("/api/account/accounts/readAll?all=true");
-        if (res.ok) {
-          const result = await res.json();
-          let accountsData = [];
-          if (result.response_result) {
-            accountsData = result.response_result?.data || result.response_result;
-          } else if (result.data) {
-            accountsData = result.data;
-          }
-          if (!Array.isArray(accountsData)) accountsData = [];
-
-          setAccounts(
-            accountsData.filter(
-              (acc) =>
-                acc.account_nam?.toLowerCase() === "bhagtanwala" &&
-                acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
-            ),
-          );
+  const fetchAccounts = async () => {
+    if (initialAccounts !== null) {
+      let accountsData = Array.isArray(initialAccounts) ? initialAccounts : [];
+      setAccounts(
+        accountsData.filter(
+          (acc) =>
+            acc.account_nam?.toLowerCase() === "bhagtanwala" &&
+            acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
+        ),
+      );
+      return;
+    }
+    try {
+      const res = await fetch("/api/account/accounts/readAll?all=true");
+      if (res.ok) {
+        const result = await res.json();
+        let accountsData = [];
+        if (result.response_result) {
+          accountsData = result.response_result?.data || result.response_result;
+        } else if (result.data) {
+          accountsData = result.data;
         }
-      } catch (err) {
-        console.error("Error fetching accounts:", err);
+        if (!Array.isArray(accountsData)) accountsData = [];
+
+        setAccounts(
+          accountsData.filter(
+            (acc) =>
+              acc.account_nam?.toLowerCase() === "bhagtanwala" &&
+              acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
+          ),
+        );
       }
-    };
+    } catch (err) {
+      console.error("Error fetching accounts:", err);
+    }
+  };
+
+  useEffect(() => {
     fetchAccounts();
-  }, []);
+  }, [initialAccounts]);
+
+  useEffect(() => {
+    if (accounts.length > 0 && !localAccountId) {
+      setLocalAccountId(accounts[0].acc_id.toString());
+    }
+  }, [accounts, localAccountId]);
 
   const fetchReport = async () => {
     if (!startDate || !endDate || !localAccountId) {
@@ -405,16 +423,18 @@ export default function LocalSaleReport() {
 
                       {/* Source details box */}
                       {day.sourceEntries && day.sourceEntries.length > 0 ? (
-                        <div className="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 text-sm w-full max-w-2xl">
-                          <div className="space-y-1 text-gray-600">
-                            {day.sourceEntries.map((entry, idx) => (
-                              <div key={idx} className="flex justify-between border-b border-gray-200 pb-1">
-                                <span>Weight: {fmt(entry.weight, 0)}</span>
-                                <span>Rate: {fmt(entry.rate)}</span>
-                                <span className="font-medium text-gray-900">Total: {fmt(entry.total)}</span>
-                              </div>
-                            ))}
-                            <div className="flex justify-between pt-1 font-bold text-gray-800">
+                        <div className="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 text-sm w-full">
+                          <div>
+                            <div className="flex w-full justify-center divide-x divide-gray-400 border-b border-gray-200 pb-2 mb-2 leading-relaxed text-md">
+                              {day.sourceEntries.map((entry, idx) => (
+                                <div key={idx} className="flex-1 text-center px-2">
+                                  <span>Weight: {fmt(entry.weight, 0)}</span>{" "}
+                                  <span>Rate: {fmt(entry.rate)}</span>{" "}
+                                  <span className="font-medium text-gray-900">Total: {fmt(entry.total)}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex justify-center gap-6 font-bold text-gray-800">
                               <span>Total Weight: {fmt(day.sourceWeight, 0)}</span>
                               <span>Total Purchase Cost: {fmt(day.purchaseCost)}</span>
                             </div>
@@ -465,7 +485,7 @@ export default function LocalSaleReport() {
                       </table>
                       <div className="mt-4 grid grid-cols-4 gap-4 text-center bg-gray-50 p-3 rounded-lg border border-gray-200">
                         <div>
-                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Net Receiving</p>
+                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Net Receiving (Received - Expense)</p>
                           <p className="text-gray-900 font-semibold text-sm">{fmt(day.totalReceived)} - {fmt(day.dailyExpense)} = {fmt(day.netReceiving)}</p>
                         </div>
                         <div>
@@ -473,11 +493,11 @@ export default function LocalSaleReport() {
                           <p className="text-gray-900 font-semibold text-sm">{fmt(day.sourceWeight, 0)} - {fmt(day.totalWeight, 0)} = {fmt(day.weightDifference, 0)}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Profit</p>
+                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Profit (Sale Amount -Purchase Cost)</p>
                           <p className="text-gray-900 font-semibold text-sm">{day.profit === null ? "Unavailable" : `${fmt(day.totalAmount)} - ${fmt(day.purchaseCost)} = ${fmt(day.profit)}`}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Net Profit</p>
+                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Net Profit (Profit - Expense)</p>
                           <p className="text-gray-900 font-semibold text-sm">{day.netProfit === null ? "Unavailable" : `${fmt(day.profit)} - ${fmt(day.dailyExpense)} = ${fmt(day.netProfit)}`}</p>
                         </div>
                       </div>

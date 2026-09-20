@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Search, Edit2, Trash2, ArrowUp } from "lucide-react";
@@ -44,6 +44,8 @@ export default function ShopAddExpense() {
     const [editingTransactionId, setEditingTransactionId] = useState(null);
     const [accounts, setAccounts] = useState([]);
     const [subHeads, setSubHeads] = useState([]);
+    const [shops, setShops] = useState([]);
+    const [selectedShopId, setSelectedShopId] = useState("");
 
     const [searchQuery, setSearchQuery] = useState("");
     const [isMobile, setIsMobile] = useState(false);
@@ -65,22 +67,41 @@ export default function ShopAddExpense() {
         ? accounts.filter((account) => account.shop_subhead_id?.toString() === selectedSubId)
         : [];
 
+    const fetchShops = useCallback(async () => {
+        try {
+            const res = await fetch("/api/account/accounts/readAll?all=true");
+            const data = await res.json();
+            if (data.response_status === "success") {
+                const list = data.response_result?.data || data.response_result || [];
+                const shopList = Array.isArray(list) ? list.filter((a) => a.shop_enable === 1) : [];
+                setShops(shopList);
+                if (shopList.length > 0) {
+                    setSelectedShopId(shopList[0].acc_id.toString());
+                }
+            }
+        } catch (e) {
+            console.error("fetchShops:", e);
+        }
+    }, []);
+
     useEffect(() => {
         const mq = window.matchMedia("(max-width: 768px)");
         const handleResize = () => setIsMobile(mq.matches);
         handleResize();
         mq.addEventListener("change", handleResize);
 
+        fetchShops();
         fetchAccounts();
         fetchSubHeads();
-        fetchExpenseTransactions(filterDate);
 
         return () => mq.removeEventListener("change", handleResize);
-    }, []);
+    }, [fetchShops]);
 
     useEffect(() => {
-        fetchExpenseTransactions(filterDate);
-    }, [filterDate]);
+        if (selectedShopId) {
+            fetchExpenseTransactions(filterDate, selectedShopId);
+        }
+    }, [filterDate, selectedShopId]);
 
     const fetchSubHeads = async () => {
         try {
@@ -106,10 +127,13 @@ export default function ShopAddExpense() {
         }
     };
 
-    const fetchExpenseTransactions = async (date) => {
+    const fetchExpenseTransactions = async (date, shopId) => {
         setLoading(true);
         try {
-            const url = date ? `/api/shopExpense/readAll?all=true&date=${date}` : `/api/shopExpense/readAll?all=true`;
+            let url = date ? `/api/shopExpense/readAll?all=true&date=${date}` : `/api/shopExpense/readAll?all=true`;
+            if (shopId) {
+                url += `&shop_acc_id=${shopId}`;
+            }
             const response = await fetch(url);
             const result = await response.json();
             if (result.response_status === "success") {
@@ -126,7 +150,11 @@ export default function ShopAddExpense() {
     const fetchAllTransactionsForModal = async () => {
         setModalLoading(true);
         try {
-            const response = await fetch(`/api/shopExpense/readAll?all=true`);
+            let url = `/api/shopExpense/readAll?all=true`;
+            if (selectedShopId) {
+                url += `&shop_acc_id=${selectedShopId}`;
+            }
+            const response = await fetch(url);
             const result = await response.json();
             if (result.response_status === "success") {
                 const data = result.response_result?.data || result.response_result || [];
@@ -150,6 +178,7 @@ export default function ShopAddExpense() {
         const payload = {
             req_object: {
                 shop_expense_date: data.shop_expense_date,
+                shop_acc_id: parseInt(selectedShopId),
                 shop_account_id: parseInt(data.shop_account_id),
                 amount: parseFloat(data.amount),
                 description: data.description?.trim() || "",
@@ -179,7 +208,7 @@ export default function ShopAddExpense() {
                 });
                 setIsEditMode(false);
                 setEditingTransactionId(null);
-                fetchExpenseTransactions(filterDate);
+                fetchExpenseTransactions(filterDate, selectedShopId);
             } else {
                 toast.error(result.response_message || "Failed to save expense");
             }
@@ -271,6 +300,20 @@ export default function ShopAddExpense() {
             <Card className="max-w-xl mx-auto">
                 <CardContent className="p-4 sm:p-6">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="shop-expense-form">
+                        <div className="space-y-2">
+                            <Label>Select Shop *</Label>
+                            <Combobox
+                                options={shops.map((shop) => ({ value: shop.acc_id.toString(), label: shop.account_nam }))}
+                                value={selectedShopId}
+                                onValueChange={(val) => {
+                                    setSelectedShopId(val);
+                                }}
+                                placeholder="Select Shop"
+                                searchPlaceholder="Search shop..."
+                                emptyText="No shop found."
+                            />
+                        </div>
+
                         <div className="space-y-2 w-full">
                             <Label htmlFor="shop_expense_date">Date *</Label>
                             <div className="flex items-center gap-2">

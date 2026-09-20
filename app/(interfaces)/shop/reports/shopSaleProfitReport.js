@@ -148,25 +148,25 @@ export default function ShopSaleProfitReport() {
     const headers = [
       "Date",
       "Purchased Amount",
-      "Sale Amount",
-      "Net Sale",
-      "Due Sale",
-      "Recovery",
-      "Profit / Loss",
+      "Cash Received",
+      "Due/Udhaar",
       "Expense",
-      "Final Net Profit",
+      "Recovery",
+      "Net Sale",
+      "Sale Stock Amt",
+      "Net Profit",
     ];
 
     const rows = reportData.map((t) => [
       formatPeriod(t.period, groupBy),
       t.purchase_amount > 0 ? fmt(t.purchase_amount) : "-",
-      t.sale_amount > 0 ? fmt(t.sale_amount) : "-",
       t.net_sale > 0 ? fmt(t.net_sale) : "-",
       t.due_sale > 0 ? fmt(t.due_sale) : "-",
-      t.recovery > 0 ? fmt(t.recovery) : "-",
-      fmt(t.profit),
       fmt(t.expense_amount || 0),
-      fmt(t.final_net_profit || 0),
+      t.recovery > 0 ? fmt(t.recovery) : "-",
+      fmt(t.computed_net_sale || 0),
+      fmt(t.sale_stock_amount || 0),
+      fmt(t.profit || 0),
     ]);
 
     if (grandTotals) {
@@ -174,13 +174,13 @@ export default function ShopSaleProfitReport() {
       rows.push([
         "Grand Total",
         fmt(grandTotals.purchase_amount),
-        fmt(grandTotals.sale_amount),
         fmt(grandTotals.net_sale),
         fmt(grandTotals.due_sale),
-        fmt(grandTotals.recovery),
-        fmt(grandTotals.profit),
         fmt(grandTotals.expense_amount || 0),
-        fmt(grandTotals.final_net_profit || 0),
+        fmt(grandTotals.recovery),
+        fmt(grandTotals.computed_net_sale || 0),
+        fmt(grandTotals.sale_stock_amount || 0),
+        fmt(grandTotals.profit || 0),
       ]);
     }
 
@@ -410,26 +410,26 @@ export default function ShopSaleProfitReport() {
                       <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-32">
                         Purchased Amount
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-32">
-                        Sale Amount
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
+                        Cash Received
                       </th>
                       <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
-                        Net Sale
-                      </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
-                        Due Sale
-                      </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
-                        Recovery
-                      </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-36">
-                        Profit / Loss
+                        Due/Udhaar
                       </th>
                       <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
                         Expense
                       </th>
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
+                        Recovery
+                      </th>
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-28">
+                        Net Sale
+                      </th>
+                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-32">
+                        Sale Stock Amt
+                      </th>
                       <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300 w-36">
-                        Final Net Profit
+                        Net Profit
                       </th>
                     </tr>
                   </thead>
@@ -448,26 +448,26 @@ export default function ShopSaleProfitReport() {
                             {item.purchase_amount > 0 ? fmt(item.purchase_amount) : "-"}
                           </td>
                           <td className="px-4 py-2 text-right border border-gray-300">
-                            {item.sale_amount > 0 ? fmt(item.sale_amount) : "-"}
-                          </td>
-                          <td className="px-4 py-2 text-right border border-gray-300">
                             {item.net_sale > 0 ? fmt(item.net_sale) : "-"}
                           </td>
                           <td className="px-4 py-2 text-right border border-gray-300">
                             {item.due_sale > 0 ? fmt(item.due_sale) : "-"}
                           </td>
-                          <td className="px-4 py-2 text-right text-blue-700 font-semibold border border-gray-300">
+                          <td className="px-4 py-2 text-right font-semibold border border-gray-300">
+                            {fmt(item.expense_amount || 0)}
+                          </td>
+                          <td className="px-4 py-2 text-right font-semibold border border-gray-300">
                             {item.recovery > 0 ? fmt(item.recovery) : "-"}
                           </td>
                           <td className="px-4 py-2 text-right font-semibold border border-gray-300">
-                            {fmt(item.profit)}
+                            {fmt(item.computed_net_sale || 0)}
                           </td>
-                          <td className="px-4 py-2 text-right font-semibold border border-gray-300 text-red-600">
-                            {fmt(item.expense_amount || 0)}
+                          <td className="px-4 py-2 text-right font-semibold border border-gray-300">
+                            {fmt(item.sale_stock_amount || 0)}
                           </td>
                           <td className="px-4 py-2 text-right font-bold border border-gray-300">
-                            <span className={(item.final_net_profit || 0) >= 0 ? "text-green-600" : "text-red-600"}>
-                              {fmt(item.final_net_profit || 0)}
+                            <span className={(item.profit || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                              {fmt(item.profit || 0)}
                             </span>
                           </td>
                         </tr>
@@ -483,26 +483,26 @@ export default function ShopSaleProfitReport() {
                           {fmt(grandTotals.purchase_amount)}
                         </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
-                          {fmt(grandTotals.sale_amount)}
-                        </td>
-                        <td className="px-4 py-3 text-right border border-gray-300">
                           {fmt(grandTotals.net_sale)}
                         </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
                           {fmt(grandTotals.due_sale)}
                         </td>
-                        <td className="px-4 py-3 text-right text-blue-700 border border-gray-300">
-                          {fmt(grandTotals.recovery)}
-                        </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
-                          {fmt(grandTotals.profit)}
-                        </td>
-                        <td className="px-4 py-3 text-right border border-gray-300 text-red-600">
                           {fmt(grandTotals.expense_amount || 0)}
                         </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
-                          <span className={(grandTotals.final_net_profit || 0) >= 0 ? "text-green-600" : "text-red-600"}>
-                            {fmt(grandTotals.final_net_profit || 0)}
+                          {fmt(grandTotals.recovery)}
+                        </td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
+                          {fmt(grandTotals.computed_net_sale || 0)}
+                        </td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
+                          {fmt(grandTotals.sale_stock_amount || 0)}
+                        </td>
+                        <td className="px-4 py-3 text-right border border-gray-300">
+                          <span className={(grandTotals.profit || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                            {fmt(grandTotals.profit || 0)}
                           </span>
                         </td>
                       </tr>
@@ -515,12 +515,12 @@ export default function ShopSaleProfitReport() {
                         <td colSpan="2" className="px-4 py-3 text-right text-lg border border-gray-300">
                           <span
                             className={
-                              (grandTotals.final_net_profit || 0) >= 0
+                              (grandTotals.profit || 0) >= 0
                                 ? "text-green-600"
                                 : "text-red-600"
                             }
                           >
-                            {fmt(grandTotals.final_net_profit || 0)}
+                            {fmt(grandTotals.profit || 0)}
                           </span>
                         </td>
                       </tr>

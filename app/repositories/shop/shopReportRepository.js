@@ -132,6 +132,17 @@ export default class ShopReportRepository {
       },
     });
 
+    // Optimize: fetch all shop expenses for the shop in range
+    const shopExpenses = await prisma.shop_expense.findMany({
+      where: {
+        status: 1,
+        shop_expense_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
     // Determine initial opening stock before the start date
     const initialOpeningStockEntry = await prisma.shop_closing_stock.findFirst({
       where: {
@@ -142,7 +153,7 @@ export default class ShopReportRepository {
         closing_date: "desc",
       },
     });
-    
+
     let rollingOpeningStock = initialOpeningStockEntry ? Number(initialOpeningStockEntry.closing_weight) : 0;
 
     for (const d of dates) {
@@ -150,7 +161,7 @@ export default class ShopReportRepository {
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(d);
       endOfDay.setHours(23, 59, 59, 999);
-      const dateStr = startOfDay.toISOString().split("T")[0];
+      const dateStr = `${startOfDay.getFullYear()}-${String(startOfDay.getMonth() + 1).padStart(2, "0")}-${String(startOfDay.getDate()).padStart(2, "0")}`;
 
       // 1. Opening Stock
       const openingStock = rollingOpeningStock;
@@ -184,13 +195,20 @@ export default class ShopReportRepository {
       });
 
       const saledStock = salesThatDay.reduce((sum, sale) => sum + Number(sale.qty || 0), 0);
-      
+
       const dateTotalAmount = salesThatDay.reduce((sum, sale) => sum + Number(sale.amount || 0), 0);
       const dateTotalReceived = salesThatDay.reduce((sum, sale) => sum + Number(sale.received_amount || 0), 0);
 
       // 6. Local sale info (rate and received amount for financial summary)
       const localSaleRate = purchasesThatDay.length > 0 ? Number(purchasesThatDay[0].purchaser_rate || 0) : 0;
       const localSaleNetReceived = purchasesThatDay.length > 0 ? Number(purchasesThatDay[0].received_amount || 0) : 0;
+
+      // 7. Shop expenses for the day
+      const expensesThatDay = shopExpenses.filter(ex => {
+        const exDateStr = `${ex.shop_expense_date.getFullYear()}-${String(ex.shop_expense_date.getMonth() + 1).padStart(2, "0")}-${String(ex.shop_expense_date.getDate()).padStart(2, "0")}`;
+        return exDateStr === dateStr;
+      });
+      const expense = expensesThatDay.reduce((sum, ex) => sum + Number(ex.amount || 0), 0);
 
       report.push({
         dateStr,
@@ -217,6 +235,7 @@ export default class ShopReportRepository {
         financialSummary: {
           localSaleRate,
           localSaleNetReceived,
+          expense,
         }
       });
     }
@@ -311,7 +330,7 @@ export default class ShopReportRepository {
 
     for (const t of transactions) {
       currentBalance = currentBalance + Number(t.amount || 0) - Number(t.received_amount || 0);
-      
+
       const d = new Date(t.sale_date);
       const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -372,6 +391,7 @@ export default class ShopReportRepository {
         local_sale_date: true,
         purchaser_amount: true,
         received_amount: true, // Net Sale: cash paid to us when stock was transferred to the shop
+        purchaser_rate: true,
       },
     });
 
@@ -389,6 +409,7 @@ export default class ShopReportRepository {
         sale_date: true,
         amount: true,
         received_amount: true,
+        qty: true,
       },
     });
 
@@ -408,10 +429,15 @@ export default class ShopReportRepository {
 
     const groupedData = new Map();
 
+    const dailyRates = new Map();
     localSales.forEach((ls) => {
+      const dateKey = ls.local_sale_date.toISOString().split('T')[0];
+      if (!dailyRates.has(dateKey)) {
+        dailyRates.set(dateKey, Number(ls.purchaser_rate || 0));
+      }
       const key = getGroupKey(ls.local_sale_date);
       if (!groupedData.has(key)) {
-        groupedData.set(key, { period: key, purchase_amount: 0, net_sale: 0, sale_amount: 0, recovery: 0, expense_amount: 0 });
+        groupedData.set(key, { period: key, purchase_amount: 0, net_sale: 0, sale_amount: 0, recovery: 0, expense_amount: 0, sale_stock_amount: 0 });
       }
       const group = groupedData.get(key);
       group.purchase_amount += Number(ls.purchaser_amount || 0);
@@ -419,29 +445,36 @@ export default class ShopReportRepository {
     });
 
     shopSales.forEach((ss) => {
+      const dateKey = ss.sale_date.toISOString().split('T')[0];
+      const dailyRate = dailyRates.get(dateKey) || 0;
+      const saleStockAmt = Number(ss.qty || 0) * dailyRate;
+
       const key = getGroupKey(ss.sale_date);
       if (!groupedData.has(key)) {
-        groupedData.set(key, { period: key, purchase_amount: 0, net_sale: 0, sale_amount: 0, recovery: 0, expense_amount: 0 });
+        groupedData.set(key, { period: key, purchase_amount: 0, net_sale: 0, sale_amount: 0, recovery: 0, expense_amount: 0, sale_stock_amount: 0 });
       }
       const group = groupedData.get(key);
       group.sale_amount += Number(ss.amount || 0);
       group.recovery += Number(ss.received_amount || 0);
+      group.sale_stock_amount += saleStockAmt;
     });
 
     expenses.forEach((ex) => {
       const key = getGroupKey(ex.shop_expense_date);
       if (!groupedData.has(key)) {
-        groupedData.set(key, { period: key, purchase_amount: 0, net_sale: 0, sale_amount: 0, recovery: 0, expense_amount: 0 });
+        groupedData.set(key, { period: key, purchase_amount: 0, net_sale: 0, sale_amount: 0, recovery: 0, expense_amount: 0, sale_stock_amount: 0 });
       }
       const group = groupedData.get(key);
       group.expense_amount += Number(ex.amount || 0);
     });
 
     const results = Array.from(groupedData.values()).map(row => {
-      const profit = row.sale_amount - row.purchase_amount;
+      const saleAmount = (row.net_sale + row.sale_amount + row.expense_amount) - row.recovery;
+      const profit = saleAmount - row.sale_stock_amount;
       return {
         ...row,
-        due_sale: row.sale_amount, // alias: total shop sale amount in this period
+        due_sale: row.sale_amount, // alias for total shop sale amount in this period for UI compatibility
+        computed_net_sale: saleAmount,
         profit: profit,
         final_net_profit: profit - row.expense_amount,
       };
@@ -456,8 +489,10 @@ export default class ShopReportRepository {
     const grandTotalDueSale = grandTotalSale;
     const grandTotalRecovery = results.reduce((sum, row) => sum + row.recovery, 0);
     const grandTotalExpense = results.reduce((sum, row) => sum + row.expense_amount, 0);
-    const netProfit = grandTotalSale - grandTotalPurchase;
-    const grandTotalFinalNetProfit = netProfit - grandTotalExpense;
+    const grandTotalSaleStockAmt = results.reduce((sum, row) => sum + row.sale_stock_amount, 0);
+    const grandTotalComputedNetSale = results.reduce((sum, row) => sum + row.computed_net_sale, 0);
+    const grandTotalProfit = results.reduce((sum, row) => sum + row.profit, 0);
+    const grandTotalFinalNetProfit = results.reduce((sum, row) => sum + row.final_net_profit, 0);
 
     return {
       results,
@@ -467,9 +502,11 @@ export default class ShopReportRepository {
         net_sale: grandTotalNetSale,
         due_sale: grandTotalDueSale,
         recovery: grandTotalRecovery,
-        profit: netProfit,
+        profit: grandTotalProfit,
         expense_amount: grandTotalExpense,
         final_net_profit: grandTotalFinalNetProfit,
+        sale_stock_amount: grandTotalSaleStockAmt,
+        computed_net_sale: grandTotalComputedNetSale,
       }
     };
   }

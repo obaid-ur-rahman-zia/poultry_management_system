@@ -22,7 +22,7 @@ const selectStyles = {
   }),
 };
 
-export default function BalanceSheetReport() {
+export default function BalanceSheetReport({ initialAccounts = null }) {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
@@ -39,23 +39,32 @@ export default function BalanceSheetReport() {
 
   useEffect(() => {
     if (session?.user?.role === "SUPER_ADMIN") {
-      fetch("/api/account/accounts/readAll?all=true")
-        .then((res) => res.json())
-        .then((result) => {
-          if (result.response_status === "success") {
-            const data = result.response_result?.data || result.response_result || [];
-            // Filter for cash accounts - strictly those falling under "Cash In Hand" subhead
-            const cashAccounts = Array.isArray(data) ? data.filter(a =>
-              a.subhead?.subhead_nam?.toLowerCase() === "cash in hand"
-            ) : [];
-            setAccounts(cashAccounts);
-            // Default to account id 2 if it exists
-            const defaultAcc = cashAccounts.find(a => a.acc_id === 2);
-            if (defaultAcc) setSelectedAccount(2);
-          }
-        });
+      if (initialAccounts !== null) {
+        // Use provided accounts
+        const cashAccounts = Array.isArray(initialAccounts) ? initialAccounts.filter(a =>
+          a.subhead?.subhead_nam?.toLowerCase() === "cash in hand"
+        ) : [];
+        setAccounts(cashAccounts);
+        const defaultAcc = cashAccounts.find(a => a.acc_id === 2);
+        if (defaultAcc) setSelectedAccount(2);
+      } else {
+        // Fallback to fetch
+        fetch("/api/account/accounts/readAll?all=true")
+          .then((res) => res.json())
+          .then((result) => {
+            if (result.response_status === "success") {
+              const data = result.response_result?.data || result.response_result || [];
+              const cashAccounts = Array.isArray(data) ? data.filter(a =>
+                a.subhead?.subhead_nam?.toLowerCase() === "cash in hand"
+              ) : [];
+              setAccounts(cashAccounts);
+              const defaultAcc = cashAccounts.find(a => a.acc_id === 2);
+              if (defaultAcc) setSelectedAccount(2);
+            }
+          });
+      }
     }
-  }, [session]);
+  }, [session, initialAccounts]);
 
   const fetchBalanceSheet = async () => {
     if (!startDate || !endDate) {

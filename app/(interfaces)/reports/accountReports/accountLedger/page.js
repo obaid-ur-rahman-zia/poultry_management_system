@@ -54,7 +54,7 @@ const selectStyles = {
   }),
 };
 
-export default function AccountLedgerModal() {
+export default function AccountLedgerModal({ initialAccounts = null, initialSubHeads = null }) {
   const { data: session } = useSession();
   const { control, setValue, watch } = useForm();
   const [isOpen, setIsOpen] = useState(false);
@@ -100,9 +100,13 @@ export default function AccountLedgerModal() {
   useEffect(() => {
     fetchAccounts();
     fetchSubHeads();
-  }, []);
+  }, [initialAccounts, initialSubHeads, session]);
 
   const fetchSubHeads = async () => {
+    if (initialSubHeads !== null) {
+      setAccountSubHeads(Array.isArray(initialSubHeads) ? initialSubHeads : []);
+      return;
+    }
     try {
       const response = await fetch("/api/account/accountSubHead/readAll");
       const result = await response.json();
@@ -117,6 +121,19 @@ export default function AccountLedgerModal() {
   };
 
   const fetchAccounts = async () => {
+    if (initialAccounts !== null) {
+      let accountsData = Array.isArray(initialAccounts) ? initialAccounts : [];
+      if (session?.user?.role === "USER") {
+        accountsData = accountsData.filter((a) =>
+          a.head?.head_nam?.toLowerCase().includes("local purchaser") ||
+          a.subhead?.subhead_nam?.toLowerCase().includes("local purchaser") ||
+          a.account_nam?.toLowerCase() === "bhagtanwala"
+        );
+      }
+      setAccounts(accountsData);
+      return;
+    }
+
     try {
       // Fetch all accounts without pagination using all=true parameter
       const response = await fetch("/api/account/accounts/readAll?all=true");

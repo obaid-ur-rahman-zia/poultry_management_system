@@ -130,6 +130,7 @@ class ShopExpenseController {
             const dateParam = searchParams.get("date") || "";
             const startDateParam = searchParams.get("start_dat") || "";
             const endDateParam = searchParams.get("end_dat") || "";
+            const shopAccId = searchParams.get("shop_acc_id") || null;
             
             const page = parseInt(searchParams.get("page") || "1");
             const limit = parseInt(searchParams.get("limit") || "20");
@@ -138,16 +139,16 @@ class ShopExpenseController {
             let data, total;
             if (getAll) {
                 if (startDateParam && endDateParam) {
-                    data = await ShopExpenseRepository.readAllByDateRange(startDateParam, endDateParam);
+                    data = await ShopExpenseRepository.readAllByDateRange(startDateParam, endDateParam, null, shopAccId);
                 } else if (dateParam) {
-                    data = await ShopExpenseRepository.readAllByDate(dateParam);
+                    data = await ShopExpenseRepository.readAllByDate(dateParam, null, shopAccId);
                 } else {
-                    data = await ShopExpenseRepository.readAll();
+                    data = await ShopExpenseRepository.readAll(null, shopAccId);
                 }
                 total = data.length;
                 return successResponse({ data }, "Success");
             } else {
-                const result = await ShopExpenseRepository.readAllWithPagination(skip, limit);
+                const result = await ShopExpenseRepository.readAllWithPagination(skip, limit, null, shopAccId);
                 data = result.data;
                 total = result.total;
             }
@@ -194,10 +195,10 @@ class ShopExpenseController {
     async create(req) {
         try {
             const { req_object } = await req.json();
-            const { shop_expense_date, shop_account_id, amount } = req_object;
+            const { shop_expense_date, shop_acc_id, shop_account_id, amount } = req_object;
 
-            if (!shop_expense_date || !shop_account_id || !amount) {
-                return errorResponse(new Error("shop_expense_date, shop_account_id, and amount are required"), 400);
+            if (!shop_expense_date || !shop_acc_id || !shop_account_id || !amount) {
+                return errorResponse(new Error("shop_expense_date, shop_acc_id, shop_account_id, and amount are required"), 400);
             }
 
             if (parseFloat(amount) <= 0) {

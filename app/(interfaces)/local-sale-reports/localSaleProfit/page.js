@@ -36,7 +36,7 @@ const selectStyles = {
   }),
 };
 
-export default function LocalSaleProfitModal() {
+export default function LocalSaleProfitModal({ initialAccounts = null }) {
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
@@ -57,34 +57,52 @@ export default function LocalSaleProfitModal() {
   const [isLoading, setIsLoading] = useState(false);
   const rowsPerPage = 15;
 
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const res = await fetch("/api/account/accounts/readAll?all=true");
-        if (res.ok) {
-          const result = await res.json();
-          let accountsData = [];
-          if (result.response_result) {
-            accountsData = result.response_result?.data || result.response_result;
-          } else if (result.data) {
-            accountsData = result.data;
-          }
-          if (!Array.isArray(accountsData)) accountsData = [];
-
-          setAccounts(
-            accountsData.filter(
-              (acc) =>
-                acc.account_nam?.toLowerCase() === "bhagtanwala" &&
-                acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
-            ),
-          );
+  const fetchAccounts = async () => {
+    if (initialAccounts !== null) {
+      let accountsData = Array.isArray(initialAccounts) ? initialAccounts : [];
+      setAccounts(
+        accountsData.filter(
+          (acc) =>
+            acc.account_nam?.toLowerCase() === "bhagtanwala" &&
+            acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
+        ),
+      );
+      return;
+    }
+    try {
+      const res = await fetch("/api/account/accounts/readAll?all=true");
+      if (res.ok) {
+        const result = await res.json();
+        let accountsData = [];
+        if (result.response_result) {
+          accountsData = result.response_result?.data || result.response_result;
+        } else if (result.data) {
+          accountsData = result.data;
         }
-      } catch (err) {
-        console.error("Error fetching accounts:", err);
+        if (!Array.isArray(accountsData)) accountsData = [];
+
+        setAccounts(
+          accountsData.filter(
+            (acc) =>
+              acc.account_nam?.toLowerCase() === "bhagtanwala" &&
+              acc.subhead?.subhead_nam?.toLowerCase() === "purchaser",
+          ),
+        );
       }
-    };
+    } catch (err) {
+      console.error("Error fetching accounts:", err);
+    }
+  };
+
+  useEffect(() => {
     fetchAccounts();
-  }, []);
+  }, [initialAccounts]);
+
+  useEffect(() => {
+    if (accounts.length > 0 && !localAccountId) {
+      setLocalAccountId(accounts[0].acc_id.toString());
+    }
+  }, [accounts, localAccountId]);
 
   const accountOptions = accounts.map((a) => ({
     value: a.acc_id,

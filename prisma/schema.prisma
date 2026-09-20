@@ -564,8 +564,8 @@ model accounts {
   rate_one          Float?
   rate_two          Float?
   rate_three        Float?
-  credit_limit      Float? @default(0)
-  shop_enable       Int    @default(0)
+  credit_limit      Float?  @default(0)
+  shop_enable       Int     @default(0)
 
   // Account type flags
   is_employee     Int @default(0)
@@ -629,8 +629,9 @@ model accounts {
   local_sale_purchaser  local_sale[]           @relation("LocalSalePurchaser")
   local_stock_lots      stock_lot[]            @relation("LocalStockLots")
   bhagtanwala_sources   bhagtanwala_source[]
-  shop_sales             shop_sale[]          @relation("ShopSaleAccount")
-  shop_closing_stocks    shop_closing_stock[] @relation("ShopClosingStock")
+  shop_sales            shop_sale[]            @relation("ShopSaleAccount")
+  shop_closing_stocks   shop_closing_stock[]   @relation("ShopClosingStock")
+  shopExpenses          shop_expense[]
 
   // Unique constraint to ensure account_id is unique within each sub_id
   @@unique([sub_id, account_id], name: "uq_sub_account")
@@ -1035,8 +1036,8 @@ model whole_sale {
   update_by       String   @default("user 1") @db.VarChar(50)
   status          Int      @default(1)
 
-  former_account_ref  accounts @relation("WholeSaleFormer", fields: [former_account], references: [acc_id])
-  purcher_account_ref accounts @relation("WholeSalePurcher", fields: [purcher_account], references: [acc_id])
+  former_account_ref  accounts            @relation("WholeSaleFormer", fields: [former_account], references: [acc_id])
+  purcher_account_ref accounts            @relation("WholeSalePurcher", fields: [purcher_account], references: [acc_id])
   stock_lot           stock_lot?
   bhagtanwala_source  bhagtanwala_source?
 
@@ -1062,26 +1063,26 @@ model local_sale {
   update_by         String   @default("user 1") @db.VarChar(50)
   status            Int      @default(1)
 
-  local_account_ref     accounts @relation("LocalSaleLocal", fields: [local_account], references: [acc_id])
-  purchaser_account_ref accounts @relation("LocalSalePurchaser", fields: [purchaser_account], references: [acc_id])
+  local_account_ref     accounts                      @relation("LocalSaleLocal", fields: [local_account], references: [acc_id])
+  purchaser_account_ref accounts                      @relation("LocalSalePurchaser", fields: [purchaser_account], references: [acc_id])
   stock_allocations     local_sale_stock_allocation[]
   source_snapshots      local_sale_source_snapshot[]
 }
 
 model stock_lot {
-  stock_lot_id       Int      @id @default(autoincrement())
-  local_account      Int
-  source_sale_id     Int?     @unique
-  original_weight    Float
-  remaining_weight   Float
-  rate               Float
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-  status             Int      @default(1)
+  stock_lot_id     Int      @id @default(autoincrement())
+  local_account    Int
+  source_sale_id   Int?     @unique
+  original_weight  Float
+  remaining_weight Float
+  rate             Float
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  status           Int      @default(1)
 
-  local_account_ref  accounts                      @relation("LocalStockLots", fields: [local_account], references: [acc_id])
-  source_sale         whole_sale?                  @relation(fields: [source_sale_id], references: [sale_id])
-  allocations         local_sale_stock_allocation[]
+  local_account_ref accounts                      @relation("LocalStockLots", fields: [local_account], references: [acc_id])
+  source_sale       whole_sale?                   @relation(fields: [source_sale_id], references: [sale_id])
+  allocations       local_sale_stock_allocation[]
 
   @@index([local_account, status, stock_lot_id])
 }
@@ -1097,8 +1098,8 @@ model bhagtanwala_source {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  account    accounts                    @relation(fields: [account_id], references: [acc_id])
-  whole_sale whole_sale                  @relation(fields: [source_sale_id], references: [sale_id])
+  account    accounts                     @relation(fields: [account_id], references: [acc_id])
+  whole_sale whole_sale                   @relation(fields: [source_sale_id], references: [sale_id])
   snapshots  local_sale_source_snapshot[]
 
   @@index([account_id, source_date, status])
@@ -1112,7 +1113,7 @@ model local_sale_source_snapshot {
   rate          Float
   created_at    DateTime @default(now())
 
-  local_sale local_sale       @relation(fields: [local_sale_id], references: [local_sale_id], onDelete: Cascade)
+  local_sale local_sale         @relation(fields: [local_sale_id], references: [local_sale_id], onDelete: Cascade)
   source     bhagtanwala_source @relation(fields: [source_id], references: [source_id])
 
   @@index([local_sale_id])
@@ -1120,12 +1121,12 @@ model local_sale_source_snapshot {
 }
 
 model local_sale_stock_allocation {
-  allocation_id  Int      @id @default(autoincrement())
-  local_sale_id  Int
-  stock_lot_id   Int
-  weight         Float
-  rate           Float
-  created_at     DateTime @default(now())
+  allocation_id Int      @id @default(autoincrement())
+  local_sale_id Int
+  stock_lot_id  Int
+  weight        Float
+  rate          Float
+  created_at    DateTime @default(now())
 
   local_sale local_sale @relation(fields: [local_sale_id], references: [local_sale_id], onDelete: Cascade)
   stock_lot  stock_lot  @relation(fields: [stock_lot_id], references: [stock_lot_id])
@@ -1198,26 +1199,26 @@ model shop_closing_stock {
 // ─── LOCAL SALE EXPENSE SYSTEM ───────────────────────────────────────────────
 
 model local_sale_expense_subhead {
-  ls_subhead_id  Int      @id @default(autoincrement())
-  subhead_nam    String   @db.VarChar(100)
-  insert_dat     DateTime @default(now()) @db.Timestamp(0)
-  update_dat     DateTime @default(now()) @db.Timestamp(0)
-  insert_by      String   @default("user 1") @db.VarChar(50)
-  update_by      String   @default("user 1") @db.VarChar(50)
-  status         Int      @default(1)
+  ls_subhead_id Int      @id @default(autoincrement())
+  subhead_nam   String   @db.VarChar(100)
+  insert_dat    DateTime @default(now()) @db.Timestamp(0)
+  update_dat    DateTime @default(now()) @db.Timestamp(0)
+  insert_by     String   @default("user 1") @db.VarChar(50)
+  update_by     String   @default("user 1") @db.VarChar(50)
+  status        Int      @default(1)
 
   accounts local_sale_expense_account[]
 }
 
 model local_sale_expense_account {
-  ls_account_id  Int      @id @default(autoincrement())
-  ls_subhead_id  Int
-  account_nam    String   @db.VarChar(100)
-  insert_dat     DateTime @default(now()) @db.Timestamp(0)
-  update_dat     DateTime @default(now()) @db.Timestamp(0)
-  insert_by      String   @default("user 1") @db.VarChar(50)
-  update_by      String   @default("user 1") @db.VarChar(50)
-  status         Int      @default(1)
+  ls_account_id Int      @id @default(autoincrement())
+  ls_subhead_id Int
+  account_nam   String   @db.VarChar(100)
+  insert_dat    DateTime @default(now()) @db.Timestamp(0)
+  update_dat    DateTime @default(now()) @db.Timestamp(0)
+  insert_by     String   @default("user 1") @db.VarChar(50)
+  update_by     String   @default("user 1") @db.VarChar(50)
+  status        Int      @default(1)
 
   subhead  local_sale_expense_subhead @relation(fields: [ls_subhead_id], references: [ls_subhead_id])
   expenses local_sale_expense[]
@@ -1276,6 +1277,7 @@ model shop_expense_account {
 model shop_expense {
   shop_expense_id   Int      @id @default(autoincrement())
   shop_expense_date DateTime
+  shop_acc_id       Int?
   shop_account_id   Int
   amount            Float
   description       String?  @db.VarChar(500)
@@ -1286,7 +1288,9 @@ model shop_expense {
   status            Int      @default(1)
 
   account shop_expense_account @relation(fields: [shop_account_id], references: [shop_account_id])
+  shop    accounts?            @relation(fields: [shop_acc_id], references: [acc_id])
 
   @@index([shop_account_id])
+  @@index([shop_acc_id])
   @@index([shop_expense_date])
 }

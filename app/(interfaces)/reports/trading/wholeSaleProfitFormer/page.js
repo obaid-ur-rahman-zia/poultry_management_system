@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export default function WholeSaleProfitFormer() {
+export default function WholeSaleProfitFormer({ initialAccounts = null, initialSubHeads = null }) {
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [groupBy, setGroupBy] = useState("date");
@@ -71,9 +71,13 @@ export default function WholeSaleProfitFormer() {
   useEffect(() => {
     fetchAllAccounts();
     fetchAccountSubHeads();
-  }, []);
+  }, [initialAccounts, initialSubHeads]);
 
   const fetchAllAccounts = async () => {
+    if (initialAccounts !== null) {
+      setAllAccounts(Array.isArray(initialAccounts) ? initialAccounts : []);
+      return;
+    }
     try {
       const res = await fetch("/api/account/accounts/readAll?all=true");
       const data = await res.json();
@@ -89,6 +93,10 @@ export default function WholeSaleProfitFormer() {
   };
 
   const fetchAccountSubHeads = async () => {
+    if (initialSubHeads !== null) {
+      setAccountSubHeads(Array.isArray(initialSubHeads) ? initialSubHeads : []);
+      return;
+    }
     try {
       const res = await fetch("/api/account/accountSubHead/readAll");
       const data = await res.json();
