@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import TrialBalanceReport from "./TrialBalanceReport";
 import SaleDetailReport from "./SaleDetailReport";
 import CustomerLedgerReport from "./CustomerLedgerReport";
@@ -8,6 +9,9 @@ import ShopProfitReport from "./shopSaleProfitReport"
 import ShopExpenseReport from "./shopExpenseReport"
 
 export default function ShopReportsTab() {
+  const { data: session } = useSession();
+  const isReportViewer = session?.user?.role === "REPORT_VIEWER";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 lg:gap-6 p-4">
       {/* Trial Balance Report Card & Modal */}
@@ -21,9 +25,11 @@ export default function ShopReportsTab() {
       </div>
 
       {/* Customer Ledger Report Card & Modal */}
-      <div className="h-full">
-        <CustomerLedgerReport />
-      </div>
+      {!isReportViewer && (
+        <div className="h-full">
+          <CustomerLedgerReport />
+        </div>
+      )}
 
       {/* Shop Sale Profit Report Card & Modal */}
       <div className="h-full">

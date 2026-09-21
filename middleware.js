@@ -46,13 +46,19 @@ export async function middleware(req) {
 
     // If user is authenticated and tries to access signin, redirect based on role
     if (token && pathname === "/auth/signin") {
-      const redirectPath = token.role === "USER" ? "/local-sale" : "/";
+      const redirectPath = token.role === "USER" ? "/local-sale" : 
+                           token.role === "REPORT_VIEWER" ? "/local-sale-reports" : "/";
       return NextResponse.redirect(new URL(redirectPath, req.url));
     }
 
     // If USER role tries to access the root dashboard, redirect to local-sale
     if (token && token.role === "USER" && pathname === "/") {
       return NextResponse.redirect(new URL("/local-sale", req.url));
+    }
+
+    // If REPORT_VIEWER tries to access the root dashboard, redirect to local-sale-reports
+    if (token && token.role === "REPORT_VIEWER" && pathname === "/") {
+      return NextResponse.redirect(new URL("/local-sale-reports", req.url));
     }
 
     // Always allow public routes to pass through
@@ -67,6 +73,18 @@ export async function middleware(req) {
       const signInUrl = new URL(`/auth/signin`, req.url);
       signInUrl.searchParams.set("callbackUrl", callbackUrl);
       return NextResponse.redirect(signInUrl);
+    }
+
+    // Hard-lock REPORT_VIEWER to only their allowed paths
+    if (token && token.role === "REPORT_VIEWER") {
+      const allowedPaths = [
+        "/local-sale-reports",
+        "/shop/reports"
+      ];
+      const isAllowed = allowedPaths.some(p => pathname === p || pathname.startsWith(p + "/"));
+      if (!isAllowed) {
+        return NextResponse.redirect(new URL(`/unauthorized`, req.url));
+      }
     }
 
     // If user has token, check authorization

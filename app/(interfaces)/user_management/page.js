@@ -60,6 +60,7 @@ const selectStyles = {
 const roleOptions = [
   { value: "ADMIN", label: "Admin" },
   { value: "USER", label: "User" },
+  { value: "REPORT_VIEWER", label: "Report Viewer" },
 ];
 
 export default function UserManagement() {

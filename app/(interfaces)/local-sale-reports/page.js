@@ -7,7 +7,12 @@ import BalanceSheetReport from "../reports/trading/balanceSheet/page"
 import LocalPurchaserTrialBalanceModal from "./localPurchaserTrialBalance/page"
 import LocalSaleExpenseReport from "./localSaleExpenseReport/page"
 
+import { useSession } from "next-auth/react";
+
 export default function ReportPage() {
+    const { data: session } = useSession();
+    const isReportViewer = session?.user?.role === "REPORT_VIEWER";
+
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -15,9 +20,9 @@ export default function ReportPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <LocalSaleReport />
                     <LocalSaleProfit />
-                    <AccountLedgerModal />
+                    {!isReportViewer && <AccountLedgerModal />}
                     <LocalPurchaserTrialBalanceModal />
-                    <BalanceSheetReport />
+                    {!isReportViewer && <BalanceSheetReport />}
                     <LocalSaleExpenseReport />
                 </div>
             </div>

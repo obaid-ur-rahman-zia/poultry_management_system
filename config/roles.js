@@ -21,5 +21,7 @@ export const roleBasedRoutes = {
     "/whole-sale": [Role.SUPER_ADMIN, Role.ADMIN],
     "/whole-sale-reports": [Role.SUPER_ADMIN, Role.ADMIN],
     "/pos": [Role.SUPER_ADMIN, Role.ADMIN],
+    "/local-sale-reports": [Role.SUPER_ADMIN, Role.ADMIN, Role.USER, Role.REPORT_VIEWER],
+    "/shop/reports": [Role.SUPER_ADMIN, Role.ADMIN, Role.USER, Role.REPORT_VIEWER],
 };
 
