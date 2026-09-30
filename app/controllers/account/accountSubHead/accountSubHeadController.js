@@ -140,6 +140,39 @@ class AccountSubHeadController {
         endDate,
       );
 
+      if (data && data.details) {
+        data.details.forEach((subhead) => {
+          if (subhead.accounts) {
+            subhead.accounts.sort((a, b) => {
+              const getOrder = (bal) => {
+                if (bal < 0) return 1; // Credit
+                if (bal > 0) return 2; // Debit
+                return 3;              // Zero
+              };
+              
+              const orderA = getOrder(a.balance);
+              const orderB = getOrder(b.balance);
+              
+              if (orderA !== orderB) {
+                return orderA - orderB;
+              }
+              
+              // Within Credit (negative balances), largest absolute value first (most negative)
+              if (orderA === 1) {
+                return a.balance - b.balance;
+              }
+              
+              // Within Debit (positive balances), largest absolute value first (most positive)
+              if (orderA === 2) {
+                return b.balance - a.balance;
+              }
+              
+              return 0;
+            });
+          }
+        });
+      }
+
       if (subheadNam && data) {
         const filteredDetails = data.details.filter(
           s => s.subhead_nam.trim().toUpperCase() === subheadNam.trim().toUpperCase()

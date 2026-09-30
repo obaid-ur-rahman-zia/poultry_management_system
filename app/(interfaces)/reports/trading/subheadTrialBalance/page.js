@@ -30,6 +30,50 @@ export default function SubheadTrialBalanceModal() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+  const [selectedSubhead, setSelectedSubhead] = useState("All");
+  const [subHeads, setSubHeads] = useState([]);
+
+  React.useEffect(() => {
+    const fetchSubHeads = async () => {
+      try {
+        const response = await fetch("/api/account/accountSubHead/readAll");
+        const data = await response.json();
+        if (data.response_status === "success") {
+          const fetchedSubHeads = data.response_result?.data || data.response_result || [];
+          setSubHeads(fetchedSubHeads);
+        }
+      } catch (error) {
+        console.error("Error fetching subheads:", error);
+      }
+    };
+    fetchSubHeads();
+  }, []);
+
+  const filteredReportData = useMemo(() => {
+    if (!reportData) return null;
+    if (selectedSubhead === "All") return reportData;
+
+    const filteredDetails = reportData.details.filter(
+      (s) => s.subhead_nam.trim().toUpperCase() === selectedSubhead.trim().toUpperCase()
+    );
+
+    let total_debit = 0;
+    let total_credit = 0;
+    filteredDetails.forEach((s) => {
+      total_debit += s.total_debit;
+      total_credit += s.total_credit;
+    });
+
+    return {
+      ...reportData,
+      details: filteredDetails,
+      conclusion: {
+        total_debit,
+        total_credit,
+        total_balance: total_debit - total_credit,
+      },
+    };
+  }, [reportData, selectedSubhead]);
 
   // 200vh roughly supports ~80-100 items of accounting data
   const itemsPerPage = 80;
@@ -46,6 +90,38 @@ export default function SubheadTrialBalanceModal() {
       const data = await response.json();
 
       if (data && data.response_result) {
+        if (data.response_result.details) {
+          data.response_result.details.forEach(subhead => {
+            if (subhead.accounts) {
+              subhead.accounts.sort((a, b) => {
+                const getOrder = (bal) => {
+                  if (bal < 0) return 1; // Credit
+                  if (bal > 0) return 2; // Debit
+                  return 3;              // Zero
+                };
+                
+                const orderA = getOrder(a.balance);
+                const orderB = getOrder(b.balance);
+                
+                if (orderA !== orderB) {
+                  return orderA - orderB;
+                }
+                
+                // Within Credit (negative balances), largest absolute value first (most negative)
+                if (orderA === 1) {
+                  return a.balance - b.balance;
+                }
+                
+                // Within Debit (positive balances), largest absolute value first (most positive)
+                if (orderA === 2) {
+                  return b.balance - a.balance;
+                }
+                
+                return 0;
+              });
+            }
+          });
+        }
         setReportData(data.response_result);
         setIsOpen(true);
         setCurrentPage(1);
@@ -61,7 +137,7 @@ export default function SubheadTrialBalanceModal() {
   };
 
   const handleExport = () => {
-    if (!reportData || !reportData.details) return;
+    if (!filteredReportData || !filteredReportData.details) return;
 
     const headers = [
       "Account Name",
@@ -74,7 +150,7 @@ export default function SubheadTrialBalanceModal() {
     rows.push([`Report Range: ${getDateRangeText()}`, "", "", "", ""]);
     rows.push(["", "", "", "", ""]);
 
-    reportData.details.forEach((subhead) => {
+    filteredReportData.details.forEach((subhead) => {
       if (subhead.accounts.length === 0) return;
       rows.push([`SUBHEAD: ${subhead.subhead_nam}`, "", "", "", ""]);
       subhead.accounts.forEach((acc) => {
@@ -99,9 +175,9 @@ export default function SubheadTrialBalanceModal() {
     rows.push([
       "GRAND TOTAL",
       "",
-      reportData.conclusion.total_debit !== 0 ? `${reportData.conclusion.total_debit.toFixed(2)} Dr` : "0.00",
-      reportData.conclusion.total_credit !== 0 ? `${reportData.conclusion.total_credit.toFixed(2)} Cr` : "0.00",
-      `${Math.abs(reportData.conclusion.total_balance).toFixed(2)} ${reportData.conclusion.total_balance >= 0 ? "Dr" : "Cr"}`,
+      filteredReportData.conclusion.total_debit !== 0 ? `${filteredReportData.conclusion.total_debit.toFixed(2)} Dr` : "0.00",
+      filteredReportData.conclusion.total_credit !== 0 ? `${filteredReportData.conclusion.total_credit.toFixed(2)} Cr` : "0.00",
+      `${Math.abs(filteredReportData.conclusion.total_balance).toFixed(2)} ${filteredReportData.conclusion.total_balance >= 0 ? "Dr" : "Cr"}`,
     ]);
     exportToCSV(
       `Subhead_Trial_Balance_${new Date().toISOString().split("T")[0]}.csv`,
@@ -132,10 +208,10 @@ export default function SubheadTrialBalanceModal() {
 
   // Flatten the nested data into a linear list of "Render Blocks" for height-based pagination
   const flatItems = useMemo(() => {
-    if (!reportData || !reportData.details) return [];
+    if (!filteredReportData || !filteredReportData.details) return [];
 
     const items = [];
-    reportData.details.forEach((subhead) => {
+    filteredReportData.details.forEach((subhead) => {
       if (subhead.accounts.length === 0) return;
 
       // Block type: HEADER
@@ -160,15 +236,15 @@ export default function SubheadTrialBalanceModal() {
       });
     });
 
-    if (reportData.wholeSaleProfit) {
-      items.push({ type: "WHOLE_SALE_PROFIT", ...reportData.wholeSaleProfit });
+    if (filteredReportData.wholeSaleProfit && selectedSubhead === "All") {
+      items.push({ type: "WHOLE_SALE_PROFIT", ...filteredReportData.wholeSaleProfit });
     }
 
     // Final block: CONCLUSION
-    items.push({ type: "CONCLUSION", ...reportData.conclusion });
+    items.push({ type: "CONCLUSION", ...filteredReportData.conclusion });
 
     return items.map((item, index) => ({ ...item, flatIndex: index }));
-  }, [reportData]);
+  }, [filteredReportData, selectedSubhead]);
 
   const totalPages = Math.ceil(flatItems.length / itemsPerPage) || 1;
   const currentItems = flatItems.slice(
@@ -218,6 +294,7 @@ export default function SubheadTrialBalanceModal() {
     try {
       const params = new URLSearchParams();
       if (endDate) params.append("endDate", endDate);
+      if (selectedSubhead !== "All") params.append("subheadNam", selectedSubhead);
 
       const response = await fetch(
         `/api/account/accountSubHead/read/downloadTrialBalance?${params.toString()}`,
@@ -304,6 +381,23 @@ export default function SubheadTrialBalanceModal() {
           <div className="space-y-3 mb-4">
             <div className="flex flex-col">
               <label className="text-xs font-semibold text-gray-700 mb-1">
+                Select Subhead
+              </label>
+              <select
+                value={selectedSubhead}
+                onChange={(e) => setSelectedSubhead(e.target.value)}
+                className="h-[40px] border-2 border-gray-200 rounded-lg px-3 text-sm focus:border-green-500 outline-none bg-white"
+              >
+                <option value="All">All Subheads</option>
+                {subHeads.map((s) => (
+                  <option key={s.sub_id} value={s.subhead_nam}>
+                    {s.subhead_nam}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-xs font-semibold text-gray-700 mb-1">
                 As of Date
               </label>
               <input
@@ -318,6 +412,7 @@ export default function SubheadTrialBalanceModal() {
             <button
               onClick={() => {
                 setEndDate("");
+                setSelectedSubhead("All");
               }}
               className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg font-medium hover:shadow-lg transition-all"
             >
