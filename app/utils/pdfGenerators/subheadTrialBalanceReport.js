@@ -85,9 +85,19 @@ function generateReportHTML(reportData, endDate) {
       </div>
     `;
   } else {
+    const regularSubheads = [];
+    const expenseSubheads = [];
+
     reportData.details.forEach((subhead) => {
       if (subhead.accounts.length === 0) return;
+      if (subhead.is_expense_head) {
+        expenseSubheads.push(subhead);
+      } else {
+        regularSubheads.push(subhead);
+      }
+    });
 
+    regularSubheads.forEach((subhead) => {
       let rowsHtml = "";
       subhead.accounts.forEach((acc) => {
         const limitExceeded = acc.credit_limit > 0 && acc.balance > acc.credit_limit;
@@ -151,6 +161,68 @@ function generateReportHTML(reportData, endDate) {
         </div>
       `;
     });
+
+    if (expenseSubheads.length > 0) {
+      let rowsHtml = "";
+      let totalExpenseDebit = 0;
+      let totalExpenseCredit = 0;
+
+      expenseSubheads.forEach((subhead) => {
+        const trStyle = "border-bottom: 1px solid #e5e7eb; page-break-inside: avoid;";
+        
+        rowsHtml += `
+          <tr style="${trStyle}">
+            <td style="padding: 6px; border: 1px solid #d1d5db; font-weight: 500; color: #111827;">${subhead.subhead_nam}</td>
+            <td style="padding: 6px; border: 1px solid #d1d5db; text-align: right;">-</td>
+            <td style="padding: 6px; border: 1px solid #d1d5db; text-align: right;">${formatCurrency(subhead.total_debit, 'debit')}</td>
+            <td style="padding: 6px; border: 1px solid #d1d5db; text-align: right;">${formatCurrency(subhead.total_credit, 'credit')}</td>
+            <td style="padding: 6px; border: 1px solid #d1d5db; text-align: right; font-weight: 600;">${formatCurrency(subhead.total_balance, 'balance')}</td>
+          </tr>
+        `;
+        totalExpenseDebit += subhead.total_debit;
+        totalExpenseCredit += subhead.total_credit;
+      });
+
+      const totalExpenseBalance = totalExpenseDebit - totalExpenseCredit;
+
+      contentHtml += `
+        <div style="margin-bottom: 25px;">
+          <div style="margin-bottom: 6px; display: flex; align-items: center; justify-content: flex-start; gap: 8px;">
+            <span style="font-size: 16px; font-weight: 800; color: #1f2937;">Expense Head</span>
+            <span style="font-size: 10px; border: 1px solid #e5e7eb; border-radius: 4px; padding: 2px 6px;">${expenseSubheads.length} Subheads</span>
+          </div>
+          
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <colgroup>
+              <col style="width: 40%;" />
+              <col style="width: 15%;" />
+              <col style="width: 15%;" />
+              <col style="width: 15%;" />
+              <col style="width: 15%;" />
+            </colgroup>
+            <thead>
+              <tr style="background-color: #f3f4f6;">
+                <th style="padding: 6px; border: 1px solid #9ca3af; text-align: left;">Account Name</th>
+                <th style="padding: 6px; border: 1px solid #9ca3af; text-align: right;">Contact</th>
+                <th style="padding: 6px; border: 1px solid #9ca3af; text-align: right;">Total Debit</th>
+                <th style="padding: 6px; border: 1px solid #9ca3af; text-align: right;">Total Credit</th>
+                <th style="padding: 6px; border: 1px solid #9ca3af; text-align: right;">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+          <div style="background-color: #f3f4f6; border: 2px solid #e5e7eb; padding: 8px; font-weight: bold; display: grid; grid-template-columns: 40% 15% 15% 15% 15%; font-size: 12px; margin-top: -1px;">
+            <div style="text-align: left;">Total</div>
+            <div></div>
+            <div style="text-align: right; color: #15803d;">${formatCurrency(totalExpenseDebit, 'debit')}</div>
+            <div style="text-align: right; color: #b91c1c;">${formatCurrency(totalExpenseCredit, 'credit')}</div>
+            <div style="text-align: right; color: #1d4ed8;">${formatCurrency(totalExpenseBalance, 'balance')}</div>
+          </div>
+        </div>
+      `;
+    }
 
     if (reportData.wholeSaleProfit) {
       contentHtml += `

@@ -4,6 +4,7 @@ export async function generateBalanceSheetAllReportPDF(
   rawTransactions,
   globalOpeningBalance,
   globalClosingBalance,
+  individualClosingBalances,
   startDate,
   endDate,
   cashAccIds
@@ -30,6 +31,7 @@ export async function generateBalanceSheetAllReportPDF(
       rawTransactions,
       globalOpeningBalance,
       globalClosingBalance,
+      individualClosingBalances,
       startDate,
       endDate,
       cashAccIds
@@ -95,15 +97,18 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccIds) 
       let selfPayTransactions = [];
       let localSales = [];
       let oppositeTransactions = [];
+      let expenseTransactions = [];
 
       dayTransactions.forEach((trans) => {
         if (trans.type === "self") {
           if (trans.transaction_type === "receive") selfReceiveTransactions.push(trans);
           else if (trans.transaction_type === "pay") selfPayTransactions.push(trans);
-        } else if (trans.type === "local_sale") {
+        } else if (trans.type === "local_sale" || trans.type === "local_sale_expense") {
           localSales.push(trans);
         } else if (trans.type === "opposite") {
           oppositeTransactions.push(trans);
+        } else if (trans.type === "expense") {
+          expenseTransactions.push(trans);
         }
       });
 
@@ -124,25 +129,44 @@ function processTransactions(rawTransactions, globalOpeningBalance, cashAccIds) 
 
       // 2. Local Sales (Consolidated)
       if (localSales.length > 0) {
-        const totalLocalSaleAmount = localSales.reduce(
-          (sum, ls) => sum + ls.received_amount,
-          0
-        );
-        currentBalance += totalLocalSaleAmount;
-        dayTotalReceived += totalLocalSaleAmount;
+        const totalLocalSaleReceived = localSales
+          .filter(ls => ls.type === 'local_sale')
+          .reduce((sum, ls) => sum + ls.received_amount, 0);
+          
+        const totalLocalSaleExpense = localSales
+          .filter(ls => ls.type === 'local_sale_expense')
+          .reduce((sum, ls) => sum + ls.amount, 0);
+          
+        const netLocalSaleAmount = totalLocalSaleReceived - totalLocalSaleExpense;
+        
+        if (netLocalSaleAmount > 0) {
+          currentBalance += netLocalSaleAmount;
+          dayTotalReceived += netLocalSaleAmount;
 
-        dayProcessedTransactions.push({
-          type: "local_sale_consolidated",
-          transaction_date: dateStr,
-          received_amount: totalLocalSaleAmount,
-          runningBalance: currentBalance,
-          description: `Local Sale`,
-          srNo: globalSrNo++,
-        });
+          dayProcessedTransactions.push({
+            type: "local_sale_consolidated",
+            transaction_date: dateStr,
+            received_amount: netLocalSaleAmount,
+            runningBalance: currentBalance,
+            description: `Local Sale Cash - Consolidated Net of Expenses (${totalLocalSaleReceived} received, ${totalLocalSaleExpense} expenses)`,
+            srNo: globalSrNo++,
+          });
+        }
       }
 
       // 3. Self Transactions (Pay)
       selfPayTransactions.forEach((trans) => {
+        currentBalance -= trans.amount;
+        dayTotalPaid += trans.amount;
+        dayProcessedTransactions.push({
+          ...trans,
+          srNo: globalSrNo++,
+          runningBalance: currentBalance,
+        });
+      });
+
+      // 3.5. Expense Transactions (Pay)
+      expenseTransactions.forEach((trans) => {
         currentBalance -= trans.amount;
         dayTotalPaid += trans.amount;
         dayProcessedTransactions.push({
@@ -192,6 +216,7 @@ function generateReportHTML(
   rawTransactions,
   globalOpeningBalance,
   globalClosingBalance,
+  individualClosingBalances,
   startDate,
   endDate,
   cashAccIds
@@ -236,6 +261,9 @@ function generateReportHTML(
         } else if (trans.type === "local_sale_consolidated") {
           colReceivedBy = "Local Sales";
           colReceivedAmount = trans.received_amount.toFixed(2);
+        } else if (trans.type === "expense") {
+          colPaidBy = trans.account?.account_nam || "-";
+          colPaidAmount = trans.amount.toFixed(2);
         }
 
         const balanceColor = trans.runningBalance < 0 ? "#dc2626" : "#16a34a";
@@ -294,6 +322,50 @@ function generateReportHTML(
         </div>
       `;
     });
+  }
+
+  // Render individual closing balances
+  if (individualClosingBalances && individualClosingBalances.length > 0) {
+    let accRowsHtml = "";
+    individualClosingBalances.forEach((acc, index) => {
+      const color = acc.closingBalance < 0 ? "#dc2626" : "#16a34a";
+      const bg = index % 2 === 0 ? "#ffffff" : "#f9fafb";
+      accRowsHtml += `
+        <tr style="background-color: ${bg}; border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 8px; border: 1px solid #d1d5db; font-weight: 500;">${acc.account_nam}</td>
+          <td style="padding: 8px; border: 1px solid #d1d5db; text-align: right; font-weight: bold; color: ${color};">
+            ${acc.closingBalance.toFixed(2)}
+          </td>
+        </tr>
+      `;
+    });
+
+    const globalColor = globalClosingBalance < 0 ? "#dc2626" : "#16a34a";
+
+    contentHtml += `
+      <div style="margin-top: 40px; page-break-inside: avoid;">
+        <div style="background-color: #f3f4f6; padding: 10px; border: 1px solid #9ca3af; border-bottom: none; font-weight: bold; font-size: 14px; text-align: center;">
+          Individual Cash Accounts Closing Balances
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <thead>
+            <tr style="background-color: #e5e7eb;">
+              <th style="padding: 8px; border: 1px solid #9ca3af; text-align: left;">Account Name</th>
+              <th style="padding: 8px; border: 1px solid #9ca3af; text-align: right;">Closing Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${accRowsHtml}
+            <tr style="background-color: #f3f4f6; font-weight: bold; border-top: 2px solid #9ca3af;">
+              <td style="padding: 10px; border: 1px solid #9ca3af; text-align: right;">Total Cash In Hand:</td>
+              <td style="padding: 10px; border: 1px solid #9ca3af; text-align: right; color: ${globalColor};">
+                ${globalClosingBalance.toFixed(2)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
   }
 
   return `

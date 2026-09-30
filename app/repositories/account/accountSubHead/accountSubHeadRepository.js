@@ -248,6 +248,7 @@ class AccountSubHeadRepository {
 
       return {
         subhead_nam: subhead.subhead_nam,
+        is_expense_head: isExpenseHeadSubhead,
         accounts: processedAccounts,
         total_debit: subheadDebit,
         total_credit: subheadCredit,

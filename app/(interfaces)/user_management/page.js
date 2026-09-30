@@ -227,7 +227,7 @@ export default function UserManagement() {
     reset({
       user_nam: user.user_nam || "",
       email: emailUsername,
-      password: "", // Don't pre-fill password
+      password: "", // Passwords are hashed, cannot be decrypted or displayed
       role: user.role || "USER",
       phone: user.phone || "",
       address: user.address || "",
@@ -762,11 +762,6 @@ export default function UserManagement() {
               <div className="space-y-2">
                 <Label htmlFor="password">
                   Password {!isEditMode && <span className="text-red-500">*</span>}
-                  {isEditMode && (
-                    <span className="text-gray-500 text-xs ml-2">
-                      (Leave empty to keep current)
-                    </span>
-                  )}
                 </Label>
                 <div className="relative">
                   <Input

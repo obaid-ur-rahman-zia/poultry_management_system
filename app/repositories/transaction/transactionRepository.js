@@ -294,6 +294,43 @@ class TransactionRepository {
     return totalDebit - totalCredit;
   }
 
+  async readAllCashIndividualClosingBalances(req_object) {
+    const { end_dat } = req_object;
+    
+    const cashAccounts = await prisma.accounts.findMany({
+      where: {
+        subhead: { subhead_nam: "Cash In Hand" },
+        status: 1,
+      },
+      select: { acc_id: true, account_nam: true },
+    });
+
+    const accIds = cashAccounts.map(a => a.acc_id);
+
+    const result = await prisma.transaction.groupBy({
+      by: ['acc_id'],
+      where: {
+        acc_id: { in: accIds },
+        transaction_dat: { lte: new Date(end_dat) },
+        isDeleted: false,
+      },
+      _sum: { debit: true, credit: true },
+    });
+
+    const resultMap = new Map(result.map(r => [r.acc_id, r]));
+
+    return cashAccounts.map(acc => {
+      const r = resultMap.get(acc.acc_id);
+      const totalDebit = r ? (Number(r._sum.debit) || 0) : 0;
+      const totalCredit = r ? (Number(r._sum.credit) || 0) : 0;
+      return {
+        acc_id: acc.acc_id,
+        account_nam: acc.account_nam,
+        closingBalance: totalDebit - totalCredit
+      };
+    }).sort((a, b) => a.account_nam.localeCompare(b.account_nam));
+  }
+
   async readLastTransaction(req_object) {
     const { acc_id } = req_object;
 

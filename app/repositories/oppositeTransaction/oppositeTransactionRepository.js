@@ -361,6 +361,17 @@ class OppositeTransactionRepository {
       orderBy: { ls_expense_date: "asc" },
     });
 
+    const expenseTransactions = await prisma.expense_transaction.findMany({
+      where: {
+        expense_t_date: { gte: startDate, lte: endDate },
+        status: 1,
+      },
+      include: {
+        account: { select: { account_nam: true } },
+      },
+      orderBy: { expense_t_date: "asc" },
+    });
+
     const combinedTransactions = [
       ...oppositeTransactions.map((t) => ({ ...t, type: "opposite" })),
       ...selfTransactions.map((t) => ({ ...t, type: "self" })),
@@ -373,6 +384,11 @@ class OppositeTransactionRepository {
         ...t,
         type: "local_sale_expense",
         transaction_date: t.ls_expense_date,
+      })),
+      ...expenseTransactions.map((t) => ({
+        ...t,
+        type: "expense",
+        transaction_date: t.expense_t_date,
       })),
     ].sort((a, b) => new Date(a.transaction_date) - new Date(b.transaction_date));
 

@@ -759,3 +759,33 @@ custom-exception:  [Failed to update account in Method: AccountsController.updat
 system-exception:  [PrismaClientKnownRequestError:  Invalid `prismaClient.accounts.update()` invocation in C:\Switch2iTech\Poultry Systems\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__6c4e241c._.js:1636:38    1633 }   1634 async update(acc_id, req_object, tx = null) {   1635     const prismaClient = tx || __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"]; → 1636     return prismaClient.accounts.update( Unique constraint failed on the fields: (`sub_id`,`account_id`)]
 
 
+exception-time:       [2026-09-30T20:22:21.758Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Poultry Systems\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__ede503ef._.js:83:148    80 ;   81 class AccountsRepository {   82     async readAll() { → 83         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-09-30T20:22:24.387Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in C:\Switch2iTech\Poultry Systems\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__94406669._.js:83:156    80 ;   81 class AccountSubHeadRepository {   82     async readAll() { → 83         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-09-30T20:22:24.757Z]  
+custom-exception:  [Failed to get balance sheet in Method: OppositeTransactionController.readAllCashBalanceSheet] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.aggregate()` invocation in C:\Switch2iTech\Poultry Systems\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__6950e7c0._.js:768:165    765 }   766 async readAllCashOpeningBalance(req_object) {   767     const { start_dat } = req_object; → 768     const result = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].transaction.aggregate( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-09-30T20:28:08.516Z]  
+custom-exception:  [Failed to get User receives in Method: UserController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany()` invocation in C:\Switch2iTech\Poultry Systems\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__5ac46fd5._.js:203:144    200     };   201     console.log("Excluding role:", excludeRole, "Where condition:", whereCondition); // Debug log   202 } → 203 return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].user.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-09-30T20:32:46.596Z]  
+custom-exception:  [Failed to get all account subheads in Method: AccountSubHeadController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany()` invocation in C:\Switch2iTech\Poultry Systems\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__94406669._.js:83:156    80 ;   81 class AccountSubHeadRepository {   82     async readAll() { → 83         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].account_sub_head.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+
+exception-time:       [2026-09-30T20:32:46.641Z]  
+custom-exception:  [Failed to get all accounts in Method: AccountsController.readAll] | 
+system-exception:  [PrismaClientKnownRequestError:  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany()` invocation in C:\Switch2iTech\Poultry Systems\Tanvir poultry\poultry_management_system\.next\server\chunks\[root-of-the-server]__ede503ef._.js:83:148    80 ;   81 class AccountsRepository {   82     async readAll() { → 83         return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].accounts.findMany( Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)]
+
+

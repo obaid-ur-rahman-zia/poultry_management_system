@@ -150,8 +150,19 @@ export default function SubheadTrialBalanceModal() {
     rows.push([`Report Range: ${getDateRangeText()}`, "", "", "", ""]);
     rows.push(["", "", "", "", ""]);
 
+    const regularSubheads = [];
+    const expenseSubheads = [];
+
     filteredReportData.details.forEach((subhead) => {
       if (subhead.accounts.length === 0) return;
+      if (subhead.is_expense_head) {
+        expenseSubheads.push(subhead);
+      } else {
+        regularSubheads.push(subhead);
+      }
+    });
+
+    regularSubheads.forEach((subhead) => {
       rows.push([`SUBHEAD: ${subhead.subhead_nam}`, "", "", "", ""]);
       subhead.accounts.forEach((acc) => {
         rows.push([
@@ -171,6 +182,34 @@ export default function SubheadTrialBalanceModal() {
       ]);
       rows.push(["", "", "", "", ""]);
     });
+
+    if (expenseSubheads.length > 0) {
+      rows.push([`SUBHEAD: Expense Head`, "", "", "", ""]);
+      let totalExpenseDebit = 0;
+      let totalExpenseCredit = 0;
+
+      expenseSubheads.forEach((subhead) => {
+        rows.push([
+          subhead.subhead_nam,
+          "-",
+          subhead.total_debit !== 0 ? `${subhead.total_debit.toFixed(2)} Dr` : "0.00",
+          subhead.total_credit !== 0 ? `${subhead.total_credit.toFixed(2)} Cr` : "0.00",
+          `${Math.abs(subhead.total_balance).toFixed(2)} ${subhead.total_balance >= 0 ? "Dr" : "Cr"}`,
+        ]);
+        totalExpenseDebit += subhead.total_debit;
+        totalExpenseCredit += subhead.total_credit;
+      });
+
+      const totalExpenseBalance = totalExpenseDebit - totalExpenseCredit;
+      rows.push([
+        `TOTAL Expense Head`,
+        "",
+        totalExpenseDebit !== 0 ? `${totalExpenseDebit.toFixed(2)} Dr` : "0.00",
+        totalExpenseCredit !== 0 ? `${totalExpenseCredit.toFixed(2)} Cr` : "0.00",
+        `${Math.abs(totalExpenseBalance).toFixed(2)} ${totalExpenseBalance >= 0 ? "Dr" : "Cr"}`,
+      ]);
+      rows.push(["", "", "", "", ""]);
+    }
 
     rows.push([
       "GRAND TOTAL",
@@ -211,9 +250,19 @@ export default function SubheadTrialBalanceModal() {
     if (!filteredReportData || !filteredReportData.details) return [];
 
     const items = [];
+    const regularSubheads = [];
+    const expenseSubheads = [];
+
     filteredReportData.details.forEach((subhead) => {
       if (subhead.accounts.length === 0) return;
+      if (subhead.is_expense_head) {
+        expenseSubheads.push(subhead);
+      } else {
+        regularSubheads.push(subhead);
+      }
+    });
 
+    regularSubheads.forEach((subhead) => {
       // Block type: HEADER
       items.push({
         type: "HEADER",
@@ -235,6 +284,43 @@ export default function SubheadTrialBalanceModal() {
         balance: subhead.total_balance,
       });
     });
+
+    if (expenseSubheads.length > 0) {
+      // Block type: HEADER
+      items.push({
+        type: "HEADER",
+        name: "Expense Head",
+        count: expenseSubheads.length,
+      });
+
+      let totalExpenseDebit = 0;
+      let totalExpenseCredit = 0;
+
+      expenseSubheads.forEach((subhead) => {
+        items.push({ 
+          type: "ROW", 
+          name: subhead.subhead_nam, 
+          contact: "-", 
+          total_debit: subhead.total_debit,
+          total_credit: subhead.total_credit,
+          balance: subhead.total_balance,
+          credit_limit: 0,
+          subhead_nam: "Expense Head" 
+        });
+
+        totalExpenseDebit += subhead.total_debit;
+        totalExpenseCredit += subhead.total_credit;
+      });
+
+      // Block type: TOTAL
+      items.push({
+        type: "SUBTOTAL",
+        name: "Expense Head",
+        debit: totalExpenseDebit,
+        credit: totalExpenseCredit,
+        balance: totalExpenseDebit - totalExpenseCredit,
+      });
+    }
 
     if (filteredReportData.wholeSaleProfit && selectedSubhead === "All") {
       items.push({ type: "WHOLE_SALE_PROFIT", ...filteredReportData.wholeSaleProfit });

@@ -30,6 +30,7 @@ export default function BalanceSheetAllReport() {
     const [rawTransactions, setRawTransactions] = useState([]);
     const [globalOpeningBalance, setGlobalOpeningBalance] = useState(0);
     const [globalClosingBalance, setGlobalClosingBalance] = useState(0);
+    const [individualClosingBalances, setIndividualClosingBalances] = useState([]);
     const [cashAccIds, setCashAccIds] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -50,6 +51,7 @@ export default function BalanceSheetAllReport() {
             if (data.response_result) {
                 setGlobalOpeningBalance(data.response_result.openingBalance || 0);
                 setGlobalClosingBalance(data.response_result.closingBalance || 0);
+                setIndividualClosingBalances(data.response_result.individualClosingBalances || []);
                 setRawTransactions(data.response_result.transactions || []);
                 setCashAccIds(data.response_result.cashAccIds || []);
                 setIsOpen(true);
@@ -69,7 +71,9 @@ export default function BalanceSheetAllReport() {
 
         const grouped = {};
         rawTransactions.forEach((trans) => {
-            const dateVal = trans.type === 'local_sale' ? trans.local_sale_date : trans.transaction_date;
+            let dateVal = trans.transaction_date;
+            if (trans.type === 'local_sale') dateVal = trans.local_sale_date;
+            if (trans.type === 'local_sale_expense') dateVal = trans.ls_expense_date;
             const dateStr = new Date(dateVal).toISOString().split("T")[0];
             if (!grouped[dateStr]) grouped[dateStr] = [];
             grouped[dateStr].push(trans);
@@ -89,6 +93,7 @@ export default function BalanceSheetAllReport() {
                 let selfPayTransactions = [];
                 let localSales = [];
                 let oppositeTransactions = [];
+                let expenseTransactions = [];
 
                 dayTransactions.forEach((trans) => {
                     if (trans.type === "self") {
@@ -96,8 +101,12 @@ export default function BalanceSheetAllReport() {
                         else if (trans.transaction_type === "pay") selfPayTransactions.push(trans);
                     } else if (trans.type === "local_sale") {
                         localSales.push(trans);
+                    } else if (trans.type === "local_sale_expense") {
+                        localSales.push(trans); // Push to localSales array to aggregate net cash
                     } else if (trans.type === "opposite") {
                         oppositeTransactions.push(trans);
+                    } else if (trans.type === "expense") {
+                        expenseTransactions.push(trans);
                     }
                 });
 
@@ -118,25 +127,44 @@ export default function BalanceSheetAllReport() {
 
                 // 2. Local Sales (Consolidated)
                 if (localSales.length > 0) {
-                    const totalLocalSaleAmount = localSales.reduce(
-                        (sum, ls) => sum + ls.received_amount,
-                        0
-                    );
-                    currentBalance += totalLocalSaleAmount;
-                    dayTotalReceived += totalLocalSaleAmount;
+                    const totalLocalSaleReceived = localSales
+                        .filter(ls => ls.type === 'local_sale')
+                        .reduce((sum, ls) => sum + ls.received_amount, 0);
+                        
+                    const totalLocalSaleExpense = localSales
+                        .filter(ls => ls.type === 'local_sale_expense')
+                        .reduce((sum, ls) => sum + ls.amount, 0);
+                        
+                    const netLocalSaleAmount = totalLocalSaleReceived - totalLocalSaleExpense;
+                    
+                    if (netLocalSaleAmount > 0) {
+                        currentBalance += netLocalSaleAmount;
+                        dayTotalReceived += netLocalSaleAmount;
 
-                    dayProcessedTransactions.push({
-                        type: "local_sale_consolidated",
-                        transaction_date: dateStr,
-                        received_amount: totalLocalSaleAmount,
-                        runningBalance: currentBalance,
-                        description: `Local Sale`,
-                        srNo: globalSrNo++,
-                    });
+                        dayProcessedTransactions.push({
+                            type: "local_sale_consolidated",
+                            transaction_date: dateStr,
+                            received_amount: netLocalSaleAmount,
+                            runningBalance: currentBalance,
+                            description: `Local Sale Cash - Consolidated Net of Expenses (${totalLocalSaleReceived} received, ${totalLocalSaleExpense} expenses)`,
+                            srNo: globalSrNo++,
+                        });
+                    }
                 }
 
                 // 3. Self Transactions (Pay)
                 selfPayTransactions.forEach((trans) => {
+                    currentBalance -= trans.amount;
+                    dayTotalPaid += trans.amount;
+                    dayProcessedTransactions.push({
+                        ...trans,
+                        srNo: globalSrNo++,
+                        runningBalance: currentBalance,
+                    });
+                });
+
+                // 3.5. Expense Transactions (Pay)
+                expenseTransactions.forEach((trans) => {
                     currentBalance -= trans.amount;
                     dayTotalPaid += trans.amount;
                     dayProcessedTransactions.push({
@@ -259,6 +287,9 @@ export default function BalanceSheetAllReport() {
                 } else if (trans.type === "local_sale_consolidated") {
                     colReceivedBy = "Local Sales";
                     colReceivedAmount = trans.received_amount.toFixed(2);
+                } else if (trans.type === "expense") {
+                    colPaidBy = trans.account?.account_nam || "-";
+                    colPaidAmount = trans.amount.toFixed(2);
                 }
 
                 rows.push([
@@ -279,6 +310,15 @@ export default function BalanceSheetAllReport() {
 
         // Overall Closing Balance
         rows.push(["", "", "", "", "", "Overall Closing Balance:", globalClosingBalance.toFixed(2)]);
+        rows.push(["", "", "", "", "", "", ""]);
+
+        // Individual Closing Balances
+        if (individualClosingBalances && individualClosingBalances.length > 0) {
+            rows.push(["", "Individual Cash Account Balances", "", "", "", "", ""]);
+            individualClosingBalances.forEach(acc => {
+                rows.push(["", acc.account_nam, "", "", "", "Closing Balance:", acc.closingBalance.toFixed(2)]);
+            });
+        }
 
         exportToCSV(`Balance_Sheet_${startDate}_to_${endDate}.csv`, headers, rows);
     };
@@ -508,6 +548,9 @@ export default function BalanceSheetAllReport() {
                                                         } else if (trans.type === "local_sale_consolidated") {
                                                             colReceivedBy = "Local Sales";
                                                             colReceivedAmount = trans.received_amount.toFixed(2);
+                                                        } else if (trans.type === "expense") {
+                                                            colPaidBy = trans.account?.account_nam || "-";
+                                                            colPaidAmount = trans.amount.toFixed(2);
                                                         }
 
                                                         return (
@@ -567,6 +610,43 @@ export default function BalanceSheetAllReport() {
                                             </table>
                                         </div>
                                     ))
+                                )}
+
+                                {/* Individual Cash Accounts Closing Balances (Only on last page) */}
+                                {currentPage === totalPages && individualClosingBalances && individualClosingBalances.length > 0 && (
+                                    <div className="mt-8 border border-gray-300 rounded-lg overflow-hidden">
+                                        <div className="bg-gray-100 px-4 py-3 border-b border-gray-300 font-bold text-gray-800 text-lg">
+                                            Individual Cash Accounts Closing Balances
+                                        </div>
+                                        <table className="w-full text-sm border-collapse">
+                                            <thead>
+                                                <tr className="bg-gray-50 border-b border-gray-300">
+                                                    <th className="px-4 py-2 text-left font-bold text-gray-700 w-1/2">Account Name</th>
+                                                    <th className="px-4 py-2 text-right font-bold text-gray-700 w-1/2">Closing Balance</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {individualClosingBalances.map((acc, idx) => (
+                                                    <tr key={acc.acc_id} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                                        <td className="px-4 py-2 font-medium text-gray-800">{acc.account_nam}</td>
+                                                        <td className="px-4 py-2 text-right font-bold">
+                                                            <span className={acc.closingBalance < 0 ? "text-red-600" : "text-green-600"}>
+                                                                {acc.closingBalance.toFixed(2)}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                <tr className="bg-gray-100 border-t-2 border-gray-300 font-bold">
+                                                    <td className="px-4 py-2 text-right text-gray-700">Total Cash In Hand:</td>
+                                                    <td className="px-4 py-2 text-right">
+                                                        <span className={globalClosingBalance < 0 ? "text-red-600" : "text-green-600"}>
+                                                            {globalClosingBalance.toFixed(2)}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 )}
                             </div>
                         </div>

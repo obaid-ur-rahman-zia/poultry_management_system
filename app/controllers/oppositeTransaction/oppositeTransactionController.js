@@ -603,6 +603,10 @@ class OppositeTransactionController {
         end_dat: end_date,
       });
 
+      const individualClosingBalances = await TransactionRepository.readAllCashIndividualClosingBalances({
+        end_dat: end_date,
+      });
+
       const { transactions, cashAccIds } = await OppositeTransactionRepository.readAllCashBalanceSheet(
         start_date,
         end_date
@@ -612,6 +616,7 @@ class OppositeTransactionController {
         {
           openingBalance,
           closingBalance,
+          individualClosingBalances,
           transactions,
           cashAccIds,
         },
@@ -647,6 +652,10 @@ class OppositeTransactionController {
         end_dat: end_date,
       });
 
+      const individualClosingBalances = await TransactionRepository.readAllCashIndividualClosingBalances({
+        end_dat: end_date,
+      });
+
       const { transactions, cashAccIds } = await OppositeTransactionRepository.readAllCashBalanceSheet(
         start_date,
         end_date
@@ -658,6 +667,7 @@ class OppositeTransactionController {
         transactions,
         openingBalance,
         closingBalance,
+        individualClosingBalances,
         start_date,
         end_date,
         cashAccIds
