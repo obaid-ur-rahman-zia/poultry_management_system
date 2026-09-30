@@ -566,6 +566,8 @@ model accounts {
   rate_two          Float?
   rate_three        Float?
   credit_limit      Float?  @default(0)
+  opening_balance   Float?  @default(0)
+  account_opening_date DateTime?
   shop_enable       Int     @default(0)
 
   // Account type flags

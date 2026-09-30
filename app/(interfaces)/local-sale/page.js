@@ -64,7 +64,7 @@ export default function LocalSalePageWrapper() {
   const [activeTab, setActiveTab] = useState("local-sale");
 
   return (
-    <div className=" sm:p-4 md:p-6">
+    <div className="">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex justify-center h-auto w-full bg-transparent shadow-none ">
           {/* Flip Toggle Switch Container */}

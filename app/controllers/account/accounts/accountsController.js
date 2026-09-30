@@ -334,6 +334,8 @@ class AccountsController {
             account_alter_nam: req_object.account_alter_nam,
             account_no: req_object.account_no,
             credit_limit: req_object.credit_limit,
+            opening_balance: req_object.opening_balance,
+            account_opening_date: req_object.account_opening_date,
             shop_enable: req_object.shop_enable,
             is_supplier,
             is_customer,
