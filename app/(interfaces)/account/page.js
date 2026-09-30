@@ -137,7 +137,9 @@ export default function AccountPage() {
   const fetchAllAccounts = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/account/accounts/readAll?all=true");
+      const response = await fetch("/api/account/accounts/readAll?all=true", {
+        cache: "no-store",
+      });
       const result = await response.json();
 
       if (result.success || result.response_status === "success") {
@@ -163,7 +165,9 @@ export default function AccountPage() {
 
   const fetchAccountHeads = async () => {
     try {
-      const response = await fetch("/api/account/accountHead/readAll");
+      const response = await fetch("/api/account/accountHead/readAll", {
+        cache: "no-store",
+      });
       const result = await response.json();
 
       if (result.response_status === "success") {
@@ -182,7 +186,9 @@ export default function AccountPage() {
 
   const fetchSubHeads = async () => {
     try {
-      const response = await fetch("/api/account/accountSubHead/readAll");
+      const response = await fetch("/api/account/accountSubHead/readAll", {
+        cache: "no-store",
+      });
       const result = await response.json();
 
       if (result.response_status === "success") {
@@ -332,6 +338,7 @@ export default function AccountPage() {
         account_no: accountNo,
         shop_enable: !!data.shop_enable,
         ...(finalBalance !== null && { opening_balance: finalBalance }),
+        balance_type: data.balance_type,
         ...(data.credit_limit && { credit_limit: Number(data.credit_limit) }),
         insert_by: "user",
         update_by: "user",
