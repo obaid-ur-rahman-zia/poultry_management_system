@@ -241,65 +241,6 @@ const Sidebar = ({
 
   return (
     <TooltipProvider>
-      {/* Mobile Sidebar as Sheet */}
-      <div className="lg:hidden">
-        <Sheet open={isOpen} onOpenChange={toggleSidebar}>
-          <SheetContent side="left" className="w-80 p-0">
-            <SheetHeader className="px-4 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg flex items-center justify-center">
-                  <Image
-                    src={"/favicon.ico"}
-                    height={200}
-                    width={200}
-                    className=""
-                    alt="Logo"
-                  />
-                </div>
-                <SheetTitle className="text-base font-bold">
-                  Switch2itech
-                </SheetTitle>
-              </div>
-            </SheetHeader>
-            <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-              {filteredNavigationItems.map((item) => {
-                if (item.type === "single") {
-                  return (
-                    <SidebarLink key={item.id} item={item} isExpanded={true} />
-                  );
-                }
-
-                if (item.type === "group") {
-                  const sectionExpanded = expandedSections[item.id];
-                  return (
-                    <div key={item.id} className="space-y-1">
-                      <GroupHeader
-                        item={item}
-                        sectionKey={item.id}
-                        isExpanded={true}
-                      />
-                      {sectionExpanded && (
-                        <div className="ml-4 space-y-1 border-l-2 border-border pl-2">
-                          {item.children.map((child) => (
-                            <SidebarLink
-                              key={child.id}
-                              item={child}
-                              isExpanded={true}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
-                return null;
-              })}
-            </nav>
-          </SheetContent>
-        </Sheet>
-      </div>
-
       {/* Desktop Sidebar */}
       <aside
         onMouseEnter={handleMouseEnter}
@@ -478,14 +419,6 @@ const LayoutSidebar = ({ children }) => {
   return (
     <SidebarContext.Provider value={{ isPinned, isExpanded }}>
       <div className="h-screen w-full overflow-hidden relative flex bg-white">
-        {/* Mobile Menu Button */}
-        <button
-          onClick={toggleSidebar}
-          className="lg:hidden fixed top-4 left-4 z-50 h-10 w-10 flex items-center justify-center bg-card rounded-lg shadow-lg border border-border hover:bg-accent transition-colors"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-
         {/* Sidebar - Desktop as aside, Mobile as Sheet */}
         <Sidebar
           isOpen={sidebarOpen}

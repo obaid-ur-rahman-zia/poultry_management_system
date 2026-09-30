@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Trash2, ArrowUp, Calendar as CalendarIcon, Edit2 } from "lucide-react";
+import { Search, Trash2, ArrowUp, Calendar as CalendarIcon, Edit2, Store, ReceiptText } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -64,11 +64,26 @@ export default function LocalSalePageWrapper() {
   const [activeTab, setActiveTab] = useState("local-sale");
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-4">
+    <div className=" sm:p-4 md:p-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="local-sale">Local Sale</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
+        <TabsList className="flex justify-center h-auto w-full bg-transparent shadow-none ">
+          {/* Flip Toggle Switch Container */}
+          <div className="relative bg-slate-200/80 dark:bg-slate-900 p-1.5 rounded-full flex shadow-[inset_0px_2px_5px_rgba(0,0,0,0.1)] border border-slate-300/50 dark:border-slate-800 w-full sm:w-[500px]">
+            <TabsTrigger
+              value="local-sale"
+              className="flex-1 relative z-10 flex items-center justify-center gap-2 rounded-full py-3 text-sm sm:text-base font-bold transition-all duration-300 data-[state=active]:!bg-blue-600 data-[state=active]:!text-white data-[state=active]:shadow-[0px_4px_12px_rgba(37,99,235,0.4)] data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-500 hover:data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-400"
+            >
+              <Store className="size-4 shrink-0" />
+              Local Sale
+            </TabsTrigger>
+            <TabsTrigger
+              value="expenses"
+              className="flex-1 relative z-10 flex items-center justify-center gap-2 rounded-full py-3 text-sm sm:text-base font-bold transition-all duration-300 data-[state=active]:!bg-blue-600 data-[state=active]:!text-white data-[state=active]:shadow-[0px_4px_12px_rgba(37,99,235,0.4)] data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-500 hover:data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-400"
+            >
+              <ReceiptText className="size-4 shrink-0" />
+              Expenses
+            </TabsTrigger>
+          </div>
         </TabsList>
 
         <TabsContent value="local-sale" forceMount className="space-y-4 data-[state=inactive]:hidden">
@@ -90,7 +105,7 @@ function LocalSaleTab() {
 
   const { accounts: rawAccounts } = useAccounts();
   const allAccounts = React.useMemo(() => rawAccounts || [], [rawAccounts]);
-  
+
   const localAccounts = React.useMemo(() => {
     return allAccounts.filter(
       (a) =>

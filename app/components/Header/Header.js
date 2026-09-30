@@ -55,31 +55,36 @@ import { useRouter } from "next/navigation";
 
 // Quick access buttons - matching the Quick Links style from quick-access page
 const quickAccessLinks = [
-  { href: "/", name: "Dashboard", icon: Home, color: "bg-blue-500" },
+  { href: "/", name: "Dashboard", icon: Home, color: "bg-blue-500", roles: ["SUPER_ADMIN", "ADMIN"] },
   // { href: "/account", name: "Accounts", icon: Users, color: "bg-green-500" },
   {
     href: "/sale",
     name: "Whole Sale",
     icon: ShoppingCart,
     color: "bg-purple-500",
+    roles: ["SUPER_ADMIN", "ADMIN"],
   },
   {
     href: "/transactions",
     name: "Recovery",
     icon: Activity,
     color: "bg-teal-500",
+    roles: ["SUPER_ADMIN", "ADMIN", "USER"],
   },
-  
+
   {
     href: "/expense-head",
     name: "Expenses",
     icon: DollarSign,
     color: "bg-teal-500",
+    roles: ["SUPER_ADMIN", "ADMIN", "USER"],
   },
-  { href: "/local-sale", name: "Local Sale", icon: ShoppingCart, color: "bg-pink-500" },
-  { href: "/shop", name: "Shop", icon: Store, color: "bg-emerald-500" },
-  { href: "/reports", name: "Reports", icon: FileText, color: "bg-orange-500" },
-  
+  { href: "/local-sale", name: "Local Sale", icon: ShoppingCart, color: "bg-pink-500", roles: ["SUPER_ADMIN", "ADMIN", "USER"] },
+  { href: "/local-sale-reports", name: "LS Reports", icon: FileText, color: "bg-pink-600", roles: ["SUPER_ADMIN", "ADMIN", "USER", "REPORT_VIEWER"] },
+  { href: "/shop", name: "Shop", icon: Store, color: "bg-emerald-500", roles: ["SUPER_ADMIN", "ADMIN", "USER"] },
+  { href: "/shop/reports", name: "Shop Report", icon: FileText, color: "bg-emerald-600", roles: ["SUPER_ADMIN", "ADMIN", "USER", "REPORT_VIEWER"] },
+  { href: "/reports", name: "Reports", icon: FileText, color: "bg-orange-500", roles: ["SUPER_ADMIN", "ADMIN"] },
+
 ];
 
 const Header = () => {
@@ -109,83 +114,53 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-20 w-full bg-card border-b border-muted">
-      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+      <div className="container flex h-auto min-h-16 py-2 items-center justify-between px-4 md:px-6">
         {/* Left Section - Quick Access Buttons */}
-        <div className="flex items-center gap-2 md:gap-3">
-          {/* Mobile Menu */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64">
-              <SheetHeader>
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-2">
-                    <div className="relative w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
-                      <Image
-                        src={SITE.LOGO}
-                        alt="Logo"
-                        width={20}
-                        height={20}
-                        className="object-contain"
-                      />
-                    </div>
-                    <span className="font-bold text-base bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                      {SITE.COMPANY.NAME}
-                    </span>
-                  </div>
-                </div>
-              </SheetHeader>
-              <SheetFooter>
-                <TooltipProvider></TooltipProvider>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
+        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
 
-          {/* Quick Access Buttons - Desktop */}
+          {/* Quick Access Buttons */}
           <TooltipProvider>
-            <div className="hidden md:flex items-center gap-1.5">
-              {(user?.role === "SUPER_ADMIN" || user?.role === "ADMIN") &&
-                quickAccessLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Tooltip key={link.href}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "flex flex-col items-center gap-1 h-auto py-1 px-3 hover:shadow-md transition-all hover:bg-slate-700 hover:text-white hover:border-slate-700 group",
-                        )}
-                        onClick={() => router.push(link.href)}
-                      >
-                        <div
+            <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {quickAccessLinks
+                .filter((link) => link.roles.includes(user?.role))
+                .map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <Tooltip key={link.href}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
                           className={cn(
-                            "w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm",
-                            link.color,
+                            "flex flex-col items-center gap-1 h-auto py-1 px-3 hover:shadow-md transition-all hover:bg-slate-700 hover:text-white hover:border-slate-700 group shrink-0",
                           )}
+                          onClick={() => router.push(link.href)}
                         >
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <span className="text-[10px] leading-tight font-medium">
-                          {link.name}
-                        </span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{link.name}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
+                          <div
+                            className={cn(
+                              "w-18 h-15 rounded-lg flex items-center justify-center text-white shadow-sm",
+                              link.color,
+                            )}
+                          >
+                            <Icon className="size-[35px]" />
+                          </div>
+                          <span className="text-[10px] leading-tight font-medium">
+                            {link.name}
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{link.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
             </div>
           </TooltipProvider>
         </div>
 
         {/* Right Section - Theme Toggle & Profile */}
         <TooltipProvider>
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
             {/* Theme Toggle */}
 
             {/* User Profile */}
