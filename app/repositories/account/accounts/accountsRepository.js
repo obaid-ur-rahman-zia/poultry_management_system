@@ -114,6 +114,7 @@ class AccountsRepository {
           account_no: data.account_no || null,
           credit_limit: data.credit_limit !== undefined ? Number(data.credit_limit) : 0,
           opening_balance: data.opening_balance !== undefined ? Number(data.opening_balance) : 0,
+          balance_type: data.balance_type || "credit",
           account_opening_date: data.account_opening_date ? new Date(data.account_opening_date) : null,
           shop_enable: data.shop_enable !== undefined ? Number(data.shop_enable) : 0,
           is_supplier: data.is_supplier !== undefined ? data.is_supplier : 0,
@@ -178,6 +179,10 @@ class AccountsRepository {
         opening_balance:
           req_object.opening_balance !== undefined
             ? Number(req_object.opening_balance)
+            : undefined,
+        balance_type:
+          req_object.balance_type !== undefined
+            ? req_object.balance_type
             : undefined,
         account_opening_date:
           req_object.account_opening_date !== undefined

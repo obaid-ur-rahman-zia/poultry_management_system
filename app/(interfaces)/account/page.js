@@ -312,13 +312,8 @@ export default function AccountPage() {
       return;
     }
 
-    // Calculate opening balance (negative for debit)
-    let finalBalance = null;
-    const openingBalanceValue = parseFloat(data.opening_balance) || 0;
-    finalBalance =
-      data.balance_type === "credit"
-        ? -Math.abs(openingBalanceValue)
-        : Math.abs(openingBalanceValue);
+    // Send opening balance as absolute value, rely on balance_type
+    const finalBalance = Math.abs(parseFloat(data.opening_balance) || 0);
 
     // Combine bank account numbers
     const bankAccounts = (data.bank_account_numbers || [])
@@ -444,10 +439,9 @@ export default function AccountPage() {
     // Ensure at least one empty bank account field
     const bankAccountNumbers = bankAccounts.length > 0 ? bankAccounts : [""];
 
-    // Determine balance type from opening balance
-    const openingBalance = account.opening_balance || 0;
-    const balanceType = openingBalance < 0 ? "debit" : "credit";
-    const balanceValue = Math.abs(openingBalance);
+    // Determine balance type from saved database field (default to credit)
+    const balanceType = account.balance_type || "credit";
+    const balanceValue = Math.abs(account.opening_balance || 0);
 
     // Set account opening date or use current date
     const openingDate = account.account_opening_date
