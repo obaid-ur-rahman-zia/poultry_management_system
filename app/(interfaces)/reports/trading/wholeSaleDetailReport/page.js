@@ -402,7 +402,7 @@ export default function WholeSaleReport() {
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl h-[100vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b bg-gray-50 gap-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -487,7 +487,7 @@ export default function WholeSaleReport() {
                   No records found for this period
                 </div>
               ) : (
-                <table className="w-full border-collapse text-xs border border-gray-400">
+                <table className="w-full border-collapse text-medium font-bold border border-gray-400">
                   {/* Column Headers */}
                   <thead className="bg-gray-100 sticky top-0 z-10">
                     <tr>
@@ -557,7 +557,7 @@ export default function WholeSaleReport() {
                           <tr
                             key={`item-${item.flatIndex}`}
                             id={`item-${item.flatIndex}`}
-                            className={`transition-colors ${isMatch ? "bg-yellow-200" : "hover:bg-gray-100"} text-sm`}
+                            className={`transition-colors ${isMatch ? "bg-yellow-200" : "hover:bg-gray-100"} text-medium`}
                           >
                             <td className="px-1 py-1 border border-black text-center">
                               {item.rowIndex}

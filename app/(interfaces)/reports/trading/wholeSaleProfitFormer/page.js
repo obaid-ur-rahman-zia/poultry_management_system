@@ -245,9 +245,9 @@ export default function WholeSaleProfitFormer() {
 
             {/* Group By */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Group By</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Group By</label>
               <select value={groupBy} onChange={(e) => { setGroupBy(e.target.value); setStartDate(""); setEndDate(""); }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all">
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-medium  focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all">
                 <option value="date">Date</option>
                 <option value="month">Month</option>
                 <option value="year">Year</option>
@@ -281,7 +281,7 @@ export default function WholeSaleProfitFormer() {
       {/* Report Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl h-[100vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-end p-1 border-b">
               <div className="flex gap-1">
@@ -314,7 +314,7 @@ export default function WholeSaleProfitFormer() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm border border-gray-300">
+                <table className="w-full border-collapse text-medium font-bold border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
                       <th className="px-4 py-2 text-center font-bold text-gray-700 border border-gray-300">{getPeriodHeader()}</th>
@@ -328,7 +328,7 @@ export default function WholeSaleProfitFormer() {
                   <tbody>
                     {currentRows.map((row, index) => (
                       <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="px-4 py-2 font-medium border border-gray-300">{formatPeriod(row.period, groupBy)}</td>
+                        <td className="px-4 py-2  border border-gray-300">{formatPeriod(row.period, groupBy)}</td>
                         <td className="px-4 py-2 text-right border border-gray-300">{(row.weight || 0).toFixed(2)}</td>
                         <td className="px-4 py-2 text-right border border-gray-300">{row.purchase_amount.toFixed(2)}</td>
                         <td className="px-4 py-2 text-right border border-gray-300">{row.sale_amount.toFixed(2)}</td>
@@ -351,7 +351,7 @@ export default function WholeSaleProfitFormer() {
                       <tr className="bg-gray-100 border-t border-gray-300 font-bold">
                         <td colSpan="4" className="px-4 py-3 text-right border border-gray-300">Net Profit:</td>
                         <td className="px-4 py-3 text-right text-lg border border-gray-300">
-                          <span className={netProfit >= 0 ? "text-green-600" : "text-red-600"}>{netProfit.toFixed(2)}</span>
+                          <span>{netProfit.toFixed(2)}</span>
                         </td>
                         <td className="px-4 py-3 border border-gray-300"></td>
                       </tr>

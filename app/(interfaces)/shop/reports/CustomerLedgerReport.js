@@ -199,7 +199,7 @@ export default function CustomerLedgerReport() {
               <select
                 value={selectedCustomer}
                 onChange={(e) => setSelectedCustomer(e.target.value)}
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                className="w-full px-2 py-2 border border-gray-300 rounded-lg text-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
               >
                 {customers.map((c) => (
                   <option key={c.customer_id} value={c.customer_id}>
@@ -260,7 +260,7 @@ export default function CustomerLedgerReport() {
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[95vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[100vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b bg-gray-50 gap-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -339,7 +339,7 @@ export default function CustomerLedgerReport() {
                   No data available.
                 </div>
               ) : (
-                <table className="w-full border-collapse bg-white text-sm shadow-sm rounded-lg overflow-hidden">
+                <table className="w-full border-collapse bg-white text-medium font-bold shadow-sm rounded-lg overflow-hidden">
                   <thead className=" sticky top-0 z-10 shadow">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold border-r border-blue-500 w-32">
@@ -351,13 +351,13 @@ export default function CustomerLedgerReport() {
                       <th className="px-3 py-2 text-right font-semibold border-r border-blue-500 w-24">
                         Rate
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold border-r border-blue-500 w-32">
+                      <th className="px-3 py-2 text-right  border-r border-blue-500 w-32">
                         Amount (Debit)
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold border-r border-blue-500 w-32">
+                      <th className="px-3 py-2 text-right border-r border-blue-500 w-32">
                         Received (Credit)
                       </th>
-                      <th className="px-3 py-2 text-right font-semibold w-32">
+                      <th className="px-3 py-2 text-right w-32">
                         Balance
                       </th>
                     </tr>
@@ -403,10 +403,10 @@ export default function CustomerLedgerReport() {
                             <td className="px-3 py-2 border-r border-gray-200 text-right ">
                               {item.rate > 0 ? fmt(item.rate) : "-"}
                             </td>
-                            <td className="px-3 py-2 text-right border-r border-gray-200  font-medium">
+                            <td className="px-3 py-2 text-right border-r border-gray-200 ">
                               {item.amount > 0 ? fmt(item.amount) : "-"}
                             </td>
-                            <td className="px-3 py-2 text-right border-r border-gray-200  font-medium">
+                            <td className="px-3 py-2 text-right border-r border-gray-200 ">
                               {item.received_amount > 0 ? fmt(item.received_amount) : "-"}
                             </td>
                             <td className="px-3 py-2 text-right font-semibold text-gray-900">

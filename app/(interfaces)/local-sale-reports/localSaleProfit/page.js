@@ -43,7 +43,7 @@ export default function LocalSaleProfitModal() {
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [groupBy, setGroupBy] = useState("date");
   const [localAccountId, setLocalAccountId] = useState("");
-  
+
   const { accounts: allAccounts } = useAccounts();
   const accounts = React.useMemo(() => {
     return (allAccounts || []).filter(
@@ -54,7 +54,7 @@ export default function LocalSaleProfitModal() {
   }, [allAccounts]);
 
   const [reportData, setReportData] = useState([]);
-  
+
   const [grandTotalPurchase, setGrandTotalPurchase] = useState(0);
   const [grandTotalSale, setGrandTotalSale] = useState(0);
   const [grandTotalReceived, setGrandTotalReceived] = useState(0);
@@ -62,7 +62,7 @@ export default function LocalSaleProfitModal() {
   const [netProfit, setNetProfit] = useState(0);
   const [grandTotalExpense, setGrandTotalExpense] = useState(0);
   const [grandTotalFinalNetProfit, setGrandTotalFinalNetProfit] = useState(0);
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const rowsPerPage = 15;
@@ -78,7 +78,7 @@ export default function LocalSaleProfitModal() {
     value: a.acc_id,
     label: a.account_nam,
   }));
-  
+
   const selectedAccountName = accounts.find((a) => a.acc_id === (localAccountId ? parseInt(localAccountId) : null))?.account_nam || "Unknown Account";
 
   // Format period display based on group type
@@ -355,7 +355,7 @@ export default function LocalSaleProfitModal() {
 
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[100vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-2 border-b border-gray-300">
               <div>
                 <h1 className="text-xl font-bold">Local Sale Profit Report</h1>
@@ -385,35 +385,35 @@ export default function LocalSaleProfitModal() {
             </div>
 
             <div className="flex-1 overflow-auto p-4">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm border border-gray-300">
+              <div className="overflow-x-auto font-bold text-medium">
+                <table className="w-full border-collapse border border-gray-300 ">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-4 py-2 text-left font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-left  text-gray-700 border border-gray-300">
                         {getPeriodHeader()}
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-right text-gray-700 border border-gray-300">
                         Purchase Amount
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-right text-gray-700 border border-gray-300">
                         Sale Amount
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-right text-gray-700 border border-gray-300">
                         Received
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-right text-gray-700 border border-gray-300">
                         Weight Loss
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-right text-gray-700 border border-gray-300">
                         Profit
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-right text-gray-700 border border-gray-300">
                         Loss
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-right text-gray-700 border border-gray-300">
                         Expense
                       </th>
-                      <th className="px-4 py-2 text-right font-bold text-gray-700 border border-gray-300">
+                      <th className="px-4 py-2 text-right text-gray-700 border border-gray-300">
                         Final Net Profit
                       </th>
                     </tr>
@@ -433,7 +433,7 @@ export default function LocalSaleProfitModal() {
                         <td className="px-4 py-2 text-right border border-gray-300">
                           {row.sale_amount.toFixed(2)}
                         </td>
-                        <td className="px-4 py-2 text-right text-blue-700 font-semibold border border-gray-300">
+                        <td className="px-4 py-2 text-right  font-semibold border border-gray-300">
                           {(row.received_amount || 0).toFixed(2)}
                         </td>
                         <td className="px-4 py-2 text-right font-semibold border border-gray-300">
@@ -447,11 +447,11 @@ export default function LocalSaleProfitModal() {
                             ? Math.abs(row.profit_loss).toFixed(2)
                             : 0}
                         </td>
-                        <td className="px-4 py-2 text-right font-semibold border border-gray-300 text-red-600">
+                        <td className="px-4 py-2 text-right font-semibold border border-gray-300">
                           {(row.expense_amount || 0).toFixed(2)}
                         </td>
                         <td className="px-4 py-2 text-right font-bold border border-gray-300">
-                          <span className={row.final_net_profit >= 0 ? "text-green-600" : "text-red-600"}>
+                          <span>
                             {(row.final_net_profit || 0).toFixed(2)}
                           </span>
                         </td>
@@ -467,7 +467,7 @@ export default function LocalSaleProfitModal() {
                         <td className="px-4 py-3 text-right border border-gray-300">
                           {grandTotalSale.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-right text-blue-700 border border-gray-300">
+                        <td className="px-4 py-3 text-right  border border-gray-300">
                           {grandTotalReceived.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
@@ -479,11 +479,11 @@ export default function LocalSaleProfitModal() {
                         <td className="px-4 py-3 text-right border border-gray-300">
                           {netProfit < 0 ? Math.abs(netProfit).toFixed(2) : 0}
                         </td>
-                        <td className="px-4 py-3 text-right border border-gray-300 text-red-600">
+                        <td className="px-4 py-3 text-right border border-gray-300">
                           {grandTotalExpense.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
-                          <span className={grandTotalFinalNetProfit >= 0 ? "text-green-600" : "text-red-600"}>
+                          <span >
                             {grandTotalFinalNetProfit.toFixed(2)}
                           </span>
                         </td>
@@ -496,11 +496,7 @@ export default function LocalSaleProfitModal() {
                           Final Net Profit:
                         </td>
                         <td colSpan="2" className="px-4 py-3 text-right text-lg border border-gray-300">
-                          <span
-                            className={
-                              grandTotalFinalNetProfit >= 0 ? "text-green-600" : "text-red-600"
-                            }
-                          >
+                          <span>
                             {grandTotalFinalNetProfit.toFixed(2)}
                           </span>
                         </td>

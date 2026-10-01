@@ -49,13 +49,13 @@ export default function LocalPurchaserTrialBalanceModal() {
         const localPurchaserSubheads = data.response_result.details.filter(
           s => s.subhead_nam.trim().toUpperCase() === "LOCAL PURCHASER"
         );
-        
+
         let total_debit = 0, total_credit = 0;
         localPurchaserSubheads.forEach(s => {
           total_debit += s.total_debit;
           total_credit += s.total_credit;
         });
-        
+
         setReportData({
           details: localPurchaserSubheads,
           conclusion: {
@@ -459,7 +459,7 @@ export default function LocalPurchaserTrialBalanceModal() {
                   if (chunk.type === "TABLE") {
                     return (
                       <div key={idx} className="overflow-x-auto">
-                        <table className="w-full border-collapse text-sm mb-2 border border-gray-300">
+                        <table className="w-full border-collapse text-medium font-bold mb-2 border border-gray-300">
                           <colgroup>
                             <col className="w-[40%]" />
                             <col className="w-[15%]" />
@@ -500,7 +500,7 @@ export default function LocalPurchaserTrialBalanceModal() {
                                   id={`item-${row.flatIndex}`}
                                   className={`border-b border-gray-200 ${isMatch ? "bg-yellow-200 hover:bg-yellow-300" : limitExceeded ? "bg-red-50 hover:bg-red-100" : "hover:bg-gray-50"}`}
                                 >
-                                  <td className={`px-3 py-2 font-medium border border-gray-300 ${limitExceeded ? "text-red-700" : "text-gray-900"}`}>
+                                  <td className={`px-3 py-2  border border-gray-300 ${limitExceeded ? "text-red-700" : "text-gray-900"}`}>
                                     {row.name}
                                     {limitExceeded && (
                                       <span className="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded-sm border border-red-200" title={`Credit Limit: ${formatCurrency(row.credit_limit, 'credit')}`}>
@@ -533,19 +533,19 @@ export default function LocalPurchaserTrialBalanceModal() {
                     return (
                       <div
                         key={idx}
-                        className="bg-gray-100 border-2 border-gray-200 p-2 mb-4 font-bold grid grid-cols-[40%_15%_15%_15%_15%] text-sm"
+                        className="bg-gray-100 border-2 border-gray-200 p-2 mb-4 font-bold grid grid-cols-[40%_15%_15%_15%_15%] text-medium"
                       >
                         <div className="text-left whitespace-nowrap">
                           Total
                         </div>
                         <div />
-                        <div className="text-right text-green-700">
+                        <div className="text-right ">
                           {formatCurrency(chunk.debit, 'debit')}
                         </div>
-                        <div className="text-right text-red-700">
+                        <div className="text-right ">
                           {formatCurrency(chunk.credit, 'credit')}
                         </div>
-                        <div className="text-right text-blue-700">
+                        <div className="text-right ">
                           {formatCurrency(chunk.balance, 'balance')}
                         </div>
                       </div>
@@ -561,7 +561,7 @@ export default function LocalPurchaserTrialBalanceModal() {
                         <h2 className="text-xl font-bold mb-2 text-gray-800 uppercase">
                           Whole Sale Profit
                         </h2>
-                        <table className="w-full border-collapse text-sm border border-gray-300">
+                        <table className="w-full border-collapse text-medium border border-gray-300">
                           <thead>
                             <tr className="bg-gray-200 border-b-2 border-gray-400">
                               <th className="px-3 py-2 text-left font-bold text-gray-800 border border-gray-300">
@@ -577,7 +577,7 @@ export default function LocalPurchaserTrialBalanceModal() {
                               <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
                                 Balance of Income Acc under Income (Credit)
                               </td>
-                              <td className="px-3 py-2 text-right font-bold text-green-700 border border-gray-300">
+                              <td className="px-3 py-2 text-right font-bold  border border-gray-300">
                                 {formatCurrency(chunk.income_acc_credit, 'credit')}
                               </td>
                             </tr>
@@ -612,19 +612,19 @@ export default function LocalPurchaserTrialBalanceModal() {
                         <h2 className="text-xl font-bold mb-2 text-gray-800 uppercase">
                           Grand Conclusion
                         </h2>
-                        <table className="w-full border-collapse text-sm border border-gray-300">
+                        <table className="w-full border-collapse text-medium border border-gray-300">
                           <thead>
                             <tr className="bg-gray-200 border-b-2 border-gray-400">
                               <th className="px-3 py-2 text-left font-bold text-gray-800 border border-gray-300">
                                 Description
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-green-800 border border-gray-300">
+                              <th className="px-3 py-2 text-right font-bold  border border-gray-300">
                                 Total Debit
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-red-800 border border-gray-300">
+                              <th className="px-3 py-2 text-right font-bold  border border-gray-300">
                                 Total Credit
                               </th>
-                              <th className="px-3 py-2 text-right font-bold text-blue-800 border border-gray-300">
+                              <th className="px-3 py-2 text-right font-bold  border border-gray-300">
                                 Total Balance
                               </th>
                             </tr>
@@ -634,13 +634,13 @@ export default function LocalPurchaserTrialBalanceModal() {
                               <td className="px-3 py-3 font-bold text-gray-900 border border-gray-300">
                                 Final Aggregates
                               </td>
-                              <td className="px-3 py-3 text-right font-bold text-green-700 text-lg border border-gray-300">
+                              <td className="px-3 py-3 text-right font-bold  text-lg border border-gray-300">
                                 {formatCurrency(chunk.total_debit, 'debit')}
                               </td>
-                              <td className="px-3 py-3 text-right font-bold text-red-700 text-lg border border-gray-300">
+                              <td className="px-3 py-3 text-right font-bold  text-lg border border-gray-300">
                                 {formatCurrency(chunk.total_credit, 'credit')}
                               </td>
-                              <td className="px-3 py-3 text-right font-bold text-blue-700 text-lg border border-gray-300">
+                              <td className="px-3 py-3 text-right font-bold  text-lg border border-gray-300">
                                 {formatCurrency(chunk.total_balance, 'balance')}
                               </td>
                             </tr>

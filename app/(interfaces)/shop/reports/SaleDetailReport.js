@@ -552,7 +552,7 @@ export default function SaleDetailReport() {
                   No records found for this period
                 </div>
               ) : (
-                <table className="w-full border-collapse text-sm border border-gray-400">
+                <table className="w-full border-collapse text-medium font-bold border border-gray-400">
                   <tbody>
                     {currentItems.map((item) => {
                       const isMatch =
@@ -635,7 +635,7 @@ export default function SaleDetailReport() {
                                 </div>
                               </td>
                             </tr>
-                            <tr className="sticky top-0 z-10 border-b-2 border-black shadow-sm">
+                            <tr className=" z-10 border-b-2 border-black shadow-sm">
                               <th className="px-2 py-2 text-left font-semibold border-r border-black w-16">
                                 Sr
                               </th>

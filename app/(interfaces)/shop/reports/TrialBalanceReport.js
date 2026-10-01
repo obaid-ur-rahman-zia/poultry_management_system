@@ -115,7 +115,7 @@ export default function TrialBalanceReport() {
   return (
     <div>
       {/* Trigger Card */}
-      <div className="group relative bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
+      <div className="group relative bg-white rounded-xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
         <div className="relative p-6">
@@ -221,7 +221,7 @@ export default function TrialBalanceReport() {
                 </div>
               ) : (
                 <div className="border border-gray-400">
-                  <table className="w-full border-collapse text-sm">
+                  <table className="w-full border-collapse text-medium font-bold">
                     <thead className="bg-gray-100 sticky top-0 z-10 border-b-2 border-gray-400">
                       <tr>
                         <th className="px-3 py-2 text-left font-semibold text-gray-800 border-r border-gray-300 w-16">
@@ -239,7 +239,7 @@ export default function TrialBalanceReport() {
                         <th className="px-3 py-2 text-right font-semibold text-gray-800 border-r border-gray-300 w-32">
                           Total Received
                         </th>
-                        <th className="px-3 py-2 text-right font-semibold text-gray-800 w-32">
+                        <th className="px-3 py-2  font-semibold text-gray-800 w-32">
                           Balance
                         </th>
                       </tr>
@@ -253,7 +253,7 @@ export default function TrialBalanceReport() {
                           <td className="px-3 py-2 border-r border-gray-200 text-center">
                             {idx + 1}
                           </td>
-                          <td className="px-3 py-2 border-r border-gray-200 font-medium text-gray-900">
+                          <td className="px-3 py-2 border-r border-gray-200  text-gray-900">
                             {item.customer_nam}
                           </td>
                           <td className="px-3 py-2 text-right border-r border-gray-200 text-gray-700">
@@ -262,17 +262,10 @@ export default function TrialBalanceReport() {
                           <td className="px-3 py-2 text-right border-r border-gray-200 text-gray-700">
                             {fmt(item.total_amount)}
                           </td>
-                          <td className="px-3 py-2 text-right border-r border-gray-200 text-green-700">
+                          <td className="px-3 py-2 text-right border-r border-gray-200 ">
                             {fmt(item.total_received)}
                           </td>
-                          <td
-                            className={`px-3 py-2 text-right font-semibold ${
-                              item.balance > 0
-                                ? "text-red-600"
-                                : item.balance < 0
-                                ? "text-green-600"
-                                : "text-gray-700"
-                            }`}
+                          <td className="text-center"
                           >
                             {fmt(item.balance)}
                           </td>
@@ -296,14 +289,7 @@ export default function TrialBalanceReport() {
                         <td className="px-3 py-3 text-right border-r border-gray-600">
                           {fmt(grandReceived)}
                         </td>
-                        <td
-                          className={`px-3 py-3 text-right ${
-                            grandBalance > 0
-                              ? "text-red-400"
-                              : grandBalance < 0
-                              ? "text-green-400"
-                              : ""
-                          }`}
+                        <td className="text-center"
                         >
                           {fmt(grandBalance)}
                         </td>

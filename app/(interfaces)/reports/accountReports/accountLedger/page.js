@@ -66,9 +66,9 @@ export default function AccountLedgerModal() {
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const selectedAccount = watch("selectedAccount");
-  
+
   const { accounts: allAccounts } = useAccounts();
-  
+
   // Apply filtering logic based on session
   const accounts = React.useMemo(() => {
     let accountsData = allAccounts || [];
@@ -109,14 +109,6 @@ export default function AccountLedgerModal() {
       return true;
     }
     return false;
-  };
-
-  // Format account code as 01-003-00002
-  const formatAccountCode = (head_id, sub_id, account_id) => {
-    const headPart = String(head_id).padStart(2, "0");
-    const subPart = String(sub_id).padStart(3, "0");
-    const accountPart = String(account_id).padStart(5, "0");
-    return `${headPart}-${subPart}-${accountPart}`;
   };
 
   const fetchLedger = async () => {
@@ -366,7 +358,7 @@ export default function AccountLedgerModal() {
       {/* Modal */}
       {isOpen && selectedAccountData && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center print:bg-white print:relative print:p-0">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[100vh] overflow-hidden flex flex-col print:max-h-none print:shadow-none">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] overflow-hidden flex flex-col print:max-h-none print:shadow-none">
             {/* Header */}
             <div className="flex items-center justify-end p-1 border-b print:hidden">
               <div className="flex gap-1">
@@ -443,7 +435,7 @@ export default function AccountLedgerModal() {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm border border-gray-300">
+                <table className="w-full border-collapse text-medium font-bold border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
                       <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
@@ -479,11 +471,7 @@ export default function AccountLedgerModal() {
                       <td className="px-3 py-2 text-right border border-gray-300"></td>
                       <td className="px-3 py-2  border border-gray-300">
                         <span
-                          className={
-                            openingBalance < 0
-                              ? "text-red-600"
-                              : "text-green-600"
-                          }
+
                         >
                           {Math.abs(openingBalance).toFixed(2)} {openingBalance >= 0 ? "Dr" : "Cr"}
                         </span>
@@ -519,13 +507,9 @@ export default function AccountLedgerModal() {
                           <td className="px-3 py-2  border border-gray-300">
                             {trans.credit ? `${trans.credit.toFixed(2)} Cr` : "-"}
                           </td>
-                          <td className="px-3 py-2  font-medium border border-gray-300">
+                          <td className="px-3 py-2  border border-gray-300">
                             <span
-                              className={
-                                runningBalance < 0
-                                  ? "text-red-600"
-                                  : "text-green-600"
-                              }
+
                             >
                               {Math.abs(runningBalance).toFixed(2)} {runningBalance >= 0 ? "Dr" : "Cr"}
                             </span>
@@ -555,12 +539,6 @@ export default function AccountLedgerModal() {
                         </td>
                         <td className="px-3 py-2  border border-gray-300">
                           <span
-                            className={
-                              calculateRunningBalance(transactions.length - 1) <
-                                0
-                                ? "text-red-600"
-                                : "text-green-600"
-                            }
                           >
                             {Math.abs(calculateRunningBalance(transactions.length - 1)).toFixed(2)} {calculateRunningBalance(transactions.length - 1) >= 0 ? "Dr" : "Cr"}
                           </span>

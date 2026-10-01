@@ -134,7 +134,7 @@ export default function ShopExpenseReport() {
 
             {isOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] overflow-hidden flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b border-gray-300">
                             <div>
                                 <h1 className="text-xl font-bold">Shop Expenses Report</h1>
@@ -165,7 +165,7 @@ export default function ShopExpenseReport() {
                                     {dateSections.map((day) => (
                                         <section key={day.date} className="mb-8">
                                             <h2 className="mb-2 text-lg font-bold">Date: {day.date}</h2>
-                                            <table className="w-full border-collapse text-sm border border-gray-400">
+                                            <table className="w-full border-collapse text-medium font-bold border border-gray-400">
                                                 <thead className="bg-gray-100">
                                                     <tr>
                                                         <th className="px-3 py-2 text-left border border-gray-400">Expense Head</th>

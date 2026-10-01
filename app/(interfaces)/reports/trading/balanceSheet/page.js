@@ -101,7 +101,7 @@ export default function BalanceSheetReport() {
       let dateVal = trans.transaction_date;
       if (trans.type === 'local_sale') dateVal = trans.local_sale_date;
       if (trans.type === 'local_sale_expense') dateVal = trans.ls_expense_date;
-      
+
       const dateStr = new Date(dateVal).toISOString().split("T")[0];
       if (!grouped[dateStr]) grouped[dateStr] = [];
       grouped[dateStr].push(trans);
@@ -158,17 +158,17 @@ export default function BalanceSheetReport() {
           const totalLocalSaleReceived = localSales
             .filter(ls => ls.type === 'local_sale')
             .reduce((sum, ls) => sum + ls.received_amount, 0);
-            
+
           const totalLocalSaleExpense = localSales
             .filter(ls => ls.type === 'local_sale_expense')
             .reduce((sum, ls) => sum + ls.amount, 0);
-            
+
           const netLocalSaleAmount = totalLocalSaleReceived - totalLocalSaleExpense;
-          
+
           if (netLocalSaleAmount > 0) {
             currentBalance += netLocalSaleAmount;
             dayTotalReceived += netLocalSaleAmount;
-  
+
             dayProcessedTransactions.push({
               type: "local_sale_consolidated",
               transaction_date: dateStr,
@@ -523,19 +523,13 @@ export default function BalanceSheetReport() {
                         </span>
                         <span className="font-bold text-gray-800 text-base">
                           Opening Balance:{" "}
-                          <span
-                            className={
-                              day.openingBalance < 0
-                                ? "text-red-600"
-                                : "text-green-600"
-                            }
-                          >
+                          <span>
                             {day.openingBalance.toFixed(2)}
                           </span>
                         </span>
                       </div>
 
-                      <table className="w-full border-collapse text-sm border border-gray-300 table-fixed">
+                      <table className="w-full border-collapse text-medium font-bold border border-gray-300 table-fixed">
                         <thead>
                           <tr className="bg-gray-100 border-b-2 border-gray-300">
                             <th className="px-3 py-2 text-center font-bold text-gray-700 border border-gray-300 w-16">
@@ -602,14 +596,8 @@ export default function BalanceSheetReport() {
                                 <td className="px-3 py-2 border border-gray-300">{colPaidBy}</td>
                                 <td className="px-3 py-2 border border-gray-300 text-right">{colPaidAmount}</td>
                                 <td className="px-3 py-2 border border-gray-300">{description}</td>
-                                <td className="px-3 py-2 border border-gray-300 font-medium text-right">
-                                  <span
-                                    className={
-                                      trans.runningBalance < 0
-                                        ? "text-red-600"
-                                        : "text-green-600"
-                                    }
-                                  >
+                                <td className="px-3 py-2 border border-gray-300 text-right">
+                                  <span>
                                     {trans.runningBalance.toFixed(2)}
                                   </span>
                                 </td>
@@ -622,24 +610,18 @@ export default function BalanceSheetReport() {
                             <td colSpan="2" className="px-3 py-2 border border-gray-300 text-right text-gray-700">
                               Day Total:
                             </td>
-                            <td className="px-3 py-2 border border-gray-300 text-right text-green-700">
+                            <td className="px-3 py-2 border border-gray-300 text-right">
                               {day.totalReceived.toFixed(2)}
                             </td>
                             <td className="px-3 py-2 border border-gray-300 text-right"></td>
-                            <td className="px-3 py-2 border border-gray-300 text-right text-red-700">
+                            <td className="px-3 py-2 border border-gray-300 text-right ">
                               {day.totalPaid.toFixed(2)}
                             </td>
                             <td className="px-3 py-2 border border-gray-300 text-right text-gray-700">
                               Closing Balance:
                             </td>
                             <td className="px-3 py-2 border border-gray-300 text-right">
-                              <span
-                                className={
-                                  day.closingBalance < 0
-                                    ? "text-red-600"
-                                    : "text-green-600"
-                                }
-                              >
+                              <span>
                                 {day.closingBalance.toFixed(2)}
                               </span>
                             </td>

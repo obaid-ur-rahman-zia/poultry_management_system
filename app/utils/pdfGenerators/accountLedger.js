@@ -154,19 +154,16 @@ function generateLedgerHTML(
       return `
       <tr style="border-bottom: 1px solid #e5e7eb; page-break-inside: avoid;">
         <td style="padding: 6px; font-size: 10px;">${new Date(
-          trans.transaction_dat,
-        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</td>
+        trans.transaction_dat,
+      ).toLocaleDateString("en-GB").replace(/\//g, "-")}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.fs_rate || "-"}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.t_id}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.remarks || "-"}</td>
-        <td style="padding: 6px; text-align: right; font-size: 10px;">${
-          trans.debit ? `${trans.debit.toFixed(2)} Dr` : "-"
+        <td style="padding: 6px; text-align: right; font-size: 10px;">${trans.debit ? `${trans.debit.toFixed(2)} Dr` : "-"
         }</td>
-        <td style="padding: 6px; text-align: right; font-size: 10px;">${
-          trans.credit ? `${trans.credit.toFixed(2)} Cr` : "-"
+        <td style="padding: 6px; text-align: right; font-size: 10px;">${trans.credit ? `${trans.credit.toFixed(2)} Cr` : "-"
         }</td>
-        <td style="padding: 6px; text-align: right; font-weight: 500; font-size: 10px; color: ${
-          runningBalance < 0 ? "#dc2626" : "#16a34a"
+        <td style="padding: 6px; text-align: right; font-weight: 500; font-size: 10px; 
         };">
           ${Math.abs(runningBalance).toFixed(2)} ${runningBalance >= 0 ? "Dr" : "Cr"}
         </td>
@@ -275,10 +272,10 @@ function generateLedgerHTML(
           </span>
         </div>
         <p style="margin-top: 5px;">From: <strong>${new Date(
-          startDate,
-        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong> To: <strong>${new Date(
-          endDate,
-        ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong></p>
+    startDate,
+  ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong> To: <strong>${new Date(
+    endDate,
+  ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong></p>
       </div>
       
       <table>
@@ -299,9 +296,8 @@ function generateLedgerHTML(
             <td colspan="4" style="padding: 6px; font-size: 10px;">Opening Balance</td>
             <td style="padding: 6px; text-align: right;"></td>
             <td style="padding: 6px; text-align: right;"></td>
-            <td style="padding: 6px; text-align: right; font-size: 10px; color: ${
-              openingBalance < 0 ? "#dc2626" : "#16a34a"
-            };">
+            <td style="padding: 6px; text-align: right; font-size: 10px; color: ${openingBalance < 0 ? "#dc2626" : "#16a34a"
+    };">
               ${Math.abs(openingBalance).toFixed(2)} ${openingBalance >= 0 ? "Dr" : "Cr"}
             </td>
           </tr>
@@ -314,9 +310,7 @@ function generateLedgerHTML(
             <td colspan="4" style="padding: 8px; font-size: 11px;">Closing Balance</td>
             <td style="padding: 8px; text-align: right; font-size: 11px;">${totalDebit.toFixed(2)} Dr</td>
             <td style="padding: 8px; text-align: right; font-size: 11px;">${totalCredit.toFixed(2)} Cr</td>
-            <td style="padding: 8px; text-align: right; font-size: 11px; color: ${
-              closingBalance < 0 ? "#dc2626" : "#16a34a"
-            };">
+            <td style="padding: 8px; text-align: right; font-size: 11px;">
               ${Math.abs(closingBalance).toFixed(2)} ${closingBalance >= 0 ? "Dr" : "Cr"}
             </td>
           </tr>

@@ -99,24 +99,24 @@ export default function SubheadTrialBalanceModal() {
                   if (bal > 0) return 2; // Debit
                   return 3;              // Zero
                 };
-                
+
                 const orderA = getOrder(a.balance);
                 const orderB = getOrder(b.balance);
-                
+
                 if (orderA !== orderB) {
                   return orderA - orderB;
                 }
-                
+
                 // Within Credit (negative balances), largest absolute value first (most negative)
                 if (orderA === 1) {
                   return a.balance - b.balance;
                 }
-                
+
                 // Within Debit (positive balances), largest absolute value first (most positive)
                 if (orderA === 2) {
                   return b.balance - a.balance;
                 }
-                
+
                 return 0;
               });
             }
@@ -297,15 +297,15 @@ export default function SubheadTrialBalanceModal() {
       let totalExpenseCredit = 0;
 
       expenseSubheads.forEach((subhead) => {
-        items.push({ 
-          type: "ROW", 
-          name: subhead.subhead_nam, 
-          contact: "-", 
+        items.push({
+          type: "ROW",
+          name: subhead.subhead_nam,
+          contact: "-",
           total_debit: subhead.total_debit,
           total_credit: subhead.total_credit,
           balance: subhead.total_balance,
           credit_limit: 0,
-          subhead_nam: "Expense Head" 
+          subhead_nam: "Expense Head"
         });
 
         totalExpenseDebit += subhead.total_debit;
@@ -522,7 +522,7 @@ export default function SubheadTrialBalanceModal() {
       {/* Report Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex bg-black/50 items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] flex flex-col">
             <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b bg-gray-50 gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Pagination */}
@@ -622,7 +622,7 @@ export default function SubheadTrialBalanceModal() {
                   if (chunk.type === "TABLE") {
                     return (
                       <div key={idx} className="overflow-x-auto">
-                        <table className="w-full border-collapse text-sm mb-2 border border-gray-300">
+                        <table className="w-full border-collapse text-medium font-semibold mb-2 border border-gray-300">
                           <colgroup>
                             <col className="w-[40%]" />
                             <col className="w-[15%]" />
@@ -663,7 +663,7 @@ export default function SubheadTrialBalanceModal() {
                                   id={`item-${row.flatIndex}`}
                                   className={`border-b border-gray-200 ${isMatch ? "bg-yellow-200 hover:bg-yellow-300" : limitExceeded ? "bg-red-50 hover:bg-red-100" : "hover:bg-gray-50"}`}
                                 >
-                                  <td className={`px-3 py-2 font-medium border border-gray-300 ${limitExceeded ? "text-red-700" : "text-gray-900"}`}>
+                                  <td className={`px-3 py-2  border border-gray-300 ${limitExceeded ? "text-red-700" : "text-gray-900"}`}>
                                     {row.name}
                                     {limitExceeded && (
                                       <span className="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded-sm border border-red-200" title={`Credit Limit: ${formatCurrency(row.credit_limit, 'credit')}`}>
@@ -696,7 +696,7 @@ export default function SubheadTrialBalanceModal() {
                     return (
                       <div
                         key={idx}
-                        className="bg-gray-100 border-2 border-gray-200 p-2 mb-4 font-bold grid grid-cols-[40%_15%_15%_15%_15%] text-sm"
+                        className="bg-gray-100 border-2 border-gray-200 p-2 mb-4 font-bold grid grid-cols-[40%_15%_15%_15%_15%] text-lg"
                       >
                         <div className="text-left whitespace-nowrap">
                           Total
@@ -724,7 +724,7 @@ export default function SubheadTrialBalanceModal() {
                         <h2 className="text-xl font-bold mb-2 text-gray-800 uppercase">
                           Whole Sale Profit
                         </h2>
-                        <table className="w-full border-collapse text-sm border border-gray-300">
+                        <table className="w-full border-collapse text-medium border border-gray-300">
                           <thead>
                             <tr className="bg-gray-200 border-b-2 border-gray-400">
                               <th className="px-3 py-2 text-left font-bold text-gray-800 border border-gray-300">

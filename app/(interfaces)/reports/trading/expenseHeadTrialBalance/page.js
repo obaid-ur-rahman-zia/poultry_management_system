@@ -200,9 +200,9 @@ export default function ExpenseHeadTrialBalance() {
       <div className="group relative bg-white rounded-xl border border-gray-200 hover:border-orange-300 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
         <div className="relative p-6">
-          
+
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-           EXPENSE REPORT
+            EXPENSE REPORT
           </h3>
           <div className="space-y-3 mb-4">
             <div className="flex flex-col">
@@ -256,7 +256,7 @@ export default function ExpenseHeadTrialBalance() {
       {/* Report Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] flex flex-col">
             <div className="flex items-center justify-end p-1 border-b bg-gray-50">
               <div className="flex gap-2">
                 <Button
@@ -301,7 +301,7 @@ export default function ExpenseHeadTrialBalance() {
                   if (chunk.type === "TABLE") {
                     return (
                       <div key={idx} className="overflow-x-auto">
-                        <table className="w-full border-collapse text-sm mb-2 border border-gray-300">
+                        <table className="w-full border-collapse text-medium mb-2 border border-gray-300 font-bold">
                           <thead>
                             <tr className="bg-orange-50 border-b-2 border-orange-200">
                               <th className="px-3 py-2 text-left font-bold text-gray-700 w-[40%] border border-gray-300">
@@ -332,7 +332,7 @@ export default function ExpenseHeadTrialBalance() {
                                 key={rIdx}
                                 className="border-b border-gray-200 hover:bg-orange-50/40"
                               >
-                                <td className="px-3 py-2 font-medium text-gray-900 border border-gray-300">
+                                <td className="px-3 py-2 font-bold text-gray-900 border border-gray-300">
                                   {row.name}
                                 </td>
                                 <td className="px-3 py-2 text-gray-600 border border-gray-300">
@@ -359,7 +359,7 @@ export default function ExpenseHeadTrialBalance() {
                     return (
                       <div
                         key={idx}
-                        className="bg-orange-50 border-2 border-orange-200 p-2 mb-4 font-bold flex text-sm"
+                        className="bg-orange-50 border-2 border-orange-200 p-2 mb-4 font-bold flex text-medium"
                       >
                         <div className="flex-1 text-right mr-10 whitespace-nowrap">
                           Total {chunk.name}:
@@ -386,7 +386,7 @@ export default function ExpenseHeadTrialBalance() {
                         <h2 className="text-xl font-bold mb-2 text-gray-800 uppercase">
                           Grand Conclusion
                         </h2>
-                        <table className="w-full border-collapse text-sm border border-gray-300">
+                        <table className="w-full border-collapse text-medium font-bold border border-gray-300">
                           <thead>
                             <tr className="bg-gray-200 border-b-2 border-gray-400">
                               <th className="px-3 py-2 text-left font-bold text-gray-800 border border-gray-300">

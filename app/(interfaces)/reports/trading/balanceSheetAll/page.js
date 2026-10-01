@@ -130,13 +130,13 @@ export default function BalanceSheetAllReport() {
                     const totalLocalSaleReceived = localSales
                         .filter(ls => ls.type === 'local_sale')
                         .reduce((sum, ls) => sum + ls.received_amount, 0);
-                        
+
                     const totalLocalSaleExpense = localSales
                         .filter(ls => ls.type === 'local_sale_expense')
                         .reduce((sum, ls) => sum + ls.amount, 0);
-                        
+
                     const netLocalSaleAmount = totalLocalSaleReceived - totalLocalSaleExpense;
-                    
+
                     if (netLocalSaleAmount > 0) {
                         currentBalance += netLocalSaleAmount;
                         dayTotalReceived += netLocalSaleAmount;
@@ -363,54 +363,54 @@ export default function BalanceSheetAllReport() {
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                 <div className="relative p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            CONSOLIDATED BALANCE SHEET / ALL CASH
-          </h3>
-          <div className="space-y-3 mb-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
-          </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                        CONSOLIDATED BALANCE SHEET / ALL CASH
+                    </h3>
+                    <div className="space-y-3 mb-4">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Start Date
+                            </label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                                End Date
+                            </label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            />
+                        </div>
+                    </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                setStartDate("");
-                setEndDate("");
-              }}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Clear
-            </button>
-            <button
-              onClick={fetchBalanceSheet}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Loading..." : "View Report"}
-            </button>
-          </div>
-        </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => {
+                                setStartDate("");
+                                setEndDate("");
+                            }}
+                            disabled={isLoading}
+                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Clear
+                        </button>
+                        <button
+                            onClick={fetchBalanceSheet}
+                            disabled={isLoading}
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? "Loading..." : "View Report"}
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Modal */}
@@ -485,19 +485,13 @@ export default function BalanceSheetAllReport() {
                                                 </span>
                                                 <span className="font-bold text-gray-800 text-base">
                                                     Opening Balance:{" "}
-                                                    <span
-                                                        className={
-                                                            day.openingBalance < 0
-                                                                ? "text-red-600"
-                                                                : "text-green-600"
-                                                        }
-                                                    >
+                                                    <span>
                                                         {day.openingBalance.toFixed(2)}
                                                     </span>
                                                 </span>
                                             </div>
 
-                                            <table className="w-full border-collapse text-sm border border-gray-300 table-fixed">
+                                            <table className="w-full border-collapse text-medium font-bold border border-gray-300 table-fixed">
                                                 <thead>
                                                     <tr className="bg-gray-100 border-b-2 border-gray-300">
                                                         <th className="px-3 py-2 text-center font-bold text-gray-700 border border-gray-300 w-16">
@@ -564,14 +558,8 @@ export default function BalanceSheetAllReport() {
                                                                 <td className="px-3 py-2 border border-gray-300">{colPaidBy}</td>
                                                                 <td className="px-3 py-2 border border-gray-300 text-right">{colPaidAmount}</td>
                                                                 <td className="px-3 py-2 border border-gray-300">{description}</td>
-                                                                <td className="px-3 py-2 border border-gray-300 font-medium text-right">
-                                                                    <span
-                                                                        className={
-                                                                            trans.runningBalance < 0
-                                                                                ? "text-red-600"
-                                                                                : "text-green-600"
-                                                                        }
-                                                                    >
+                                                                <td className="px-3 py-2 border border-gray-300  text-right">
+                                                                    <span>
                                                                         {trans.runningBalance.toFixed(2)}
                                                                     </span>
                                                                 </td>
@@ -584,24 +572,18 @@ export default function BalanceSheetAllReport() {
                                                         <td colSpan="2" className="px-3 py-2 border border-gray-300 text-right text-gray-700">
                                                             Day Total:
                                                         </td>
-                                                        <td className="px-3 py-2 border border-gray-300 text-right text-green-700">
+                                                        <td className="px-3 py-2 border border-gray-300 text-right ">
                                                             {day.totalReceived.toFixed(2)}
                                                         </td>
                                                         <td className="px-3 py-2 border border-gray-300 text-right"></td>
-                                                        <td className="px-3 py-2 border border-gray-300 text-right text-red-700">
+                                                        <td className="px-3 py-2 border border-gray-300 text-right ">
                                                             {day.totalPaid.toFixed(2)}
                                                         </td>
                                                         <td className="px-3 py-2 border border-gray-300 text-right text-gray-700">
                                                             Closing Balance:
                                                         </td>
                                                         <td className="px-3 py-2 border border-gray-300 text-right">
-                                                            <span
-                                                                className={
-                                                                    day.closingBalance < 0
-                                                                        ? "text-red-600"
-                                                                        : "text-green-600"
-                                                                }
-                                                            >
+                                                            <span>
                                                                 {day.closingBalance.toFixed(2)}
                                                             </span>
                                                         </td>
@@ -618,7 +600,7 @@ export default function BalanceSheetAllReport() {
                                         <div className="bg-gray-100 px-4 py-3 border-b border-gray-300 font-bold text-gray-800 text-lg">
                                             Individual Cash Accounts Closing Balances
                                         </div>
-                                        <table className="w-full text-sm border-collapse">
+                                        <table className="w-full text-medium border-collapse">
                                             <thead>
                                                 <tr className="bg-gray-50 border-b border-gray-300">
                                                     <th className="px-4 py-2 text-left font-bold text-gray-700 w-1/2">Account Name</th>
@@ -630,7 +612,7 @@ export default function BalanceSheetAllReport() {
                                                     <tr key={acc.acc_id} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                                                         <td className="px-4 py-2 font-medium text-gray-800">{acc.account_nam}</td>
                                                         <td className="px-4 py-2 text-right font-bold">
-                                                            <span className={acc.closingBalance < 0 ? "text-red-600" : "text-green-600"}>
+                                                            <span >
                                                                 {acc.closingBalance.toFixed(2)}
                                                             </span>
                                                         </td>
@@ -639,7 +621,7 @@ export default function BalanceSheetAllReport() {
                                                 <tr className="bg-gray-100 border-t-2 border-gray-300 font-bold">
                                                     <td className="px-4 py-2 text-right text-gray-700">Total Cash In Hand:</td>
                                                     <td className="px-4 py-2 text-right">
-                                                        <span className={globalClosingBalance < 0 ? "text-red-600" : "text-green-600"}>
+                                                        <span >
                                                             {globalClosingBalance.toFixed(2)}
                                                         </span>
                                                     </td>

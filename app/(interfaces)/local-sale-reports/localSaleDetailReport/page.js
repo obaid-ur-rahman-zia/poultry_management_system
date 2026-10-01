@@ -42,7 +42,7 @@ export default function LocalSaleReport() {
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [localAccountId, setLocalAccountId] = useState("");
-  
+
   const { accounts: allAccounts } = useAccounts();
   const accounts = React.useMemo(() => {
     return (allAccounts || []).filter(
@@ -392,7 +392,7 @@ export default function LocalSaleReport() {
 
                       {/* Source details box */}
                       {day.sourceEntries && day.sourceEntries.length > 0 ? (
-                        <div className="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 text-sm w-full">
+                        <div className="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 text-medium w-full">
                           <div>
                             <div className="flex w-full justify-center divide-x divide-gray-400 border-b border-gray-200 pb-2 mb-2 leading-relaxed text-md">
                               {day.sourceEntries.map((entry, idx) => (
@@ -415,7 +415,7 @@ export default function LocalSaleReport() {
                         </div>
                       )}
 
-                      <table className="w-full border-collapse text-sm border border-gray-400">
+                      <table className="w-full border-collapse text-medium font-bold border border-gray-400">
                         <thead className="bg-gray-100">
                           <tr>
                             <th className="px-3 py-2 text-left border border-gray-400">Purchaser</th>
@@ -452,42 +452,42 @@ export default function LocalSaleReport() {
                           </tr>
                         </tfoot>
                       </table>
-                      <div className="mt-4 grid grid-cols-4 gap-4 text-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div className="mt-4 grid grid-cols-4 gap-4 text-center bg-gray-50 p-3 rounded-lg border border-gray-200 text-medium font-bold">
                         <div>
-                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Net Receiving (Received - Expense)</p>
-                          <p className="text-gray-900 font-semibold text-sm">{fmt(day.totalReceived)} - {fmt(day.dailyExpense)} = {fmt(day.netReceiving)}</p>
+                          <p className="text-gray-500 text-sm uppercase tracking-wider mb-1">Net Receiving (Received - Expense)</p>
+                          <p className="text-gray-900 ">{fmt(day.totalReceived)} - {fmt(day.dailyExpense)} = {fmt(day.netReceiving)}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Weight Loss</p>
-                          <p className="text-gray-900 font-semibold text-sm">{fmt(day.sourceWeight, 0)} - {fmt(day.totalWeight, 0)} = {fmt(day.weightDifference, 0)}</p>
+                          <p className="text-gray-500  text-sm uppercase tracking-wider mb-1">Weight Loss</p>
+                          <p className="text-gray-900 ">{fmt(day.sourceWeight, 0)} - {fmt(day.totalWeight, 0)} = {fmt(day.weightDifference, 0)}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Profit (Sale Amount -Purchase Cost)</p>
-                          <p className="text-gray-900 font-semibold text-sm">{day.profit === null ? "Unavailable" : `${fmt(day.totalAmount)} - ${fmt(day.purchaseCost)} = ${fmt(day.profit)}`}</p>
+                          <p className="text-gray-500 text-sm uppercase tracking-wider mb-1">Profit (Sale Amount -Purchase Cost)</p>
+                          <p className="text-gray-900 ">{day.profit === null ? "Unavailable" : `${fmt(day.totalAmount)} - ${fmt(day.purchaseCost)} = ${fmt(day.profit)}`}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Net Profit (Profit - Expense)</p>
-                          <p className="text-gray-900 font-semibold text-sm">{day.netProfit === null ? "Unavailable" : `${fmt(day.profit)} - ${fmt(day.dailyExpense)} = ${fmt(day.netProfit)}`}</p>
+                          <p className="text-gray-500  text-sm uppercase tracking-wider mb-1">Net Profit (Profit - Expense)</p>
+                          <p className="text-gray-900 ">{day.netProfit === null ? "Unavailable" : `${fmt(day.profit)} - ${fmt(day.dailyExpense)} = ${fmt(day.netProfit)}`}</p>
                         </div>
                       </div>
                     </section>
                   ))}
-                  <div className="mt-8 grid grid-cols-4 gap-4 text-center bg-purple-50 p-4 rounded-xl border border-purple-200">
+                  <div className="mt-8 grid grid-cols-4 gap-4 text-center bg-purple-50 p-4 rounded-xl border border-purple-200 font-bold text-medium">
                     <div>
-                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">Grand Net Receiving</p>
-                      <p className="text-gray-900 font-bold text-sm">{fmt(grandTotalReceived)} - {fmt(grandTotalExpense)} = {fmt(grandTotalNetReceiving)}</p>
+                      <p className=" text-xs font-bold uppercase tracking-wider mb-1">Grand Net Receiving</p>
+                      <p className="text-gray-900 ">{fmt(grandTotalReceived)} - {fmt(grandTotalExpense)} = {fmt(grandTotalNetReceiving)}</p>
                     </div>
                     <div>
-                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">Grand Weight Loss</p>
-                      <p className="text-gray-900 font-bold text-sm">{fmt(grandTotalSourceWeight, 0)} - {fmt(grandTotalWeight, 0)} = {fmt(grandTotalWeightDifference, 0)}</p>
+                      <p className=" text-xs font-bold uppercase tracking-wider mb-1">Grand Weight Loss</p>
+                      <p className="text-gray-900 ">{fmt(grandTotalSourceWeight, 0)} - {fmt(grandTotalWeight, 0)} = {fmt(grandTotalWeightDifference, 0)}</p>
                     </div>
                     <div>
-                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">Grand Profit</p>
-                      <p className="text-gray-900 font-bold text-sm">{totalProfit === null ? "Unavailable" : `${fmt(grandTotalAmount)} - ${fmt(totalPurchaseCost)} = ${fmt(totalProfit)}`}</p>
+                      <p className=" text-xs font-bold uppercase tracking-wider mb-1">Grand Profit</p>
+                      <p className="text-gray-900 ">{totalProfit === null ? "Unavailable" : `${fmt(grandTotalAmount)} - ${fmt(totalPurchaseCost)} = ${fmt(totalProfit)}`}</p>
                     </div>
                     <div>
-                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">Grand Net Profit</p>
-                      <p className="text-gray-900 font-bold text-sm">{grandTotalNetProfit === null ? "Unavailable" : `${fmt(totalProfit)} - ${fmt(grandTotalExpense)} = ${fmt(grandTotalNetProfit)}`}</p>
+                      <p className=" text-xs font-bold uppercase tracking-wider mb-1">Grand Net Profit</p>
+                      <p className="text-gray-900 ">{grandTotalNetProfit === null ? "Unavailable" : `${fmt(totalProfit)} - ${fmt(grandTotalExpense)} = ${fmt(grandTotalNetProfit)}`}</p>
                     </div>
                   </div>
                 </>

@@ -323,7 +323,7 @@ export default function WholeSaleProfitModal() {
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl h-[100vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[100vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-end p-1 border-b">
               <div className="flex gap-1">
@@ -382,7 +382,7 @@ export default function WholeSaleProfitModal() {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm border border-gray-300">
+                <table className="w-full border-collapse text-medium font-bold border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
                       <th className="px-4 py-2 text-center font-bold text-gray-700 border border-gray-300">
@@ -420,7 +420,7 @@ export default function WholeSaleProfitModal() {
                         <td className="px-4 py-2 text-right border border-gray-300">
                           {row.sale_amount.toFixed(2)}
                         </td>
-                        <td className="px-4 py-2 text-right text-blue-700 font-semibold border border-gray-300">
+                        <td className="px-4 py-2 text-right font-semibold border border-gray-300">
                           {(row.recovery_amount || 0).toFixed(2)}
                         </td>
                         <td className="px-4 py-2 text-right font-semibold border border-gray-300">
@@ -444,7 +444,7 @@ export default function WholeSaleProfitModal() {
                         <td className="px-4 py-3 text-right border border-gray-300">
                           {grandTotalSale.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-right text-blue-700 border border-gray-300">
+                        <td className="px-4 py-3 text-right  border border-gray-300">
                           {grandTotalRecovery.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
@@ -464,9 +464,6 @@ export default function WholeSaleProfitModal() {
                         </td>
                         <td className="px-4 py-3 text-right text-lg border border-gray-300">
                           <span
-                            className={
-                              netProfit >= 0 ? "text-green-600" : "text-red-600"
-                            }
                           >
                             {netProfit.toFixed(2)}
                           </span>

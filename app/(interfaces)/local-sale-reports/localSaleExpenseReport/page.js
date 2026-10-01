@@ -27,7 +27,7 @@ export default function LocalSaleExpenseReport() {
 
             const result = await res.json();
             const data = result.response_result?.data || result.response_result || result.data || [];
-            
+
             setReportData(Array.isArray(data) ? data : []);
             setIsOpen(true);
         } catch (error) {
@@ -165,7 +165,7 @@ export default function LocalSaleExpenseReport() {
                                     {dateSections.map((day) => (
                                         <section key={day.date} className="mb-8">
                                             <h2 className="mb-2 text-lg font-bold">Date: {day.date}</h2>
-                                            <table className="w-full border-collapse text-sm border border-gray-400">
+                                            <table className="w-full border-collapse text-medium border border-gray-400">
                                                 <thead className="bg-gray-100">
                                                     <tr>
                                                         <th className="px-3 py-2 text-left border border-gray-400">Expense Head</th>

@@ -309,7 +309,7 @@ export default function ShopSaleProfitReport() {
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[100vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b bg-gray-50 gap-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -388,7 +388,7 @@ export default function ShopSaleProfitReport() {
                   No data available.
                 </div>
               ) : (
-                <table className="w-full border-collapse text-sm border border-gray-300">
+                <table className="w-full border-collapse text-medium font-bold border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
                       <th className="px-4 py-2 text-left font-bold text-gray-700 border border-gray-300">
@@ -426,9 +426,9 @@ export default function ShopSaleProfitReport() {
                       return (
                         <tr
                           key={`row-${idx}`}
-                          className="border-b border-gray-200 hover:bg-gray-50"
+                          className="border-b border-gray-200 hover:bg-gray-50 "
                         >
-                          <td className="px-4 py-2 font-medium border border-gray-300">
+                          <td className="px-4 py-2  border border-gray-300">
                             {formatPeriod(item.period, groupBy)}
                           </td>
                           <td className="px-4 py-2 text-right border border-gray-300">
@@ -440,20 +440,20 @@ export default function ShopSaleProfitReport() {
                           <td className="px-4 py-2 text-right border border-gray-300">
                             {item.due_sale > 0 ? fmt(item.due_sale) : "-"}
                           </td>
-                          <td className="px-4 py-2 text-right font-semibold border border-gray-300">
+                          <td className="px-4 py-2 text-right  border border-gray-300">
                             {fmt(item.expense_amount || 0)}
                           </td>
-                          <td className="px-4 py-2 text-right font-semibold border border-gray-300">
+                          <td className="px-4 py-2 text-right  border border-gray-300">
                             {item.recovery > 0 ? fmt(item.recovery) : "-"}
                           </td>
-                          <td className="px-4 py-2 text-right font-semibold border border-gray-300">
+                          <td className="px-4 py-2 text-right  border border-gray-300">
                             {fmt(item.computed_net_sale || 0)}
                           </td>
-                          <td className="px-4 py-2 text-right font-semibold border border-gray-300">
+                          <td className="px-4 py-2 text-right border border-gray-300">
                             {fmt(item.sale_stock_amount || 0)}
                           </td>
-                          <td className="px-4 py-2 text-right font-bold border border-gray-300">
-                            <span className={(item.profit || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                          <td className="px-4 py-2 text-right  border border-gray-300">
+                            <span >
                               {fmt(item.profit || 0)}
                             </span>
                           </td>
@@ -488,7 +488,7 @@ export default function ShopSaleProfitReport() {
                           {fmt(grandTotals.sale_stock_amount || 0)}
                         </td>
                         <td className="px-4 py-3 text-right border border-gray-300">
-                          <span className={(grandTotals.profit || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                          <span>
                             {fmt(grandTotals.profit || 0)}
                           </span>
                         </td>
@@ -501,11 +501,6 @@ export default function ShopSaleProfitReport() {
                         </td>
                         <td colSpan="2" className="px-4 py-3 text-right text-lg border border-gray-300">
                           <span
-                            className={
-                              (grandTotals.profit || 0) >= 0
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }
                           >
                             {fmt(grandTotals.profit || 0)}
                           </span>
