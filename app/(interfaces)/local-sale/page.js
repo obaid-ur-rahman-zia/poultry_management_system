@@ -620,7 +620,7 @@ function LocalSaleTab() {
                     <span className="text-l text-muted-foreground">Loading...</span>
                   ) : (
                     <span className="text-l underline">
-                      Balance {localBalance !== null ? localBalance.toFixed(2) : "0"}
+                      Balance {localBalance !== null ? `${Math.abs(localBalance).toFixed(2)} ${localBalance >= 0 ? "Dr" : "Cr"}` : "0"}
                     </span>
                   )}
                 </div>
@@ -669,7 +669,7 @@ function LocalSaleTab() {
                     <span className="text-l text-muted-foreground">Loading...</span>
                   ) : (
                     <span className="text-l underline">
-                      Balance {purchaserBalance !== null ? purchaserBalance.toFixed(2) : "0"}
+                      Balance {purchaserBalance !== null ? `${Math.abs(purchaserBalance).toFixed(2)} ${purchaserBalance >= 0 ? "Dr" : "Cr"}` : "0"}
                     </span>
                   )}
                 </div>
@@ -704,7 +704,7 @@ function LocalSaleTab() {
                       className="h-8 w-24 text-l"
                     />
                   </div>
-                  {!isEditMode && <span className="text-l underline">Net Balance {netBalance.toFixed(2)}</span>}
+                  {!isEditMode && <span className="text-l underline">Net Balance {`${Math.abs(netBalance).toFixed(2)} ${netBalance >= 0 ? "Dr" : "Cr"}`}</span>}
                 </div>
 
                 <div className="flex flex-col justify-center gap-2">

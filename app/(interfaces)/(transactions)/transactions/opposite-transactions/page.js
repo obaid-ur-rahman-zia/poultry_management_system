@@ -175,6 +175,15 @@ export default function OppositeTransactionsPage() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const btn = document.getElementById("paid_by_combobox");
+      if (btn) btn.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     if (subHeads.length > 0 && accounts.length > 0) {
       // Filter bank accounts by subhead name containing "bank"
@@ -395,6 +404,11 @@ export default function OppositeTransactionsPage() {
         setIsEditMode(false);
         setEditingTransactionId(null);
         fetchTransactions(filterDate);
+        
+        setTimeout(() => {
+          const btn = document.getElementById("paid_by_combobox");
+          if (btn) btn.focus();
+        }, 100);
       } else {
         toast.error(result.response_message || "Failed to save transaction");
       }
@@ -600,6 +614,7 @@ export default function OppositeTransactionsPage() {
                       return (
                         <div className="flex-1">
                           <Combobox
+                            id="paid_by_combobox"
                             options={options}
                             value={field.value}
                             onValueChange={field.onChange}
@@ -639,7 +654,7 @@ export default function OppositeTransactionsPage() {
                       ) : (
                         <div className="text-lg font-semibold">
                           {paidByBalance !== null
-                            ? paidByBalance.toFixed(2)
+                            ? `${Math.abs(paidByBalance).toFixed(2)} ${paidByBalance >= 0 ? "Dr" : "Cr"}`
                             : "0"}
                         </div>
                       )
@@ -784,7 +799,7 @@ export default function OppositeTransactionsPage() {
                       ) : (
                         <div className="text-lg font-semibold">
                           {receivedByBalance !== null
-                            ? receivedByBalance.toFixed(2)
+                            ? `${Math.abs(receivedByBalance).toFixed(2)} ${receivedByBalance >= 0 ? "Dr" : "Cr"}`
                             : "0"}
                         </div>
                       )

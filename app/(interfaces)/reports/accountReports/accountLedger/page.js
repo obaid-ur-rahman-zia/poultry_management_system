@@ -184,7 +184,7 @@ export default function AccountLedgerModal() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Account_Ledger_${selectedAccountData?.account_nam.replace(
+      a.download = `${selectedAccountData?.account_nam.replace(
         /\s+/g,
         "_",
       )}_${startDate}_to_${endDate}.pdf`;
@@ -209,8 +209,8 @@ export default function AccountLedgerModal() {
     }
 
     const headers = [
-      "Date",
       "Fs Rate",
+      "Date",
       "Transaction No",
       "Description",
       "Debit",
@@ -222,8 +222,8 @@ export default function AccountLedgerModal() {
 
     // 🔹 Opening Balance row
     rows.push([
-      new Date(startDate).toLocaleDateString(),
       "",
+      new Date(startDate).toLocaleDateString(),
       "",
       "Opening Balance",
       "",
@@ -236,8 +236,8 @@ export default function AccountLedgerModal() {
       const runningBalance = calculateRunningBalance(index);
 
       rows.push([
-        new Date(trans.transaction_dat).toLocaleDateString(),
         trans.fs_rate || "-",
+        new Date(trans.transaction_dat).toLocaleDateString(),
         trans.t_id,
         trans.remarks || "-",
         trans.debit ? `${trans.debit.toFixed(2)} Dr` : "",
@@ -247,7 +247,7 @@ export default function AccountLedgerModal() {
     });
 
     exportToCSV(
-      `Account_Ledger_${selectedAccountData.account_nam}_${startDate}_to_${endDate}.csv`,
+      `${selectedAccountData.account_nam}_${startDate}_to_${endDate}.csv`,
       headers,
       rows,
     );
@@ -439,10 +439,10 @@ export default function AccountLedgerModal() {
                   <thead>
                     <tr className="bg-gray-100 border-b-2 border-gray-300">
                       <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Date
+                        Fs Rate
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
-                        Fs Rate
+                        Date
                       </th>
                       <th className="px-3 py-2 text-left font-bold text-gray-700 border border-gray-300">
                         Description
@@ -491,12 +491,12 @@ export default function AccountLedgerModal() {
                           className="border-b border-gray-200 hover:bg-gray-50"
                         >
                           <td className="px-3 py-2 border border-gray-300">
+                            {trans.fs_rate || "-"}
+                          </td>
+                          <td className="px-3 py-2 border border-gray-300">
                             {new Date(
                               trans.transaction_dat,
                             ).toLocaleDateString()}
-                          </td>
-                          <td className="px-3 py-2 border border-gray-300">
-                            {trans.fs_rate || "-"}
                           </td>
                           <td className="px-3 py-2 border border-gray-300">
                             {trans.remarks || "-"}

@@ -112,23 +112,6 @@ function generateLedgerHTML(
     return "<html><body><h1>Account data not available</h1></body></html>";
   }
 
-  // Format account code with null safety
-  const formatAccountCode = (accountData) => {
-    try {
-      const head_id = accountData.head_id || 0;
-      const sub_id = accountData.subhead?.subhead_id || accountData.sub_id || 0;
-      const account_id = accountData.account_id || 0;
-
-      const headPart = String(head_id).padStart(2, "0");
-      const subPart = String(sub_id).padStart(3, "0");
-      const accountPart = String(account_id).padStart(5, "0");
-      return `${headPart}-${subPart}-${accountPart}`;
-    } catch (error) {
-      console.error("Error formatting account code:", error);
-      return "N/A";
-    }
-  };
-
   // Calculate running balance
   const calculateRunningBalance = (index) => {
     let balance = openingBalance;
@@ -153,10 +136,10 @@ function generateLedgerHTML(
 
       return `
       <tr style="border-bottom: 1px solid #e5e7eb; page-break-inside: avoid;">
+        <td style="padding: 6px; font-size: 10px;">${trans.fs_rate || "-"}</td>
         <td style="padding: 6px; font-size: 10px;">${new Date(
         trans.transaction_dat,
       ).toLocaleDateString("en-GB").replace(/\//g, "-")}</td>
-        <td style="padding: 6px; font-size: 10px;">${trans.fs_rate || "-"}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.t_id}</td>
         <td style="padding: 6px; font-size: 10px;">${trans.remarks || "-"}</td>
         <td style="padding: 6px; text-align: right; font-size: 10px;">${trans.debit ? `${trans.debit.toFixed(2)} Dr` : "-"
@@ -194,7 +177,7 @@ function generateLedgerHTML(
         }
         .header p {
           font-size: 12px;
-          color: #666;
+          color: #000;
           margin: 0;
         }
         .account-details {
@@ -204,6 +187,7 @@ function generateLedgerHTML(
           padding: 10px;
           margin: 10px auto;
           max-width: 500px;
+          color: #000;
         }
         .account-details div {
           margin-bottom: 5px;
@@ -211,10 +195,10 @@ function generateLedgerHTML(
         }
         .account-details .label {
           font-weight: bold;
-          color: #374151;
+          color: #000;
         }
         .account-details .value {
-          color: #111827;
+          color: #000;
         }
         table {
           width: 100%;
@@ -265,13 +249,7 @@ function generateLedgerHTML(
           <span class="label">Name: </span>
           <span class="value">${accountData.account_nam || "N/A"}</span>
         </div>
-        <div>
-          <span class="label">Account Code: </span>
-          <span class="value" style="font-family: monospace;">
-            ${formatAccountCode(accountData)}
-          </span>
-        </div>
-        <p style="margin-top: 5px;">From: <strong>${new Date(
+        <p style="margin-top: 5px; font-size: 7.5px;">From: <strong>${new Date(
     startDate,
   ).toLocaleDateString("en-GB").replace(/\//g, "-")}</strong> To: <strong>${new Date(
     endDate,
@@ -281,8 +259,8 @@ function generateLedgerHTML(
       <table>
         <thead>
           <tr>
-            <th>Date</th>
             <th>Fs Rate</th>
+            <th>Date</th>
             <th>T.No</th>
             <th>Description</th>
             <th style="text-align: right;">Debit</th>
@@ -296,8 +274,7 @@ function generateLedgerHTML(
             <td colspan="4" style="padding: 6px; font-size: 10px;">Opening Balance</td>
             <td style="padding: 6px; text-align: right;"></td>
             <td style="padding: 6px; text-align: right;"></td>
-            <td style="padding: 6px; text-align: right; font-size: 10px; color: ${openingBalance < 0 ? "#dc2626" : "#16a34a"
-    };">
+            <td style="padding: 6px; text-align: right; font-size: 10px; color: #000000;">
               ${Math.abs(openingBalance).toFixed(2)} ${openingBalance >= 0 ? "Dr" : "Cr"}
             </td>
           </tr>

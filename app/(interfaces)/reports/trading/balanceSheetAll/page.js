@@ -257,12 +257,12 @@ export default function BalanceSheetAllReport() {
         const rows = [];
 
         // Overall Opening Balance
-        rows.push(["", "", "", "", "", "Overall Opening Balance:", globalOpeningBalance.toFixed(2)]);
+        rows.push(["", "", "", "", "", "Overall Opening Balance:", `${Math.abs(globalOpeningBalance).toFixed(2)} ${globalOpeningBalance >= 0 ? "Dr" : "Cr"}`]);
         rows.push(["", "", "", "", "", "", ""]);
 
         processedDays.forEach(day => {
             // Day Header
-            rows.push(["", `Date: ${day.displayDate}`, "", "", "", "Opening Balance:", day.openingBalance.toFixed(2)]);
+            rows.push(["", `Date: ${day.displayDate}`, "", "", "", "Opening Balance:", `${Math.abs(day.openingBalance).toFixed(2)} ${day.openingBalance >= 0 ? "Dr" : "Cr"}`]);
 
             day.transactions.forEach(trans => {
                 let colReceivedBy = "-";
@@ -299,24 +299,24 @@ export default function BalanceSheetAllReport() {
                     colPaidBy,
                     colPaidAmount,
                     description,
-                    trans.runningBalance.toFixed(2)
+                    `${Math.abs(trans.runningBalance).toFixed(2)} ${trans.runningBalance >= 0 ? "Dr" : "Cr"}`
                 ]);
             });
 
             // Day Footer
-            rows.push(["", "Day Total", day.totalReceived.toFixed(2), "", day.totalPaid.toFixed(2), "Closing Balance:", day.closingBalance.toFixed(2)]);
+            rows.push(["", "Day Total", day.totalReceived.toFixed(2), "", day.totalPaid.toFixed(2), "Closing Balance:", `${Math.abs(day.closingBalance).toFixed(2)} ${day.closingBalance >= 0 ? "Dr" : "Cr"}`]);
             rows.push(["", "", "", "", "", "", ""]);
         });
 
         // Overall Closing Balance
-        rows.push(["", "", "", "", "", "Overall Closing Balance:", globalClosingBalance.toFixed(2)]);
+        rows.push(["", "", "", "", "", "Overall Closing Balance:", `${Math.abs(globalClosingBalance).toFixed(2)} ${globalClosingBalance >= 0 ? "Dr" : "Cr"}`]);
         rows.push(["", "", "", "", "", "", ""]);
 
         // Individual Closing Balances
         if (individualClosingBalances && individualClosingBalances.length > 0) {
             rows.push(["", "Individual Cash Account Balances", "", "", "", "", ""]);
             individualClosingBalances.forEach(acc => {
-                rows.push(["", acc.account_nam, "", "", "", "Closing Balance:", acc.closingBalance.toFixed(2)]);
+                rows.push(["", acc.account_nam, "", "", "", "Closing Balance:", `${Math.abs(acc.closingBalance).toFixed(2)} ${acc.closingBalance >= 0 ? "Dr" : "Cr"}`]);
             });
         }
 
@@ -486,7 +486,7 @@ export default function BalanceSheetAllReport() {
                                                 <span className="font-bold text-gray-800 text-base">
                                                     Opening Balance:{" "}
                                                     <span>
-                                                        {day.openingBalance.toFixed(2)}
+                                                        {`${Math.abs(day.openingBalance).toFixed(2)} ${day.openingBalance >= 0 ? "Dr" : "Cr"}`}
                                                     </span>
                                                 </span>
                                             </div>
@@ -560,7 +560,7 @@ export default function BalanceSheetAllReport() {
                                                                 <td className="px-3 py-2 border border-gray-300">{description}</td>
                                                                 <td className="px-3 py-2 border border-gray-300  text-right">
                                                                     <span>
-                                                                        {trans.runningBalance.toFixed(2)}
+                                                                        {`${Math.abs(trans.runningBalance).toFixed(2)} ${trans.runningBalance >= 0 ? "Dr" : "Cr"}`}
                                                                     </span>
                                                                 </td>
                                                             </tr>
@@ -584,7 +584,7 @@ export default function BalanceSheetAllReport() {
                                                         </td>
                                                         <td className="px-3 py-2 border border-gray-300 text-right">
                                                             <span>
-                                                                {day.closingBalance.toFixed(2)}
+                                                                {`${Math.abs(day.closingBalance).toFixed(2)} ${day.closingBalance >= 0 ? "Dr" : "Cr"}`}
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -613,7 +613,7 @@ export default function BalanceSheetAllReport() {
                                                         <td className="px-4 py-2 font-medium text-gray-800">{acc.account_nam}</td>
                                                         <td className="px-4 py-2 text-right font-bold">
                                                             <span >
-                                                                {acc.closingBalance.toFixed(2)}
+                                                                {`${Math.abs(acc.closingBalance).toFixed(2)} ${acc.closingBalance >= 0 ? "Dr" : "Cr"}`}
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -622,7 +622,7 @@ export default function BalanceSheetAllReport() {
                                                     <td className="px-4 py-2 text-right text-gray-700">Total Cash In Hand:</td>
                                                     <td className="px-4 py-2 text-right">
                                                         <span >
-                                                            {globalClosingBalance.toFixed(2)}
+                                                            {`${Math.abs(globalClosingBalance).toFixed(2)} ${globalClosingBalance >= 0 ? "Dr" : "Cr"}`}
                                                         </span>
                                                     </td>
                                                 </tr>

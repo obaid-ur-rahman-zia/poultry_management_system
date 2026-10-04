@@ -285,12 +285,12 @@ export default function BalanceSheetReport() {
     const rows = [];
 
     // Overall Opening Balance
-    rows.push(["", "", "", "", "", "Overall Opening Balance:", globalOpeningBalance.toFixed(2)]);
+    rows.push(["", "", "", "", "", "Overall Opening Balance:", `${Math.abs(globalOpeningBalance).toFixed(2)} ${globalOpeningBalance >= 0 ? "Dr" : "Cr"}`]);
     rows.push(["", "", "", "", "", "", ""]);
 
     processedDays.forEach(day => {
       // Day Header
-      rows.push(["", `Date: ${day.displayDate}`, "", "", "", "Opening Balance:", day.openingBalance.toFixed(2)]);
+      rows.push(["", `Date: ${day.displayDate}`, "", "", "", "Opening Balance:", `${Math.abs(day.openingBalance).toFixed(2)} ${day.openingBalance >= 0 ? "Dr" : "Cr"}`]);
 
       day.transactions.forEach(trans => {
         let colReceivedBy = "-";
@@ -324,17 +324,17 @@ export default function BalanceSheetReport() {
           colPaidBy,
           colPaidAmount,
           description,
-          trans.runningBalance.toFixed(2)
+          `${Math.abs(trans.runningBalance).toFixed(2)} ${trans.runningBalance >= 0 ? "Dr" : "Cr"}`
         ]);
       });
 
       // Day Footer
-      rows.push(["", "Day Total", day.totalReceived.toFixed(2), "", day.totalPaid.toFixed(2), "Closing Balance:", day.closingBalance.toFixed(2)]);
+      rows.push(["", "Day Total", day.totalReceived.toFixed(2), "", day.totalPaid.toFixed(2), "Closing Balance:", `${Math.abs(day.closingBalance).toFixed(2)} ${day.closingBalance >= 0 ? "Dr" : "Cr"}`]);
       rows.push(["", "", "", "", "", "", ""]);
     });
 
     // Overall Closing Balance
-    rows.push(["", "", "", "", "", "Overall Closing Balance:", globalClosingBalance.toFixed(2)]);
+    rows.push(["", "", "", "", "", "Overall Closing Balance:", `${Math.abs(globalClosingBalance).toFixed(2)} ${globalClosingBalance >= 0 ? "Dr" : "Cr"}`]);
 
     exportToCSV(`Balance_Sheet_${startDate}_to_${endDate}.csv`, headers, rows);
   };
@@ -524,7 +524,7 @@ export default function BalanceSheetReport() {
                         <span className="font-bold text-gray-800 text-base">
                           Opening Balance:{" "}
                           <span>
-                            {day.openingBalance.toFixed(2)}
+                            {`${Math.abs(day.openingBalance).toFixed(2)} ${day.openingBalance >= 0 ? "Dr" : "Cr"}`}
                           </span>
                         </span>
                       </div>
@@ -598,7 +598,7 @@ export default function BalanceSheetReport() {
                                 <td className="px-3 py-2 border border-gray-300">{description}</td>
                                 <td className="px-3 py-2 border border-gray-300 text-right">
                                   <span>
-                                    {trans.runningBalance.toFixed(2)}
+                                    {`${Math.abs(trans.runningBalance).toFixed(2)} ${trans.runningBalance >= 0 ? "Dr" : "Cr"}`}
                                   </span>
                                 </td>
                               </tr>
@@ -622,7 +622,7 @@ export default function BalanceSheetReport() {
                             </td>
                             <td className="px-3 py-2 border border-gray-300 text-right">
                               <span>
-                                {day.closingBalance.toFixed(2)}
+                                {`${Math.abs(day.closingBalance).toFixed(2)} ${day.closingBalance >= 0 ? "Dr" : "Cr"}`}
                               </span>
                             </td>
                           </tr>

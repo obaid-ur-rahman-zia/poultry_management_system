@@ -239,6 +239,14 @@ function WholeSaleTab() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const btn = document.getElementById("former_account_combobox");
+      if (btn) btn.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
 
 
   // Fetch Companies for supplier
@@ -921,6 +929,7 @@ function WholeSaleTab() {
                       return (
                         <div className="w-60">
                           <Combobox
+                            id="former_account_combobox"
                             options={options}
                             value={field.value}
                             onValueChange={field.onChange}
@@ -957,7 +966,7 @@ function WholeSaleTab() {
                       <span className="text-l underline">
                         Balance{" "}
                         {supplierBalance !== null
-                          ? supplierBalance.toFixed(2)
+                          ? `${Math.abs(supplierBalance).toFixed(2)} ${supplierBalance >= 0 ? "Dr" : "Cr"}`
                           : "0"}
                       </span>
                     )}
@@ -997,7 +1006,7 @@ function WholeSaleTab() {
                   </div>
 
                   <span className="text-l underline">
-                    Net Balance {supplierNetBalance.toFixed(2)}
+                    Net Balance {`${Math.abs(supplierNetBalance).toFixed(2)} ${supplierNetBalance >= 0 ? "Dr" : "Cr"}`}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -1088,7 +1097,7 @@ function WholeSaleTab() {
                       <span className="text-l underline">
                         Balance{" "}
                         {customerBalance !== null
-                          ? customerBalance.toFixed(2)
+                          ? `${Math.abs(customerBalance).toFixed(2)} ${customerBalance >= 0 ? "Dr" : "Cr"}`
                           : "0"}
                       </span>
                     )}
@@ -1112,7 +1121,7 @@ function WholeSaleTab() {
                   Amount {purcherAmount || "0"}
                 </span>
                 <span className="text-l underline">
-                  Net Balance {customerNetBalance.toFixed(2)}
+                  Net Balance {`${Math.abs(customerNetBalance).toFixed(2)} ${customerNetBalance >= 0 ? "Dr" : "Cr"}`}
                 </span>
               </div>
             </div>

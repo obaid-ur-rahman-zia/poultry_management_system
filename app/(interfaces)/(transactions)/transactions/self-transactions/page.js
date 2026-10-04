@@ -160,6 +160,14 @@ export default function SelfTransactionPage() {
     return true;
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const btn = document.getElementById("account_id_combobox");
+      if (btn) btn.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   const fetchAccountBalance = async (accId) => {
     if (!accId) return;
     setBalanceLoading(true);
@@ -267,6 +275,11 @@ export default function SelfTransactionPage() {
         setIsEditMode(false);
         setEditingTransactionId(null);
         fetchTransactions();
+        
+        setTimeout(() => {
+          const btn = document.getElementById("account_id_combobox");
+          if (btn) btn.focus();
+        }, 100);
       } else {
         // Show backend error message
         toast.error(result.response_message || "Failed to save transaction");
@@ -504,6 +517,7 @@ export default function SelfTransactionPage() {
 
                           return (
                             <Combobox
+                              id="account_id_combobox"
                               options={options}
                               value={field.value}
                               onValueChange={field.onChange}
@@ -549,10 +563,12 @@ export default function SelfTransactionPage() {
                         <p
                           className={`text-lg font-semibold ${currentBalance.balance >= 0 ? "text-green-600" : "text-red-600"}`}
                         >
-                          {currentBalance.balance?.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }) || "0.00"}
+                          {currentBalance.balance !== undefined && currentBalance.balance !== null
+                            ? `${Math.abs(currentBalance.balance).toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })} ${currentBalance.balance >= 0 ? "Dr" : "Cr"}`
+                            : "0.00"}
                         </p>
                       </div>
                     ) : (
@@ -634,10 +650,10 @@ export default function SelfTransactionPage() {
                   <p
                     className={`text-lg font-semibold ${netBalance >= 0 ? "text-green-600" : "text-red-600"}`}
                   >
-                    {netBalance.toLocaleString(undefined, {
+                    {`${Math.abs(netBalance).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
-                    })}
+                    })} ${netBalance >= 0 ? "Dr" : "Cr"}`}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {transactionType === "receive"
