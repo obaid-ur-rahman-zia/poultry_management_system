@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
-import { Plus, Search, Edit2, Trash2, Loader2 } from "lucide-react";
+import { Search, Edit2, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -29,7 +29,7 @@ import {
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 import StockInfoBar, { todayStr, fmtNum } from "../components/StockInfoBar";
 
-export default function ShopSaleTab() {
+export default function ShopSaleTab({ customersVersion = 0 }) {
   const emptyForm = () => ({
     sale_date: todayStr(),
     shop_acc_id: "",
@@ -69,12 +69,6 @@ export default function ShopSaleTab() {
   // Shop customer previous balance
   const [custPrevBalance, setCustPrevBalance] = useState(0);
   const [loadingCustBal, setLoadingCustBal] = useState(false);
-
-  // Add customer dialog
-  const [isAddCustOpen, setIsAddCustOpen] = useState(false);
-  const [newCustName, setNewCustName] = useState("");
-  const [newCustContact, setNewCustContact] = useState("");
-  const [isAddingCust, setIsAddingCust] = useState(false);
 
   // Delete dialog
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -212,7 +206,7 @@ export default function ShopSaleTab() {
   // ── Effects ─────────────────────────────────────────────────────────
   useEffect(() => {
     fetchCustomers();
-  }, [fetchCustomers]);
+  }, [fetchCustomers, customersVersion]);
 
   useEffect(() => {
     fetchStock(form.shop_acc_id, form.sale_date);
@@ -356,42 +350,6 @@ export default function ShopSaleTab() {
     }
   };
 
-  const handleAddCustomer = async () => {
-    if (!newCustName.trim()) {
-      toast.error("Customer name is required");
-      return;
-    }
-    setIsAddingCust(true);
-    try {
-      const res = await fetch("/api/shop/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          req_object: {
-            customer_nam: newCustName.trim(),
-            customer_contact: newCustContact.trim() || null,
-          },
-        }),
-      });
-      const data = await res.json();
-      if (data.response_status === "success") {
-        toast.success("Customer added successfully");
-        await fetchCustomers();
-        const newId = data.response_result?.customer_id?.toString() || "";
-        setForm((prev) => ({ ...prev, customer_id: newId }));
-        setNewCustName("");
-        setNewCustContact("");
-        setIsAddCustOpen(false);
-      } else {
-        toast.error(data.response_message || "Failed to add customer");
-      }
-    } catch {
-      toast.error("Failed to add customer");
-    } finally {
-      setIsAddingCust(false);
-    }
-  };
-
   // List computations
   const filteredSales = searchQuery
     ? sales.filter((s) =>
@@ -482,16 +440,6 @@ export default function ShopSaleTab() {
                   emptyText="No customer found."
                 />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                onClick={() => setIsAddCustOpen(true)}
-                title="Add new customer"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
               {form.customer_id && (
                 <span className="text-sm underline whitespace-nowrap">
                   Prev Balance{" "}
@@ -755,64 +703,6 @@ export default function ShopSaleTab() {
               disabled={isDeleting}
             >
               {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Add Customer Dialog ── */}
-      <Dialog open={isAddCustOpen} onOpenChange={setIsAddCustOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New Customer</DialogTitle>
-            <DialogDescription>Create a new shop customer.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="new_cust_name">Name *</Label>
-              <Input
-                id="new_cust_name"
-                placeholder="Enter customer name"
-                value={newCustName}
-                onChange={(e) => setNewCustName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddCustomer();
-                  }
-                }}
-                autoFocus
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new_cust_contact">Contact (Optional)</Label>
-              <Input
-                id="new_cust_contact"
-                placeholder="Enter contact number"
-                value={newCustContact}
-                onChange={(e) => setNewCustContact(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsAddCustOpen(false);
-                setNewCustName("");
-                setNewCustContact("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddCustomer}
-              disabled={isAddingCust || !newCustName.trim()}
-            >
-              {isAddingCust && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {isAddingCust ? "Adding..." : "Add Customer"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useAccounts, useSubHeads } from "@/app/utils/hooks";
+import { useAccounts } from "@/app/utils/hooks";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Trash2, ArrowUp, Calendar as CalendarIcon, Edit2, Store, ReceiptText, Plus } from "lucide-react";
+import { Search, Trash2, ArrowUp, Calendar as CalendarIcon, Edit2, Store, ReceiptText, UserPlus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import MobileListToggle from "@/app/(interfaces)/components/MobileListToggle";
 import LocalSaleExpenseTab from "./expenses/LocalSaleExpenseTab";
+import LocalCustomerTab from "./customers/LocalCustomerTab";
 
 const fmtDate = (d) => {
   if (!d) return "-";
@@ -68,7 +69,7 @@ export default function LocalSalePageWrapper() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex justify-center h-auto w-full bg-transparent shadow-none ">
           {/* Flip Toggle Switch Container */}
-          <div className="relative bg-slate-200/80 dark:bg-slate-900 p-1.5 rounded-full flex shadow-[inset_0px_2px_5px_rgba(0,0,0,0.1)] border border-slate-300/50 dark:border-slate-800 w-full sm:w-[500px]">
+          <div className="relative bg-slate-200/80 dark:bg-slate-900 p-1.5 rounded-full flex shadow-[inset_0px_2px_5px_rgba(0,0,0,0.1)] border border-slate-300/50 dark:border-slate-800 w-full sm:w-[700px]">
             <TabsTrigger
               value="local-sale"
               className="flex-1 relative z-10 flex items-center justify-center gap-2 rounded-full py-3 text-sm sm:text-base font-bold transition-all duration-300 data-[state=active]:!bg-blue-600 data-[state=active]:!text-white data-[state=active]:shadow-[0px_4px_12px_rgba(37,99,235,0.4)] data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-500 hover:data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-400"
@@ -83,6 +84,13 @@ export default function LocalSalePageWrapper() {
               <ReceiptText className="size-4 shrink-0" />
               Expenses
             </TabsTrigger>
+            <TabsTrigger
+              value="add-customer"
+              className="flex-1 relative z-10 flex items-center justify-center gap-2 rounded-full py-3 text-sm sm:text-base font-bold transition-all duration-300 data-[state=active]:!bg-blue-600 data-[state=active]:!text-white data-[state=active]:shadow-[0px_4px_12px_rgba(37,99,235,0.4)] data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-500 hover:data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-400"
+            >
+              <UserPlus className="size-4 shrink-0" />
+              Add Customer
+            </TabsTrigger>
           </div>
         </TabsList>
 
@@ -91,6 +99,9 @@ export default function LocalSalePageWrapper() {
         </TabsContent>
         <TabsContent value="expenses" forceMount className="space-y-4 data-[state=inactive]:hidden">
           <LocalSaleExpenseTab />
+        </TabsContent>
+        <TabsContent value="add-customer" forceMount className="space-y-4 data-[state=inactive]:hidden">
+          <LocalCustomerTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -104,7 +115,6 @@ function LocalSaleTab() {
   const [editingId, setEditingId] = useState(null);
 
   const { accounts: rawAccounts, mutate: mutateAccounts } = useAccounts();
-  const { subHeads } = useSubHeads();
   const allAccounts = React.useMemo(() => rawAccounts || [], [rawAccounts]);
 
   const localAccounts = React.useMemo(() => {
@@ -157,12 +167,6 @@ function LocalSaleTab() {
   // Modal state
   const [isGetDataModalOpen, setIsGetDataModalOpen] = useState(false);
   const [modalSearchQuery, setModalSearchQuery] = useState("");
-
-  // Create Local Purchaser Modal State
-  const [isCreatePurchaserOpen, setIsCreatePurchaserOpen] = useState(false);
-  const [newPurchaserName, setNewPurchaserName] = useState("");
-  const [newPurchaserPhone, setNewPurchaserPhone] = useState("");
-  const [isCreatingPurchaser, setIsCreatingPurchaser] = useState(false);
 
   // Mobile list toggle state
   const [isMobile, setIsMobile] = useState(false);
@@ -364,77 +368,6 @@ function LocalSaleTab() {
     setIsGetDataModalOpen(true);
   };
 
-  const handleCreatePurchaser = async (e) => {
-    if (e) e.preventDefault();
-    const trimmedName = newPurchaserName.trim();
-    const trimmedPhone = newPurchaserPhone.trim();
-
-    if (!trimmedName) {
-      toast.error("Purchaser name is required");
-      return;
-    }
-
-    // Determine target subhead and head for LOCAL PURCHASER
-    const targetSubHead = subHeads?.find(
-      (s) => s.subhead_nam?.trim().toUpperCase() === "LOCAL PURCHASER"
-    );
-    const headId = targetSubHead?.head_id || purchaserAccounts[0]?.head_id || 1;
-    const subId = targetSubHead?.sub_id || purchaserAccounts[0]?.sub_id || 3;
-
-    setIsCreatingPurchaser(true);
-    try {
-      const payload = {
-        req_object: {
-          account_nam: trimmedName,
-          account_contact: trimmedPhone ? JSON.stringify([trimmedPhone]) : JSON.stringify([]),
-          account_address: "",
-          account_reference: "",
-          head_id: Number(headId),
-          sub_id: Number(subId),
-          account_no: null,
-          shop_enable: 0,
-          opening_balance: 0,
-          balance_type: "credit",
-          insert_by: "user",
-          update_by: "user",
-          status: 1,
-        },
-      };
-
-      const res = await fetch("/api/account/accounts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (data.response_status === "success" || data.success) {
-        toast.success("Local purchaser account created successfully");
-        const createdAccId = data.response_result?.acc_id;
-
-        await mutateAccounts();
-
-        if (createdAccId) {
-          setForm((prev) => ({
-            ...prev,
-            purchaser_account: createdAccId.toString(),
-          }));
-        }
-
-        setNewPurchaserName("");
-        setNewPurchaserPhone("");
-        setIsCreatePurchaserOpen(false);
-      } else {
-        toast.error(data.response_message || data.message || "Failed to create account");
-      }
-    } catch (error) {
-      console.error("Error creating local purchaser account:", error);
-      toast.error("Failed to create account");
-    } finally {
-      setIsCreatingPurchaser(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (isSubmitting) return;
@@ -526,7 +459,7 @@ function LocalSaleTab() {
         const savedPurchaser = form.purchaser_account;
         handleClear();
         setForm(prev => ({ ...prev, purchaser_account: savedPurchaser }));
-        await fetchAccounts();
+        await mutateAccounts();
         fetchSales();
 
         setTimeout(() => {
@@ -742,16 +675,6 @@ function LocalSaleTab() {
                     emptyText="No purchaser found."
                   />
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsCreatePurchaserOpen(true)}
-                  className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 shrink-0"
-                  title="Add New Local Purchaser"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
                 <div className="flex items-center gap-1">
                   {loadingPurchaserBalance ? (
                     <span className="text-l text-muted-foreground">Loading...</span>
@@ -1080,57 +1003,6 @@ function LocalSaleTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Create Local Purchaser Modal */}
-      <Dialog open={isCreatePurchaserOpen} onOpenChange={setIsCreatePurchaserOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add Local Purchaser</DialogTitle>
-            <DialogDescription>
-              Create a new purchaser account under LOCAL PURCHASER.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreatePurchaser} className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="new_purchaser_name">Name *</Label>
-              <Input
-                id="new_purchaser_name"
-                placeholder="Enter purchaser name"
-                value={newPurchaserName}
-                onChange={(e) => setNewPurchaserName(e.target.value)}
-                disabled={isCreatingPurchaser}
-                autoFocus
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new_purchaser_phone">Phone Number</Label>
-              <Input
-                id="new_purchaser_phone"
-                placeholder="e.g. 03001234567"
-                value={newPurchaserPhone}
-                onChange={(e) => setNewPurchaserPhone(e.target.value)}
-                disabled={isCreatingPurchaser}
-              />
-            </div>
-            <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsCreatePurchaserOpen(false);
-                  setNewPurchaserName("");
-                  setNewPurchaserPhone("");
-                }}
-                disabled={isCreatingPurchaser}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isCreatingPurchaser}>
-                {isCreatingPurchaser ? "Creating..." : "Save Purchaser"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
